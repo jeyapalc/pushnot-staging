@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PUSHNOT // 3D Artifact Viewer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- 3D Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Header HUD -->
+  <header class="hud-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <div class="brand-icon-inner"></div>
+      </div>
+      <div>
+        <div class="brand-title">PUSHNOT</div>
+      </div>
+      <div class="brand-sub">ARTIFACT_VIEWER // V1.0</div>
+    </div>
+
+    <div class="header-status">
+      <div class="status-badge">
+        <span class="dot-live"></span>
+        <span>ENGINE READY</span>
+      </div>
+      <div class="status-badge">
+        <span>WEBGL2 / THREE.JS</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-icon" id="btn-reset-cam">⟲ RESET CAM</button>
+      <button class="btn-icon" id="btn-snapshot">⌗ SNAPSHOT</button>
+      <button class="btn-icon" id="btn-fullscreen">⛶ FULLSCREEN</button>
+    </div>
+  </header>
+
+  <!-- Sidebar HUD -->
+  <aside class="hud-sidebar">
+    <!-- Artifact Library -->
+    <div class="panel-section">
+      <div class="panel-title">ARTIFACT ARCHIVE</div>
+      <div class="artifact-pills">
+        <div class="artifact-pill active" data-artifact="top_mod">
+          <span>Top_Mod_V1</span>
+          <span class="artifact-pill-format">STL</span>
+        </div>
+        <div class="artifact-pill" data-artifact="box">
+          <span>box_4x7x1.5</span>
+          <span class="artifact-pill-format">OBJ</span>
+        </div>
+        <div class="artifact-pill" data-artifact="procedural">
+          <span>Quantum Monolith</span>
+          <span class="artifact-pill-format">PROCEDURAL</span>
+        </div>
+      </div>
+
+      <input type="file" id="file-input" accept=".stl,.obj,.gltf,.glb" style="display: none;" />
+      <div class="upload-box" id="upload-box">
+        <strong>+ INGEST ARTIFACT</strong>
+        <span>Click or Drag & Drop .STL, .OBJ, .GLTF, .GLB</span>
+      </div>
+    </div>
+
+    <!-- Shading Mode -->
+    <div class="panel-section">
+      <div class="panel-title">SHADING & TEXTURE</div>
+      <div class="control-buttons-grid">
+        <button class="btn-ctrl active" data-shader="pbr">PBR SOLID</button>
+        <button class="btn-ctrl" data-shader="normals">NORMALS</button>
+        <button class="btn-ctrl" data-shader="matcap">CHROME</button>
+        <button class="btn-ctrl" data-shader="wireframe">WIREFRAME</button>
+      </div>
+
+      <div class="control-row">
+        <span class="control-label">Base Color</span>
+        <input type="color" id="mesh-color" value="#00f0ff" />
+      </div>
+      <div class="control-row">
+        <span class="control-label">Roughness</span>
+        <input type="range" id="roughness-slider" min="0" max="1" step="0.05" value="0.3" />
+      </div>
+      <div class="control-row">
+        <span class="control-label">Metalness</span>
+        <input type="range" id="metalness-slider" min="0" max="1" step="0.05" value="0.8" />
+      </div>
+    </div>
+
+    <!-- Display / Environment Toggles -->
+    <div class="panel-section">
+      <div class="panel-title">VIEWPORT CONTROLS</div>
+      
+      <div class="control-row">
+        <span class="control-label">Turntable Rotation</span>
+        <input type="checkbox" id="chk-turntable" checked />
+      </div>
+      <div class="control-row">
+        <span class="control-label">Spin Speed</span>
+        <input type="range" id="rotate-speed" min="0.2" max="3" step="0.1" value="1.0" />
+      </div>
+      <div class="control-row">
+        <span class="control-label">Wireframe Overlay</span>
+        <input type="checkbox" id="chk-wire-overlay" />
+      </div>
+      <div class="control-row">
+        <span class="control-label">Coordinate Grid</span>
+        <input type="checkbox" id="chk-grid" checked />
+      </div>
+      <div class="control-row">
+        <span class="control-label">Axis Indicator</span>
+        <input type="checkbox" id="chk-axes" />
+      </div>
+      <div class="control-row">
+        <span class="control-label">Bounding Box</span>
+        <input type="checkbox" id="chk-bounds" />
+      </div>
+    </div>
+
+    <!-- Metadata Card -->
+    <div class="panel-section">
+      <div class="panel-title">TELEMETRY & SPECS</div>
+      <div class="stat-item">
+        <span class="stat-key">Name:</span>
+        <span class="stat-val" id="stat-name">--</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-key">Format:</span>
+        <span class="stat-val" id="stat-format">--</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-key">Vertices:</span>
+        <span class="stat-val" id="stat-verts">--</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-key">Polygons:</span>
+        <span class="stat-val" id="stat-tris">--</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-key">Bounds (X×Y×Z):</span>
+        <span class="stat-val" id="stat-dims">--</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-key">Data Size:</span>
+        <span class="stat-val" id="stat-size">--</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom Camera View Presets HUD -->
+  <div class="hud-bottom-controls">
+    <button class="btn-ctrl active" data-view="iso">ISO</button>
+    <button class="btn-ctrl" data-view="front">FRONT</button>
+    <button class="btn-ctrl" data-view="top">TOP</button>
+    <button class="btn-ctrl" data-view="side">SIDE</button>
+  </div>
+
+  <!-- Fullscreen Drag & Drop Target Overlay -->
+  <div id="drop-target">
+    <div class="drop-text">DROP 3D ARTIFACT TO LOAD</div>
+    <div style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem;">
+      Compatible with STL, OBJ, GLTF, and GLB files
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loader">
+    <div class="spinner"></div>
+    <div style="letter-spacing: 2px;">PARSING GEOMETRY...</div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

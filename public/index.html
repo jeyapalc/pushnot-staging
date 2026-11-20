@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUSHNOT // The Talking Push Token 3D Explainer</title>
+  <title>PUSHNOT // 3D Push Notifications Visual Presentation Aid</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -22,312 +22,126 @@
   <!-- 3D WebGL Canvas -->
   <div id="canvas-container"></div>
 
-  <!-- In-Scene 3D Notification Banner Alert -->
-  <div class="notif-banner" id="notif-banner">
-    <div class="notif-icon">📦</div>
+  <!-- In-Scene 3D Holographic Overlays Projected Over 3D Coordinates -->
+
+  <!-- 1. Holographic Device Token Card A (Above Phone) -->
+  <div class="holo-token-card" id="token-card-a">
+    <div class="token-badge token-badge-amber" id="tok-a-badge">● ACTIVE DEVICE TOKEN</div>
+    <div style="font-weight: 700; color: #fff;">MyApp (John's Phone)</div>
+    <div class="token-val-str" id="tok-a-val">apns:7f4a-9b12-e891</div>
+  </div>
+
+  <!-- 2. Holographic Device Token Card B (Dual App Token - Still 03) -->
+  <div class="holo-token-card token-b" id="token-card-b" style="display: none;">
+    <div class="token-badge token-badge-green">● SECOND APP TOKEN</div>
+    <div style="font-weight: 700; color: #fff;">ChatApp (Same Device)</div>
+    <div class="token-val-str">apns:3c88-66a1-10f2</div>
+  </div>
+
+  <!-- 3. Holographic Database Table (Above Server Rack - Still 06) -->
+  <div class="holo-db-panel" id="holo-db-panel">
+    <div class="holo-db-header">
+      <span>SERVER DB // INSTALLATIONS</span>
+      <span style="color: var(--green);">● CONNECTED</span>
+    </div>
+    <table class="holo-db-table">
+      <thead>
+        <tr>
+          <th>ACCOUNT</th>
+          <th>DEVICE TOKEN</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr id="db-row-john" class="db-row-active">
+          <td>john@example.com</td>
+          <td>apns:7f4a...e891</td>
+          <td id="db-row-status" style="color: var(--green);">ACTIVE</td>
+        </tr>
+        <tr>
+          <td>john@example.com</td>
+          <td>apns:b912...c440 (iPad)</td>
+          <td>ACTIVE</td>
+        </tr>
+        <tr>
+          <td>sarah@corp.com</td>
+          <td>fcm:eX98...001a</td>
+          <td>ACTIVE</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 4. Holographic Notification Alert Banner (Above Phone Screen - Still 08) -->
+  <div class="holo-alert-banner" id="holo-alert-banner">
+    <div class="alert-icon-box">📦</div>
     <div>
-      <div class="notif-title">MyApp: Order Shipped!</div>
-      <div class="notif-sub">Your package #8492 is out for delivery. Tap to view live tracking.</div>
+      <div class="alert-title-text">MyApp: Order Shipped!</div>
+      <div class="alert-sub-text">Your order #8492 is out for delivery.</div>
     </div>
   </div>
 
-  <!-- Header HUD -->
-  <header class="hud-header">
+  <!-- Speaker HUD Header -->
+  <header class="speaker-header">
     <div class="brand">
-      <div class="brand-icon">
-        <div class="brand-icon-inner"></div>
-      </div>
-      <div>
-        <div class="brand-title">PUSHNOT</div>
-      </div>
-      <div class="brand-sub">THE TALKING PUSH TOKEN // 3D FLOW EXPLAINER</div>
+      <div class="brand-gem"></div>
+      <div class="brand-text">PUSHNOT</div>
+      <div class="brand-tag">3D PRESENTATION STAGE</div>
     </div>
 
-    <div class="header-status">
-      <div class="status-badge">
-        <span class="dot-live"></span>
-        <span>TOKEN ENGINE: ACTIVE</span>
-      </div>
-      <div class="status-badge">
-        <span>3D GLB HARDWARE</span>
-      </div>
+    <!-- Camera Navigation Presets -->
+    <div class="cam-nav-group">
+      <button class="btn-cam active" data-cam="wide">WIDE (CHAIN)</button>
+      <button class="btn-cam" data-cam="phone">PHONE (DEVICE)</button>
+      <button class="btn-cam" data-cam="server">SERVER (DATABASE)</button>
+      <button class="btn-cam" data-cam="gateway">GATEWAY (APNs/FCM)</button>
     </div>
 
-    <div class="header-actions">
-      <button class="btn-icon" id="btn-open-handoff">📋 HANDOFF SPECS</button>
-      <button class="btn-icon" id="btn-reset-cam">⟲ FOCUS TOKEN</button>
-      <button class="btn-icon" id="btn-snapshot">⌗ SNAPSHOT</button>
-      <button class="btn-icon" id="btn-fullscreen">⛶ FULLSCREEN</button>
+    <!-- Tools -->
+    <div class="header-tools">
+      <button class="btn-tool" id="btn-fullscreen">⛶ FULLSCREEN</button>
     </div>
   </header>
 
-  <!-- Sidebar HUD: Live Token Telemetry & Inspection -->
-  <aside class="hud-sidebar">
-    <!-- Mode Switcher -->
-    <div class="panel-section">
-      <div class="mode-switcher">
-        <button class="tab-btn active" id="tab-sim">TOKEN JOURNEY</button>
-        <button class="tab-btn" id="tab-inspect">INSPECT 3D</button>
-      </div>
-
-      <!-- SIMULATION CONTROLS & TOKEN STATE -->
-      <div id="section-sim">
-        <div class="panel-title">LIVE TOKEN RECORD</div>
-        <div class="token-state-box">
-          <div class="token-state-row">
-            <span class="token-state-key">Address:</span>
-            <span class="token-state-val" id="tok-val-address">apns:7f4a...e891</span>
-          </div>
-          <div class="token-state-row">
-            <span class="token-state-key">Account:</span>
-            <span class="token-state-val" id="tok-val-account">john@example.com</span>
-          </div>
-          <div class="token-state-row">
-            <span class="token-state-key">Provider:</span>
-            <span class="token-state-val" id="tok-val-provider">APNs (iOS)</span>
-          </div>
-          <div class="token-state-row">
-            <span class="token-state-key">Status:</span>
-            <span class="token-state-val highlight" id="tok-val-status">ACTIVE</span>
-          </div>
-          <div class="token-state-row">
-            <span class="token-state-key">Payload:</span>
-            <span class="token-state-val" id="tok-val-payload">None</span>
-          </div>
-        </div>
-
-        <button class="btn-dispatch" id="btn-dispatch-flow">
-          <span>⚡ RUN COMPLETE PUSH LIFECYCLE</span>
-        </button>
-      </div>
-
-      <!-- ARTIFACT INSPECTOR SELECTION -->
-      <div id="section-inspect" style="display: none;">
-        <div class="panel-title">3D HARDWARE ASSETS</div>
-        <div class="artifact-pills">
-          <div class="artifact-pill active" data-artifact="server_rack">
-            <span>Server Rack (data_center_rack.glb)</span>
-            <span class="artifact-pill-format">GLB</span>
-          </div>
-          <div class="artifact-pill" data-artifact="smartphone">
-            <span>Smartphone (generic_smartphone.glb)</span>
-            <span class="artifact-pill-format">GLB</span>
-          </div>
-          <div class="artifact-pill" data-artifact="top_mod">
-            <span>Top_Mod_V1</span>
-            <span class="artifact-pill-format">STL</span>
-          </div>
-          <div class="artifact-pill" data-artifact="box">
-            <span>box_4x7x1.5</span>
-            <span class="artifact-pill-format">OBJ</span>
-          </div>
-          <div class="artifact-pill" data-artifact="procedural">
-            <span>Quantum Monolith</span>
-            <span class="artifact-pill-format">PROC</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Shading & Materials -->
-    <div class="panel-section">
-      <div class="panel-title">MATERIAL & RENDERING</div>
-      <div class="control-buttons-grid">
-        <button class="btn-ctrl active" data-shader="original">ORIGINAL</button>
-        <button class="btn-ctrl" data-shader="pbr">PBR</button>
-        <button class="btn-ctrl" data-shader="normals">NORMALS</button>
-        <button class="btn-ctrl" data-shader="wireframe">WIREFRAME</button>
-      </div>
-
-      <div class="control-row">
-        <span class="control-label">Base Color</span>
-        <input type="color" id="mesh-color" value="#00f0ff" />
-      </div>
-      <div class="control-row">
-        <span class="control-label">Roughness</span>
-        <input type="range" id="roughness-slider" min="0" max="1" step="0.05" value="0.3" />
-      </div>
-      <div class="control-row">
-        <span class="control-label">Metalness</span>
-        <input type="range" id="metalness-slider" min="0" max="1" step="0.05" value="0.8" />
-      </div>
-    </div>
-
-    <!-- Viewport Environment -->
-    <div class="panel-section">
-      <div class="panel-title">VIEWPORT SETTINGS</div>
-      <div class="control-row">
-        <span class="control-label">Turntable Rotation</span>
-        <input type="checkbox" id="chk-turntable" />
-      </div>
-      <div class="control-row">
-        <span class="control-label">Coordinate Grid</span>
-        <input type="checkbox" id="chk-grid" checked />
-      </div>
-      <div class="control-row">
-        <span class="control-label">Bounding Box</span>
-        <input type="checkbox" id="chk-bounds" />
-      </div>
-    </div>
-
-    <!-- Specs -->
-    <div class="panel-section">
-      <div class="panel-title">TELEMETRY</div>
-      <div class="stat-item">
-        <span class="stat-key">Component:</span>
-        <span class="stat-val" id="stat-name">Push Architecture</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-key">Vertices:</span>
-        <span class="stat-val" id="stat-verts">--</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-key">Bounds:</span>
-        <span class="stat-val" id="stat-dims">--</span>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ================= TALKING PUSH TOKEN NARRATOR PANEL ================= -->
-  <div class="token-narrator-panel" id="token-narrator">
-    <div class="token-narrator-header">
-      <div class="token-avatar">
-        <div class="token-avatar-orb">TK</div>
-        <div>
-          <div class="token-name" id="token-title">I Am Born on the Device</div>
-          <div class="token-subtitle" id="token-subtitle">STAGE 1: APNs / FCM Token Minting</div>
-        </div>
-      </div>
-      <div style="display: flex; gap: 8px;">
-        <button class="token-audio-toggle" id="btn-token-replay">↻ REPLAY VOICE</button>
-        <button class="token-audio-toggle" id="btn-token-audio">🔊 VOICE: ON</button>
-      </div>
-    </div>
-
-    <div class="token-dialogue-body" id="token-dialogue">
-      Hello! I am your <strong>Push Token</strong>. Think of me like an <em>email address</em> for this app installation on John's phone.<br/>
-      The platform (Apple APNs or Google FCM) minted me. I am <strong>opaque and unique</strong> to this exact app and hardware—you can never guess or fabricate me!
-    </div>
-
-    <div class="token-nav-bar">
-      <div class="step-indicator">
-        STAGE <span id="token-step-num">1</span> OF 6
-      </div>
-      <div class="token-nav-buttons">
-        <button class="btn-token-nav" id="btn-token-prev">◀ PREV</button>
-        <button class="btn-token-nav primary" id="btn-token-next">NEXT STAGE ▶</button>
-      </div>
-    </div>
+  <!-- Live Stage Caption Banner -->
+  <div class="stage-caption">
+    <span class="stage-caption-dot"></span>
+    <span id="stage-caption-text">STAGE 1 // DEVICE REQUESTS & PLATFORM MINTS UNIQUE DEVICE TOKEN</span>
   </div>
 
-  <!-- Right Side Handoff Drawer -->
-  <aside class="hud-handoff-drawer" id="handoff-drawer">
-    <div class="drawer-header">
-      <h3>SNAPYT // PUSH HANDOFF SPECS</h3>
-      <button class="drawer-close" id="btn-close-handoff">✕</button>
+  <!-- ================= SPEAKER CONTROL DECK ================= -->
+  <div class="speaker-deck">
+    <!-- Stages Row -->
+    <div class="deck-stages-row">
+      <button class="btn-stage active">01: TOKEN MINT</button>
+      <button class="btn-stage">02: SYNC TO DB</button>
+      <button class="btn-stage">03: EVENT TRIGGER</button>
+      <button class="btn-stage">04: DISPATCH GATEWAY</button>
+      <button class="btn-stage">05: DEVICE RECEIPT</button>
+      <button class="btn-stage">06: REINSTALL / ROTATE</button>
     </div>
-    <div class="drawer-content">
-      <h4 style="color: var(--cyan); margin-bottom: 8px;">Core Architecture</h4>
-      <p style="color: var(--text-muted); margin-bottom: 14px;">
-        A remote push routes messages from application backends through platform push services (APNs/FCM) to a specific installation using an opaque device token.
-      </p>
 
-      <h4 style="color: var(--amber); margin-bottom: 8px;">Suggested Registration Record</h4>
-      <table class="schema-table">
-        <thead>
-          <tr>
-            <th>Field</th>
-            <th>Purpose</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>account_id</td>
-            <td>Recipient account from authenticated session.</td>
-          </tr>
-          <tr>
-            <td>installation_id</td>
-            <td>Unique app installation identity.</td>
-          </tr>
-          <tr>
-            <td>provider & target_kind</td>
-            <td>FCM/APNs route & address kind.</td>
-          </tr>
-          <tr>
-            <td>target_address</td>
-            <td>Exact opaque device token.</td>
-          </tr>
-          <tr>
-            <td>status / invalidated_at</td>
-            <td>Active state and deactivation timestamp.</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h4 style="color: var(--cyan); margin-bottom: 12px;">Walkthrough Stills & Timestamps</h4>
-
-      <div class="still-card">
-        <img src="stills/01-email-recipient.png" alt="Email Recipient Analogy" />
-        <div class="still-card-caption">
-          <strong>00:05</strong> — Email analogy: an email address tells the mail system where to route. A device token plays the same role for push.
-        </div>
-      </div>
-
-      <div class="still-card">
-        <img src="stills/02-notification-address.png" alt="Notification Address" />
-        <div class="still-card-caption">
-          <strong>00:09</strong> — Address vs Payload: Token routes the request, while the payload specifies what alert to display.
-        </div>
-      </div>
-
-      <div class="still-card">
-        <img src="stills/03-app-specific-tokens.png" alt="App Specific Tokens" />
-        <div class="still-card-caption">
-          <strong>00:22</strong> — Distinct tokens: Multiple apps on one device receive separate unique device tokens.
-        </div>
-      </div>
-
-      <div class="still-card">
-        <img src="stills/05-fcm-and-apns.png" alt="FCM and APNs" />
-        <div class="still-card-caption">
-          <strong>00:43</strong> — Platform routes: Google Firebase Cloud Messaging (Android) and Apple APNs (iOS).
-        </div>
-      </div>
-
-      <div class="still-card">
-        <img src="stills/06-register-token-with-server.png" alt="Register Token with Server" />
-        <div class="still-card-caption">
-          <strong>00:51</strong> — App syncs address to backend DB table linked to the authenticated user.
-        </div>
-      </div>
-
-      <div class="still-card">
-        <img src="stills/08-provider-delivers-notification.png" alt="Provider Delivers Notification" />
-        <div class="still-card-caption">
-          <strong>01:06</strong> — Complete pipeline: Backend triggers request $\rightarrow$ Push Service $\rightarrow$ Device displays banner.
-        </div>
-      </div>
-
-      <div class="still-card">
-        <img src="stills/10-reinstall-and-update-registration.png" alt="Reinstall and Refresh" />
-        <div class="still-card-caption">
-          <strong>01:20</strong> — Reinstallation generates a new token. Backend replaces stale records cleanly.
-        </div>
-      </div>
-
-      <div class="still-card">
-        <img src="stills/12-four-components.png" alt="Four Components" />
-        <div class="still-card-caption">
-          <strong>01:52</strong> — Four components: App $\rightarrow$ Server $\rightarrow$ Push Service $\rightarrow$ Receiving Device.
-        </div>
+    <!-- Manual 3D Data Scrubber -->
+    <div class="deck-scrubber-row">
+      <span class="scrubber-label">SCRUB CHAIN:</span>
+      <div class="scrubber-track-box">
+        <input type="range" class="chain-slider" id="chain-slider" min="0" max="100" value="0" />
       </div>
     </div>
-  </aside>
 
-  <!-- Loading Overlay -->
-  <div id="loader">
-    <div class="spinner"></div>
-    <div style="letter-spacing: 2px;">AWAKENING PUSH TOKEN...</div>
+    <!-- Actions & Nav Row -->
+    <div class="deck-actions-row">
+      <div class="deck-nav-buttons">
+        <button class="btn-deck-nav" id="btn-deck-prev">◀ PREV STAGE</button>
+        <button class="btn-deck-nav" id="btn-deck-next">NEXT STAGE ▶</button>
+      </div>
+
+      <div class="deck-feature-toggles">
+        <button class="btn-action" id="btn-toggle-dual">📱 SHOW 2ND APP TOKEN</button>
+        <button class="btn-action danger" id="btn-reinstall-token">⟳ REINSTALL / ROTATE</button>
+        <button class="btn-action btn-fire" id="btn-fire-send">⚡ FIRE FULL SEND</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="js/app.js"></script>

@@ -3,145 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUSHNOT // 3D Push Notifications Visual Presentation Aid</title>
+  <title>PUSHNOT // How Push Notifications Work — 3D Stage</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
-
   <script type="importmap">
-    {
-      "imports": {
+    { "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
         "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-      }
-    }
+    } }
   </script>
 </head>
 <body>
-  <!-- 3D WebGL Canvas -->
   <div id="canvas-container"></div>
+  <div id="load-status" class="load-status">LOADING 3D HARDWARE…</div>
 
-  <!-- In-Scene 3D Holographic Overlays Projected Over 3D Coordinates -->
-
-  <!-- 1. Holographic Device Token Card A (Above Phone) -->
-  <div class="holo-token-card" id="token-card-a">
-    <div class="token-badge token-badge-amber" id="tok-a-badge">● ACTIVE DEVICE TOKEN</div>
-    <div style="font-weight: 700; color: #fff;">MyApp (John's Phone)</div>
-    <div class="token-val-str" id="tok-a-val">apns:7f4a-9b12-e891</div>
+  <!-- ===== Projected holograms (positioned every frame from 3D coords) ===== -->
+  <div class="holo holo-card" id="card-phone">
+    <div class="badge" id="card-phone-badge">● DEVICE TOKEN</div>
+    <div class="who">MyApp · John's iPhone</div>
+    <div class="val" id="card-phone-val">—</div>
   </div>
 
-  <!-- 2. Holographic Device Token Card B (Dual App Token - Still 03) -->
-  <div class="holo-token-card token-b" id="token-card-b" style="display: none;">
-    <div class="token-badge token-badge-green">● SECOND APP TOKEN</div>
-    <div style="font-weight: 700; color: #fff;">ChatApp (Same Device)</div>
-    <div class="token-val-str">apns:3c88-66a1-10f2</div>
+  <div class="holo holo-card app2" id="card-app2">
+    <div class="badge">● DEVICE TOKEN</div>
+    <div class="who">ChatApp · same iPhone</div>
+    <div class="val">apns:3c88…10f2</div>
   </div>
 
-  <!-- 3. Holographic Database Table (Above Server Rack - Still 06) -->
-  <div class="holo-db-panel" id="holo-db-panel">
-    <div class="holo-db-header">
-      <span>SERVER DB // INSTALLATIONS</span>
-      <span style="color: var(--green);">● CONNECTED</span>
-    </div>
-    <table class="holo-db-table">
-      <thead>
-        <tr>
-          <th>ACCOUNT</th>
-          <th>DEVICE TOKEN</th>
-          <th>STATUS</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr id="db-row-john" class="db-row-active">
-          <td>john@example.com</td>
-          <td>apns:7f4a...e891</td>
-          <td id="db-row-status" style="color: var(--green);">ACTIVE</td>
-        </tr>
-        <tr>
-          <td>john@example.com</td>
-          <td>apns:b912...c440 (iPad)</td>
-          <td>ACTIVE</td>
-        </tr>
-        <tr>
-          <td>sarah@corp.com</td>
-          <td>fcm:eX98...001a</td>
-          <td>ACTIVE</td>
-        </tr>
-      </tbody>
+  <div class="holo db-panel" id="db-panel">
+    <div class="db-head"><span>MyApp BACKEND · installations</span><span class="live">● LIVE</span></div>
+    <table>
+      <thead><tr><th>ACCOUNT</th><th>DEVICE</th><th>TOKEN</th><th>STATUS</th></tr></thead>
+      <tbody id="db-body"></tbody>
     </table>
   </div>
 
-  <!-- 4. Holographic Notification Alert Banner (Above Phone Screen - Still 08) -->
-  <div class="holo-alert-banner" id="holo-alert-banner">
-    <div class="alert-icon-box">📦</div>
-    <div>
-      <div class="alert-title-text">MyApp: Order Shipped!</div>
-      <div class="alert-sub-text">Your order #8492 is out for delivery.</div>
-    </div>
-  </div>
+  <div class="holo lbl lbl-chip" id="lbl-chip"></div>
+  <div class="holo lbl lbl-env" id="lbl-env"></div>
+  <div class="holo lbl lbl-env" id="lbl-env2"></div>
+  <div class="holo lbl lbl-ack" id="lbl-ack"></div>
 
-  <!-- Speaker HUD Header -->
+  <div class="holo banner" id="banner">
+    <div class="ico">📦</div>
+    <div><div class="b-title">MyApp · Order Shipped</div><div class="b-sub">Order #8492 is on its way. Tap to track.</div></div>
+  </div>
+  <div class="holo silent" id="silent">🔕 delivered · alert suppressed</div>
+  <div class="holo banner small" id="ipad-banner"><div class="ico">📦</div><div class="b-title">Order Shipped</div></div>
+
+  <div class="holo tag tag-server" id="tag-server">APP BACKEND</div>
+  <div class="holo tag tag-phone" id="tag-phone">JOHN'S iPHONE</div>
+  <div class="holo tag tag-phone" id="tag-ipad">JOHN'S iPAD</div>
+  <div class="holo tag tag-apns" id="tag-apns">APNs · APPLE PUSH</div>
+  <div class="holo tag tag-fcm" id="tag-fcm">FCM · GOOGLE (Android route)</div>
+
+  <!-- ===== Header ===== -->
   <header class="speaker-header">
     <div class="brand">
       <div class="brand-gem"></div>
       <div class="brand-text">PUSHNOT</div>
-      <div class="brand-tag">3D PRESENTATION STAGE</div>
+      <div class="brand-tag">HOW PUSH NOTIFICATIONS WORK</div>
     </div>
-
-    <!-- Camera Navigation Presets -->
     <div class="cam-nav-group">
-      <button class="btn-cam active" data-cam="wide">WIDE (CHAIN)</button>
-      <button class="btn-cam" data-cam="phone">PHONE (DEVICE)</button>
-      <button class="btn-cam" data-cam="server">SERVER (DATABASE)</button>
-      <button class="btn-cam" data-cam="gateway">GATEWAY (APNs/FCM)</button>
+      <button class="btn-cam" data-cam="wide">WIDE</button>
+      <button class="btn-cam" data-cam="phone">PHONE</button>
+      <button class="btn-cam" data-cam="server">BACKEND</button>
+      <button class="btn-cam" data-cam="gateway">GATEWAYS</button>
     </div>
-
-    <!-- Tools -->
-    <div class="header-tools">
-      <button class="btn-tool" id="btn-fullscreen">⛶ FULLSCREEN</button>
-    </div>
+    <div class="header-tools"><button class="btn-tool" id="btn-fullscreen">⛶ FULLSCREEN</button></div>
   </header>
 
-  <!-- Live Stage Caption Banner -->
+  <!-- ===== Caption ===== -->
   <div class="stage-caption">
-    <span class="stage-caption-dot"></span>
-    <span id="stage-caption-text">STAGE 1 // DEVICE REQUESTS & PLATFORM MINTS UNIQUE DEVICE TOKEN</span>
+    <span class="cap-stage" id="cap-stage">01 · MINT TOKEN</span>
+    <span class="cap-text" id="cap-text"></span>
   </div>
 
-  <!-- ================= SPEAKER CONTROL DECK ================= -->
+  <!-- ===== Server log ===== -->
+  <aside class="server-log">
+    <div class="log-head">BACKEND LOG</div>
+    <div class="log-body" id="log-body"></div>
+  </aside>
+
+  <!-- ===== Speaker deck ===== -->
   <div class="speaker-deck">
-    <!-- Stages Row -->
     <div class="deck-stages-row">
-      <button class="btn-stage active">01: TOKEN MINT</button>
-      <button class="btn-stage">02: SYNC TO DB</button>
-      <button class="btn-stage">03: EVENT TRIGGER</button>
-      <button class="btn-stage">04: DISPATCH GATEWAY</button>
-      <button class="btn-stage">05: DEVICE RECEIPT</button>
-      <button class="btn-stage">06: REINSTALL / ROTATE</button>
+      <button class="btn-stage">01 · MINT TOKEN</button>
+      <button class="btn-stage">02 · REGISTER</button>
+      <button class="btn-stage">03 · EVENT &amp; LOOKUP</button>
+      <button class="btn-stage">04 · SEND TO APNs</button>
+      <button class="btn-stage">05 · DELIVER &amp; DISPLAY</button>
+      <button class="btn-stage">06 · REINSTALL &amp; ROTATE</button>
     </div>
-
-    <!-- Manual 3D Data Scrubber -->
     <div class="deck-scrubber-row">
-      <span class="scrubber-label">SCRUB CHAIN:</span>
-      <div class="scrubber-track-box">
-        <input type="range" class="chain-slider" id="chain-slider" min="0" max="100" value="0" />
-      </div>
+      <button class="btn-deck-nav" id="btn-prev">◀</button>
+      <button class="btn-action" id="btn-play">▶ PLAY STAGE</button>
+      <input type="range" class="chain-slider" id="scrub" min="0" max="1000" value="0" />
+      <span class="scrub-pct" id="scrub-pct">0%</span>
+      <button class="btn-deck-nav" id="btn-next">▶</button>
     </div>
-
-    <!-- Actions & Nav Row -->
     <div class="deck-actions-row">
-      <div class="deck-nav-buttons">
-        <button class="btn-deck-nav" id="btn-deck-prev">◀ PREV STAGE</button>
-        <button class="btn-deck-nav" id="btn-deck-next">NEXT STAGE ▶</button>
-      </div>
-
       <div class="deck-feature-toggles">
-        <button class="btn-action" id="btn-toggle-dual">📱 SHOW 2ND APP TOKEN</button>
-        <button class="btn-action danger" id="btn-reinstall-token">⟳ REINSTALL / ROTATE</button>
-        <button class="btn-action btn-fire" id="btn-fire-send">⚡ FIRE FULL SEND</button>
+        <button class="btn-toggle" id="btn-fanout"></button>
+        <button class="btn-toggle" id="btn-alerts"></button>
+        <button class="btn-toggle" id="btn-app2"></button>
       </div>
+      <button class="btn-action btn-fire" id="btn-full">⚡ FULL SEND (03→05)</button>
     </div>
+    <div class="hotkeys">← → stage · SPACE play/pause · , . nudge · 1–6 jump · F full send</div>
   </div>
 
   <script type="module" src="js/app.js"></script>

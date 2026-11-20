@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUSHNOT // Push Notification 3D Orbit</title>
+  <title>PUSHNOT // 3D Push Notification Orbit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
@@ -17,42 +17,50 @@
 </head>
 <body>
   <div id="canvas-container"></div>
-  <div id="load-status" class="load-status">Loading 3D scene…</div>
+  <div id="load-status" class="load-status">Loading 3D models…</div>
 
   <!-- Minimal top bar -->
   <div class="top-brand">
-    <span class="dot"></span>
+    <span class="dot" id="brand-dot"></span>
     <span>PUSHNOT</span>
   </div>
   <button class="btn-fs" id="btn-fullscreen" title="Fullscreen">⛶</button>
 
-  <!-- Minimal in-world station labels -->
-  <div class="pin pin-node" id="pin-phone">PHONE</div>
-  <div class="pin pin-node" id="pin-server">SERVER</div>
-  <div class="pin pin-node" id="pin-cloud">CLOUD · APNs / FCM</div>
+  <!-- Crisp polarity direction indicator -->
+  <div class="polarity-banner" id="polarity-banner">
+    <span class="pol-arrow" id="pol-arrow">↺</span>
+    <span class="pol-label" id="pol-label">SETUP FLOW</span>
+    <span class="pol-route" id="pol-route">App Store → Phone → Post Office → Server</span>
+  </div>
 
-  <!-- Single active contextual callout (only one shown at a time) -->
-  <div class="pin pin-event" id="pin-install">
+  <!-- Minimal 4-station labels -->
+  <div class="pin pin-node" id="pin-store">APP STORE</div>
+  <div class="pin pin-node" id="pin-phone">PHONE</div>
+  <div class="pin pin-node" id="pin-post">POST OFFICE · APNs/FCM</div>
+  <div class="pin pin-node" id="pin-server">APP SERVER</div>
+
+  <!-- Single active contextual callout -->
+  <div class="pin pin-event cyan" id="pin-install">
     <span class="app-tile">M</span>
     <div>
       <div class="ev-title">MyApp Installed</div>
-      <div class="ev-sub">Requests push address</div>
+      <div class="ev-sub">Downloaded from App Store</div>
     </div>
   </div>
 
   <div class="pin pin-event amber" id="pin-token">
     <span class="ev-ico">🔑</span>
     <div>
-      <div class="ev-title">Device Token</div>
+      <div class="ev-title">Token Minted</div>
       <div class="ev-sub">apns:7f4a…e891</div>
     </div>
   </div>
 
-  <div class="pin pin-event cyan" id="pin-saved">
+  <div class="pin pin-event amber" id="pin-saved">
     <span class="ev-ico">✓</span>
     <div>
-      <div class="ev-title">Token Registered</div>
-      <div class="ev-sub">Linked to user account</div>
+      <div class="ev-title">Address Saved</div>
+      <div class="ev-sub">Server stores user → token</div>
     </div>
   </div>
 
@@ -60,26 +68,28 @@
     <span class="ev-ico">📦</span>
     <div>
       <div class="ev-title">Order Shipped</div>
-      <div class="ev-sub">MyApp · Push delivered</div>
+      <div class="ev-sub">MyApp · Delivered to Phone</div>
     </div>
   </div>
 
   <!-- Moving packet pill -->
   <div class="pin pin-mover" id="pin-mover"></div>
 
-  <!-- Ultra-clean bottom orbit dock -->
+  <!-- Ultra-clean bottom dock with Polarity Switch -->
   <nav class="orbit-dock">
-    <div class="steps">
-      <button class="step active" data-step="0"><span>1</span> Install App</button>
-      <button class="step" data-step="1"><span>2</span> Create Token</button>
-      <button class="step" data-step="2"><span>3</span> Save to Server</button>
-      <button class="step" data-step="3"><span>4</span> Cloud → Push</button>
+    <div class="polarity-switch" role="group" aria-label="Flow Polarity">
+      <button class="pol-btn active setup" id="mode-setup" data-mode="setup">
+        <span class="pol-sym">↺</span> Mode 1 · Install &amp; Token Setup
+      </button>
+      <button class="pol-flip" id="btn-flip" title="Flip Polarity (Tab)">⇄</button>
+      <button class="pol-btn push" id="mode-push" data-mode="push">
+        <span class="pol-sym">↻</span> Mode 2 · Push Delivery
+      </button>
     </div>
+
     <div class="controls">
-      <button class="ctl" id="btn-prev" title="Previous">◀</button>
-      <button class="ctl play" id="btn-play" title="Play / Pause">▶</button>
+      <button class="ctl play" id="btn-play" title="Play / Pause (Space)">▶</button>
       <input type="range" id="scrub" min="0" max="1000" value="0" />
-      <button class="ctl" id="btn-next" title="Next">▶▶</button>
       <button class="ctl orbit-toggle on" id="btn-orbit" title="Auto-orbit camera">⟳ Orbit</button>
     </div>
   </nav>

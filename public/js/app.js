@@ -1,71 +1,81 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 /* =====================================================================
-   PUSHNOT // Clean 3D Orbit
-   Single continuous 0..1 timeline across 4 uncluttered beats:
-     0.00–0.20  1. Install App on Phone
-     0.20–0.45  2. Cloud creates Token -> Phone
-     0.45–0.70  3. Phone registers Token -> Server
-     0.70–1.00  4. Server -> Cloud -> Push Notification -> Phone
+   PUSHNOT // 4-Station 3D Orbit with Polarity Switch
+   Stations around ring (R = 46):
+     App Store (UFO)          : back-right   (+32, 0, -32)
+     Phone (Smartphone)       : front-right  (+32, 0, +32)
+     App Server (Server Rack) : front-left   (-32, 0, +32)
+     Post Office (Post Box)   : back-left    (-32, 0, -32)
+
+   Two Polarity Modes (reverses orbital flow & purpose):
+     'setup' (↺): App Store -> Phone -> Post Office -> App Server
+     'push'  (↻): App Server -> Post Office -> Phone
    ===================================================================== */
 
-const R = 42; // orbit radius
+const R = 46;
+const D = Math.SQRT1_2 * R; // ~32.5
 const POS = {
-  phone:  new THREE.Vector3( Math.cos(Math.PI / 6) * R, 0,  Math.sin(Math.PI / 6) * R), // front-right
-  server: new THREE.Vector3(-Math.cos(Math.PI / 6) * R, 0,  Math.sin(Math.PI / 6) * R), // front-left
-  cloud:  new THREE.Vector3(0, 22, -R)                                                   // back-top
+  store:  new THREE.Vector3( D, 0, -D), // UFO (App Store Gateway)
+  phone:  new THREE.Vector3( D, 0,  D), // Smartphone
+  server: new THREE.Vector3(-D, 0,  D), // Server Rack
+  post:   new THREE.Vector3(-D, 0, -D)  // Edward VII Post Box (APNs/FCM)
 };
 
-const STEP_STOPS = [0.08, 0.34, 0.58, 0.88]; // click jumps to middle/peak of each beat
-const LOOP_SECONDS = 14;
-
+const MODE_SECONDS = { setup: 11, push: 8 };
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
 
 class PushnotOrbit {
   constructor() {
     this.container = document.getElementById('canvas-container');
-    this.loader = new GLTFLoader();
 
-    this.t = 0.08;
-    this.playing = false;
+    this.loader = new GLTFLoader();
+    const draco = new DRACOLoader();
+    draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
+    this.loader.setDRACOLoader(draco);
+
+    this.mode = 'setup'; // 'setup' | 'push'
+    this.t = 0.0;
+    this.playing = true;
     this.autoOrbit = true;
-    this.orbitAngle = 0.25;
+    this.orbitAngle = 0.35;
     this.lastFrame = performance.now();
-    this.tops = { phone: 30, server: 36 };
+    this.tops = { phone: 30, server: 36, post: 32, store: 34 };
 
     this.initScene();
     this.initLights();
     this.initOrbitRing();
-    this.initCloud();
     this.initMovers();
     this.loadModels();
     this.initUI();
+    this.setMode('setup', false);
     this.animate();
   }
 
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x05080f, 0.0038);
+    this.scene.fog = new THREE.FogExp2(0x05080f, 0.0032);
 
     this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
-    this.camera.position.set(28, 48, 118);
+    this.camera.position.set(42, 56, 128);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.3;
+    this.renderer.toneMappingExposure = 1.45;
     this.container.appendChild(this.renderer.domElement);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.target.set(0, 14, 0);
-    this.controls.minDistance = 45;
-    this.controls.maxDistance = 240;
+    this.controls.minDistance = 50;
+    this.controls.maxDistance = 260;
     this.controls.maxPolarAngle = Math.PI * 0.48;
     this.controls.addEventListener('start', () => {
       if (this.autoOrbit) this.setAutoOrbit(false);
@@ -79,55 +89,70 @@ class PushnotOrbit {
   }
 
   initLights() {
-    this.scene.add(new THREE.AmbientLight(0xdbeafe, 1.1));
-    const key = new THREE.DirectionalLight(0x38bdf8, 2.2); key.position.set(60, 110, 70); this.scene.add(key);
-    const warm = new THREE.DirectionalLight(0xfbbf24, 1.4); warm.position.set(-70, 80, -40); this.scene.add(warm);
-    const rim = new THREE.DirectionalLight(0x34d399, 1.2); rim.position.set(0, 40, -90); this.scene.add(rim);
+    this.scene.add(new THREE.AmbientLight(0xeef6ff, 1.5));
+    const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(60, 130, 80); this.scene.add(key);
+    const fill = new THREE.DirectionalLight(0x38bdf8, 1.4); fill.position.set(-80, 90, -50); this.scene.add(fill);
+    const warm = new THREE.DirectionalLight(0xfbbf24, 1.1); warm.position.set(0, 50, -110); this.scene.add(warm);
   }
 
   initOrbitRing() {
-    // Ground orbital ring
-    const ringGeo = new THREE.TorusGeometry(R, 0.18, 12, 128);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.28 });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
+    // Main luminous orbit ring (color shifts with polarity)
+    this.ringMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.32 });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 12, 128), this.ringMat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.15;
     this.scene.add(ring);
 
-    // Subtle outer halo ring
+    // Subtle outer halo
     const outer = new THREE.Mesh(
-      new THREE.TorusGeometry(R + 10, 0.08, 8, 128),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.1 })
+      new THREE.TorusGeometry(R + 11, 0.08, 8, 128),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.12 })
     );
     outer.rotation.x = Math.PI / 2;
     outer.position.y = 0.1;
     this.scene.add(outer);
 
-    // Orbital arcs connecting Phone, Cloud, Server
+    // Polarity flow beads orbiting the ring to show flow direction visually
+    this.flowBeads = [];
+    this.beadMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const beadGeo = new THREE.ConeGeometry(0.9, 2.6, 8);
+    beadGeo.rotateX(Math.PI / 2);
+    for (let i = 0; i < 12; i++) {
+      const m = new THREE.Mesh(beadGeo, this.beadMat);
+      this.scene.add(m);
+      this.flowBeads.push({ mesh: m, baseAngle: (i / 12) * Math.PI * 2 });
+    }
+
+    // Elevated arcs between stations
+    const pStore  = POS.store.clone().setY(22);
     const pPhone  = POS.phone.clone().setY(16);
+    const pPost   = POS.post.clone().setY(18);
     const pServer = POS.server.clone().setY(18);
-    const pCloud  = POS.cloud.clone();
 
-    this.arcCloudToPhone = new THREE.QuadraticBezierCurve3(
-      pCloud, new THREE.Vector3(36, 30, -14), pPhone
-    );
-    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(
-      pPhone, new THREE.Vector3(0, 10, R + 10), pServer
-    );
-    this.arcServerToCloud = new THREE.QuadraticBezierCurve3(
-      pServer, new THREE.Vector3(-36, 30, -14), pCloud
-    );
+    // Setup arcs (Mode 1)
+    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pStore,  new THREE.Vector3(R + 10, 28, 0),  pPhone);
+    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(0, 32, 0),       pPhone);
+    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 12, R + 12),  pServer);
 
-    this.addArc(this.arcCloudToPhone, 0x34d399, 0.35);
-    this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.35);
-    this.addArc(this.arcServerToCloud, 0x38bdf8, 0.35);
+    // Push arcs (Mode 2)
+    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-R - 10, 28, 0), pPost);
 
-    // Subtle floating starfield
+    this.setupLines = [
+      this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4),
+      this.addArc(this.arcPostToPhone,   0xfbbf24, 0.35),
+      this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.4)
+    ];
+    this.pushLines = [
+      this.addArc(this.arcServerToPost, 0x34d399, 0.45),
+      this.addArc(this.arcPostToPhone,  0x34d399, 0.45)
+    ];
+
+    // Starfield
     const pts = [];
     for (let i = 0; i < 240; i++) {
       const a = Math.random() * Math.PI * 2;
-      const rad = 55 + Math.random() * 140;
-      pts.push(Math.cos(a) * rad, -10 + Math.random() * 90, Math.sin(a) * rad);
+      const rad = 60 + Math.random() * 140;
+      pts.push(Math.cos(a) * rad, -10 + Math.random() * 95, Math.sin(a) * rad);
     }
     const starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
@@ -144,51 +169,29 @@ class PushnotOrbit {
     const line = new THREE.Line(geo, mat);
     line.computeLineDistances();
     this.scene.add(line);
-  }
-
-  initCloud() {
-    this.cloud = new THREE.Group();
-    this.cloud.position.copy(POS.cloud);
-
-    const core = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(5.5, 2),
-      new THREE.MeshStandardMaterial({
-        color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.7,
-        wireframe: true
-      })
-    );
-    const inner = new THREE.Mesh(
-      new THREE.SphereGeometry(2.6, 24, 24),
-      new THREE.MeshBasicMaterial({ color: 0xe0f2fe })
-    );
-    const orbit1 = new THREE.Mesh(
-      new THREE.TorusGeometry(8.5, 0.18, 10, 64),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 })
-    );
-    orbit1.rotation.x = Math.PI / 3;
-    const orbit2 = new THREE.Mesh(
-      new THREE.TorusGeometry(10.5, 0.12, 10, 64),
-      new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.45 })
-    );
-    orbit2.rotation.y = Math.PI / 3;
-
-    this.cloud.add(core, inner, orbit1, orbit2, new THREE.PointLight(0x38bdf8, 3, 45));
-    this.cloudOrbit1 = orbit1;
-    this.cloudOrbit2 = orbit2;
-    this.scene.add(this.cloud);
+    return line;
   }
 
   initMovers() {
-    // Token orb (amber)
+    // App install cube (cyan)
+    this.appOrb = new THREE.Group();
+    this.appOrb.add(new THREE.Mesh(
+      new THREE.BoxGeometry(2.8, 2.8, 2.8),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.2 })
+    ));
+    this.appOrb.add(new THREE.PointLight(0x38bdf8, 3, 28));
+    this.scene.add(this.appOrb);
+
+    // Token octahedron (amber)
     this.tokenOrb = new THREE.Group();
     this.tokenOrb.add(new THREE.Mesh(
-      new THREE.OctahedronGeometry(2.2),
+      new THREE.OctahedronGeometry(2.3),
       new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xd97706, emissiveIntensity: 0.9, metalness: 0.7, roughness: 0.2 })
     ));
     this.tokenOrb.add(new THREE.PointLight(0xfbbf24, 3, 28));
     this.scene.add(this.tokenOrb);
 
-    // Push notification capsule (emerald)
+    // Push envelope slab (emerald)
     this.pushOrb = new THREE.Group();
     const box = new THREE.Mesh(
       new THREE.BoxGeometry(4.4, 2.8, 0.7),
@@ -198,37 +201,68 @@ class PushnotOrbit {
     this.pushOrb.add(new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0xffffff })));
     this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
     this.scene.add(this.pushOrb);
-
-    // Install pulse ring around phone
-    this.installRing = new THREE.Mesh(
-      new THREE.TorusGeometry(11, 0.25, 10, 64),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 })
-    );
-    this.installRing.rotation.x = Math.PI / 2;
-    this.installRing.position.set(POS.phone.x, 1, POS.phone.z);
-    this.scene.add(this.installRing);
   }
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 2;
-    const done = () => { if (--left === 0) status.style.display = 'none'; };
+    let left = 4;
+    const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
+    // 1. Server Rack (front-left)
     this.loader.load('models/data_center_rack.glb', (gltf) => {
       const rack = gltf.scene;
-      rack.rotation.y = Math.PI / 3;
-      this.tops.server = this.ground(rack, 36, POS.server);
+      rack.rotation.y = Math.PI * 0.25;
+      this.tops.server = this.ground(rack, 34, POS.server);
       this.scene.add(rack);
       done();
     }, undefined, done);
 
+    // 2. Smartphone (front-right)
     this.loader.load('models/generic_smartphone_game-ready.glb', (gltf) => {
       const phone = gltf.scene;
-      phone.rotation.y = -Math.PI / 3;
-      this.tops.phone = this.ground(phone, 30, POS.phone);
+      phone.rotation.y = -Math.PI * 0.25;
+      this.tops.phone = this.ground(phone, 28, POS.phone);
       this.scene.add(phone);
       done();
     }, undefined, done);
+
+    // 3. Edward VII Post Box — APNs/FCM (back-left)
+    this.loader.load('models/postbox.glb', (gltf) => {
+      const post = gltf.scene;
+      post.rotation.y = Math.PI * 0.25;
+      this.tops.post = this.ground(post, 32, POS.post);
+      this.scene.add(post);
+      done();
+    }, undefined, done);
+
+    // 4. UFO — App Store Gateway (back-right)
+    this.loader.load('models/ufo.glb', (gltf) => {
+      this.ufoGroup = new THREE.Group();
+      const ufo = gltf.scene;
+      this.centerAndScale(ufo, 32);
+      this.ufoGroup.add(ufo);
+
+      const beam = new THREE.Mesh(
+        new THREE.ConeGeometry(10, 20, 32, 1, true),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.14, side: THREE.DoubleSide })
+      );
+      beam.position.y = -11;
+      this.ufoGroup.add(beam);
+
+      this.ufoGroup.position.set(POS.store.x, 22, POS.store.z);
+      this.tops.store = 33;
+      this.scene.add(this.ufoGroup);
+      done();
+    }, undefined, done);
+  }
+
+  centerAndScale(obj, size) {
+    let box = new THREE.Box3().setFromObject(obj);
+    const dim = box.getSize(new THREE.Vector3());
+    obj.scale.setScalar(size / Math.max(dim.x, dim.y, dim.z));
+    box = new THREE.Box3().setFromObject(obj);
+    const c = box.getCenter(new THREE.Vector3());
+    obj.position.sub(c);
   }
 
   ground(obj, size, at) {
@@ -241,40 +275,55 @@ class PushnotOrbit {
     return new THREE.Box3().setFromObject(obj).max.y;
   }
 
-  /* ---------------- UI ---------------- */
+  /* ---------------- Polarity Mode Switch ---------------- */
+  setMode(mode, resetT = true) {
+    this.mode = mode;
+    if (resetT) this.t = 0;
+
+    const isPush = mode === 'push';
+
+    // Update 3D ring & arcs polarity color/visibility
+    const color = isPush ? 0x34d399 : 0xfbbf24;
+    this.ringMat.color.setHex(color);
+    this.beadMat.color.setHex(color);
+    this.setupLines.forEach((l) => (l.visible = !isPush));
+    this.pushLines.forEach((l) => (l.visible = isPush));
+
+    // Update HUD polarity chrome
+    document.getElementById('mode-setup').classList.toggle('active', !isPush);
+    document.getElementById('mode-push').classList.toggle('active', isPush);
+    document.getElementById('brand-dot').classList.toggle('push', isPush);
+    document.getElementById('btn-play').classList.toggle('push', isPush);
+    document.getElementById('scrub').classList.toggle('push', isPush);
+
+    const banner = document.getElementById('polarity-banner');
+    banner.classList.toggle('push', isPush);
+    document.getElementById('pol-arrow').textContent = isPush ? '↻' : '↺';
+    document.getElementById('pol-label').textContent = isPush ? 'PUSH DELIVERY' : 'INSTALL & SETUP';
+    document.getElementById('pol-route').textContent = isPush
+      ? 'App Server → Post Office → Phone'
+      : 'App Store → Phone → Post Office → App Server';
+  }
+
   setAutoOrbit(on) {
     this.autoOrbit = on;
-    const b = document.getElementById('btn-orbit');
-    b.classList.toggle('on', on);
-  }
-
-  activeStepIndex() {
-    if (this.t < 0.20) return 0;
-    if (this.t < 0.45) return 1;
-    if (this.t < 0.70) return 2;
-    return 3;
-  }
-
-  jumpToStep(idx) {
-    const i = (idx + 4) % 4;
-    this.playing = false;
-    this.t = STEP_STOPS[i];
+    document.getElementById('btn-orbit').classList.toggle('on', on);
   }
 
   initUI() {
-    document.querySelectorAll('.step').forEach((btn) => {
-      btn.addEventListener('click', () => this.jumpToStep(parseInt(btn.dataset.step, 10)));
+    document.getElementById('mode-setup').addEventListener('click', () => this.setMode('setup'));
+    document.getElementById('mode-push').addEventListener('click', () => this.setMode('push'));
+    document.getElementById('btn-flip').addEventListener('click', () => {
+      this.setMode(this.mode === 'setup' ? 'push' : 'setup');
     });
+
     document.getElementById('scrub').addEventListener('input', (e) => {
       this.playing = false;
       this.t = parseInt(e.target.value, 10) / 1000;
     });
     document.getElementById('btn-play').addEventListener('click', () => {
       this.playing = !this.playing;
-      if (this.playing && this.t >= 0.99) this.t = 0;
     });
-    document.getElementById('btn-prev').addEventListener('click', () => this.jumpToStep(this.activeStepIndex() - 1));
-    document.getElementById('btn-next').addEventListener('click', () => this.jumpToStep(this.activeStepIndex() + 1));
     document.getElementById('btn-orbit').addEventListener('click', () => this.setAutoOrbit(!this.autoOrbit));
     document.getElementById('btn-fullscreen').addEventListener('click', () => {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
@@ -284,79 +333,105 @@ class PushnotOrbit {
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if (e.code === 'Space') { e.preventDefault(); this.playing = !this.playing; }
-      else if (e.key === 'ArrowRight') this.jumpToStep(this.activeStepIndex() + 1);
-      else if (e.key === 'ArrowLeft') this.jumpToStep(this.activeStepIndex() - 1);
-      else if (e.key >= '1' && e.key <= '4') this.jumpToStep(parseInt(e.key, 10) - 1);
+      else if (e.key === 'Tab') { e.preventDefault(); this.setMode(this.mode === 'setup' ? 'push' : 'setup'); }
+      else if (e.key === '1') this.setMode('setup');
+      else if (e.key === '2') this.setMode('push');
     });
   }
 
-  /* ---------------- render state from t ---------------- */
-  updateState(now) {
+  /* ---------------- render state from (mode, t) ---------------- */
+  updateState() {
     const t = this.t;
-    const step = this.activeStepIndex();
-
-    // Update dock UI
     document.getElementById('scrub').value = Math.round(t * 1000);
     document.getElementById('btn-play').textContent = this.playing ? '❚❚' : '▶';
-    document.querySelectorAll('.step').forEach((el, i) => el.classList.toggle('active', i === step));
 
-    // 1. Install pulse (0.00 - 0.20)
-    const isInstall = t < 0.20;
-    this.installRing.visible = isInstall;
-    if (isInstall) {
-      const pulse = 1 + Math.sin(now * 0.005) * 0.14;
-      this.installRing.scale.setScalar(pulse);
-    }
-
-    // 2. Token orb: Cloud -> Phone (0.20 - 0.42), then Phone -> Server (0.45 - 0.68)
-    let moverPos = null;
-    let moverText = '';
-    let moverPush = false;
-
+    this.appOrb.visible = false;
     this.tokenOrb.visible = false;
     this.pushOrb.visible = false;
 
-    if (t >= 0.20 && t < 0.43) {
-      const p = this.arcCloudToPhone.getPoint(seg(t, 0.20, 0.42));
-      this.tokenOrb.visible = true;
-      this.tokenOrb.position.copy(p);
-      moverPos = p;
-      moverText = '🔑 New Device Token';
-    } else if (t >= 0.45 && t < 0.68) {
-      const p = this.arcPhoneToServer.getPoint(seg(t, 0.45, 0.67));
-      this.tokenOrb.visible = true;
-      this.tokenOrb.position.copy(p);
-      moverPos = p;
-      moverText = '🔑 Register Token';
-    } else if (t >= 0.70 && t < 0.96) {
-      // Server -> Cloud (0.70 - 0.82), Cloud -> Phone (0.82 - 0.95)
-      const p = t < 0.82
-        ? this.arcServerToCloud.getPoint(seg(t, 0.70, 0.82))
-        : this.arcCloudToPhone.getPoint(seg(t, 0.82, 0.95));
-      this.pushOrb.visible = true;
-      this.pushOrb.position.copy(p);
-      moverPos = p;
-      moverText = t < 0.82 ? '✉ Send to Cloud' : '✉ Push to Phone';
-      moverPush = true;
+    let moverPos = null;
+    let moverText = '';
+    let moverCls = '';
+
+    let showInstall = false;
+    let showToken = false;
+    let showSaved = false;
+    let showPush = false;
+
+    if (this.mode === 'setup') {
+      // 0.00–0.28: App Store -> Phone (Install MyApp)
+      // 0.28–0.38: Installed callout
+      // 0.38–0.62: Post Office -> Phone (Mint Device Token)
+      // 0.62–0.70: Token callout
+      // 0.70–0.92: Phone -> App Server (Register Token)
+      // 0.92–1.00: Saved callout
+      if (t < 0.28) {
+        const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.28));
+        this.appOrb.visible = true;
+        this.appOrb.position.copy(p);
+        moverPos = p;
+        moverText = '⬇ Installing MyApp';
+        moverCls = 'cyan';
+      } else if (t < 0.38) {
+        showInstall = true;
+      } else if (t < 0.62) {
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.38, 0.62));
+        this.tokenOrb.visible = true;
+        this.tokenOrb.position.copy(p);
+        moverPos = p;
+        moverText = '🔑 Mint Device Token';
+      } else if (t < 0.70) {
+        showToken = true;
+      } else if (t < 0.92) {
+        const p = this.arcPhoneToServer.getPoint(seg(t, 0.70, 0.92));
+        this.tokenOrb.visible = true;
+        this.tokenOrb.position.copy(p);
+        moverPos = p;
+        moverText = '🔑 Register to Server';
+      } else {
+        showSaved = true;
+      }
+    } else {
+      // PUSH DELIVERY MODE (reversed polarity!)
+      // 0.00–0.42: App Server -> Post Office (Send Payload + Token)
+      // 0.42–0.84: Post Office -> Phone (Deliver Push Notification)
+      // 0.84–1.00: Phone displays Order Shipped banner
+      if (t < 0.42) {
+        const p = this.arcServerToPost.getPoint(seg(t, 0, 0.42));
+        this.pushOrb.visible = true;
+        this.pushOrb.position.copy(p);
+        moverPos = p;
+        moverText = '✉ Payload + Token → Post Office';
+        moverCls = 'push';
+      } else if (t < 0.84) {
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.42, 0.84));
+        this.pushOrb.visible = true;
+        this.pushOrb.position.copy(p);
+        moverPos = p;
+        moverText = '✉ Delivering Push → Phone';
+        moverCls = 'push';
+      } else {
+        showPush = true;
+      }
     }
 
-    // Project clean station tags
+    // Station labels
+    this.place('pin-store',  new THREE.Vector3(POS.store.x,  this.tops.store + 2, POS.store.z), true);
+    this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2,  POS.post.z),  true);
     this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8),  true);
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), true);
-    this.place('pin-cloud',  new THREE.Vector3(POS.cloud.x, POS.cloud.y + 11, POS.cloud.z), true);
 
-    // Project ONLY the single relevant contextual card for the current beat
-    const phoneCardPos  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 4,  POS.phone.z);
-    const serverCardPos = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
-
-    this.place('pin-install', phoneCardPos,  t < 0.20);
-    this.place('pin-token',   phoneCardPos,  t >= 0.40 && t < 0.50);
-    this.place('pin-saved',   serverCardPos, t >= 0.65 && t < 0.74);
-    this.place('pin-push',    phoneCardPos,  t >= 0.93);
+    // Contextual callouts (at most 1 visible at any instant)
+    const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 4,  POS.phone.z);
+    const serverTop = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
+    this.place('pin-install', phoneTop,  showInstall);
+    this.place('pin-token',   phoneTop,  showToken);
+    this.place('pin-saved',   serverTop, showSaved);
+    this.place('pin-push',    phoneTop,  showPush);
 
     const mv = document.getElementById('pin-mover');
+    mv.className = 'pin pin-mover' + (moverCls ? ' ' + moverCls : '');
     mv.textContent = moverText;
-    mv.classList.toggle('push', moverPush);
     this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.2, 0)) : null, !!moverPos);
   }
 
@@ -369,7 +444,7 @@ class PushnotOrbit {
     el.style.display = 'flex';
     const w = el.offsetWidth || 120;
     const x = Math.max(w / 2 + 16, Math.min(innerWidth - w / 2 - 16, (p.x * 0.5 + 0.5) * innerWidth));
-    const y = Math.max(76, Math.min(innerHeight - 132, (-p.y * 0.5 + 0.5) * innerHeight));
+    const y = Math.max(76, Math.min(innerHeight - 134, (-p.y * 0.5 + 0.5) * innerHeight));
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
   }
@@ -381,29 +456,45 @@ class PushnotOrbit {
     this.lastFrame = now;
 
     if (this.playing) {
-      this.t = (this.t + dt / LOOP_SECONDS) % 1;
+      this.t = (this.t + dt / MODE_SECONDS[this.mode]) % 1;
     }
 
     if (this.autoOrbit) {
-      this.orbitAngle += dt * 0.14;
-      const camR = 116;
+      this.orbitAngle += dt * 0.12;
+      const camR = 132;
       this.camera.position.set(
         Math.sin(this.orbitAngle) * camR,
-        46 + Math.sin(this.orbitAngle * 0.7) * 6,
+        54 + Math.sin(this.orbitAngle * 0.7) * 6,
         Math.cos(this.orbitAngle) * camR
       );
       this.controls.target.set(0, 14, 0);
     }
 
-    this.cloud.rotation.y += dt * 0.5;
-    this.cloudOrbit1.rotation.z += dt * 0.8;
-    this.cloudOrbit2.rotation.x += dt * 0.6;
-    this.tokenOrb.rotation.y += dt * 2.4;
+    // Animate directional polarity cones around the orbit ring!
+    // setup = clockwise/negative, push = reversed!
+    const dir = this.mode === 'setup' ? 1 : -1;
+    const phase = now * 0.00055 * dir;
+    for (const b of this.flowBeads) {
+      const a = b.baseAngle + phase;
+      b.mesh.position.set(Math.cos(a) * R, 0.4, Math.sin(a) * R);
+      // Tangent heading along the ring in the flow direction
+      const nextA = a + 0.05 * dir;
+      b.mesh.lookAt(Math.cos(nextA) * R, 0.4, Math.sin(nextA) * R);
+    }
+
+    if (this.ufoGroup) {
+      this.ufoGroup.rotation.y += dt * 0.65;
+      this.ufoGroup.position.y = 22 + Math.sin(now * 0.0025) * 1.6;
+    }
+
+    this.appOrb.rotation.y += dt * 2.0;
+    this.appOrb.rotation.x += dt * 1.2;
+    this.tokenOrb.rotation.y += dt * 2.5;
     this.pushOrb.rotation.y = Math.sin(now * 0.003) * 0.35;
-    this.stars.rotation.y += dt * 0.02;
+    this.stars.rotation.y += dt * 0.015;
 
     this.controls.update();
-    this.updateState(now);
+    this.updateState();
     this.renderer.render(this.scene, this.camera);
   }
 }

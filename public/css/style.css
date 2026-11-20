@@ -45,23 +45,34 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 
 /* ---------- caption ---------- */
 .stage-caption {
-  position: absolute; top: 80px; left: 50%; transform: translateX(-50%); z-index: 10;
-  display: flex; align-items: center; gap: 12px; max-width: 80vw;
-  padding: 9px 20px; border-radius: 22px; background: rgba(8,12,18,.92); border: 1px solid var(--border);
+  position: absolute; top: 74px; left: 50%; transform: translateX(-50%); z-index: 12;
+  display: flex; align-items: center; gap: 10px; max-width: 82vw;
+  padding: 7px 18px; border-radius: 20px; background: rgba(8,12,18,.94); border: 1px solid var(--border);
   box-shadow: 0 4px 20px rgba(0,0,0,.5);
 }
-.cap-stage { font-family: var(--mono); font-size: .75rem; font-weight: 800; color: var(--bg); background: var(--cyan); padding: 3px 10px; border-radius: 12px; white-space: nowrap; }
-.cap-text { font-size: 1.15rem; font-weight: 600; letter-spacing: .3px; }
+.cap-stage { font-family: var(--mono); font-size: .72rem; font-weight: 800; color: var(--bg); background: var(--cyan); padding: 3px 9px; border-radius: 12px; white-space: nowrap; }
+.cap-text { font-size: 1.05rem; font-weight: 600; letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-/* ---------- backend log ---------- */
-.server-log {
-  position: absolute; top: 80px; left: 20px; width: 400px; z-index: 9;
-  background: var(--panel); border: 1px solid var(--border); border-radius: 8px; backdrop-filter: blur(14px);
-  font-family: var(--mono); font-size: .72rem;
+/* ---------- unified backend HUD (DB + log, docked top-left) ---------- */
+.backend-hud {
+  position: absolute; top: 120px; left: 18px; width: 356px; z-index: 9;
+  display: flex; flex-direction: column; padding: 9px 11px; border-radius: 8px;
+  background: rgba(8,14,22,.92); border: 1px solid var(--cyan); box-shadow: 0 0 24px rgba(0,240,255,.22);
+  backdrop-filter: blur(14px); font-family: var(--mono); font-size: .66rem;
 }
-.log-head { padding: 8px 12px; color: var(--cyan); letter-spacing: 2px; font-weight: 800; border-bottom: 1px solid rgba(255,255,255,.08); }
-.log-body { padding: 8px 12px; display: flex; flex-direction: column; gap: 5px; min-height: 40px; }
-.log-body div { color: var(--text); word-break: break-all; }
+.db-head { display: flex; justify-content: space-between; color: var(--cyan); font-weight: 800; letter-spacing: 1px; margin-bottom: 5px; }
+.db-head .live { color: var(--green); }
+.backend-hud table { width: 100%; border-collapse: collapse; margin-bottom: 7px; }
+.backend-hud th { color: var(--muted); font-size: .6rem; text-align: left; padding: 2px 3px; border-bottom: 1px solid rgba(255,255,255,.12); }
+.backend-hud td { padding: 3px; border-bottom: 1px solid rgba(255,255,255,.05); }
+.backend-hud td.st { color: var(--green); font-weight: 700; }
+.backend-hud tr.fresh { background: rgba(255,170,0,.16); animation: rowIn .5s ease; }
+.backend-hud tr.target { background: rgba(0,240,255,.18); outline: 1px solid var(--cyan); }
+.backend-hud tr.retired td { color: var(--pink); text-decoration: line-through; opacity: .75; }
+.backend-hud tr.retired td.st { text-decoration: none; }
+.log-head { padding: 5px 0 3px; color: var(--cyan); letter-spacing: 2px; font-weight: 800; font-size: .62rem; border-top: 1px solid rgba(255,255,255,.1); }
+.log-body { display: flex; flex-direction: column; gap: 3px; min-height: 24px; max-height: 82px; overflow-y: auto; }
+.log-body div { color: var(--text); word-break: break-word; line-height: 1.3; }
 .log-body .ok { color: var(--green); }
 .log-body .bad { color: var(--pink); }
 .log-body .dim { color: var(--muted); }
@@ -84,21 +95,6 @@ html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg);
 .holo-card.app2 { border-color: var(--purple); box-shadow: 0 0 18px rgba(176,38,255,.35); }
 .holo-card.app2 .badge { color: var(--purple); }
 
-.db-panel {
-  flex-direction: column; width: 400px; padding: 10px 12px; border-radius: 8px;
-  background: rgba(8,14,22,.94); border: 1px solid var(--cyan); box-shadow: 0 0 28px rgba(0,240,255,.3);
-  font-family: var(--mono); font-size: .7rem;
-}
-.db-head { display: flex; justify-content: space-between; color: var(--cyan); font-weight: 800; letter-spacing: 1px; margin-bottom: 6px; }
-.db-head .live { color: var(--green); }
-.db-panel table { width: 100%; border-collapse: collapse; }
-.db-panel th { color: var(--muted); font-size: .64rem; text-align: left; padding: 3px 4px; border-bottom: 1px solid rgba(255,255,255,.12); }
-.db-panel td { padding: 4px; border-bottom: 1px solid rgba(255,255,255,.05); }
-.db-panel td.st { color: var(--green); font-weight: 700; }
-.db-panel tr.fresh { background: rgba(255,170,0,.16); animation: rowIn .5s ease; }
-.db-panel tr.target { background: rgba(0,240,255,.18); outline: 1px solid var(--cyan); }
-.db-panel tr.retired td { color: var(--pink); text-decoration: line-through; opacity: .75; }
-.db-panel tr.retired td.st { text-decoration: none; }
 @keyframes rowIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
 
 .lbl {

@@ -32,14 +32,6 @@
     <div class="val">apns:3c88…10f2</div>
   </div>
 
-  <div class="holo db-panel" id="db-panel">
-    <div class="db-head"><span>MyApp BACKEND · installations</span><span class="live">● LIVE</span></div>
-    <table>
-      <thead><tr><th>ACCOUNT</th><th>DEVICE</th><th>TOKEN</th><th>STATUS</th></tr></thead>
-      <tbody id="db-body"></tbody>
-    </table>
-  </div>
-
   <div class="holo lbl lbl-chip" id="lbl-chip"></div>
   <div class="holo lbl lbl-env" id="lbl-env"></div>
   <div class="holo lbl lbl-env" id="lbl-env2"></div>
@@ -55,8 +47,8 @@
   <div class="holo tag tag-server" id="tag-server">APP BACKEND</div>
   <div class="holo tag tag-phone" id="tag-phone">JOHN'S iPHONE</div>
   <div class="holo tag tag-phone" id="tag-ipad">JOHN'S iPAD</div>
-  <div class="holo tag tag-apns" id="tag-apns">APNs · APPLE PUSH</div>
-  <div class="holo tag tag-fcm" id="tag-fcm">FCM · GOOGLE (Android route)</div>
+  <div class="holo tag tag-apns" id="tag-apns">APNs · APPLE</div>
+  <div class="holo tag tag-fcm" id="tag-fcm">FCM · GOOGLE (Android)</div>
 
   <!-- ===== Header ===== -->
   <header class="speaker-header">
@@ -66,7 +58,7 @@
       <div class="brand-tag">HOW PUSH NOTIFICATIONS WORK</div>
     </div>
     <div class="cam-nav-group">
-      <button class="btn-cam" data-cam="wide">WIDE</button>
+      <button class="btn-cam active" data-cam="wide">WIDE</button>
       <button class="btn-cam" data-cam="phone">PHONE</button>
       <button class="btn-cam" data-cam="server">BACKEND</button>
       <button class="btn-cam" data-cam="gateway">GATEWAYS</button>
@@ -80,8 +72,13 @@
     <span class="cap-text" id="cap-text"></span>
   </div>
 
-  <!-- ===== Server log ===== -->
-  <aside class="server-log">
+  <!-- ===== Unified Backend HUD (DB + Log, docked top-left) ===== -->
+  <aside class="backend-hud" id="db-panel">
+    <div class="db-head"><span>MyApp BACKEND · installations</span><span class="live">● LIVE</span></div>
+    <table>
+      <thead><tr><th>ACCOUNT</th><th>DEVICE</th><th>TOKEN</th><th>STATUS</th></tr></thead>
+      <tbody id="db-body"></tbody>
+    </table>
     <div class="log-head">BACKEND LOG</div>
     <div class="log-body" id="log-body"></div>
   </aside>

@@ -12,8 +12,8 @@ const POS = {
   server: new THREE.Vector3(-48, 0, 0),
   phone: new THREE.Vector3(48, 0, 0),
   ipad: new THREE.Vector3(76, 0, -28),
-  apns: new THREE.Vector3(-9, 26, -10),
-  fcm: new THREE.Vector3(9, 26, -10)
+  apns: new THREE.Vector3(-13, 26, -8),
+  fcm: new THREE.Vector3(15, 19, -16)
 };
 
 const TOKEN_OLD = 'apns:7f4a…e891';
@@ -22,12 +22,12 @@ const TOKEN_IPAD = 'apns:b912…77d0';
 const TOKEN_FCM = 'fcm:eX98…001a';
 
 const STAGES = [
-  { label: '01 · MINT TOKEN',       cam: [48, 26, 52],  tgt: [44, 14, 0] },
-  { label: '02 · REGISTER',         cam: [0, 44, 96],   tgt: [0, 12, 0] },
-  { label: '03 · EVENT & LOOKUP',   cam: [-38, 34, 60], tgt: [-44, 16, 0] },
-  { label: '04 · SEND TO APNs',     cam: [-24, 42, 66], tgt: [-26, 20, -6] },
-  { label: '05 · DELIVER & DISPLAY',cam: [36, 34, 66],  tgt: [30, 16, -4] },
-  { label: '06 · REINSTALL & ROTATE', cam: [0, 60, 132], tgt: [0, 12, 0] }
+  { label: '01 · MINT TOKEN',         cam: [0, 56, 148],  tgt: [0, 12, 0] },
+  { label: '02 · REGISTER',           cam: [0, 52, 138],  tgt: [0, 12, 0] },
+  { label: '03 · EVENT & LOOKUP',     cam: [-18, 46, 110], tgt: [-22, 14, 0] },
+  { label: '04 · SEND TO APNs',       cam: [-16, 48, 114], tgt: [-18, 16, -4] },
+  { label: '05 · DELIVER & DISPLAY',  cam: [18, 46, 114],  tgt: [16, 14, -4] },
+  { label: '06 · REINSTALL & ROTATE', cam: [0, 58, 152],  tgt: [0, 12, 0] }
 ];
 const STAGE_SECONDS = [5, 5, 6, 5, 5, 10];
 
@@ -394,7 +394,7 @@ class PushnotSpeakerAid {
     this.place('card-phone', V(POS.phone.x, A.phoneTop + 3, POS.phone.z), true);
     this.place('card-app2', V(POS.phone.x + 14, A.phoneTop - 4, POS.phone.z), this.secondApp);
 
-    // Backend DB
+    // Backend DB + Log (docked cleanly top-left, never clipped or overlapping)
     const dbKey = JSON.stringify(st.rows);
     if (dbKey !== this.lastDbKey) {
       this.lastDbKey = dbKey;
@@ -402,9 +402,8 @@ class PushnotSpeakerAid {
         `<tr class="${r.cls}"><td>${r.acct}</td><td>${r.dev}</td><td>${r.tok}</td><td class="st">${r.status}</td></tr>`
       ).join('');
     }
-    this.place('db-panel', V(POS.server.x, A.serverTop + 2, POS.server.z), true);
 
-    // Server log (fixed HUD)
+    // Server log (stacked inside backend card)
     const logKey = st.log.join('|');
     if (logKey !== this.lastLogKey) {
       this.lastLogKey = logKey;
@@ -441,8 +440,8 @@ class PushnotSpeakerAid {
     this.place('tag-server', V(POS.server.x, -2, POS.server.z + 10), true);
     this.place('tag-phone', V(POS.phone.x, -2, POS.phone.z + 8), true);
     this.place('tag-ipad', V(POS.ipad.x, -2, POS.ipad.z + 8), this.fanout);
-    this.place('tag-apns', V(POS.apns.x, POS.apns.y + 10, POS.apns.z), true);
-    this.place('tag-fcm', V(POS.fcm.x, POS.fcm.y + 9, POS.fcm.z), true);
+    this.place('tag-apns', V(POS.apns.x, POS.apns.y + 9, POS.apns.z), true);
+    this.place('tag-fcm', V(POS.fcm.x, POS.fcm.y - 7, POS.fcm.z), true);
   }
 
   place(id, worldPos, show) {
@@ -452,8 +451,13 @@ class PushnotSpeakerAid {
     const p = worldPos.clone().project(this.camera);
     if (p.z > 1 || p.z < -1) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
-    el.style.left = `${(p.x * 0.5 + 0.5) * innerWidth}px`;
-    el.style.top = `${(-p.y * 0.5 + 0.5) * innerHeight}px`;
+    const w = el.offsetWidth || 160;
+    const h = el.offsetHeight || 40;
+    const padX = Math.max(16, w / 2 + 12);
+    const x = Math.max(padX, Math.min(innerWidth - padX, (p.x * 0.5 + 0.5) * innerWidth));
+    const y = Math.max(122 + h, Math.min(innerHeight - 178, (-p.y * 0.5 + 0.5) * innerHeight));
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
   }
 
   /* ---------------- navigation & playback ---------------- */

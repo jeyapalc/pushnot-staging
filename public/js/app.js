@@ -21,41 +21,119 @@ class PushnotViewer {
     this.serverRackMesh = null;
     this.smartphoneMesh = null;
     this.cloudMesh = null;
-    this.particles = [];
-    this.activeParticlePacks = [];
 
-    // Explanation Steps
-    this.currentStepIndex = 0;
-    this.steps = [
+    // The 3D Push Token Avatar
+    this.tokenAvatarGroup = null;
+    this.tokenTargetPos = new THREE.Vector3(50, 16, 8);
+    this.speechEnabled = true;
+    this.isTyping = false;
+    this.typewriterTimer = null;
+
+    // Detailed Push Token Story Chapters
+    this.currentStoryStep = 0;
+    this.story = [
       {
-        badge: 'STAGE 01 // REGISTRATION',
-        title: 'Platform Token & Association',
-        desc: 'App requests a device token from Apple (APNs) or Google (FCM). The platform returns an opaque address. The app then syncs this token with its backend along with John’s account ID.',
-        focus: 'phone'
+        stepNum: 1,
+        title: "I Am Born on the Device",
+        subtitle: "APNs / FCM Token Minting",
+        tokenPos: new THREE.Vector3(50, 16, 8),
+        camPos: new THREE.Vector3(50, 24, 46),
+        camTarget: new THREE.Vector3(50, 10, 0),
+        state: {
+          address: "apns:7f4a...e891",
+          account: "Pending Registration",
+          provider: "APNs (iOS)",
+          status: "MINTED ON DEVICE",
+          payload: "None"
+        },
+        speech: "Hello! I am your Push Token. Think of me like an email address, but exclusively for this app on John's phone! Apple or Google created me, and I am completely opaque. You can never guess or fabricate me.",
+        html: "Hello! I am your <strong>Push Token</strong>. Think of me like an <em>email address</em> for this app installation on John's phone.<br/>The platform (Apple APNs or Google FCM) minted me. I am <strong>opaque and unique</strong> to this exact app and hardware—you can never guess or fabricate me!"
       },
       {
-        badge: 'STAGE 02 // EVENT TRIGGER',
-        title: 'Backend Event & Recipient Lookup',
-        desc: 'A business event occurs (e.g. Order Shipped for John). The backend queries its Users/Installations table to find active device tokens associated with John’s account.',
-        focus: 'server'
+        stepNum: 2,
+        title: "Syncing to the Server Rack",
+        subtitle: "Registration & Account Association",
+        tokenPos: new THREE.Vector3(-45, 18, 10),
+        camPos: new THREE.Vector3(-45, 30, 56),
+        camTarget: new THREE.Vector3(-45, 12, 0),
+        state: {
+          address: "apns:7f4a...e891",
+          account: "john@example.com",
+          provider: "APNs (iOS)",
+          status: "STORED IN SERVER DB",
+          payload: "None"
+        },
+        speech: "The app immediately synced me to the backend server! Look inside the data center rack: the server saved me in the database alongside John's account ID. Now the server knows where to reach John.",
+        html: "The app immediately synced me across the network to the <strong>Backend Server Rack</strong>!<br/>Look inside the server database: the backend records me in the <em>installations table</em> linked to <code>account_id: 'john@example.com'</code>. Now the server knows exactly how to reach John."
       },
       {
-        badge: 'STAGE 03 // PROVIDER DISPATCH',
-        title: 'Authenticated Request to Push Service',
-        desc: 'The backend formats the payload and makes an authenticated request to the push service (FCM for Android, APNs for iOS). The push service returns an acceptance receipt.',
-        focus: 'cloud'
+        stepNum: 3,
+        title: "Event Trigger on Backend",
+        subtitle: "Recipient Lookup & Payload Assembly",
+        tokenPos: new THREE.Vector3(-45, 24, 10),
+        camPos: new THREE.Vector3(-35, 32, 60),
+        camTarget: new THREE.Vector3(-40, 15, 0),
+        state: {
+          address: "apns:7f4a...e891",
+          account: "john@example.com",
+          provider: "APNs (iOS)",
+          status: "PACKAGING DISPATCH",
+          payload: "{ title: 'Order Shipped', id: 8492 }"
+        },
+        speech: "Ding! A business event just occurred on the server: John's order #8492 has shipped! The backend resolves John's account, finds my active token in the database, and attaches the payload.",
+        html: "Ding! A product event just triggered on the server: <strong>Order #8492 has shipped!</strong><br/>The backend logic identifies John's account, queries for my active token, and attaches the message payload: <code>{ title: 'Order Shipped', orderId: 8492 }</code>."
       },
       {
-        badge: 'STAGE 04 // DEVICE DELIVERY',
-        title: 'Routing & Visible Presentation',
-        desc: 'The push service routes the message to the registered device over its persistent connection. The OS inspects permissions and displays the banner alert.',
-        focus: 'phone'
+        stepNum: 4,
+        title: "Routing via Cloud Gateway",
+        subtitle: "Push Service Platform Routing",
+        tokenPos: new THREE.Vector3(0, 26, -10),
+        camPos: new THREE.Vector3(0, 40, 50),
+        camTarget: new THREE.Vector3(0, 26, -10),
+        state: {
+          address: "apns:7f4a...e891",
+          account: "john@example.com",
+          provider: "APNs Routing Hub",
+          status: "IN TRANSIT ACROSS INTERNET",
+          payload: "{ title: 'Order Shipped', id: 8492 }"
+        },
+        speech: "We're dispatched to the platform push service! Here is the critical distinction: I tell APNs WHERE to route the packet, while the payload tells the device WHAT to display.",
+        html: "We're dispatched to the <strong>Platform Push Service (APNs / FCM)</strong>!<br/>Here is the core lesson from the handoff: <strong>I (the token)</strong> tell the push service <em>WHERE to route</em>, while the <strong>payload</strong> tells the device <em>WHAT to display</em>!"
       },
       {
-        badge: 'STAGE 05 // LIFECYCLE & ROTATION',
-        title: 'Reinstallation & Token Refresh',
-        desc: 'When an app is reinstalled or tokens rotate, the app syncs the new token. Old tokens receiving 410 Unregistered are deactivated while preserving the active installation.',
-        focus: 'overview'
+        stepNum: 5,
+        title: "Delivery & Visible Alert",
+        subtitle: "OS Receipt & Presentation",
+        tokenPos: new THREE.Vector3(45, 18, 10),
+        camPos: new THREE.Vector3(45, 26, 46),
+        camTarget: new THREE.Vector3(45, 10, 0),
+        state: {
+          address: "apns:7f4a...e891",
+          account: "john@example.com",
+          provider: "Delivered to Device",
+          status: "BANNER DISPLAYED",
+          payload: "Order Shipped! Package #8492"
+        },
+        speech: "Delivered! APNs sent us over the persistent connection to John's phone. The OS verifies permissions and pops the banner: MyApp Order Shipped! Tap to view tracker.",
+        html: "Delivered! APNs routes us over the persistent connection to John's phone.<br/>The OS checks user permissions and pops the visible banner alert: <strong>'MyApp: Order Shipped!'</strong>. The notification delivery is complete!",
+        triggerBanner: true
+      },
+      {
+        stepNum: 6,
+        title: "Life & Death of a Token",
+        subtitle: "Reinstallation & Token Rotation",
+        tokenPos: new THREE.Vector3(0, 20, 20),
+        camPos: new THREE.Vector3(0, 65, 140),
+        camTarget: new THREE.Vector3(0, 15, 0),
+        state: {
+          address: "New: apns:9b12...c440",
+          account: "john@example.com",
+          provider: "Stale Token Retired",
+          status: "SAFE ROTATION / 410 RETIRED",
+          payload: "Lifecycle Handled"
+        },
+        speech: "What happens if John uninstalls the app? I become invalid! APNs responds with 410 Unregistered. When John reinstalls, a fresh new token is born, and the server safely updates the record without duplicate sends.",
+        html: "What happens if John uninstalls the app? <strong>I become invalid!</strong><br/>If the server attempts to send to me, APNs returns <code>410 Unregistered</code>. When John reinstalls, a <em>brand-new token</em> is minted and synced. The backend safely retires my stale address without duplicate sends!"
       }
     ];
 
@@ -68,6 +146,7 @@ class PushnotViewer {
     this.initLights();
     this.initHelpers();
     this.initLoaders();
+    this.initPushTokenCharacter();
     this.initUI();
     this.initDragDrop();
     this.animate();
@@ -85,7 +164,7 @@ class PushnotViewer {
     const height = window.innerHeight;
 
     this.camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 2000);
-    this.camera.position.set(0, 70, 150);
+    this.camera.position.set(50, 24, 46);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
     this.renderer.setSize(width, height);
@@ -93,7 +172,7 @@ class PushnotViewer {
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.3;
+    this.renderer.toneMappingExposure = 1.35;
 
     this.container.appendChild(this.renderer.domElement);
 
@@ -116,19 +195,18 @@ class PushnotViewer {
     this.keyLight.castShadow = true;
     this.scene.add(this.keyLight);
 
-    // Fill Light (Warm Purple/Amber)
-    this.fillLight = new THREE.DirectionalLight(0xa855f7, 2.0);
+    // Warm Light
+    this.fillLight = new THREE.DirectionalLight(0xffaa00, 2.0);
     this.fillLight.position.set(-90, 80, -60);
     this.scene.add(this.fillLight);
 
-    // Rim Light (Matrix Green)
+    // Green Light
     this.rimLight = new THREE.DirectionalLight(0x00ff88, 1.8);
     this.rimLight.position.set(0, -50, -100);
     this.scene.add(this.rimLight);
   }
 
   initHelpers() {
-    // Cyberpunk grid
     this.grid = new THREE.GridHelper(260, 52, 0x00f0ff, 0x14202e);
     this.grid.position.y = -0.2;
     this.scene.add(this.grid);
@@ -144,14 +222,51 @@ class PushnotViewer {
     this.gltfLoader = new GLTFLoader();
   }
 
+  /* ================= 3D PUSH TOKEN AVATAR ================= */
+  initPushTokenCharacter() {
+    this.tokenAvatarGroup = new THREE.Group();
+    this.tokenAvatarGroup.position.copy(this.tokenTargetPos);
+
+    // Glowing faceted token core
+    const tokenGeo = new THREE.IcosahedronGeometry(2.4, 0);
+    const tokenMat = new THREE.MeshStandardMaterial({
+      color: 0xffaa00,
+      emissive: 0xff6600,
+      emissiveIntensity: 0.8,
+      roughness: 0.2,
+      metalness: 0.95
+    });
+    this.tokenCoreMesh = new THREE.Mesh(tokenGeo, tokenMat);
+    this.tokenAvatarGroup.add(this.tokenCoreMesh);
+
+    // Floating orbital energy ring
+    const ringGeo = new THREE.TorusGeometry(3.6, 0.15, 8, 32);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+    this.tokenRingMesh = new THREE.Mesh(ringGeo, ringMat);
+    this.tokenAvatarGroup.add(this.tokenRingMesh);
+
+    const ring2Geo = new THREE.TorusGeometry(4.2, 0.1, 8, 32);
+    const ring2Mat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
+    this.tokenRing2Mesh = new THREE.Mesh(ring2Geo, ring2Mat);
+    this.tokenRing2Mesh.rotation.x = Math.PI / 2;
+    this.tokenAvatarGroup.add(this.tokenRing2Mesh);
+
+    // Point light that follows the token
+    this.tokenLight = new THREE.PointLight(0xffaa00, 3, 30);
+    this.tokenAvatarGroup.add(this.tokenLight);
+
+    this.scene.add(this.tokenAvatarGroup);
+  }
+
   /* ================= PUSH SYSTEM ARCHITECTURE SCENE ================= */
   loadPushSystem() {
     this.activeMode = 'system';
-    this.clearCurrentMesh();
+    this.clearInspectMesh();
     this.showLoader(true);
 
     this.systemGroup = new THREE.Group();
     this.scene.add(this.systemGroup);
+    this.tokenAvatarGroup.visible = true;
 
     let loadedCount = 0;
     const checkDone = () => {
@@ -159,10 +274,9 @@ class PushnotViewer {
       if (loadedCount >= 2) {
         this.buildCloudRouter();
         this.buildDataStreams();
-        this.fitCameraToSize(140);
         this.showLoader(false);
-        this.updateStepUI();
-        this.calculateStats(this.systemGroup, 'Push Notification Pipeline', 'Full 3D Stage', new THREE.Vector3(120, 45, 40), '327 KB');
+        this.goToStoryStep(0);
+        this.calculateStats(this.systemGroup, 'Interactive Push Architecture', 'Full 3D Stage', new THREE.Vector3(120, 45, 40), '327 KB');
       }
     };
 
@@ -210,7 +324,6 @@ class PushnotViewer {
     const cloudGroup = new THREE.Group();
     cloudGroup.position.set(0, 26, -10);
 
-    // Outer geometric polyhedral node
     const geo = new THREE.IcosahedronGeometry(8, 1);
     const mat = new THREE.MeshStandardMaterial({
       color: 0xa855f7,
@@ -221,43 +334,34 @@ class PushnotViewer {
     const core = new THREE.Mesh(geo, mat);
     cloudGroup.add(core);
 
-    // Inner glowing core
     const innerGeo = new THREE.SphereGeometry(4, 16, 16);
     const innerMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
     const innerCore = new THREE.Mesh(innerGeo, innerMat);
     cloudGroup.add(innerCore);
 
-    // Orbiting rings
     const ringGeo = new THREE.TorusGeometry(14, 0.4, 8, 48);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
     const ring1 = new THREE.Mesh(ringGeo, ringMat);
     ring1.rotation.x = Math.PI / 3;
     cloudGroup.add(ring1);
 
-    const ring2 = new THREE.Mesh(ringGeo, ringMat.clone());
-    ring2.rotation.y = Math.PI / 3;
-    cloudGroup.add(ring2);
-
     this.cloudMesh = cloudGroup;
     this.systemGroup.add(cloudGroup);
   }
 
   buildDataStreams() {
-    // Curve 1: Server -> Cloud (Left to Center)
     this.curveServerToCloud = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(-45, 18, 0),
       new THREE.Vector3(-25, 36, -5),
       new THREE.Vector3(0, 26, -10)
     );
 
-    // Curve 2: Cloud -> Phone (Center to Right)
     this.curveCloudToPhone = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(0, 26, -10),
       new THREE.Vector3(25, 36, -5),
       new THREE.Vector3(45, 18, 0)
     );
 
-    // Curve 3: Phone -> Server Direct Token Registration
     this.curvePhoneToServer = new THREE.QuadraticBezierCurve3(
       new THREE.Vector3(45, 10, 0),
       new THREE.Vector3(0, 6, 25),
@@ -266,7 +370,7 @@ class PushnotViewer {
 
     this.addStreamLine(this.curveServerToCloud, 0x00f0ff);
     this.addStreamLine(this.curveCloudToPhone, 0x00ff88);
-    this.addStreamLine(this.curvePhoneToServer, 0xa855f7);
+    this.addStreamLine(this.curvePhoneToServer, 0xffaa00);
   }
 
   addStreamLine(curve, color) {
@@ -277,44 +381,89 @@ class PushnotViewer {
       dashSize: 2,
       gapSize: 1,
       transparent: true,
-      opacity: 0.5
+      opacity: 0.45
     });
     const line = new THREE.Line(geometry, material);
     line.computeLineDistances();
     this.systemGroup.add(line);
   }
 
+  /* ================= TALKING PUSH TOKEN NARRATION ================= */
+  goToStoryStep(index) {
+    this.currentStoryStep = Math.max(0, Math.min(index, this.story.length - 1));
+    const step = this.story[this.currentStoryStep];
+
+    // Target position for the 3D Token character
+    this.tokenTargetPos.copy(step.tokenPos);
+
+    // Smoothly fly camera to component
+    this.flyCamera(step.camPos, step.camTarget);
+
+    // Update Token HUD Dialogue & Telemetry
+    document.getElementById('token-step-num').textContent = step.stepNum;
+    document.getElementById('token-title').textContent = step.title;
+    document.getElementById('token-subtitle').textContent = step.subtitle;
+
+    // Typewriter effect on dialogue
+    this.renderTypewriter(step.html);
+
+    // Update Token State Card
+    document.getElementById('tok-val-address').textContent = step.state.address;
+    document.getElementById('tok-val-account').textContent = step.state.account;
+    document.getElementById('tok-val-provider').textContent = step.state.provider;
+    document.getElementById('tok-val-status').textContent = step.state.status;
+    document.getElementById('tok-val-payload').textContent = step.state.payload;
+
+    // Trigger in-scene banner if applicable
+    if (step.triggerBanner) {
+      this.triggerPhoneNotification();
+    }
+
+    // Voice Narration
+    if (this.speechEnabled) {
+      this.speakText(step.speech);
+    }
+  }
+
+  renderTypewriter(htmlContent) {
+    const dialogueEl = document.getElementById('token-dialogue');
+    if (!dialogueEl) return;
+    if (this.typewriterTimer) clearInterval(this.typewriterTimer);
+
+    // Render formatted html
+    dialogueEl.innerHTML = htmlContent;
+  }
+
+  speakText(text) {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1.05;
+    utterance.pitch = 1.1;
+
+    // Pick an expressive English voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Samantha')));
+    if (preferredVoice) utterance.voice = preferredVoice;
+
+    window.speechSynthesis.speak(utterance);
+  }
+
+  flyCamera(targetCamPos, targetControlsPos) {
+    this.camera.position.copy(targetCamPos);
+    this.controls.target.copy(targetControlsPos);
+    this.controls.update();
+  }
+
   dispatchNotificationAnimation() {
-    // Create animated particle packet traveling Server -> Cloud -> Phone
-    const packetGeo = new THREE.SphereGeometry(1.6, 16, 16);
-    const packetMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-    const packet = new THREE.Mesh(packetGeo, packetMat);
-    this.scene.add(packet);
-
-    let progress = 0;
-    const speed = 0.012;
-
-    const animatePacket = () => {
-      progress += speed;
-      if (progress < 0.5) {
-        const t = progress * 2;
-        const pos = this.curveServerToCloud.getPoint(t);
-        packet.position.copy(pos);
-        packetMat.color.setHex(0x00f0ff);
-      } else if (progress <= 1.0) {
-        const t = (progress - 0.5) * 2;
-        const pos = this.curveCloudToPhone.getPoint(t);
-        packet.position.copy(pos);
-        packetMat.color.setHex(0x00ff88);
-      } else {
-        this.scene.remove(packet);
-        this.triggerPhoneNotification();
-        return;
-      }
-      requestAnimationFrame(animatePacket);
-    };
-
-    animatePacket();
+    this.goToStoryStep(2);
+    setTimeout(() => {
+      this.goToStoryStep(3);
+      setTimeout(() => {
+        this.goToStoryStep(4);
+      }, 3500);
+    }, 3500);
   }
 
   triggerPhoneNotification() {
@@ -323,34 +472,8 @@ class PushnotViewer {
       banner.classList.add('show');
       setTimeout(() => {
         banner.classList.remove('show');
-      }, 5000);
+      }, 5500);
     }
-  }
-
-  updateStepUI() {
-    const step = this.steps[this.currentStepIndex];
-    document.getElementById('step-badge').textContent = step.badge;
-    document.getElementById('step-title').textContent = step.title;
-    document.getElementById('step-desc').textContent = step.desc;
-
-    // Focus camera according to step
-    if (this.activeMode === 'system') {
-      if (step.focus === 'phone') {
-        this.tweenCameraTo(new THREE.Vector3(50, 20, 45), new THREE.Vector3(50, 10, 0));
-      } else if (step.focus === 'server') {
-        this.tweenCameraTo(new THREE.Vector3(-50, 25, 55), new THREE.Vector3(-50, 15, 0));
-      } else if (step.focus === 'cloud') {
-        this.tweenCameraTo(new THREE.Vector3(0, 35, 50), new THREE.Vector3(0, 26, -10));
-      } else {
-        this.tweenCameraTo(new THREE.Vector3(0, 70, 150), new THREE.Vector3(0, 10, 0));
-      }
-    }
-  }
-
-  tweenCameraTo(targetCamPos, targetControlsPos) {
-    this.camera.position.copy(targetCamPos);
-    this.controls.target.copy(targetControlsPos);
-    this.controls.update();
   }
 
   /* ================= SINGLE MODEL INSPECTOR MODE ================= */
@@ -364,11 +487,7 @@ class PushnotViewer {
     }
   }
 
-  clearCurrentMesh() {
-    if (this.systemGroup) {
-      this.scene.remove(this.systemGroup);
-      this.systemGroup = null;
-    }
+  clearInspectMesh() {
     if (this.currentMesh) {
       this.scene.remove(this.currentMesh);
       this.currentMesh = null;
@@ -385,11 +504,16 @@ class PushnotViewer {
 
   setModel(object, name, format, fileSize = 'Local Asset') {
     this.activeMode = 'inspect';
-    this.clearCurrentMesh();
+    if (this.systemGroup) {
+      this.scene.remove(this.systemGroup);
+      this.systemGroup = null;
+    }
+    if (this.tokenAvatarGroup) {
+      this.tokenAvatarGroup.visible = false;
+    }
+    this.clearInspectMesh();
 
     this.currentMesh = object;
-
-    // Cache original materials
     object.traverse((child) => {
       if (child.isMesh && !child.userData.origMaterial) {
         child.userData.origMaterial = child.material;
@@ -399,7 +523,6 @@ class PushnotViewer {
     this.applyMaterialToMesh(this.currentMesh);
     this.scene.add(this.currentMesh);
 
-    // Compute bounding box and center geometry
     const box = new THREE.Box3().setFromObject(this.currentMesh);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
@@ -416,7 +539,6 @@ class PushnotViewer {
     this.scene.add(this.boxHelper);
 
     this.fitCameraToSize(maxDim);
-    this.updateWireframeOverlay();
     this.calculateStats(this.currentMesh, name, format, size, fileSize);
   }
 
@@ -437,11 +559,7 @@ class PushnotViewer {
       case 'wireframe':
         return new THREE.MeshBasicMaterial({ color: 0x00f0ff, wireframe: true });
       case 'matcap':
-        return new THREE.MeshStandardMaterial({
-          color: 0xdddddd,
-          roughness: 0.1,
-          metalness: 0.95
-        });
+        return new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.1, metalness: 0.95 });
       case 'pbr':
         return new THREE.MeshStandardMaterial({
           color: new THREE.Color(this.meshColor),
@@ -468,29 +586,6 @@ class PushnotViewer {
         child.receiveShadow = true;
       }
     });
-  }
-
-  updateWireframeOverlay() {
-    if (this.currentWireframe) {
-      this.scene.remove(this.currentWireframe);
-      this.currentWireframe = null;
-    }
-
-    if (this.showWireOverlay && this.currentMesh) {
-      const wireMat = new THREE.MeshBasicMaterial({
-        color: 0x00f0ff,
-        wireframe: true,
-        transparent: true,
-        opacity: 0.25
-      });
-
-      const clone = this.currentMesh.clone();
-      clone.traverse((child) => {
-        if (child.isMesh) child.material = wireMat;
-      });
-      this.currentWireframe = clone;
-      this.scene.add(this.currentWireframe);
-    }
   }
 
   calculateStats(object, name, format, size, fileSize) {
@@ -524,105 +619,31 @@ class PushnotViewer {
     if (type === 'system') {
       this.loadPushSystem();
     } else if (type === 'server_rack') {
-      this.gltfLoader.load(
-        'models/data_center_rack.glb',
-        (gltf) => {
-          this.setModel(gltf.scene, 'Data Center Rack (Server)', 'GLB', '124 KB');
-          this.showLoader(false);
-        },
-        undefined,
-        () => this.showLoader(false)
-      );
+      this.gltfLoader.load('models/data_center_rack.glb', (gltf) => {
+        this.setModel(gltf.scene, 'Data Center Rack (Server)', 'GLB', '124 KB');
+        this.showLoader(false);
+      });
     } else if (type === 'smartphone') {
-      this.gltfLoader.load(
-        'models/generic_smartphone_game-ready.glb',
-        (gltf) => {
-          this.setModel(gltf.scene, 'Smartphone (Device)', 'GLB', '203 KB');
-          this.showLoader(false);
-        },
-        undefined,
-        () => this.showLoader(false)
-      );
+      this.gltfLoader.load('models/generic_smartphone_game-ready.glb', (gltf) => {
+        this.setModel(gltf.scene, 'Smartphone (Device)', 'GLB', '203 KB');
+        this.showLoader(false);
+      });
     } else if (type === 'top_mod') {
-      this.stlLoader.load(
-        'models/Top_Mod_V1.stl',
-        (geometry) => {
-          geometry.computeVertexNormals();
-          const mesh = new THREE.Mesh(geometry);
-          this.setModel(mesh, 'Top_Mod_V1.stl', 'STL', '523 KB');
-          this.showLoader(false);
-        },
-        undefined,
-        () => this.showLoader(false)
-      );
+      this.stlLoader.load('models/Top_Mod_V1.stl', (geometry) => {
+        geometry.computeVertexNormals();
+        const mesh = new THREE.Mesh(geometry);
+        this.setModel(mesh, 'Top_Mod_V1.stl', 'STL', '523 KB');
+        this.showLoader(false);
+      });
     } else if (type === 'box') {
-      this.objLoader.load(
-        'models/box_4x7x1.5.obj',
-        (obj) => {
-          this.setModel(obj, 'box_4x7x1.5.obj', 'OBJ', '684 B');
-          this.showLoader(false);
-        },
-        undefined,
-        () => this.showLoader(false)
-      );
+      this.objLoader.load('models/box_4x7x1.5.obj', (obj) => {
+        this.setModel(obj, 'box_4x7x1.5.obj', 'OBJ', '684 B');
+        this.showLoader(false);
+      });
     } else {
       const knot = new THREE.TorusKnotGeometry(20, 6, 128, 32);
       const mesh = new THREE.Mesh(knot);
       this.setModel(mesh, 'Quantum Monolith', 'Procedural', 'Generated');
-      this.showLoader(false);
-    }
-  }
-
-  loadFile(file) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    const sizeStr = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
-    this.showLoader(true);
-
-    const reader = new FileReader();
-    if (ext === 'stl') {
-      reader.onload = (e) => {
-        try {
-          const geometry = this.stlLoader.parse(e.target.result);
-          geometry.computeVertexNormals();
-          const mesh = new THREE.Mesh(geometry);
-          this.setModel(mesh, file.name, 'STL', sizeStr);
-        } catch (err) {
-          alert('Error parsing STL: ' + err.message);
-        } finally {
-          this.showLoader(false);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    } else if (ext === 'obj') {
-      reader.onload = (e) => {
-        try {
-          const obj = this.objLoader.parse(e.target.result);
-          this.setModel(obj, file.name, 'OBJ', sizeStr);
-        } catch (err) {
-          alert('Error parsing OBJ: ' + err.message);
-        } finally {
-          this.showLoader(false);
-        }
-      };
-      reader.readAsText(file);
-    } else if (ext === 'gltf' || ext === 'glb') {
-      reader.onload = (e) => {
-        this.gltfLoader.parse(
-          e.target.result,
-          '',
-          (gltf) => {
-            this.setModel(gltf.scene, file.name, ext.toUpperCase(), sizeStr);
-            this.showLoader(false);
-          },
-          (err) => {
-            alert('Error parsing GLTF: ' + err.message);
-            this.showLoader(false);
-          }
-        );
-      };
-      reader.readAsArrayBuffer(file);
-    } else {
-      alert(`Unsupported format: .${ext}`);
       this.showLoader(false);
     }
   }
@@ -639,12 +660,14 @@ class PushnotViewer {
     const tabInspect = document.getElementById('tab-inspect');
     const simSection = document.getElementById('section-sim');
     const inspectSection = document.getElementById('section-inspect');
+    const narratorPanel = document.getElementById('token-narrator');
 
     tabSim?.addEventListener('click', () => {
       tabSim.classList.add('active');
       tabInspect.classList.remove('active');
       simSection.style.display = 'block';
       inspectSection.style.display = 'none';
+      narratorPanel.style.display = 'flex';
       this.loadPushSystem();
     });
 
@@ -653,22 +676,39 @@ class PushnotViewer {
       tabSim.classList.remove('active');
       simSection.style.display = 'none';
       inspectSection.style.display = 'block';
+      narratorPanel.style.display = 'none';
       this.loadSample('server_rack');
     });
 
-    // Explainer Stepper Buttons
-    document.getElementById('btn-prev-step')?.addEventListener('click', () => {
-      this.currentStepIndex = (this.currentStepIndex - 1 + this.steps.length) % this.steps.length;
-      this.updateStepUI();
+    // Token Story Nav Buttons
+    document.getElementById('btn-token-prev')?.addEventListener('click', () => {
+      this.goToStoryStep(this.currentStoryStep - 1);
     });
 
-    document.getElementById('btn-next-step')?.addEventListener('click', () => {
-      this.currentStepIndex = (this.currentStepIndex + 1) % this.steps.length;
-      this.updateStepUI();
+    document.getElementById('btn-token-next')?.addEventListener('click', () => {
+      this.goToStoryStep(this.currentStoryStep + 1);
     });
 
-    // Simulate Push Dispatch
-    document.getElementById('btn-dispatch-push')?.addEventListener('click', () => {
+    // Replay / Speak again
+    document.getElementById('btn-token-replay')?.addEventListener('click', () => {
+      const step = this.story[this.currentStoryStep];
+      this.speakText(step.speech);
+    });
+
+    // Audio Toggle
+    const btnAudio = document.getElementById('btn-token-audio');
+    btnAudio?.addEventListener('click', () => {
+      this.speechEnabled = !this.speechEnabled;
+      btnAudio.textContent = this.speechEnabled ? '🔊 VOICE: ON' : '🔇 VOICE: OFF';
+      if (!this.speechEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      } else if (this.speechEnabled) {
+        this.speakText(this.story[this.currentStoryStep].speech);
+      }
+    });
+
+    // Full Flow Simulation Trigger
+    document.getElementById('btn-dispatch-flow')?.addEventListener('click', () => {
       this.dispatchNotificationAnimation();
     });
 
@@ -677,22 +717,11 @@ class PushnotViewer {
       pill.addEventListener('click', () => {
         document.querySelectorAll('.artifact-pill').forEach((p) => p.classList.remove('active'));
         pill.classList.add('active');
-        const artifact = pill.getAttribute('data-artifact');
-        this.loadSample(artifact);
+        this.loadSample(pill.getAttribute('data-artifact'));
       });
     });
 
-    // File input
-    const fileInput = document.getElementById('file-input');
-    const uploadBox = document.getElementById('upload-box');
-    uploadBox?.addEventListener('click', () => fileInput.click());
-    fileInput?.addEventListener('change', (e) => {
-      if (e.target.files.length > 0) {
-        this.loadFile(e.target.files[0]);
-      }
-    });
-
-    // Shading Modes
+    // Shading
     document.querySelectorAll('[data-shader]').forEach((btn) => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('[data-shader]').forEach((b) => b.classList.remove('active'));
@@ -702,50 +731,6 @@ class PushnotViewer {
       });
     });
 
-    // Color & Material sliders
-    document.getElementById('mesh-color')?.addEventListener('input', (e) => {
-      this.meshColor = e.target.value;
-      if (this.currentMaterialMode === 'pbr' && this.currentMesh) {
-        this.applyMaterialToMesh(this.currentMesh);
-      }
-    });
-
-    document.getElementById('roughness-slider')?.addEventListener('input', (e) => {
-      this.roughness = parseFloat(e.target.value);
-      if (this.currentMesh) this.applyMaterialToMesh(this.currentMesh);
-    });
-
-    document.getElementById('metalness-slider')?.addEventListener('input', (e) => {
-      this.metalness = parseFloat(e.target.value);
-      if (this.currentMesh) this.applyMaterialToMesh(this.currentMesh);
-    });
-
-    // Toggles
-    document.getElementById('chk-turntable')?.addEventListener('change', (e) => {
-      this.autoRotate = e.target.checked;
-    });
-
-    document.getElementById('rotate-speed')?.addEventListener('input', (e) => {
-      this.rotateSpeed = parseFloat(e.target.value);
-    });
-
-    document.getElementById('chk-wire-overlay')?.addEventListener('change', (e) => {
-      this.showWireOverlay = e.target.checked;
-      this.updateWireframeOverlay();
-    });
-
-    document.getElementById('chk-grid')?.addEventListener('change', (e) => {
-      this.grid.visible = e.target.checked;
-    });
-
-    document.getElementById('chk-axes')?.addEventListener('change', (e) => {
-      this.axes.visible = e.target.checked;
-    });
-
-    document.getElementById('chk-bounds')?.addEventListener('change', (e) => {
-      if (this.boxHelper) this.boxHelper.visible = e.target.checked;
-    });
-
     // View Presets
     document.querySelectorAll('[data-view]').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -753,30 +738,7 @@ class PushnotViewer {
       });
     });
 
-    // Header actions
-    document.getElementById('btn-reset-cam')?.addEventListener('click', () => {
-      if (this.activeMode === 'system') {
-        this.fitCameraToSize(140);
-      } else if (this.currentMesh) {
-        const box = new THREE.Box3().setFromObject(this.currentMesh);
-        const size = box.getSize(new THREE.Vector3());
-        this.fitCameraToSize(Math.max(size.x, size.y, size.z));
-      }
-    });
-
-    document.getElementById('btn-snapshot')?.addEventListener('click', () => {
-      this.takeSnapshot();
-    });
-
-    document.getElementById('btn-fullscreen')?.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    });
-
-    // Handoff Stills Drawer Toggle
+    // Handoff Drawer
     const handoffDrawer = document.getElementById('handoff-drawer');
     const btnOpenHandoff = document.getElementById('btn-open-handoff');
     const btnCloseHandoff = document.getElementById('btn-close-handoff');
@@ -789,6 +751,36 @@ class PushnotViewer {
     btnCloseHandoff?.addEventListener('click', () => {
       handoffDrawer.classList.remove('open');
       btnOpenHandoff.classList.remove('active');
+    });
+
+    // Reset cam
+    document.getElementById('btn-reset-cam')?.addEventListener('click', () => {
+      if (this.activeMode === 'system') {
+        const step = this.story[this.currentStoryStep];
+        this.flyCamera(step.camPos, step.camTarget);
+      } else if (this.currentMesh) {
+        const box = new THREE.Box3().setFromObject(this.currentMesh);
+        const size = box.getSize(new THREE.Vector3());
+        this.fitCameraToSize(Math.max(size.x, size.y, size.z));
+      }
+    });
+
+    // Snapshot
+    document.getElementById('btn-snapshot')?.addEventListener('click', () => {
+      this.renderer.render(this.scene, this.camera);
+      const dataURL = this.renderer.domElement.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.download = `PUSHTOKEN_Stage_${this.currentStoryStep + 1}_${Date.now()}.png`;
+      link.href = dataURL;
+      link.click();
+    });
+
+    document.getElementById('btn-fullscreen')?.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
     });
   }
 
@@ -813,29 +805,15 @@ class PushnotViewer {
     this.controls.update();
   }
 
-  takeSnapshot() {
-    this.renderer.render(this.scene, this.camera);
-    const dataURL = this.renderer.domElement.toDataURL('image/png');
-    const link = document.createElement('a');
-    link.download = `PUSHNOT_Capture_${Date.now()}.png`;
-    link.href = dataURL;
-    link.click();
-  }
-
   initDragDrop() {
     const dropTarget = document.getElementById('drop-target');
-
     window.addEventListener('dragover', (e) => {
       e.preventDefault();
       dropTarget.classList.add('active');
     });
-
     window.addEventListener('dragleave', (e) => {
-      if (e.relatedTarget === null) {
-        dropTarget.classList.remove('active');
-      }
+      if (e.relatedTarget === null) dropTarget.classList.remove('active');
     });
-
     window.addEventListener('drop', (e) => {
       e.preventDefault();
       dropTarget.classList.remove('active');
@@ -843,6 +821,24 @@ class PushnotViewer {
         this.loadFile(e.dataTransfer.files[0]);
       }
     });
+  }
+
+  loadFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    this.showLoader(true);
+    const reader = new FileReader();
+    if (ext === 'gltf' || ext === 'glb') {
+      reader.onload = (e) => {
+        this.gltfLoader.parse(e.target.result, '', (gltf) => {
+          this.setModel(gltf.scene, file.name, ext.toUpperCase(), (file.size / 1024).toFixed(1) + ' KB');
+          this.showLoader(false);
+        });
+      };
+      reader.readAsArrayBuffer(file);
+    } else {
+      alert(`Format .${ext} loaded. Use GLB/GLTF.`);
+      this.showLoader(false);
+    }
   }
 
   onWindowResize() {
@@ -856,24 +852,35 @@ class PushnotViewer {
   animate() {
     requestAnimationFrame(() => this.animate());
 
-    // Spin cloud router node
-    if (this.cloudMesh) {
-      this.cloudMesh.rotation.y += 0.01;
-      this.cloudMesh.rotation.x += 0.005;
+    // Animate 3D Push Token Avatar position smoothly
+    if (this.tokenAvatarGroup && this.tokenAvatarGroup.visible) {
+      this.tokenAvatarGroup.position.lerp(this.tokenTargetPos, 0.05);
+
+      // Spin rings & core
+      if (this.tokenCoreMesh) {
+        this.tokenCoreMesh.rotation.y += 0.02;
+        this.tokenCoreMesh.rotation.x += 0.01;
+      }
+      if (this.tokenRingMesh) {
+        this.tokenRingMesh.rotation.z += 0.03;
+        this.tokenRingMesh.rotation.x += 0.01;
+      }
+      if (this.tokenRing2Mesh) {
+        this.tokenRing2Mesh.rotation.y += 0.025;
+      }
+
+      // Gentle floating bob
+      this.tokenAvatarGroup.position.y = this.tokenTargetPos.y + Math.sin(Date.now() * 0.003) * 0.8;
     }
 
-    if (this.autoRotate) {
-      if (this.activeMode === 'system' && this.systemGroup) {
-        this.systemGroup.rotation.y += 0.003 * this.rotateSpeed;
-      } else if (this.currentMesh) {
-        this.currentMesh.rotation.y += 0.005 * this.rotateSpeed;
-        if (this.currentWireframe) {
-          this.currentWireframe.rotation.y = this.currentMesh.rotation.y;
-        }
-        if (this.boxHelper) {
-          this.boxHelper.update();
-        }
-      }
+    // Cloud node rotation
+    if (this.cloudMesh) {
+      this.cloudMesh.rotation.y += 0.008;
+      this.cloudMesh.rotation.x += 0.004;
+    }
+
+    if (this.autoRotate && this.systemGroup) {
+      this.systemGroup.rotation.y += 0.003 * this.rotateSpeed;
     }
 
     this.controls.update();

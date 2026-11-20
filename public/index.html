@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUSHNOT // 3D Push Notifications Explainer & Artifact Viewer</title>
+  <title>PUSHNOT // The Talking Push Token 3D Explainer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -19,15 +19,15 @@
   </script>
 </head>
 <body>
-  <!-- 3D Canvas Container -->
+  <!-- 3D WebGL Canvas -->
   <div id="canvas-container"></div>
 
   <!-- In-Scene 3D Notification Banner Alert -->
   <div class="notif-banner" id="notif-banner">
-    <div class="notif-icon">✓</div>
+    <div class="notif-icon">📦</div>
     <div>
       <div class="notif-title">MyApp: Order Shipped!</div>
-      <div class="notif-sub">Your package #8492 is out for delivery. Tap to view tracker.</div>
+      <div class="notif-sub">Your package #8492 is out for delivery. Tap to view live tracking.</div>
     </div>
   </div>
 
@@ -40,66 +40,78 @@
       <div>
         <div class="brand-title">PUSHNOT</div>
       </div>
-      <div class="brand-sub">PUSH NOTIFICATIONS // 3D VISUAL EXPLAINER</div>
+      <div class="brand-sub">THE TALKING PUSH TOKEN // 3D FLOW EXPLAINER</div>
     </div>
 
     <div class="header-status">
       <div class="status-badge">
         <span class="dot-live"></span>
-        <span>ENGINE LIVE</span>
+        <span>TOKEN ENGINE: ACTIVE</span>
       </div>
       <div class="status-badge">
-        <span>WEBGL2 / THREE.JS</span>
+        <span>3D GLB HARDWARE</span>
       </div>
     </div>
 
     <div class="header-actions">
       <button class="btn-icon" id="btn-open-handoff">📋 HANDOFF SPECS</button>
-      <button class="btn-icon" id="btn-reset-cam">⟲ RESET CAM</button>
+      <button class="btn-icon" id="btn-reset-cam">⟲ FOCUS TOKEN</button>
       <button class="btn-icon" id="btn-snapshot">⌗ SNAPSHOT</button>
       <button class="btn-icon" id="btn-fullscreen">⛶ FULLSCREEN</button>
     </div>
   </header>
 
-  <!-- Sidebar HUD -->
+  <!-- Sidebar HUD: Live Token Telemetry & Inspection -->
   <aside class="hud-sidebar">
     <!-- Mode Switcher -->
     <div class="panel-section">
       <div class="mode-switcher">
-        <button class="tab-btn active" id="tab-sim">3D PIPELINE</button>
+        <button class="tab-btn active" id="tab-sim">TOKEN JOURNEY</button>
         <button class="tab-btn" id="tab-inspect">INSPECT 3D</button>
       </div>
 
-      <!-- SIMULATION & EXPLAINER CONTROLS -->
+      <!-- SIMULATION CONTROLS & TOKEN STATE -->
       <div id="section-sim">
-        <div class="explainer-box">
-          <div class="explainer-step-badge" id="step-badge">STAGE 01 // REGISTRATION</div>
-          <div class="explainer-step-title" id="step-title">Platform Token & Association</div>
-          <div class="explainer-step-desc" id="step-desc">
-            App requests a device token from Apple (APNs) or Google (FCM). The platform returns an opaque address. The app then syncs this token with its backend along with John’s account ID.
+        <div class="panel-title">LIVE TOKEN RECORD</div>
+        <div class="token-state-box">
+          <div class="token-state-row">
+            <span class="token-state-key">Address:</span>
+            <span class="token-state-val" id="tok-val-address">apns:7f4a...e891</span>
           </div>
-          <div class="explainer-controls">
-            <button class="btn-step" id="btn-prev-step">◀ PREVIOUS</button>
-            <button class="btn-step" id="btn-next-step">NEXT STAGE ▶</button>
+          <div class="token-state-row">
+            <span class="token-state-key">Account:</span>
+            <span class="token-state-val" id="tok-val-account">john@example.com</span>
+          </div>
+          <div class="token-state-row">
+            <span class="token-state-key">Provider:</span>
+            <span class="token-state-val" id="tok-val-provider">APNs (iOS)</span>
+          </div>
+          <div class="token-state-row">
+            <span class="token-state-key">Status:</span>
+            <span class="token-state-val highlight" id="tok-val-status">ACTIVE</span>
+          </div>
+          <div class="token-state-row">
+            <span class="token-state-key">Payload:</span>
+            <span class="token-state-val" id="tok-val-payload">None</span>
           </div>
         </div>
 
-        <button class="btn-dispatch" id="btn-dispatch-push">
-          <span>⚡ TRIGGER NOTIFICATION DISPATCH</span>
+        <button class="btn-dispatch" id="btn-dispatch-flow">
+          <span>⚡ RUN COMPLETE PUSH LIFECYCLE</span>
         </button>
       </div>
 
-      <!-- ARTIFACT INSPECTOR SELECTION (Hidden by default) -->
+      <!-- ARTIFACT INSPECTOR SELECTION -->
       <div id="section-inspect" style="display: none;">
-        <div class="panel-title">SELECT 3D ARTIFACT</div>
+        <div class="panel-title">3D HARDWARE ASSETS</div>
         <div class="artifact-pills">
-          <div class="artifact-pill featured active" data-artifact="server_rack">
-            <span>Server Rack (Backend)</span>
-            <span class="artifact-pill-format system">GLB</span>
+          <div class="artifact-pill active" data-artifact="server_rack">
+            <span>Server Rack (data_center_rack.glb)</span>
+            <span class="artifact-pill-format">GLB</span>
           </div>
-          <div class="artifact-pill featured" data-artifact="smartphone">
-            <span>Smartphone (Device)</span>
-            <span class="artifact-pill-format system">GLB</span>
+          <div class="artifact-pill" data-artifact="smartphone">
+            <span>Smartphone (generic_smartphone.glb)</span>
+            <span class="artifact-pill-format">GLB</span>
           </div>
           <div class="artifact-pill" data-artifact="top_mod">
             <span>Top_Mod_V1</span>
@@ -114,21 +126,15 @@
             <span class="artifact-pill-format">PROC</span>
           </div>
         </div>
-
-        <input type="file" id="file-input" accept=".stl,.obj,.gltf,.glb" style="display: none;" />
-        <div class="upload-box" id="upload-box">
-          <strong>+ INGEST CUSTOM 3D ARTIFACT</strong>
-          <span>Drop .GLB, .GLTF, .STL, or .OBJ</span>
-        </div>
       </div>
     </div>
 
     <!-- Shading & Materials -->
     <div class="panel-section">
-      <div class="panel-title">SHADING & TEXTURE</div>
+      <div class="panel-title">MATERIAL & RENDERING</div>
       <div class="control-buttons-grid">
         <button class="btn-ctrl active" data-shader="original">ORIGINAL</button>
-        <button class="btn-ctrl" data-shader="pbr">PBR SOLID</button>
+        <button class="btn-ctrl" data-shader="pbr">PBR</button>
         <button class="btn-ctrl" data-shader="normals">NORMALS</button>
         <button class="btn-ctrl" data-shader="wireframe">WIREFRAME</button>
       </div>
@@ -147,28 +153,16 @@
       </div>
     </div>
 
-    <!-- Display / Environment Toggles -->
+    <!-- Viewport Environment -->
     <div class="panel-section">
-      <div class="panel-title">VIEWPORT CONTROLS</div>
+      <div class="panel-title">VIEWPORT SETTINGS</div>
       <div class="control-row">
         <span class="control-label">Turntable Rotation</span>
         <input type="checkbox" id="chk-turntable" />
       </div>
       <div class="control-row">
-        <span class="control-label">Spin Speed</span>
-        <input type="range" id="rotate-speed" min="0.2" max="3" step="0.1" value="1.0" />
-      </div>
-      <div class="control-row">
-        <span class="control-label">Wireframe Overlay</span>
-        <input type="checkbox" id="chk-wire-overlay" />
-      </div>
-      <div class="control-row">
         <span class="control-label">Coordinate Grid</span>
         <input type="checkbox" id="chk-grid" checked />
-      </div>
-      <div class="control-row">
-        <span class="control-label">Axis Indicator</span>
-        <input type="checkbox" id="chk-axes" />
       </div>
       <div class="control-row">
         <span class="control-label">Bounding Box</span>
@@ -176,42 +170,54 @@
       </div>
     </div>
 
-    <!-- Metadata Card -->
+    <!-- Specs -->
     <div class="panel-section">
-      <div class="panel-title">TELEMETRY & SPECS</div>
+      <div class="panel-title">TELEMETRY</div>
       <div class="stat-item">
         <span class="stat-key">Component:</span>
-        <span class="stat-val" id="stat-name">Push Notification Pipeline</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-key">Format:</span>
-        <span class="stat-val" id="stat-format">3D STAGE</span>
+        <span class="stat-val" id="stat-name">Push Architecture</span>
       </div>
       <div class="stat-item">
         <span class="stat-key">Vertices:</span>
         <span class="stat-val" id="stat-verts">--</span>
       </div>
       <div class="stat-item">
-        <span class="stat-key">Polygons:</span>
-        <span class="stat-val" id="stat-tris">--</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-key">Bounds (X×Y×Z):</span>
+        <span class="stat-key">Bounds:</span>
         <span class="stat-val" id="stat-dims">--</span>
-      </div>
-      <div class="stat-item">
-        <span class="stat-key">Data Size:</span>
-        <span class="stat-val" id="stat-size">--</span>
       </div>
     </div>
   </aside>
 
-  <!-- Bottom Camera View Presets HUD -->
-  <div class="hud-bottom-controls">
-    <button class="btn-ctrl active" data-view="iso">ISO</button>
-    <button class="btn-ctrl" data-view="front">FRONT</button>
-    <button class="btn-ctrl" data-view="top">TOP</button>
-    <button class="btn-ctrl" data-view="side">SIDE</button>
+  <!-- ================= TALKING PUSH TOKEN NARRATOR PANEL ================= -->
+  <div class="token-narrator-panel" id="token-narrator">
+    <div class="token-narrator-header">
+      <div class="token-avatar">
+        <div class="token-avatar-orb">TK</div>
+        <div>
+          <div class="token-name" id="token-title">I Am Born on the Device</div>
+          <div class="token-subtitle" id="token-subtitle">STAGE 1: APNs / FCM Token Minting</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="token-audio-toggle" id="btn-token-replay">↻ REPLAY VOICE</button>
+        <button class="token-audio-toggle" id="btn-token-audio">🔊 VOICE: ON</button>
+      </div>
+    </div>
+
+    <div class="token-dialogue-body" id="token-dialogue">
+      Hello! I am your <strong>Push Token</strong>. Think of me like an <em>email address</em> for this app installation on John's phone.<br/>
+      The platform (Apple APNs or Google FCM) minted me. I am <strong>opaque and unique</strong> to this exact app and hardware—you can never guess or fabricate me!
+    </div>
+
+    <div class="token-nav-bar">
+      <div class="step-indicator">
+        STAGE <span id="token-step-num">1</span> OF 6
+      </div>
+      <div class="token-nav-buttons">
+        <button class="btn-token-nav" id="btn-token-prev">◀ PREV</button>
+        <button class="btn-token-nav primary" id="btn-token-next">NEXT STAGE ▶</button>
+      </div>
+    </div>
   </div>
 
   <!-- Right Side Handoff Drawer -->
@@ -221,12 +227,12 @@
       <button class="drawer-close" id="btn-close-handoff">✕</button>
     </div>
     <div class="drawer-content">
-      <h4 style="color: var(--cyan); margin-bottom: 8px;">Architecture Principles</h4>
+      <h4 style="color: var(--cyan); margin-bottom: 8px;">Core Architecture</h4>
       <p style="color: var(--text-muted); margin-bottom: 14px;">
         A remote push routes messages from application backends through platform push services (APNs/FCM) to a specific installation using an opaque device token.
       </p>
 
-      <h4 style="color: var(--green); margin-bottom: 8px;">Suggested Registration Record</h4>
+      <h4 style="color: var(--amber); margin-bottom: 8px;">Suggested Registration Record</h4>
       <table class="schema-table">
         <thead>
           <tr>
@@ -258,7 +264,7 @@
         </tbody>
       </table>
 
-      <h4 style="color: var(--cyan); margin-bottom: 12px;">Visual Walkthrough & Stills</h4>
+      <h4 style="color: var(--cyan); margin-bottom: 12px;">Walkthrough Stills & Timestamps</h4>
 
       <div class="still-card">
         <img src="stills/01-email-recipient.png" alt="Email Recipient Analogy" />
@@ -318,18 +324,10 @@
     </div>
   </aside>
 
-  <!-- Fullscreen Drag & Drop Target Overlay -->
-  <div id="drop-target">
-    <div class="drop-text">DROP 3D ARTIFACT TO LOAD</div>
-    <div style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.9rem;">
-      Compatible with STL, OBJ, GLTF, and GLB files
-    </div>
-  </div>
-
   <!-- Loading Overlay -->
   <div id="loader">
     <div class="spinner"></div>
-    <div style="letter-spacing: 2px;">PARSING 3D GEOMETRY...</div>
+    <div style="letter-spacing: 2px;">AWAKENING PUSH TOKEN...</div>
   </div>
 
   <script type="module" src="js/app.js"></script>

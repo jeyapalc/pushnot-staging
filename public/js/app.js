@@ -3,94 +3,73 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /* =====================================================================
-   PUSHNOT // 3D speaker aid for "how push notifications work"
-   Every visual is derived from (stage, t). Scrubbing backwards undoes
-   effects; nothing is toggled by side effects.
+   PUSHNOT // Clean 3D Orbit
+   Single continuous 0..1 timeline across 4 uncluttered beats:
+     0.00–0.20  1. Install App on Phone
+     0.20–0.45  2. Cloud creates Token -> Phone
+     0.45–0.70  3. Phone registers Token -> Server
+     0.70–1.00  4. Server -> Cloud -> Push Notification -> Phone
    ===================================================================== */
 
+const R = 42; // orbit radius
 const POS = {
-  server: new THREE.Vector3(-48, 0, 0),
-  phone: new THREE.Vector3(48, 0, 0),
-  ipad: new THREE.Vector3(76, 0, -28),
-  apns: new THREE.Vector3(-13, 26, -8),
-  fcm: new THREE.Vector3(15, 19, -16)
+  phone:  new THREE.Vector3( Math.cos(Math.PI / 6) * R, 0,  Math.sin(Math.PI / 6) * R), // front-right
+  server: new THREE.Vector3(-Math.cos(Math.PI / 6) * R, 0,  Math.sin(Math.PI / 6) * R), // front-left
+  cloud:  new THREE.Vector3(0, 22, -R)                                                   // back-top
 };
 
-const TOKEN_OLD = 'apns:7f4a…e891';
-const TOKEN_NEW = 'apns:9b12…c440';
-const TOKEN_IPAD = 'apns:b912…77d0';
-const TOKEN_FCM = 'fcm:eX98…001a';
-
-const STAGES = [
-  { label: '01 · MINT TOKEN',         cam: [0, 56, 148],  tgt: [0, 12, 0] },
-  { label: '02 · REGISTER',           cam: [0, 52, 138],  tgt: [0, 12, 0] },
-  { label: '03 · EVENT & LOOKUP',     cam: [-18, 46, 110], tgt: [-22, 14, 0] },
-  { label: '04 · SEND TO APNs',       cam: [-16, 48, 114], tgt: [-18, 16, -4] },
-  { label: '05 · DELIVER & DISPLAY',  cam: [18, 46, 114],  tgt: [16, 14, -4] },
-  { label: '06 · REINSTALL & ROTATE', cam: [0, 58, 152],  tgt: [0, 12, 0] }
-];
-const STAGE_SECONDS = [5, 5, 6, 5, 5, 10];
+const STEP_STOPS = [0.08, 0.34, 0.58, 0.88]; // click jumps to middle/peak of each beat
+const LOOP_SECONDS = 14;
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
-const inR = (t, a, b) => t >= a && t < b;
 
-class PushnotSpeakerAid {
+class PushnotOrbit {
   constructor() {
     this.container = document.getElementById('canvas-container');
     this.loader = new GLTFLoader();
 
-    this.stage = 0;
-    this.t = 0;
-    this.fanout = false;
-    this.alertsAllowed = true;
-    this.secondApp = false;
-
+    this.t = 0.08;
     this.playing = false;
-    this.playUntil = 0;
+    this.autoOrbit = true;
+    this.orbitAngle = 0.25;
     this.lastFrame = performance.now();
-
-    this.camGoal = null;
-    this.anchors = { phoneTop: 34, serverTop: 38, ipadTop: 38 };
-
-    this.lastDbKey = '';
-    this.lastLogKey = '';
+    this.tops = { phone: 30, server: 36 };
 
     this.initScene();
     this.initLights();
-    this.initPipelines();
-    this.initGateways();
+    this.initOrbitRing();
+    this.initCloud();
     this.initMovers();
     this.loadModels();
     this.initUI();
-
-    this.goToStage(0, true);
     this.animate();
   }
 
-  /* ---------------- scene ---------------- */
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x06080d);
-    this.scene.fog = new THREE.FogExp2(0x06080d, 0.0045);
+    this.scene.fog = new THREE.FogExp2(0x05080f, 0.0038);
 
-    this.camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 2000);
+    this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
+    this.camera.position.set(28, 48, 118);
 
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.35;
+    this.renderer.toneMappingExposure = 1.3;
     this.container.appendChild(this.renderer.domElement);
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.06;
-    this.controls.addEventListener('start', () => { this.camGoal = null; });
-
-    const grid = new THREE.GridHelper(280, 56, 0x00f0ff, 0x111c2a);
-    grid.position.y = -0.2;
-    this.scene.add(grid);
+    this.controls.dampingFactor = 0.05;
+    this.controls.target.set(0, 14, 0);
+    this.controls.minDistance = 45;
+    this.controls.maxDistance = 240;
+    this.controls.maxPolarAngle = Math.PI * 0.48;
+    this.controls.addEventListener('start', () => {
+      if (this.autoOrbit) this.setAutoOrbit(false);
+    });
 
     addEventListener('resize', () => {
       this.camera.aspect = innerWidth / innerHeight;
@@ -100,129 +79,159 @@ class PushnotSpeakerAid {
   }
 
   initLights() {
-    this.scene.add(new THREE.AmbientLight(0xffffff, 1.2));
-    const a = new THREE.DirectionalLight(0x00f0ff, 2.4); a.position.set(60, 120, 80); this.scene.add(a);
-    const b = new THREE.DirectionalLight(0xffaa00, 1.6); b.position.set(-80, 100, -50); this.scene.add(b);
-    const c = new THREE.DirectionalLight(0x00ff88, 1.4); c.position.set(0, -40, -80); this.scene.add(c);
+    this.scene.add(new THREE.AmbientLight(0xdbeafe, 1.1));
+    const key = new THREE.DirectionalLight(0x38bdf8, 2.2); key.position.set(60, 110, 70); this.scene.add(key);
+    const warm = new THREE.DirectionalLight(0xfbbf24, 1.4); warm.position.set(-70, 80, -40); this.scene.add(warm);
+    const rim = new THREE.DirectionalLight(0x34d399, 1.2); rim.position.set(0, 40, -90); this.scene.add(rim);
   }
 
-  initPipelines() {
-    const v = (x, y, z) => new THREE.Vector3(x, y, z);
-    // Token registration path: phone -> app backend
-    this.cPhoneToServer = new THREE.QuadraticBezierCurve3(v(46, 12, 2), v(0, 4, 28), v(-46, 14, 2));
-    // Backend -> APNs (authenticated send); reverse = provider response
-    this.cServerToApns = new THREE.QuadraticBezierCurve3(v(-46, 20, 0), v(-30, 38, -6), POS.apns.clone());
-    // APNs -> phone (token issue + message delivery)
-    this.cApnsToPhone = new THREE.QuadraticBezierCurve3(POS.apns.clone(), v(20, 40, -6), v(48, 18, 1));
-    // APNs -> iPad (fan-out)
-    this.cApnsToIpad = new THREE.QuadraticBezierCurve3(POS.apns.clone(), v(34, 44, -24), v(76, 18, -27));
-    // Backend -> FCM (other route; used by Android installs)
-    this.cServerToFcm = new THREE.QuadraticBezierCurve3(v(-46, 22, -2), v(-16, 44, -16), POS.fcm.clone());
+  initOrbitRing() {
+    // Ground orbital ring
+    const ringGeo = new THREE.TorusGeometry(R, 0.18, 12, 128);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.28 });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = 0.15;
+    this.scene.add(ring);
 
-    this.line(this.cPhoneToServer, 0xffaa00, 0.55);
-    this.line(this.cServerToApns, 0x00f0ff, 0.55);
-    this.line(this.cApnsToPhone, 0x00ff88, 0.55);
-    this.line(this.cServerToFcm, 0xb026ff, 0.18);
-    this.ipadLine = this.line(this.cApnsToIpad, 0x00ff88, 0.4);
-    this.ipadLine.visible = false;
+    // Subtle outer halo ring
+    const outer = new THREE.Mesh(
+      new THREE.TorusGeometry(R + 10, 0.08, 8, 128),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.1 })
+    );
+    outer.rotation.x = Math.PI / 2;
+    outer.position.y = 0.1;
+    this.scene.add(outer);
+
+    // Orbital arcs connecting Phone, Cloud, Server
+    const pPhone  = POS.phone.clone().setY(16);
+    const pServer = POS.server.clone().setY(18);
+    const pCloud  = POS.cloud.clone();
+
+    this.arcCloudToPhone = new THREE.QuadraticBezierCurve3(
+      pCloud, new THREE.Vector3(36, 30, -14), pPhone
+    );
+    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(
+      pPhone, new THREE.Vector3(0, 10, R + 10), pServer
+    );
+    this.arcServerToCloud = new THREE.QuadraticBezierCurve3(
+      pServer, new THREE.Vector3(-36, 30, -14), pCloud
+    );
+
+    this.addArc(this.arcCloudToPhone, 0x34d399, 0.35);
+    this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.35);
+    this.addArc(this.arcServerToCloud, 0x38bdf8, 0.35);
+
+    // Subtle floating starfield
+    const pts = [];
+    for (let i = 0; i < 240; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const rad = 55 + Math.random() * 140;
+      pts.push(Math.cos(a) * rad, -10 + Math.random() * 90, Math.sin(a) * rad);
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    this.stars = new THREE.Points(
+      starGeo,
+      new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.7, transparent: true, opacity: 0.45 })
+    );
+    this.scene.add(this.stars);
   }
 
-  line(curve, color, opacity) {
-    const g = new THREE.BufferGeometry().setFromPoints(curve.getPoints(60));
-    const m = new THREE.LineDashedMaterial({ color, dashSize: 2.4, gapSize: 1.2, transparent: true, opacity });
-    const l = new THREE.Line(g, m);
-    l.computeLineDistances();
-    this.scene.add(l);
-    return l;
+  addArc(curve, color, opacity) {
+    const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(64));
+    const mat = new THREE.LineDashedMaterial({ color, dashSize: 2.2, gapSize: 1.4, transparent: true, opacity });
+    const line = new THREE.Line(geo, mat);
+    line.computeLineDistances();
+    this.scene.add(line);
   }
 
-  initGateways() {
-    this.apnsNode = this.gateway(0x00f0ff);
-    this.apnsNode.position.copy(POS.apns);
-    this.fcmNode = this.gateway(0xb026ff);
-    this.fcmNode.position.copy(POS.fcm);
-    this.fcmNode.scale.setScalar(0.8);
-    this.scene.add(this.apnsNode, this.fcmNode);
-  }
+  initCloud() {
+    this.cloud = new THREE.Group();
+    this.cloud.position.copy(POS.cloud);
 
-  gateway(color) {
-    const g = new THREE.Group();
-    g.add(new THREE.Mesh(
-      new THREE.IcosahedronGeometry(4.5, 1),
-      new THREE.MeshStandardMaterial({ color, wireframe: true, emissive: color, emissiveIntensity: 0.6 })
-    ));
-    g.add(new THREE.Mesh(new THREE.SphereGeometry(1.8, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffff })));
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(7, 0.22, 8, 40), new THREE.MeshBasicMaterial({ color }));
-    ring.rotation.x = Math.PI / 3;
-    g.add(ring);
-    return g;
+    const core = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(5.5, 2),
+      new THREE.MeshStandardMaterial({
+        color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.7,
+        wireframe: true
+      })
+    );
+    const inner = new THREE.Mesh(
+      new THREE.SphereGeometry(2.6, 24, 24),
+      new THREE.MeshBasicMaterial({ color: 0xe0f2fe })
+    );
+    const orbit1 = new THREE.Mesh(
+      new THREE.TorusGeometry(8.5, 0.18, 10, 64),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 })
+    );
+    orbit1.rotation.x = Math.PI / 3;
+    const orbit2 = new THREE.Mesh(
+      new THREE.TorusGeometry(10.5, 0.12, 10, 64),
+      new THREE.MeshBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.45 })
+    );
+    orbit2.rotation.y = Math.PI / 3;
+
+    this.cloud.add(core, inner, orbit1, orbit2, new THREE.PointLight(0x38bdf8, 3, 45));
+    this.cloudOrbit1 = orbit1;
+    this.cloudOrbit2 = orbit2;
+    this.scene.add(this.cloud);
   }
 
   initMovers() {
-    // Token chip (address) — amber octahedron
-    this.chip = new THREE.Group();
-    this.chipMat = new THREE.MeshStandardMaterial({ color: 0xffaa00, emissive: 0xff8800, emissiveIntensity: 0.9, metalness: 0.8, roughness: 0.2 });
-    this.chip.add(new THREE.Mesh(new THREE.OctahedronGeometry(2.2), this.chipMat));
-    this.chip.add(new THREE.PointLight(0xffaa00, 2.5, 26));
+    // Token orb (amber)
+    this.tokenOrb = new THREE.Group();
+    this.tokenOrb.add(new THREE.Mesh(
+      new THREE.OctahedronGeometry(2.2),
+      new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xd97706, emissiveIntensity: 0.9, metalness: 0.7, roughness: 0.2 })
+    ));
+    this.tokenOrb.add(new THREE.PointLight(0xfbbf24, 3, 28));
+    this.scene.add(this.tokenOrb);
 
-    // Payload envelope (message) — green slab, carries address label
-    const mkEnv = () => {
-      const g = new THREE.Group();
-      const mat = new THREE.MeshStandardMaterial({ color: 0x00ff88, emissive: 0x00cc66, emissiveIntensity: 0.8, metalness: 0.6, roughness: 0.3 });
-      const box = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.8, 0.6), mat);
-      g.add(box);
-      g.add(new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0xffffff })));
-      g.add(new THREE.PointLight(0x00ff88, 2.2, 24));
-      g.userData.mat = mat;
-      return g;
-    };
-    this.env = mkEnv();
-    this.env2 = mkEnv();
+    // Push notification capsule (emerald)
+    this.pushOrb = new THREE.Group();
+    const box = new THREE.Mesh(
+      new THREE.BoxGeometry(4.4, 2.8, 0.7),
+      new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x059669, emissiveIntensity: 0.85, metalness: 0.5, roughness: 0.25 })
+    );
+    this.pushOrb.add(box);
+    this.pushOrb.add(new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0xffffff })));
+    this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
+    this.scene.add(this.pushOrb);
 
-    // Provider response (200 / 410)
-    this.ackMat = new THREE.MeshBasicMaterial({ color: 0x00ff88 });
-    this.ack = new THREE.Mesh(new THREE.SphereGeometry(1.3, 16, 16), this.ackMat);
-
-    this.scene.add(this.chip, this.env, this.env2, this.ack);
+    // Install pulse ring around phone
+    this.installRing = new THREE.Mesh(
+      new THREE.TorusGeometry(11, 0.25, 10, 64),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 })
+    );
+    this.installRing.rotation.x = Math.PI / 2;
+    this.installRing.position.set(POS.phone.x, 1, POS.phone.z);
+    this.scene.add(this.installRing);
   }
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let pending = 2;
-    const done = () => { if (--pending === 0) status.style.display = 'none'; };
-    const fail = (name) => (err) => {
-      console.error(err);
-      status.textContent = `⚠ FAILED TO LOAD ${name}`;
-      status.classList.add('error');
-    };
+    let left = 2;
+    const done = () => { if (--left === 0) status.style.display = 'none'; };
 
     this.loader.load('models/data_center_rack.glb', (gltf) => {
       const rack = gltf.scene;
-      rack.rotation.y = Math.PI / 4;
-      this.anchors.serverTop = this.ground(rack, 38, POS.server);
+      rack.rotation.y = Math.PI / 3;
+      this.tops.server = this.ground(rack, 36, POS.server);
       this.scene.add(rack);
       done();
-    }, undefined, fail('SERVER RACK'));
+    }, undefined, done);
 
     this.loader.load('models/generic_smartphone_game-ready.glb', (gltf) => {
       const phone = gltf.scene;
-      phone.rotation.y = -Math.PI / 5;
-      this.anchors.phoneTop = this.ground(phone, 32, POS.phone);
+      phone.rotation.y = -Math.PI / 3;
+      this.tops.phone = this.ground(phone, 30, POS.phone);
       this.scene.add(phone);
-
-      this.ipad = phone.clone(true);
-      this.ipad.rotation.y = -0.5;
-      this.anchors.ipadTop = this.ground(this.ipad, 38, POS.ipad);
-      this.ipad.visible = this.fanout;
-      this.scene.add(this.ipad);
       done();
-    }, undefined, fail('SMARTPHONE'));
+    }, undefined, done);
   }
 
-  // Scale to target size, sit on the grid, centred on target x/z. Returns top y.
   ground(obj, size, at) {
-    obj.scale.setScalar(1);
-    obj.position.set(0, 0, 0);
     let box = new THREE.Box3().setFromObject(obj);
     const dim = box.getSize(new THREE.Vector3());
     obj.scale.setScalar(size / Math.max(dim.x, dim.y, dim.z));
@@ -232,216 +241,123 @@ class PushnotSpeakerAid {
     return new THREE.Box3().setFromObject(obj).max.y;
   }
 
-  /* ---------------- state derivation ---------------- */
-  computeState() {
-    const S = this.stage, t = this.t, f = this.fanout, allow = this.alertsAllowed;
-    const st = {
-      caption: '', phone: null, rows: [], log: [],
-      chip: null, env: null, env2: null, ack: null,
-      banner: false, silent: false, ipadDelivered: false
-    };
-
-    // ---- phone token card ----
-    if (S === 0) st.phone = t < 0.95 ? { kind: 'pending', value: 'requesting token…' } : { kind: 'active', value: TOKEN_OLD };
-    else if (S < 5) st.phone = { kind: 'active', value: TOKEN_OLD };
-    else if (t < 0.1) st.phone = { kind: 'active', value: TOKEN_OLD };
-    else if (t < 0.3) st.phone = { kind: 'pending', value: 'app reinstalled · requesting…' };
-    else st.phone = { kind: 'new', value: TOKEN_NEW };
-
-    // ---- backend registrations ----
-    const oldExists = S > 1 || (S === 1 && t >= 0.97);
-    const targetOld = (S === 2 && t >= 0.3) || S === 3 || S === 4 || (S === 5 && inR(t, 0.58, 0.95));
-    const targetIpad = f && ((S === 2 && t >= 0.3) || S === 3 || S === 4);
-    if (oldExists) {
-      st.rows.push({
-        acct: 'john@example.com', dev: 'iPhone', tok: TOKEN_OLD,
-        status: S === 5 && t >= 0.95 ? 'RETIRED' : 'ACTIVE',
-        cls: S === 5 && t >= 0.95 ? 'retired' : targetOld ? 'target' : (S === 1 ? 'fresh' : '')
-      });
-    }
-    if (S === 5 && t >= 0.55) st.rows.push({ acct: 'john@example.com', dev: 'iPhone', tok: TOKEN_NEW, status: 'ACTIVE', cls: 'fresh' });
-    st.rows.push({ acct: 'john@example.com', dev: 'iPad', tok: TOKEN_IPAD, status: 'ACTIVE', cls: targetIpad ? 'target' : '' });
-    st.rows.push({ acct: 'sarah@corp.com', dev: 'Pixel', tok: TOKEN_FCM, status: 'ACTIVE', cls: '' });
-
-    // ---- server log + movers + caption ----
-    const sendLines = () => {
-      const L = [];
-      L.push('EVENT order_shipped #8492 → john@example.com');
-      if (S > 2 || t >= 0.3) L.push(`LOOKUP active installations → ${f ? 2 : 1} target${f ? 's' : ''}`);
-      if (S > 2 || t >= 0.6) L.push("BUILD payload {title:'Order Shipped', ref:'order/8492'} ttl=1h");
-      if (S >= 3) L.push(`POST api.push.apple.com/3/device/${TOKEN_OLD}${f ? ' (+iPad)' : ''} · JWT auth`);
-      if (S > 3 || (S === 3 && t >= 0.98)) L.push('← 200 OK apns-id 8f1c… · ACCEPTED (not proof of delivery)');
-      return L;
-    };
-
-    switch (S) {
-      case 0:
-        st.caption = t < 0.1 ? 'The app asks the OS to register for remote notifications.'
-          : t < 0.95 ? 'APNs issues an opaque device token for THIS app on THIS device.'
-          : "The phone has its address. The server doesn't know it yet.";
-        if (inR(t, 0.1, 0.95)) st.chip = { p: this.cApnsToPhone.getPoint(seg(t, 0.1, 0.95)), label: TOKEN_OLD };
-        st.log = ['(no registration for this installation yet)'];
-        break;
-
-      case 1:
-        st.caption = t < 0.97 ? "The app sends its token to its own backend, tied to the signed-in account."
-          : 'Backend upserts ONE active registration for this installation.';
-        if (t < 0.97) st.chip = { p: this.cPhoneToServer.getPoint(seg(t, 0, 0.97)), label: TOKEN_OLD };
-        st.log = ["POST /installations {account:'john', installation:'iphone-01', provider:'apns'}"];
-        if (t >= 0.97) st.log.push('UPSERT iphone-01 → ' + TOKEN_OLD + ' · ACTIVE');
-        break;
-
-      case 2:
-        st.caption = t < 0.3 ? "A product event fires: John's order #8492 shipped."
-          : t < 0.6 ? (f ? 'Lookup: John has 2 active installations → send to each.' : "Lookup: find John's active installation and its token.")
-          : 'Build the payload. Token = WHERE it goes. Payload = WHAT it says.';
-        if (t >= 0.6) {
-          const s = seg(t, 0.6, 0.8);
-          st.env = { p: this.cServerToApns.getPoint(0), scale: s, label: `TO ${TOKEN_OLD} · "Order Shipped"` };
-          if (f) st.env2 = { p: this.cServerToApns.getPoint(0).add(new THREE.Vector3(0, -4, 3)), scale: s, label: `TO ${TOKEN_IPAD}` };
-        }
-        st.log = sendLines();
-        break;
-
-      case 3:
-        st.caption = t < 0.6 ? 'Authenticated request to APNs — the provider that issued this token.'
-          : 'APNs answers 200: request ACCEPTED. That is not delivery yet.';
-        st.env = { p: this.cServerToApns.getPoint(seg(t, 0, 0.6)), label: `TO ${TOKEN_OLD} · "Order Shipped"` };
-        if (f) st.env2 = { p: this.cServerToApns.getPoint(seg(t, 0.04, 0.64)), label: `TO ${TOKEN_IPAD}` };
-        if (inR(t, 0.62, 0.98)) st.ack = { p: this.cServerToApns.getPoint(1 - seg(t, 0.62, 0.98)), label: '200 OK · ACCEPTED', ok: true };
-        st.log = sendLines();
-        break;
-
-      case 4:
-        st.caption = t < 0.7 ? 'APNs routes the message to the device over its persistent connection.'
-          : t < 0.8 ? "The OS checks this app's notification permission."
-          : allow ? 'Alert displayed. Display is device-side evidence, not something the server knows.'
-          : 'Delivered — but alerts are off for this app, so nothing is shown.';
-        if (t < 0.8) {
-          st.env = { p: this.cApnsToPhone.getPoint(seg(t, 0, 0.7)), label: `TO ${TOKEN_OLD} · "Order Shipped"` };
-          if (f) st.env2 = { p: this.cApnsToIpad.getPoint(seg(t, 0, 0.7)), label: `TO ${TOKEN_IPAD}` };
-        }
-        st.banner = t >= 0.8 && allow;
-        st.silent = t >= 0.8 && !allow;
-        st.ipadDelivered = f && t >= 0.8;
-        st.log = sendLines();
-        if (t >= 0.8) st.log.push(allow ? '(device-side) displayed on iPhone' : '(device-side) delivered, alert suppressed by settings');
-        break;
-
-      case 5:
-        st.caption = t < 0.1 ? 'John deletes the app. Its old token stops being valid.'
-          : t < 0.3 ? 'Reinstall: APNs issues a NEW token for the new installation.'
-          : t < 0.55 ? 'The app syncs the new token; the backend registers it.'
-          : t < 0.77 ? 'A queued send still targets the OLD token…'
-          : t < 0.95 ? 'APNs rejects it: 410 Unregistered.'
-          : 'Backend retires the old token. The new registration stays ACTIVE.';
-        if (inR(t, 0.12, 0.3)) st.chip = { p: this.cApnsToPhone.getPoint(seg(t, 0.12, 0.3)), label: TOKEN_NEW };
-        if (inR(t, 0.32, 0.55)) st.chip = { p: this.cPhoneToServer.getPoint(seg(t, 0.32, 0.55)), label: TOKEN_NEW };
-        if (inR(t, 0.58, 0.77)) st.env = { p: this.cServerToApns.getPoint(seg(t, 0.58, 0.75)), label: `TO ${TOKEN_OLD} (stale)`, stale: true };
-        if (inR(t, 0.77, 0.95)) st.ack = { p: this.cServerToApns.getPoint(1 - seg(t, 0.77, 0.95)), label: '410 UNREGISTERED', ok: false };
-        st.log = [];
-        if (t >= 0.1) st.log.push('(device) app uninstalled → reinstalled');
-        if (t >= 0.55) st.log.push('UPSERT iphone-02 → ' + TOKEN_NEW + ' · ACTIVE');
-        if (t >= 0.58) st.log.push('POST api.push.apple.com/3/device/' + TOKEN_OLD + ' (queued send)');
-        if (t >= 0.95) st.log.push('← 410 Unregistered → RETIRE ' + TOKEN_OLD + ' · keep ' + TOKEN_NEW);
-        if (!st.log.length) st.log = ['(waiting)'];
-        break;
-    }
-    return st;
+  /* ---------------- UI ---------------- */
+  setAutoOrbit(on) {
+    this.autoOrbit = on;
+    const b = document.getElementById('btn-orbit');
+    b.classList.toggle('on', on);
   }
 
-  /* ---------------- apply state ---------------- */
-  render3D(st) {
-    const place = (obj, m) => {
-      obj.visible = !!m;
-      if (m) {
-        obj.position.copy(m.p);
-        obj.scale.setScalar(m.scale === undefined ? 1 : Math.max(0.01, m.scale));
-      }
-    };
-    place(this.chip, st.chip);
-    place(this.env, st.env);
-    place(this.env2, st.env2);
-    place(this.ack, st.ack);
-
-    if (st.env) {
-      this.env.userData.mat.color.setHex(st.env.stale ? 0xff3366 : 0x00ff88);
-      this.env.userData.mat.emissive.setHex(st.env.stale ? 0xaa0033 : 0x00cc66);
-    }
-    if (st.ack) this.ackMat.color.setHex(st.ack.ok ? 0x00ff88 : 0xff0055);
-
-    this.ipadLine.visible = this.fanout;
-    if (this.ipad) this.ipad.visible = this.fanout;
+  activeStepIndex() {
+    if (this.t < 0.20) return 0;
+    if (this.t < 0.45) return 1;
+    if (this.t < 0.70) return 2;
+    return 3;
   }
 
-  renderOverlays(st) {
-    const A = this.anchors;
-    const V = (x, y, z) => new THREE.Vector3(x, y, z);
+  jumpToStep(idx) {
+    const i = (idx + 4) % 4;
+    this.playing = false;
+    this.t = STEP_STOPS[i];
+  }
 
-    // Caption + stage UI
-    document.getElementById('cap-stage').textContent = STAGES[this.stage].label;
-    document.getElementById('cap-text').textContent = st.caption;
-    document.getElementById('scrub').value = Math.round(this.t * 1000);
-    document.getElementById('scrub-pct').textContent = Math.round(this.t * 100) + '%';
-    document.getElementById('btn-play').textContent = this.playing ? '❚❚ PAUSE' : '▶ PLAY STAGE';
+  initUI() {
+    document.querySelectorAll('.step').forEach((btn) => {
+      btn.addEventListener('click', () => this.jumpToStep(parseInt(btn.dataset.step, 10)));
+    });
+    document.getElementById('scrub').addEventListener('input', (e) => {
+      this.playing = false;
+      this.t = parseInt(e.target.value, 10) / 1000;
+    });
+    document.getElementById('btn-play').addEventListener('click', () => {
+      this.playing = !this.playing;
+      if (this.playing && this.t >= 0.99) this.t = 0;
+    });
+    document.getElementById('btn-prev').addEventListener('click', () => this.jumpToStep(this.activeStepIndex() - 1));
+    document.getElementById('btn-next').addEventListener('click', () => this.jumpToStep(this.activeStepIndex() + 1));
+    document.getElementById('btn-orbit').addEventListener('click', () => this.setAutoOrbit(!this.autoOrbit));
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    });
 
-    // Phone token card
-    const card = document.getElementById('card-phone');
-    card.className = 'holo holo-card ' + st.phone.kind;
-    document.getElementById('card-phone-badge').textContent =
-      st.phone.kind === 'pending' ? '◌ NO TOKEN YET' : st.phone.kind === 'new' ? '● NEW DEVICE TOKEN' : '● DEVICE TOKEN';
-    document.getElementById('card-phone-val').textContent = st.phone.value;
-    this.place('card-phone', V(POS.phone.x, A.phoneTop + 3, POS.phone.z), true);
-    this.place('card-app2', V(POS.phone.x + 14, A.phoneTop - 4, POS.phone.z), this.secondApp);
+    addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.code === 'Space') { e.preventDefault(); this.playing = !this.playing; }
+      else if (e.key === 'ArrowRight') this.jumpToStep(this.activeStepIndex() + 1);
+      else if (e.key === 'ArrowLeft') this.jumpToStep(this.activeStepIndex() - 1);
+      else if (e.key >= '1' && e.key <= '4') this.jumpToStep(parseInt(e.key, 10) - 1);
+    });
+  }
 
-    // Backend DB + Log (docked cleanly top-left, never clipped or overlapping)
-    const dbKey = JSON.stringify(st.rows);
-    if (dbKey !== this.lastDbKey) {
-      this.lastDbKey = dbKey;
-      document.getElementById('db-body').innerHTML = st.rows.map((r) =>
-        `<tr class="${r.cls}"><td>${r.acct}</td><td>${r.dev}</td><td>${r.tok}</td><td class="st">${r.status}</td></tr>`
-      ).join('');
+  /* ---------------- render state from t ---------------- */
+  updateState(now) {
+    const t = this.t;
+    const step = this.activeStepIndex();
+
+    // Update dock UI
+    document.getElementById('scrub').value = Math.round(t * 1000);
+    document.getElementById('btn-play').textContent = this.playing ? '❚❚' : '▶';
+    document.querySelectorAll('.step').forEach((el, i) => el.classList.toggle('active', i === step));
+
+    // 1. Install pulse (0.00 - 0.20)
+    const isInstall = t < 0.20;
+    this.installRing.visible = isInstall;
+    if (isInstall) {
+      const pulse = 1 + Math.sin(now * 0.005) * 0.14;
+      this.installRing.scale.setScalar(pulse);
     }
 
-    // Server log (stacked inside backend card)
-    const logKey = st.log.join('|');
-    if (logKey !== this.lastLogKey) {
-      this.lastLogKey = logKey;
-      document.getElementById('log-body').innerHTML = st.log.map((l) => {
-        const cls = l.startsWith('←') ? (l.includes('410') ? 'bad' : 'ok') : l.startsWith('(') ? 'dim' : '';
-        return `<div class="${cls}">› ${l}</div>`;
-      }).join('');
+    // 2. Token orb: Cloud -> Phone (0.20 - 0.42), then Phone -> Server (0.45 - 0.68)
+    let moverPos = null;
+    let moverText = '';
+    let moverPush = false;
+
+    this.tokenOrb.visible = false;
+    this.pushOrb.visible = false;
+
+    if (t >= 0.20 && t < 0.43) {
+      const p = this.arcCloudToPhone.getPoint(seg(t, 0.20, 0.42));
+      this.tokenOrb.visible = true;
+      this.tokenOrb.position.copy(p);
+      moverPos = p;
+      moverText = '🔑 New Device Token';
+    } else if (t >= 0.45 && t < 0.68) {
+      const p = this.arcPhoneToServer.getPoint(seg(t, 0.45, 0.67));
+      this.tokenOrb.visible = true;
+      this.tokenOrb.position.copy(p);
+      moverPos = p;
+      moverText = '🔑 Register Token';
+    } else if (t >= 0.70 && t < 0.96) {
+      // Server -> Cloud (0.70 - 0.82), Cloud -> Phone (0.82 - 0.95)
+      const p = t < 0.82
+        ? this.arcServerToCloud.getPoint(seg(t, 0.70, 0.82))
+        : this.arcCloudToPhone.getPoint(seg(t, 0.82, 0.95));
+      this.pushOrb.visible = true;
+      this.pushOrb.position.copy(p);
+      moverPos = p;
+      moverText = t < 0.82 ? '✉ Send to Cloud' : '✉ Push to Phone';
+      moverPush = true;
     }
 
-    // Moving-object labels
-    this.place('lbl-chip', st.chip && st.chip.p.clone().add(V(0, 3.5, 0)), !!st.chip);
-    if (st.chip) document.getElementById('lbl-chip').textContent = '🔑 ' + st.chip.label;
-    this.place('lbl-env', st.env && st.env.p.clone().add(V(0, 3.5, 0)), !!st.env && (st.env.scale === undefined || st.env.scale > 0.3));
-    if (st.env) {
-      const e = document.getElementById('lbl-env');
-      e.textContent = '✉ ' + st.env.label;
-      e.classList.toggle('stale', !!st.env.stale);
-    }
-    this.place('lbl-env2', st.env2 && st.env2.p.clone().add(V(0, -3.2, 0)), !!st.env2 && (st.env2.scale === undefined || st.env2.scale > 0.3));
-    if (st.env2) document.getElementById('lbl-env2').textContent = '✉ ' + st.env2.label;
-    this.place('lbl-ack', st.ack && st.ack.p.clone().add(V(0, 3, 0)), !!st.ack);
-    if (st.ack) {
-      const a = document.getElementById('lbl-ack');
-      a.textContent = st.ack.label;
-      a.classList.toggle('bad', !st.ack.ok);
-    }
+    // Project clean station tags
+    this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8),  true);
+    this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), true);
+    this.place('pin-cloud',  new THREE.Vector3(POS.cloud.x, POS.cloud.y + 11, POS.cloud.z), true);
 
-    // Device outcomes
-    this.place('banner', V(POS.phone.x, A.phoneTop * 0.72, POS.phone.z + 6), st.banner);
-    this.place('silent', V(POS.phone.x, A.phoneTop * 0.6, POS.phone.z + 6), st.silent);
-    this.place('ipad-banner', V(POS.ipad.x, A.ipadTop * 0.72, POS.ipad.z + 6), st.ipadDelivered && this.alertsAllowed);
+    // Project ONLY the single relevant contextual card for the current beat
+    const phoneCardPos  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 4,  POS.phone.z);
+    const serverCardPos = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
 
-    // Node tags
-    this.place('tag-server', V(POS.server.x, -2, POS.server.z + 10), true);
-    this.place('tag-phone', V(POS.phone.x, -2, POS.phone.z + 8), true);
-    this.place('tag-ipad', V(POS.ipad.x, -2, POS.ipad.z + 8), this.fanout);
-    this.place('tag-apns', V(POS.apns.x, POS.apns.y + 9, POS.apns.z), true);
-    this.place('tag-fcm', V(POS.fcm.x, POS.fcm.y - 7, POS.fcm.z), true);
+    this.place('pin-install', phoneCardPos,  t < 0.20);
+    this.place('pin-token',   phoneCardPos,  t >= 0.40 && t < 0.50);
+    this.place('pin-saved',   serverCardPos, t >= 0.65 && t < 0.74);
+    this.place('pin-push',    phoneCardPos,  t >= 0.93);
+
+    const mv = document.getElementById('pin-mover');
+    mv.textContent = moverText;
+    mv.classList.toggle('push', moverPush);
+    this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.2, 0)) : null, !!moverPos);
   }
 
   place(id, worldPos, show) {
@@ -451,147 +367,45 @@ class PushnotSpeakerAid {
     const p = worldPos.clone().project(this.camera);
     if (p.z > 1 || p.z < -1) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
-    const w = el.offsetWidth || 160;
-    const h = el.offsetHeight || 40;
-    const padX = Math.max(16, w / 2 + 12);
-    const x = Math.max(padX, Math.min(innerWidth - padX, (p.x * 0.5 + 0.5) * innerWidth));
-    const y = Math.max(122 + h, Math.min(innerHeight - 178, (-p.y * 0.5 + 0.5) * innerHeight));
+    const w = el.offsetWidth || 120;
+    const x = Math.max(w / 2 + 16, Math.min(innerWidth - w / 2 - 16, (p.x * 0.5 + 0.5) * innerWidth));
+    const y = Math.max(76, Math.min(innerHeight - 132, (-p.y * 0.5 + 0.5) * innerHeight));
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
   }
 
-  /* ---------------- navigation & playback ---------------- */
-  goToStage(i, snap = false) {
-    this.stage = Math.max(0, Math.min(STAGES.length - 1, i));
-    this.t = 0;
-    document.querySelectorAll('.btn-stage').forEach((b, k) => b.classList.toggle('active', k === this.stage));
-    this.setCamera(STAGES[this.stage].cam, STAGES[this.stage].tgt, snap);
-    document.querySelectorAll('[data-cam]').forEach((b) => b.classList.remove('active'));
-  }
-
-  setCamera(cam, tgt, snap) {
-    const pos = new THREE.Vector3(...cam);
-    const target = new THREE.Vector3(...tgt);
-    if (snap) {
-      this.camera.position.copy(pos);
-      this.controls.target.copy(target);
-      this.camGoal = null;
-    } else {
-      this.camGoal = { pos, target };
-    }
-  }
-
-  play(untilStage = this.stage) {
-    if (this.t >= 1 && this.stage >= untilStage) this.t = 0;
-    this.playUntil = untilStage;
-    this.playing = true;
-    this.lastFrame = performance.now();
-  }
-
-  stop() { this.playing = false; }
-
-  fullSend() {
-    // Event → lookup → send → accept → deliver (stages 3..5), one continuous run.
-    this.stop();
-    this.goToStage(2);
-    this.play(4);
-  }
-
-  tick(dt) {
-    if (!this.playing) return;
-    this.t += dt / STAGE_SECONDS[this.stage];
-    if (this.t >= 1) {
-      if (this.stage < this.playUntil) {
-        this.goToStage(this.stage + 1);
-      } else {
-        this.t = 1;
-        this.stop();
-      }
-    }
-  }
-
-  /* ---------------- UI wiring ---------------- */
-  initUI() {
-    document.querySelectorAll('.btn-stage').forEach((b, k) => b.addEventListener('click', () => { this.stop(); this.goToStage(k); }));
-
-    document.getElementById('scrub').addEventListener('input', (e) => {
-      this.stop();
-      this.t = parseInt(e.target.value, 10) / 1000;
-    });
-
-    document.getElementById('btn-prev').addEventListener('click', () => { this.stop(); this.goToStage(this.stage - 1); });
-    document.getElementById('btn-next').addEventListener('click', () => { this.stop(); this.goToStage(this.stage + 1); });
-    document.getElementById('btn-play').addEventListener('click', () => (this.playing ? this.stop() : this.play()));
-    document.getElementById('btn-full').addEventListener('click', () => this.fullSend());
-
-    const tgl = (id, key, on, off) => {
-      const b = document.getElementById(id);
-      const sync = () => { b.textContent = this[key] ? on : off; b.classList.toggle('on', this[key]); };
-      b.addEventListener('click', () => { this[key] = !this[key]; sync(); });
-      sync();
-    };
-    tgl('btn-fanout', 'fanout', '📱📱 FAN-OUT: iPhone + iPad', '📱 FAN-OUT: iPhone only');
-    tgl('btn-alerts', 'alertsAllowed', '🔔 ALERTS: ALLOWED', '🔕 ALERTS: DENIED');
-    tgl('btn-app2', 'secondApp', '🧩 2ND APP TOKEN: SHOWN', '🧩 2ND APP TOKEN: HIDDEN');
-
-    document.querySelectorAll('[data-cam]').forEach((b) => b.addEventListener('click', () => {
-      document.querySelectorAll('[data-cam]').forEach((x) => x.classList.remove('active'));
-      b.classList.add('active');
-      const presets = {
-        wide: [[0, 60, 140], [0, 12, 0]],
-        phone: [[48, 26, 52], [46, 14, 0]],
-        server: [[-40, 34, 60], [-46, 16, 0]],
-        gateway: [[0, 40, 50], [0, 26, -10]]
-      };
-      const [c, t] = presets[b.dataset.cam];
-      this.setCamera(c, t, false);
-    }));
-
-    document.getElementById('btn-fullscreen').addEventListener('click', () => {
-      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
-      else document.exitFullscreen();
-    });
-
-    addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT') return;
-      if (e.key === 'ArrowRight') { this.stop(); this.goToStage(this.stage + 1); }
-      else if (e.key === 'ArrowLeft') { this.stop(); this.goToStage(this.stage - 1); }
-      else if (e.code === 'Space') { e.preventDefault(); this.playing ? this.stop() : this.play(); }
-      else if (e.key >= '1' && e.key <= '6') { this.stop(); this.goToStage(parseInt(e.key, 10) - 1); }
-      else if (e.key.toLowerCase() === 'f') this.fullSend();
-      else if (e.key === '.') { this.stop(); this.t = Math.min(1, this.t + 0.05); }
-      else if (e.key === ',') { this.stop(); this.t = Math.max(0, this.t - 0.05); }
-    });
-  }
-
-  /* ---------------- loop ---------------- */
   animate() {
     requestAnimationFrame(() => this.animate());
     const now = performance.now();
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
 
-    this.tick(dt);
-
-    if (this.camGoal) {
-      this.camera.position.lerp(this.camGoal.pos, 0.07);
-      this.controls.target.lerp(this.camGoal.target, 0.07);
-      if (this.camera.position.distanceTo(this.camGoal.pos) < 0.05) this.camGoal = null;
+    if (this.playing) {
+      this.t = (this.t + dt / LOOP_SECONDS) % 1;
     }
 
-    this.apnsNode.rotation.y += 0.012;
-    this.apnsNode.rotation.x += 0.006;
-    this.fcmNode.rotation.y -= 0.008;
-    this.chip.rotation.y += 0.05;
-    this.env.rotation.y = Math.sin(now * 0.002) * 0.3;
-    this.env2.rotation.y = this.env.rotation.y;
+    if (this.autoOrbit) {
+      this.orbitAngle += dt * 0.14;
+      const camR = 116;
+      this.camera.position.set(
+        Math.sin(this.orbitAngle) * camR,
+        46 + Math.sin(this.orbitAngle * 0.7) * 6,
+        Math.cos(this.orbitAngle) * camR
+      );
+      this.controls.target.set(0, 14, 0);
+    }
 
-    const st = this.computeState();
-    this.render3D(st);
+    this.cloud.rotation.y += dt * 0.5;
+    this.cloudOrbit1.rotation.z += dt * 0.8;
+    this.cloudOrbit2.rotation.x += dt * 0.6;
+    this.tokenOrb.rotation.y += dt * 2.4;
+    this.pushOrb.rotation.y = Math.sin(now * 0.003) * 0.35;
+    this.stars.rotation.y += dt * 0.02;
+
     this.controls.update();
-    this.renderOverlays(st);
+    this.updateState(now);
     this.renderer.render(this.scene, this.camera);
   }
 }
 
-addEventListener('DOMContentLoaded', () => new PushnotSpeakerAid());
+addEventListener('DOMContentLoaded', () => new PushnotOrbit());

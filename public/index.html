@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUSHNOT // How Push Notifications Work — 3D Stage</title>
+  <title>PUSHNOT // Push Notification 3D Orbit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css" />
   <script type="importmap">
     { "imports": {
@@ -17,99 +17,72 @@
 </head>
 <body>
   <div id="canvas-container"></div>
-  <div id="load-status" class="load-status">LOADING 3D HARDWARE…</div>
+  <div id="load-status" class="load-status">Loading 3D scene…</div>
 
-  <!-- ===== Projected holograms (positioned every frame from 3D coords) ===== -->
-  <div class="holo holo-card" id="card-phone">
-    <div class="badge" id="card-phone-badge">● DEVICE TOKEN</div>
-    <div class="who">MyApp · John's iPhone</div>
-    <div class="val" id="card-phone-val">—</div>
+  <!-- Minimal top bar -->
+  <div class="top-brand">
+    <span class="dot"></span>
+    <span>PUSHNOT</span>
+  </div>
+  <button class="btn-fs" id="btn-fullscreen" title="Fullscreen">⛶</button>
+
+  <!-- Minimal in-world station labels -->
+  <div class="pin pin-node" id="pin-phone">PHONE</div>
+  <div class="pin pin-node" id="pin-server">SERVER</div>
+  <div class="pin pin-node" id="pin-cloud">CLOUD · APNs / FCM</div>
+
+  <!-- Single active contextual callout (only one shown at a time) -->
+  <div class="pin pin-event" id="pin-install">
+    <span class="app-tile">M</span>
+    <div>
+      <div class="ev-title">MyApp Installed</div>
+      <div class="ev-sub">Requests push address</div>
+    </div>
   </div>
 
-  <div class="holo holo-card app2" id="card-app2">
-    <div class="badge">● DEVICE TOKEN</div>
-    <div class="who">ChatApp · same iPhone</div>
-    <div class="val">apns:3c88…10f2</div>
+  <div class="pin pin-event amber" id="pin-token">
+    <span class="ev-ico">🔑</span>
+    <div>
+      <div class="ev-title">Device Token</div>
+      <div class="ev-sub">apns:7f4a…e891</div>
+    </div>
   </div>
 
-  <div class="holo lbl lbl-chip" id="lbl-chip"></div>
-  <div class="holo lbl lbl-env" id="lbl-env"></div>
-  <div class="holo lbl lbl-env" id="lbl-env2"></div>
-  <div class="holo lbl lbl-ack" id="lbl-ack"></div>
-
-  <div class="holo banner" id="banner">
-    <div class="ico">📦</div>
-    <div><div class="b-title">MyApp · Order Shipped</div><div class="b-sub">Order #8492 is on its way. Tap to track.</div></div>
-  </div>
-  <div class="holo silent" id="silent">🔕 delivered · alert suppressed</div>
-  <div class="holo banner small" id="ipad-banner"><div class="ico">📦</div><div class="b-title">Order Shipped</div></div>
-
-  <div class="holo tag tag-server" id="tag-server">APP BACKEND</div>
-  <div class="holo tag tag-phone" id="tag-phone">JOHN'S iPHONE</div>
-  <div class="holo tag tag-phone" id="tag-ipad">JOHN'S iPAD</div>
-  <div class="holo tag tag-apns" id="tag-apns">APNs · APPLE</div>
-  <div class="holo tag tag-fcm" id="tag-fcm">FCM · GOOGLE (Android)</div>
-
-  <!-- ===== Header ===== -->
-  <header class="speaker-header">
-    <div class="brand">
-      <div class="brand-gem"></div>
-      <div class="brand-text">PUSHNOT</div>
-      <div class="brand-tag">HOW PUSH NOTIFICATIONS WORK</div>
+  <div class="pin pin-event cyan" id="pin-saved">
+    <span class="ev-ico">✓</span>
+    <div>
+      <div class="ev-title">Token Registered</div>
+      <div class="ev-sub">Linked to user account</div>
     </div>
-    <div class="cam-nav-group">
-      <button class="btn-cam active" data-cam="wide">WIDE</button>
-      <button class="btn-cam" data-cam="phone">PHONE</button>
-      <button class="btn-cam" data-cam="server">BACKEND</button>
-      <button class="btn-cam" data-cam="gateway">GATEWAYS</button>
-    </div>
-    <div class="header-tools"><button class="btn-tool" id="btn-fullscreen">⛶ FULLSCREEN</button></div>
-  </header>
-
-  <!-- ===== Caption ===== -->
-  <div class="stage-caption">
-    <span class="cap-stage" id="cap-stage">01 · MINT TOKEN</span>
-    <span class="cap-text" id="cap-text"></span>
   </div>
 
-  <!-- ===== Unified Backend HUD (DB + Log, docked top-left) ===== -->
-  <aside class="backend-hud" id="db-panel">
-    <div class="db-head"><span>MyApp BACKEND · installations</span><span class="live">● LIVE</span></div>
-    <table>
-      <thead><tr><th>ACCOUNT</th><th>DEVICE</th><th>TOKEN</th><th>STATUS</th></tr></thead>
-      <tbody id="db-body"></tbody>
-    </table>
-    <div class="log-head">BACKEND LOG</div>
-    <div class="log-body" id="log-body"></div>
-  </aside>
-
-  <!-- ===== Speaker deck ===== -->
-  <div class="speaker-deck">
-    <div class="deck-stages-row">
-      <button class="btn-stage">01 · MINT TOKEN</button>
-      <button class="btn-stage">02 · REGISTER</button>
-      <button class="btn-stage">03 · EVENT &amp; LOOKUP</button>
-      <button class="btn-stage">04 · SEND TO APNs</button>
-      <button class="btn-stage">05 · DELIVER &amp; DISPLAY</button>
-      <button class="btn-stage">06 · REINSTALL &amp; ROTATE</button>
+  <div class="pin pin-event green" id="pin-push">
+    <span class="ev-ico">📦</span>
+    <div>
+      <div class="ev-title">Order Shipped</div>
+      <div class="ev-sub">MyApp · Push delivered</div>
     </div>
-    <div class="deck-scrubber-row">
-      <button class="btn-deck-nav" id="btn-prev">◀</button>
-      <button class="btn-action" id="btn-play">▶ PLAY STAGE</button>
-      <input type="range" class="chain-slider" id="scrub" min="0" max="1000" value="0" />
-      <span class="scrub-pct" id="scrub-pct">0%</span>
-      <button class="btn-deck-nav" id="btn-next">▶</button>
-    </div>
-    <div class="deck-actions-row">
-      <div class="deck-feature-toggles">
-        <button class="btn-toggle" id="btn-fanout"></button>
-        <button class="btn-toggle" id="btn-alerts"></button>
-        <button class="btn-toggle" id="btn-app2"></button>
-      </div>
-      <button class="btn-action btn-fire" id="btn-full">⚡ FULL SEND (03→05)</button>
-    </div>
-    <div class="hotkeys">← → stage · SPACE play/pause · , . nudge · 1–6 jump · F full send</div>
   </div>
+
+  <!-- Moving packet pill -->
+  <div class="pin pin-mover" id="pin-mover"></div>
+
+  <!-- Ultra-clean bottom orbit dock -->
+  <nav class="orbit-dock">
+    <div class="steps">
+      <button class="step active" data-step="0"><span>1</span> Install App</button>
+      <button class="step" data-step="1"><span>2</span> Create Token</button>
+      <button class="step" data-step="2"><span>3</span> Save to Server</button>
+      <button class="step" data-step="3"><span>4</span> Cloud → Push</button>
+    </div>
+    <div class="controls">
+      <button class="ctl" id="btn-prev" title="Previous">◀</button>
+      <button class="ctl play" id="btn-play" title="Play / Pause">▶</button>
+      <input type="range" id="scrub" min="0" max="1000" value="0" />
+      <button class="ctl" id="btn-next" title="Next">▶▶</button>
+      <button class="ctl orbit-toggle on" id="btn-orbit" title="Auto-orbit camera">⟳ Orbit</button>
+    </div>
+  </nav>
 
   <script type="module" src="js/app.js"></script>
 </body>

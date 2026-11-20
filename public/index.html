@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PUSHNOT // 3D Artifact Viewer</title>
+  <title>PUSHNOT // 3D Push Notifications Explainer & Artifact Viewer</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -22,6 +22,15 @@
   <!-- 3D Canvas Container -->
   <div id="canvas-container"></div>
 
+  <!-- In-Scene 3D Notification Banner Alert -->
+  <div class="notif-banner" id="notif-banner">
+    <div class="notif-icon">✓</div>
+    <div>
+      <div class="notif-title">MyApp: Order Shipped!</div>
+      <div class="notif-sub">Your package #8492 is out for delivery. Tap to view tracker.</div>
+    </div>
+  </div>
+
   <!-- Header HUD -->
   <header class="hud-header">
     <div class="brand">
@@ -31,13 +40,13 @@
       <div>
         <div class="brand-title">PUSHNOT</div>
       </div>
-      <div class="brand-sub">ARTIFACT_VIEWER // V1.0</div>
+      <div class="brand-sub">PUSH NOTIFICATIONS // 3D VISUAL EXPLAINER</div>
     </div>
 
     <div class="header-status">
       <div class="status-badge">
         <span class="dot-live"></span>
-        <span>ENGINE READY</span>
+        <span>ENGINE LIVE</span>
       </div>
       <div class="status-badge">
         <span>WEBGL2 / THREE.JS</span>
@@ -45,6 +54,7 @@
     </div>
 
     <div class="header-actions">
+      <button class="btn-icon" id="btn-open-handoff">📋 HANDOFF SPECS</button>
       <button class="btn-icon" id="btn-reset-cam">⟲ RESET CAM</button>
       <button class="btn-icon" id="btn-snapshot">⌗ SNAPSHOT</button>
       <button class="btn-icon" id="btn-fullscreen">⛶ FULLSCREEN</button>
@@ -53,38 +63,73 @@
 
   <!-- Sidebar HUD -->
   <aside class="hud-sidebar">
-    <!-- Artifact Library -->
+    <!-- Mode Switcher -->
     <div class="panel-section">
-      <div class="panel-title">ARTIFACT ARCHIVE</div>
-      <div class="artifact-pills">
-        <div class="artifact-pill active" data-artifact="top_mod">
-          <span>Top_Mod_V1</span>
-          <span class="artifact-pill-format">STL</span>
-        </div>
-        <div class="artifact-pill" data-artifact="box">
-          <span>box_4x7x1.5</span>
-          <span class="artifact-pill-format">OBJ</span>
-        </div>
-        <div class="artifact-pill" data-artifact="procedural">
-          <span>Quantum Monolith</span>
-          <span class="artifact-pill-format">PROCEDURAL</span>
-        </div>
+      <div class="mode-switcher">
+        <button class="tab-btn active" id="tab-sim">3D PIPELINE</button>
+        <button class="tab-btn" id="tab-inspect">INSPECT 3D</button>
       </div>
 
-      <input type="file" id="file-input" accept=".stl,.obj,.gltf,.glb" style="display: none;" />
-      <div class="upload-box" id="upload-box">
-        <strong>+ INGEST ARTIFACT</strong>
-        <span>Click or Drag & Drop .STL, .OBJ, .GLTF, .GLB</span>
+      <!-- SIMULATION & EXPLAINER CONTROLS -->
+      <div id="section-sim">
+        <div class="explainer-box">
+          <div class="explainer-step-badge" id="step-badge">STAGE 01 // REGISTRATION</div>
+          <div class="explainer-step-title" id="step-title">Platform Token & Association</div>
+          <div class="explainer-step-desc" id="step-desc">
+            App requests a device token from Apple (APNs) or Google (FCM). The platform returns an opaque address. The app then syncs this token with its backend along with John’s account ID.
+          </div>
+          <div class="explainer-controls">
+            <button class="btn-step" id="btn-prev-step">◀ PREVIOUS</button>
+            <button class="btn-step" id="btn-next-step">NEXT STAGE ▶</button>
+          </div>
+        </div>
+
+        <button class="btn-dispatch" id="btn-dispatch-push">
+          <span>⚡ TRIGGER NOTIFICATION DISPATCH</span>
+        </button>
+      </div>
+
+      <!-- ARTIFACT INSPECTOR SELECTION (Hidden by default) -->
+      <div id="section-inspect" style="display: none;">
+        <div class="panel-title">SELECT 3D ARTIFACT</div>
+        <div class="artifact-pills">
+          <div class="artifact-pill featured active" data-artifact="server_rack">
+            <span>Server Rack (Backend)</span>
+            <span class="artifact-pill-format system">GLB</span>
+          </div>
+          <div class="artifact-pill featured" data-artifact="smartphone">
+            <span>Smartphone (Device)</span>
+            <span class="artifact-pill-format system">GLB</span>
+          </div>
+          <div class="artifact-pill" data-artifact="top_mod">
+            <span>Top_Mod_V1</span>
+            <span class="artifact-pill-format">STL</span>
+          </div>
+          <div class="artifact-pill" data-artifact="box">
+            <span>box_4x7x1.5</span>
+            <span class="artifact-pill-format">OBJ</span>
+          </div>
+          <div class="artifact-pill" data-artifact="procedural">
+            <span>Quantum Monolith</span>
+            <span class="artifact-pill-format">PROC</span>
+          </div>
+        </div>
+
+        <input type="file" id="file-input" accept=".stl,.obj,.gltf,.glb" style="display: none;" />
+        <div class="upload-box" id="upload-box">
+          <strong>+ INGEST CUSTOM 3D ARTIFACT</strong>
+          <span>Drop .GLB, .GLTF, .STL, or .OBJ</span>
+        </div>
       </div>
     </div>
 
-    <!-- Shading Mode -->
+    <!-- Shading & Materials -->
     <div class="panel-section">
       <div class="panel-title">SHADING & TEXTURE</div>
       <div class="control-buttons-grid">
-        <button class="btn-ctrl active" data-shader="pbr">PBR SOLID</button>
+        <button class="btn-ctrl active" data-shader="original">ORIGINAL</button>
+        <button class="btn-ctrl" data-shader="pbr">PBR SOLID</button>
         <button class="btn-ctrl" data-shader="normals">NORMALS</button>
-        <button class="btn-ctrl" data-shader="matcap">CHROME</button>
         <button class="btn-ctrl" data-shader="wireframe">WIREFRAME</button>
       </div>
 
@@ -105,10 +150,9 @@
     <!-- Display / Environment Toggles -->
     <div class="panel-section">
       <div class="panel-title">VIEWPORT CONTROLS</div>
-      
       <div class="control-row">
         <span class="control-label">Turntable Rotation</span>
-        <input type="checkbox" id="chk-turntable" checked />
+        <input type="checkbox" id="chk-turntable" />
       </div>
       <div class="control-row">
         <span class="control-label">Spin Speed</span>
@@ -136,12 +180,12 @@
     <div class="panel-section">
       <div class="panel-title">TELEMETRY & SPECS</div>
       <div class="stat-item">
-        <span class="stat-key">Name:</span>
-        <span class="stat-val" id="stat-name">--</span>
+        <span class="stat-key">Component:</span>
+        <span class="stat-val" id="stat-name">Push Notification Pipeline</span>
       </div>
       <div class="stat-item">
         <span class="stat-key">Format:</span>
-        <span class="stat-val" id="stat-format">--</span>
+        <span class="stat-val" id="stat-format">3D STAGE</span>
       </div>
       <div class="stat-item">
         <span class="stat-key">Vertices:</span>
@@ -170,6 +214,110 @@
     <button class="btn-ctrl" data-view="side">SIDE</button>
   </div>
 
+  <!-- Right Side Handoff Drawer -->
+  <aside class="hud-handoff-drawer" id="handoff-drawer">
+    <div class="drawer-header">
+      <h3>SNAPYT // PUSH HANDOFF SPECS</h3>
+      <button class="drawer-close" id="btn-close-handoff">✕</button>
+    </div>
+    <div class="drawer-content">
+      <h4 style="color: var(--cyan); margin-bottom: 8px;">Architecture Principles</h4>
+      <p style="color: var(--text-muted); margin-bottom: 14px;">
+        A remote push routes messages from application backends through platform push services (APNs/FCM) to a specific installation using an opaque device token.
+      </p>
+
+      <h4 style="color: var(--green); margin-bottom: 8px;">Suggested Registration Record</h4>
+      <table class="schema-table">
+        <thead>
+          <tr>
+            <th>Field</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>account_id</td>
+            <td>Recipient account from authenticated session.</td>
+          </tr>
+          <tr>
+            <td>installation_id</td>
+            <td>Unique app installation identity.</td>
+          </tr>
+          <tr>
+            <td>provider & target_kind</td>
+            <td>FCM/APNs route & address kind.</td>
+          </tr>
+          <tr>
+            <td>target_address</td>
+            <td>Exact opaque device token.</td>
+          </tr>
+          <tr>
+            <td>status / invalidated_at</td>
+            <td>Active state and deactivation timestamp.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h4 style="color: var(--cyan); margin-bottom: 12px;">Visual Walkthrough & Stills</h4>
+
+      <div class="still-card">
+        <img src="stills/01-email-recipient.png" alt="Email Recipient Analogy" />
+        <div class="still-card-caption">
+          <strong>00:05</strong> — Email analogy: an email address tells the mail system where to route. A device token plays the same role for push.
+        </div>
+      </div>
+
+      <div class="still-card">
+        <img src="stills/02-notification-address.png" alt="Notification Address" />
+        <div class="still-card-caption">
+          <strong>00:09</strong> — Address vs Payload: Token routes the request, while the payload specifies what alert to display.
+        </div>
+      </div>
+
+      <div class="still-card">
+        <img src="stills/03-app-specific-tokens.png" alt="App Specific Tokens" />
+        <div class="still-card-caption">
+          <strong>00:22</strong> — Distinct tokens: Multiple apps on one device receive separate unique device tokens.
+        </div>
+      </div>
+
+      <div class="still-card">
+        <img src="stills/05-fcm-and-apns.png" alt="FCM and APNs" />
+        <div class="still-card-caption">
+          <strong>00:43</strong> — Platform routes: Google Firebase Cloud Messaging (Android) and Apple APNs (iOS).
+        </div>
+      </div>
+
+      <div class="still-card">
+        <img src="stills/06-register-token-with-server.png" alt="Register Token with Server" />
+        <div class="still-card-caption">
+          <strong>00:51</strong> — App syncs address to backend DB table linked to the authenticated user.
+        </div>
+      </div>
+
+      <div class="still-card">
+        <img src="stills/08-provider-delivers-notification.png" alt="Provider Delivers Notification" />
+        <div class="still-card-caption">
+          <strong>01:06</strong> — Complete pipeline: Backend triggers request $\rightarrow$ Push Service $\rightarrow$ Device displays banner.
+        </div>
+      </div>
+
+      <div class="still-card">
+        <img src="stills/10-reinstall-and-update-registration.png" alt="Reinstall and Refresh" />
+        <div class="still-card-caption">
+          <strong>01:20</strong> — Reinstallation generates a new token. Backend replaces stale records cleanly.
+        </div>
+      </div>
+
+      <div class="still-card">
+        <img src="stills/12-four-components.png" alt="Four Components" />
+        <div class="still-card-caption">
+          <strong>01:52</strong> — Four components: App $\rightarrow$ Server $\rightarrow$ Push Service $\rightarrow$ Receiving Device.
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <!-- Fullscreen Drag & Drop Target Overlay -->
   <div id="drop-target">
     <div class="drop-text">DROP 3D ARTIFACT TO LOAD</div>
@@ -181,7 +329,7 @@
   <!-- Loading Overlay -->
   <div id="loader">
     <div class="spinner"></div>
-    <div style="letter-spacing: 2px;">PARSING GEOMETRY...</div>
+    <div style="letter-spacing: 2px;">PARSING 3D GEOMETRY...</div>
   </div>
 
   <script type="module" src="js/app.js"></script>

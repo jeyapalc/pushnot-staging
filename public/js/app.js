@@ -352,15 +352,16 @@ class PushnotOrbit {
     this.scene.add(this.dcGroup);
 
     const floorY = 0.8;
+    const RACK_H = 18;
     const specs = [
-      { key: 'argos',   row: 'back',  path: 'models/dc/cabinet_argos.glb', targetH: 18 },
-      { key: 'main',    row: 'back',  path: 'models/data_center_rack.glb', targetH: 19 },
-      { key: 'net',     row: 'back',  path: 'models/dc/network_rack.glb',  targetH: 18 },
-      { key: 'rack1',   row: 'back',  path: 'models/dc/rack_1.glb',        targetH: 18 },
-      { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: 13 },
-      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: 8.5 },
-      { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: 13 },
-      { key: 'topbox',  row: 'top',   path: 'models/dc/server_box.glb',    targetH: 6.5 }
+      { key: 'argos',   row: 'back',  path: 'models/dc/cabinet_argos.glb', targetH: RACK_H, uniformH: true },
+      { key: 'main',    row: 'back',  path: 'models/data_center_rack.glb', targetH: RACK_H, uniformH: true },
+      { key: 'net',     row: 'back',  path: 'models/dc/network_rack.glb',  targetH: RACK_H, uniformH: true },
+      { key: 'rack1',   row: 'back',  path: 'models/dc/rack_1.glb',        targetH: RACK_H, uniformH: true },
+      { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: RACK_H, uniformH: true },
+      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: 9,      uniformH: false },
+      { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: RACK_H, uniformH: true },
+      { key: 'topbox',  row: 'top',   path: 'models/dc/server_box.glb',    targetH: 6,      uniformH: false }
     ];
 
     const loaded = {};
@@ -470,14 +471,13 @@ class PushnotOrbit {
     for (const s of specs) {
       this.loader.load(s.path, (gltf) => {
         const obj = gltf.scene;
-        // Scale by height (capped so ultra-wide models don't blow up footprint)
         let box = new THREE.Box3().setFromObject(obj);
         const raw = box.getSize(new THREE.Vector3());
-        const scaleByH = s.targetH / (raw.y || 1);
-        const maxFootprint = s.row === 'top' ? 10 : 12;
-        const scaleCap = maxFootprint / Math.max(raw.x || 1, raw.z || 1);
-        const scale = Math.min(scaleByH, scaleCap);
-        obj.scale.setScalar(scale);
+        const sy = s.targetH / (raw.y || 1);
+        const maxFootprint = s.row === 'top' ? 10 : 11;
+        const sxz = Math.min(sy, maxFootprint / Math.max(raw.x || 1, raw.z || 1));
+        // Keep every server rack at the EXACT same roofline height (sy), capping X/Z footprint cleanly
+        obj.scale.set(sxz, s.uniformH ? sy : sxz, sxz);
 
         box = new THREE.Box3().setFromObject(obj);
         const c = box.getCenter(new THREE.Vector3());

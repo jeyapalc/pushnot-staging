@@ -110,6 +110,36 @@ body.leo-mode {
 .pin-event.cyan  { border-color: rgba(56,189,248,.65); box-shadow: 0 0 28px rgba(56,189,248,.25); }
 .pin-event.green { border-color: rgba(52,211,153,.75); box-shadow: 0 0 32px rgba(52,211,153,.35); }
 
+/* Genuine iOS/Android Push Notification Banner right on top of the Phone model */
+.push-banner-toast {
+  align-items: center; gap: 11px; width: 256px; padding: 11px 14px; border-radius: 18px;
+  background: rgba(20, 28, 44, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(22px);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.68), 0 0 24px rgba(52, 211, 153, 0.32);
+  animation: toastDrop .34s cubic-bezier(.16, 1, .3, 1);
+}
+.toast-icon {
+  width: 38px; height: 38px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #10b981, #0ea5e9);
+  font-size: 1.25rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+.toast-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.toast-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--sans); font-size: .64rem; font-weight: 700; letter-spacing: .8px; color: #94a3b8;
+}
+.toast-time { font-weight: 500; color: #64748b; letter-spacing: 0; }
+.toast-msg {
+  font-family: var(--sans); font-size: .92rem; font-weight: 700; color: #ffffff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+@keyframes toastDrop {
+  from { opacity: 0; transform: translate(-50%, -135%) scale(.9); }
+  to   { opacity: 1; transform: translate(-50%, -100%) scale(1); }
+}
+
 .app-tile {
   width: 34px; height: 34px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
   background: linear-gradient(135deg, #38bdf8, #6366f1); color: #fff; font-weight: 700; font-size: 1.05rem;
@@ -152,7 +182,7 @@ body.leo-mode {
 
 /* Spiral Notepad Ledger above 3D Brain */
 .ledger-pad {
-  flex-direction: column; width: 344px; padding: 12px 12px 10px; border-radius: 12px;
+  flex-direction: column; width: 320px; padding: 12px 12px 10px; border-radius: 12px;
   background: rgba(15, 21, 34, 0.95); border: 1px solid rgba(244, 114, 182, 0.6);
   box-shadow: 0 14px 36px rgba(0,0,0,.65), 0 0 26px rgba(244, 114, 182, 0.25);
   backdrop-filter: blur(16px); font-family: var(--mono);
@@ -178,35 +208,54 @@ body.leo-mode {
 .pad-status { color: #f472b6; }
 .ledger-pad.matched .pad-status { color: var(--green); }
 
-.pad-cols { display: grid; grid-template-columns: 1fr 1.15fr; gap: 8px; }
+.pad-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pad-col { display: flex; flex-direction: column; gap: 4px; }
 .col-title { font-size: .58rem; letter-spacing: 1.2px; color: var(--muted); font-weight: 700; }
 
 .req-box {
-  padding: 6px 8px; border-radius: 7px; height: 42px;
-  background: rgba(251, 191, 36, 0.12); border: 1px solid rgba(251, 191, 36, 0.45);
-  display: flex; flex-direction: column; justify-content: center;
+  padding: 0 8px; border-radius: 7px; height: 42px;
+  background: rgba(251, 191, 36, 0.14); border: 1px solid rgba(251, 191, 36, 0.55);
+  display: flex; align-items: center;
 }
 .ledger-pad.matched .req-box {
-  background: rgba(52, 211, 153, 0.16); border-color: rgba(52, 211, 153, 0.75);
+  background: rgba(251, 191, 36, 0.22); border-color: #fbbf24;
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.35);
 }
-.req-box .tok { font-size: .7rem; font-weight: 700; color: var(--amber); }
-.ledger-pad.matched .req-box .tok { color: var(--green); }
-.req-box .sub { font-size: .6rem; color: var(--muted); margin-top: 1px; }
 
 .scroll-window {
   height: 42px; overflow: hidden; border-radius: 7px; position: relative;
   background: rgba(5, 8, 15, 0.85); border: 1px solid rgba(255,255,255,.14);
 }
 .ledger-pad.matched .scroll-window {
-  border-color: rgba(52, 211, 153, 0.8); background: rgba(52, 211, 153, 0.14);
+  border-color: #fbbf24; background: rgba(251, 191, 36, 0.22);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.35);
 }
 .scroll-track { display: flex; flex-direction: column; will-change: transform; }
 .addr-row {
   height: 42px; display: flex; align-items: center; padding: 0 8px;
-  font-size: .66rem; color: var(--muted); white-space: nowrap; flex-shrink: 0;
+  font-size: .68rem; color: var(--text); white-space: nowrap; flex-shrink: 0;
 }
-.addr-row.match-row { color: var(--green); font-weight: 700; }
+
+.slot-item {
+  display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: .70rem;
+}
+.slot-item .swatch {
+  width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0;
+}
+.slot-item .ico { font-size: .92rem; line-height: 1; transition: transform .25s; }
+.slot-item.gold   { color: #fde68a; }
+.slot-item.gold .swatch   { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+.slot-item.red    { color: #fda4af; }
+.slot-item.red .swatch    { background: #f43f5e; box-shadow: 0 0 8px #f43f5e; }
+.slot-item.blue   { color: #93c5fd; }
+.slot-item.blue .swatch   { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+.slot-item.purple { color: #d8b4fe; }
+.slot-item.purple .swatch { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
+.slot-item.pink   { color: #f9a8d4; }
+.slot-item.pink .swatch   { background: #ec4899; box-shadow: 0 0 8px #ec4899; }
+.slot-item.cyan   { color: #7dd3fc; }
+.slot-item.cyan .swatch   { background: #38bdf8; box-shadow: 0 0 8px #38bdf8; }
+.ledger-pad.unlocked #pad-key-item .ico { transform: translateX(6px) rotate(15deg); }
 
 /* Sleek bottom orbit dock with Polarity Switch */
 .orbit-dock {

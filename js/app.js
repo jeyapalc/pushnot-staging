@@ -370,6 +370,71 @@ class PushnotOrbit {
     return group;
   }
 
+  /* ---- 3D Color Padlock with Animatable Shackle (for Casino Slot Spin & Key Insertion!) ---- */
+  create3DPadlock(scale = 1, hexColor = 0xfbbf24) {
+    const group = new THREE.Group();
+
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: hexColor,
+      emissive: hexColor,
+      emissiveIntensity: 0.45,
+      metalness: 0.82,
+      roughness: 0.22
+    });
+    const shackleMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      metalness: 0.92,
+      roughness: 0.16
+    });
+    const holeMat = new THREE.MeshBasicMaterial({ color: 0x05080f });
+
+    // Padlock body
+    const body = new THREE.Mesh(new THREE.BoxGeometry(3.6, 3.2, 1.4), bodyMat);
+    body.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(body.geometry),
+      new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 })
+    ));
+    group.add(body);
+
+    // Keyhole on front (+Z) and back (-Z)
+    for (const side of [1, -1]) {
+      const khCircle = new THREE.Mesh(new THREE.CircleGeometry(0.42, 16), holeMat);
+      khCircle.position.set(0, 0.25, side * 0.72);
+      if (side < 0) khCircle.rotation.y = Math.PI;
+      const khSlot = new THREE.Mesh(new THREE.PlaneGeometry(0.32, 0.9), holeMat);
+      khSlot.position.set(0, -0.25, side * 0.72);
+      if (side < 0) khSlot.rotation.y = Math.PI;
+      group.add(khCircle, khSlot);
+    }
+
+    // U-shaped Shackle pivoted on the right leg (x = +1.05, y = +1.6) so it pops up & swings open when unlocked!
+    const shacklePivot = new THREE.Group();
+    shacklePivot.position.set(1.05, 1.6, 0);
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(1.05, 0.28, 12, 24, Math.PI), shackleMat);
+    arch.position.set(-1.05, 0.55, 0);
+    const leftLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 0.85, 12), shackleMat);
+    leftLeg.position.set(-2.1, 0.2, 0);
+    const rightLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.28, 1.35, 12), shackleMat);
+    rightLeg.position.set(0, 0.0, 0);
+    shacklePivot.add(arch, leftLeg, rightLeg);
+    group.add(shacklePivot);
+
+    group.userData = { bodyMat, shacklePivot };
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  setPadlockState(lockGroup, { hexColor = 0xfbbf24, openAmount = 0 } = {}) {
+    if (!lockGroup || !lockGroup.userData) return;
+    const { bodyMat, shacklePivot } = lockGroup.userData;
+    bodyMat.color.setHex(hexColor);
+    bodyMat.emissive.setHex(hexColor);
+    // Lift shackle up and swing open as openAmount goes 0 -> 1
+    shacklePivot.position.y = 1.6 + openAmount * 0.95;
+    shacklePivot.rotation.y = -openAmount * 0.85;
+    shacklePivot.rotation.z = -openAmount * 0.35;
+  }
+
   /* ---- 3D Laser-Printing / Holographic Materialization Rig for Unique Key ---- */
   createKeyMaterializer() {
     const group = new THREE.Group();
@@ -619,7 +684,7 @@ class PushnotOrbit {
     this.triggerBolt.add(new THREE.PointLight(0x38bdf8, 4, 30));
     this.normalGroup.add(this.triggerBolt);
 
-    // 6. Push Notification Envelope (carrying a mini golden Key stamped on top!)
+    // 6. Push Notification Envelope (carrying a mini golden Key + matching 3D Padlock that unlocks & travels with the Key to the Phone!)
     this.pushOrb = new THREE.Group();
     const box = new THREE.Mesh(
       new THREE.BoxGeometry(4.6, 2.9, 0.7),
@@ -627,13 +692,20 @@ class PushnotOrbit {
     );
     this.pushOrb.add(box);
     this.pushOrb.add(new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0xffffff })));
-    const miniKey = this.createTokenKey(0.55);
-    miniKey.position.set(0, 2.2, 0);
-    this.pushOrb.add(miniKey);
+    this.pushOrbKey = this.createTokenKey(0.65);
+    this.pushOrbKey.position.set(0, 2.3, 0);
+    this.pushOrb.add(this.pushOrbKey);
+
+    this.pushOrbLock = this.create3DPadlock(0.55, 0xfbbf24);
+    this.pushOrbLock.position.set(2.1, 2.4, 0);
+    this.setPadlockState(this.pushOrbLock, { hexColor: 0xfbbf24, openAmount: 1 });
+    this.pushOrbLock.visible = false;
+    this.pushOrb.add(this.pushOrbLock);
+
     this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
     this.normalGroup.add(this.pushOrb);
 
-    // 7. 3D Neural Brain popping up above the Post Office for routing lookup
+    // 7. 3D Neural Brain + 3D Key & Casino Slot Lock Pair popping up above the Post Office for routing lookup
     this.initBrain();
   }
 
@@ -646,6 +718,16 @@ class PushnotOrbit {
     this.brainGroup.add(this.brainLight);
     this.brainGroup.visible = false;
     this.normalGroup.add(this.brainGroup);
+
+    // 3D Key & Casino-Spinning Padlock staged right in front of the Brain during the match step!
+    this.matchStageGroup = new THREE.Group();
+    this.matchStageGroup.position.set(0, -6.5, 6.5);
+    this.matchKey3D = this.createTokenKey(1.05);
+    this.matchKey3D.position.set(-4.2, 0, 0);
+    this.matchLock3D = this.create3DPadlock(0.95, 0xf43f5e);
+    this.matchLock3D.position.set(2.4, 0, 0);
+    this.matchStageGroup.add(this.matchKey3D, this.matchLock3D);
+    this.brainGroup.add(this.matchStageGroup);
 
     this.loader.load('models/brain_point_cloud.glb', (gltf) => {
       const brain = gltf.scene;
@@ -664,19 +746,29 @@ class PushnotOrbit {
         }
       });
       this.brainGroup.add(brain);
+      this.brainMesh = brain;
     }, undefined, (err) => {
       console.warn('brain_point_cloud.glb failed, using fallback:', err);
     });
   }
 
   updateBrainAndLedger(progress) {
-    const pop = Math.min(1, progress / 0.15);
+    const pop = Math.min(1, progress / 0.14);
     const ease = 1 - Math.pow(1 - pop, 3);
     this.brainGroup.scale.setScalar(Math.max(0.01, ease));
 
-    const matched = progress >= 0.72;
-    const scrollP = seg(progress, 0.08, 0.72);
-    const easedScroll = 1 - Math.pow(1 - scrollP, 2.2);
+    // 3 Phases inside the Post Office Brain Match step:
+    //   0.00..0.56: Casino slot spin through lock colors (Red -> Blue -> Purple -> Pink -> Cyan -> Gold!)
+    //   0.56..0.78: Landed on matching GOLD LOCK; Gold Key slides right & inserts into the Gold Lock!
+    //   0.78..1.00: Key turns & Gold Lock shackle pops OPEN (🔓 UNLOCKED)!
+    const spinP   = seg(progress, 0.05, 0.56);
+    const insertP = seg(progress, 0.56, 0.78);
+    const unlockP = seg(progress, 0.76, 0.95);
+
+    const matched  = progress >= 0.56;
+    const unlocked = progress >= 0.78;
+
+    const easedScroll = 1 - Math.pow(1 - spinP, 2.4);
     const offsetPx = easedScroll * (5 * 42);
 
     const track = document.getElementById('pad-track');
@@ -684,13 +776,41 @@ class PushnotOrbit {
 
     const pad = document.getElementById('pin-ledger');
     const status = document.getElementById('pad-status');
-    if (pad) pad.classList.toggle('matched', matched);
-    if (status) status.textContent = matched ? '✓ MATCHED' : 'MATCHING…';
+    const lockIco = document.getElementById('pad-lock-ico');
+    const lockTxt = document.getElementById('pad-lock-txt');
+    if (pad) {
+      pad.classList.toggle('matched', matched);
+      pad.classList.toggle('unlocked', unlocked);
+    }
+    if (status) {
+      status.textContent = unlocked ? '🔓 UNLOCKED!' : (matched ? '🔑 KEY INSERTED' : '🎰 SPINNING…');
+    }
+    if (lockIco) lockIco.textContent = unlocked ? '🔓' : '🔒';
+    if (lockTxt) lockTxt.textContent = unlocked ? 'GOLD OPEN' : 'GOLD LOCK';
 
-    this.brainLight.color.setHex(matched ? 0x34d399 : 0xf472b6);
+    // Animate the 3D Key & 3D Padlock right below the Brain:
+    const slotColors = [0xf43f5e, 0x3b82f6, 0xa855f7, 0xec4899, 0x38bdf8, 0xfbbf24];
+    const colorIdx = matched ? 5 : Math.min(5, Math.floor(easedScroll * 5.99));
+    const activeLockHex = slotColors[colorIdx];
+
+    if (this.matchLock3D && this.matchKey3D) {
+      this.setPadlockState(this.matchLock3D, {
+        hexColor: activeLockHex,
+        openAmount: unlocked ? (1 - Math.pow(1 - unlockP, 2)) : 0
+      });
+      // Casino reel spin on the 3D lock while cycling colors, then lock steady once matched!
+      this.matchLock3D.rotation.x = matched ? 0 : easedScroll * Math.PI * 6;
+      // Slide 3D Gold Key from x = -4.2 right into the Gold Lock body (x = -0.2) and twist!
+      const easeIns = 1 - Math.pow(1 - insertP, 2.2);
+      this.matchKey3D.position.x = -4.2 + easeIns * 3.8;
+      this.matchKey3D.rotation.x = unlocked ? (1 - Math.pow(1 - unlockP, 2)) * (Math.PI * 0.5) : 0;
+    }
+
+    this.brainLight.color.setHex(unlocked ? 0x34d399 : (matched ? 0xfbbf24 : 0xf472b6));
     for (const item of this.brainMats) {
       if (item.mat.color) {
-        if (matched) item.mat.color.setHex(0x34d399);
+        if (unlocked) item.mat.color.setHex(0x34d399);
+        else if (matched) item.mat.color.setHex(0xfbbf24);
         else item.mat.color.copy(item.origColor);
       }
     }
@@ -1785,12 +1905,15 @@ class PushnotOrbit {
         showSaved = true;
       }
     } else if (this.mode === 'push') {
+      if (this.pushOrbLock) this.pushOrbLock.visible = false;
+      if (this.pushOrbKey)  this.pushOrbKey.position.set(0, 2.3, 0);
+
       if (t < 0.16) {
         const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.16));
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
-        moverText = '⚡ Streak Trigger';
+        moverText = '⚡ Promo Trigger';
         moverCls = 'cyan';
       } else if (t < 0.30) {
         // Beat 2 in Push Delivery: App Maker tries to reach Phone directly -> Blocked by OS Firewall! Must go via Post Office
@@ -1808,19 +1931,25 @@ class PushnotOrbit {
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ Push + 🔑 Key';
+        moverText = '✉ Push + 🔑 Gold Key';
         moverCls = 'push';
-      } else if (t < 0.70) {
-        const bp = seg(t, 0.48, 0.70);
+      } else if (t < 0.72) {
+        const bp = seg(t, 0.48, 0.72);
         this.brainGroup.visible = true;
         this.updateBrainAndLedger(bp);
         showLedger = true;
       } else if (t < 0.90) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.70, 0.90));
+        // Both the Gold Key AND the Unlocked Gold Lock travel together with the push notification to the Phone!
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.72, 0.90));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
+        if (this.pushOrbKey)  this.pushOrbKey.position.set(-1.3, 2.3, 0);
+        if (this.pushOrbLock) {
+          this.pushOrbLock.visible = true;
+          this.setPadlockState(this.pushOrbLock, { hexColor: 0xfbbf24, openAmount: 1 });
+        }
         moverPos = p;
-        moverText = '✉ Deliver Push';
+        moverText = '🔑 + 🔓 Gold Unlocked → Phone';
         moverCls = 'push';
       } else {
         showPush = true;
@@ -1955,15 +2084,16 @@ class PushnotOrbit {
     this.place('pin-leo-proton',      new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
     this.place('pin-leo-ag',          new THREE.Vector3(L.ag.x,     this.leoTops.ag + 2, L.ag.z), showLeoPins, this.leoGroup);
 
-    // Normal contextual callouts
+    // Normal contextual callouts (genuine push banner sits right on top of the Phone screen!)
     const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 11, POS.phone.z);
+    const phoneFace = new THREE.Vector3(POS.phone.x,  this.tops.phone + 3,  POS.phone.z + 2);
     const serverTop = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
     const blockTop  = new THREE.Vector3(0, 29, POS.phone.z);
     this.place('pin-install',   phoneTop,  showNorm && showInstall);
     this.place('pin-token',     phoneTop,  showNorm && showToken);
     this.place('pin-no-direct', blockTop,  showNorm && showNoDirect);
     this.place('pin-saved',     serverTop, showNorm && showSaved);
-    this.place('pin-push',      phoneTop,  showNorm && showPush);
+    this.place('pin-push',      phoneFace, showNorm && showPush);
     this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
 
     // Law Enforcement contextual callouts (OSINT callout sits on the elevated OSINT plane above Police's head!)
@@ -2103,11 +2233,10 @@ class PushnotOrbit {
       fc.mesh.lookAt(pNext);
     }
 
-    // Gently rotate the 3D Brain & neural sparks when active above the Post Office
+    // Gently rotate ONLY the 3D Brain mesh when active above the Post Office (so the 3D Key & Padlock pair in front stays facing forward!)
     if (this.brainGroup && this.brainGroup.visible) {
-      this.brainGroup.rotation.y += dt * 0.9;
+      if (this.brainMesh) this.brainMesh.rotation.y += dt * 0.9;
       this.brainGroup.position.y = 38 + Math.sin(now * 0.004) * 0.8;
-      if (this.brainSparks) this.brainSparks.rotation.y -= dt * 1.4;
     }
 
     if (this.ufoGroup) {

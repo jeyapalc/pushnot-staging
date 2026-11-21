@@ -28,9 +28,9 @@ const POS = {
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 11, push: 9, leo: 15 };
+const MODE_SECONDS = { setup: 12, push: 9, leo: 15 };
 const MODE_STEPS = {
-  setup: [0.06, 0.33, 0.50, 0.66, 0.82, 0.96],
+  setup: [0.06, 0.30, 0.42, 0.56, 0.68, 0.82, 0.96],
   push:  [0.10, 0.32, 0.52, 0.64, 0.78, 0.95],
   leo:   [0.08, 0.25, 0.42, 0.60, 0.78, 0.94]
 };
@@ -302,6 +302,65 @@ class PushnotOrbit {
     return group;
   }
 
+  /* ---- 3D Laser-Printing / Holographic Materialization Rig for Unique Key ---- */
+  createKeyMaterializer() {
+    const group = new THREE.Group();
+
+    // Glowing cyan wireframe blueprint key shell (shows key geometry before solid metal prints)
+    const wireMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.75
+    });
+    const wireKey = new THREE.Group();
+    const wBow = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.35, 10, 24), wireMat); wBow.position.x = -1.7;
+    const wShaft = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.55, 0.4), wireMat);    wShaft.position.x = 0.8;
+    const wT1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.9, 0.4), wireMat);       wT1.position.set(1.4, -0.65, 0);
+    const wT2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.2, 0.4), wireMat);       wT2.position.set(2.2, -0.8, 0);
+    wireKey.add(wBow, wShaft, wT1, wT2);
+    wireKey.scale.setScalar(1.28);
+    group.add(wireKey);
+    this.forgeWireKey = wireKey;
+    this.forgeWireMat = wireMat;
+
+    // Sweeping horizontal laser print ring + flat laser scan sheet
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.95 });
+    const laserRing = new THREE.Mesh(new THREE.TorusGeometry(4.8, 0.16, 10, 48), ringMat);
+    laserRing.rotation.x = Math.PI / 2;
+    const laserDisc = new THREE.Mesh(
+      new THREE.CircleGeometry(4.8, 36),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.24, side: THREE.DoubleSide })
+    );
+    laserRing.add(laserDisc);
+    group.add(laserRing);
+    this.forgeLaserRing = laserRing;
+
+    // Vertical holographic printer containment beam
+    const cylMat = new THREE.MeshBasicMaterial({
+      color: 0xfbbf24, transparent: true, opacity: 0.14, side: THREE.DoubleSide
+    });
+    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 8.5, 32, 1, true), cylMat);
+    group.add(cyl);
+    this.forgeCylMat = cylMat;
+
+    // Swirling fabrication spark particles
+    const pts = [];
+    for (let i = 0; i < 36; i++) {
+      const a = (i / 36) * Math.PI * 2;
+      const r = 2.0 + (i % 5) * 0.65;
+      pts.push(Math.cos(a) * r, ((i % 9) - 4) * 0.85, Math.sin(a) * r);
+    }
+    const sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    this.forgeSparks = new THREE.Points(
+      sparkGeo,
+      new THREE.PointsMaterial({ color: 0xfef08a, size: 0.65, transparent: true, opacity: 0.95 })
+    );
+    group.add(this.forgeSparks);
+
+    this.forgeLight = new THREE.PointLight(0x38bdf8, 5, 36);
+    group.add(this.forgeLight);
+    return group;
+  }
+
   initMovers() {
     // 1. Bejeweled app travelling App Stores -> Phone
     this.appOrb = this.createBejeweledCluster(1.2);
@@ -312,9 +371,15 @@ class PushnotOrbit {
     this.installedApp.position.set(POS.phone.x, 32, POS.phone.z);
     this.normalGroup.add(this.installedApp);
 
-    // 3. Moving Device Token (3D Metallic Key)
+    // 3. Moving Device Token (3D Metallic Key) + Materialization / 3D Laser-Printing Rig
     this.tokenKey = this.createTokenKey(1.2);
     this.normalGroup.add(this.tokenKey);
+
+    // 3b. Holographic 3D Key Materialization / Printing Rig above Post Office
+    this.keyForge = this.createKeyMaterializer();
+    this.keyForge.position.set(POS.post.x, 28, POS.post.z);
+    this.keyForge.visible = false;
+    this.normalGroup.add(this.keyForge);
 
     // 4. Persistent Stored Token Key docked on front of the Datacentre!
     this.storedKey = this.createTokenKey(1.0);
@@ -1181,6 +1246,8 @@ class PushnotOrbit {
 
     this.appOrb.visible = false;
     this.tokenKey.visible = false;
+    this.tokenKey.scale.setScalar(1.2);
+    this.keyForge.visible = false;
     this.pushOrb.visible = false;
     this.triggerBolt.visible = false;
     this.brainGroup.visible = false;
@@ -1192,7 +1259,7 @@ class PushnotOrbit {
     const isLeo = this.mode === 'leo';
 
     // Bejeweled stays visibly installed on the phone once downloaded
-    this.installedApp.visible = !isLeo && (this.mode === 'push' || t >= 0.28);
+    this.installedApp.visible = !isLeo && (this.mode === 'push' || t >= 0.26);
     // Key stays persistently stored on the server once registered!
     this.storedKey.visible = !isLeo && (this.mode === 'push' || t >= 0.90);
 
@@ -1219,29 +1286,53 @@ class PushnotOrbit {
     let showLeoId     = false;
 
     if (this.mode === 'setup') {
-      if (t < 0.28) {
-        const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.28));
+      if (t < 0.26) {
+        const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.26));
         this.appOrb.visible = true;
         this.appOrb.position.copy(p);
         moverPos = p;
         moverText = '💎 Installing Bejeweled';
         moverCls = 'cyan';
-      } else if (t < 0.38) {
+      } else if (t < 0.34) {
         showInstall = true;
-      } else if (t < 0.62) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.38, 0.62));
+      } else if (t < 0.48) {
+        // 3D Laser-Printing / Holographic Materialization of the brand-new Unique Device Key at Post Office!
+        const mp = seg(t, 0.34, 0.48);
+        const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
+        this.keyForge.visible = true;
+        this.keyForge.position.copy(forgePos);
+
+        // Sweeping laser ring prints bottom-to-top (-3.8 -> +3.8) twice while key solidifies
+        const scanY = -3.8 + ((mp * 2.0) % 1.0) * 7.6;
+        this.forgeLaserRing.position.y = scanY;
+        this.forgeWireKey.rotation.y = this.tokenKey.rotation.y;
+        this.forgeWireMat.opacity = 0.85 * (1 - mp * 0.65);
+        this.forgeCylMat.opacity = 0.22 * Math.sin(mp * Math.PI);
+        this.forgeSparks.rotation.y += 0.14;
+
+        // Solid golden key materializes inside the wireframe blueprint shell
+        this.tokenKey.visible = true;
+        this.tokenKey.position.copy(forgePos);
+        const easeScale = 0.15 + 1.05 * (1 - Math.pow(1 - mp, 2.5));
+        this.tokenKey.scale.set(1.2 * easeScale, 1.2 * Math.max(0.08, mp), 1.2 * easeScale);
+
+        moverPos = forgePos;
+        moverText = '🔑 Printing New Unique Key';
+        moverCls = 'cyan';
+      } else if (t < 0.64) {
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.48, 0.64));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Mint Device Key';
-      } else if (t < 0.70) {
+        moverText = '🔑 Delivering Unique Key → Phone';
+      } else if (t < 0.72) {
         showToken = true;
       } else if (t < 0.92) {
-        const p = this.arcPhoneToServer.getPoint(seg(t, 0.70, 0.92));
+        const p = this.arcPhoneToServer.getPoint(seg(t, 0.72, 0.92));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Store Key in Datacentre';
+        moverText = '🔑 Saving Unique Key in Datacentre';
       } else {
         showSaved = true;
       }

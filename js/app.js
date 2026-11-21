@@ -248,18 +248,126 @@ class PushnotOrbit {
     return line;
   }
 
-  /* ---- 4 Animated World Outbound Stimulus Lines from Planet Earth -> Push Pipeline -> Phone ---- */
+  /* ---- 3D App Brand Logo Tile (Facebook, Instagram, X, Uber, Amazon, Bejeweled) ---- */
+  create3DBrandLogoOrb(brand, hexColor) {
+    const cvs = document.createElement('canvas');
+    cvs.width = 256; cvs.height = 256;
+    const ctx = cvs.getContext('2d');
+
+    if (brand === 'facebook') {
+      ctx.fillStyle = '#1877f2';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 220px "Space Grotesk", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('f', 136, 232);
+    } else if (brand === 'instagram') {
+      const grad = ctx.createRadialGradient(75, 240, 15, 160, 80, 260);
+      grad.addColorStop(0, '#fdf497');
+      grad.addColorStop(0.45, '#fd5949');
+      grad.addColorStop(0.65, '#d6249f');
+      grad.addColorStop(1, '#285aeb');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 256);
+      // Camera outline, lens circle, flash dot
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 16;
+      ctx.strokeRect(46, 46, 164, 164);
+      ctx.beginPath(); ctx.arc(128, 128, 42, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.arc(178, 78, 11, 0, Math.PI * 2); ctx.fill();
+    } else if (brand === 'x') {
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(10, 10, 236, 236);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 165px "Space Grotesk", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('𝕏', 128, 134);
+    } else if (brand === 'uber') {
+      ctx.fillStyle = '#05080f';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.strokeStyle = '#34d399';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(10, 10, 236, 236);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 84px "Space Grotesk", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('Uber', 128, 130);
+    } else if (brand === 'amazon') {
+      ctx.fillStyle = '#131921';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.strokeStyle = '#ff9900';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(10, 10, 236, 236);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 155px Georgia, serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('a', 128, 112);
+      // Iconic orange Amazon smile arrow from a -> z
+      ctx.strokeStyle = '#ff9900';
+      ctx.lineWidth = 14;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(62, 182);
+      ctx.quadraticCurveTo(128, 222, 196, 178);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(176, 174);
+      ctx.lineTo(198, 176);
+      ctx.lineTo(190, 198);
+      ctx.stroke();
+    } else {
+      // Bejeweled diamond badge
+      const grad = ctx.createLinearGradient(0, 0, 256, 256);
+      grad.addColorStop(0, '#0ea5e9');
+      grad.addColorStop(1, '#10b981');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '135px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('💎', 128, 136);
+    }
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    const rimMat  = new THREE.MeshStandardMaterial({ color: hexColor, emissive: hexColor, emissiveIntensity: 0.55, metalness: 0.45, roughness: 0.25 });
+    const faceMat = new THREE.MeshBasicMaterial({ map: tex });
+
+    const orb = new THREE.Group();
+    const tile = new THREE.Mesh(
+      new THREE.BoxGeometry(4.6, 4.6, 0.85),
+      [rimMat, rimMat, rimMat, rimMat, faceMat, faceMat]
+    );
+    tile.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(tile.geometry),
+      new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 })
+    ));
+    orb.add(tile);
+    return orb;
+  }
+
+  /* ---- 6 Animated World Outbound Stimulus Lines from Planet Earth -> Push Pipeline -> Phone ---- */
   initWorldStimStreams() {
     this.worldStimGroup = new THREE.Group();
     this.normalGroup.add(this.worldStimGroup);
 
-    const texLoader = new THREE.TextureLoader();
-
     const specs = [
-      { id: 'pin-stim-0', color: 0x38bdf8, offset: 0.00, img: null,                    spread: new THREE.Vector3(-7.5,  3.5, -5.5), mid1: new THREE.Vector3(-4.0,  2.5,  1.5), mid2: new THREE.Vector3( 0.0,  3.5, -3.0) },
-      { id: 'pin-stim-1', color: 0x3b82f6, offset: 0.25, img: 'models/zuck.png?v=26',  spread: new THREE.Vector3( 7.5,  2.5, -4.5), mid1: new THREE.Vector3( 4.0,  1.5, -1.5), mid2: new THREE.Vector3( 0.0,  1.5,  3.0) },
-      { id: 'pin-stim-2', color: 0xec4899, offset: 0.50, img: null,                    spread: new THREE.Vector3(-6.5, -2.5,  6.5), mid1: new THREE.Vector3(-3.0, -1.5,  3.0), mid2: new THREE.Vector3( 0.0, -1.5, -2.0) },
-      { id: 'pin-stim-3', color: 0xfbbf24, offset: 0.75, img: 'models/elon.png?v=26',  spread: new THREE.Vector3( 6.5, -3.5,  6.5), mid1: new THREE.Vector3( 3.0, -2.5, -2.5), mid2: new THREE.Vector3( 0.0, -3.0,  2.5) }
+      { id: 'pin-stim-0', brand: 'bejeweled', color: 0x38bdf8, offset: 0.00,  spread: new THREE.Vector3(-8.0,  4.0, -6.0), mid1: new THREE.Vector3(-4.5,  3.0,  1.5), mid2: new THREE.Vector3( 0.0,  4.0, -3.5) },
+      { id: 'pin-stim-1', brand: 'facebook',  color: 0x1877f2, offset: 0.166, spread: new THREE.Vector3( 8.0,  3.5, -5.0), mid1: new THREE.Vector3( 4.5,  2.0, -1.5), mid2: new THREE.Vector3( 0.0,  2.2,  3.5) },
+      { id: 'pin-stim-2', brand: 'instagram', color: 0xec4899, offset: 0.333, spread: new THREE.Vector3(-7.0,  0.5,  7.0), mid1: new THREE.Vector3(-3.2,  0.0,  3.2), mid2: new THREE.Vector3( 0.0,  0.4, -2.2) },
+      { id: 'pin-stim-3', brand: 'x',         color: 0xe2e8f0, offset: 0.500, spread: new THREE.Vector3( 7.0, -0.5,  7.0), mid1: new THREE.Vector3( 3.2, -1.2, -2.5), mid2: new THREE.Vector3( 0.0, -1.4,  2.5) },
+      { id: 'pin-stim-4', brand: 'uber',      color: 0x34d399, offset: 0.666, spread: new THREE.Vector3(-6.0, -4.0, -4.5), mid1: new THREE.Vector3(-2.5, -2.8, -3.0), mid2: new THREE.Vector3( 0.0, -2.8, -1.5) },
+      { id: 'pin-stim-5', brand: 'amazon',    color: 0xff9900, offset: 0.833, spread: new THREE.Vector3( 6.0, -4.5,  3.5), mid1: new THREE.Vector3( 2.5, -3.5,  2.8), mid2: new THREE.Vector3( 0.0, -4.0,  1.8) }
     ];
 
     this.worldStimStreams = specs.map((s) => {
@@ -275,36 +383,8 @@ class PushnotOrbit {
       const curve = new THREE.CatmullRomCurve3([pEarth, pEarth2, pServer, pArc1, pPost, pArc2, pPhone]);
       const line = this.addArc(curve, s.color, 0.52, this.worldStimGroup);
 
-      // Glowing 3D stimulus pulse orb (or 3D transparent cutout standee for Mark Zuckerberg / Elon Musk!)
-      const orb = new THREE.Group();
-      if (s.img) {
-        const tex = texLoader.load(s.img);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        const planeGeo = new THREE.PlaneGeometry(8.5, 8.5);
-        for (let i = 0; i < 7; i++) {
-          const isOuter = (i === 0 || i === 6);
-          const mat = new THREE.MeshBasicMaterial({
-            map: tex,
-            transparent: true,
-            alphaTest: 0.15,
-            side: THREE.DoubleSide,
-            color: isOuter ? 0xffffff : s.color
-          });
-          const slice = new THREE.Mesh(planeGeo, mat);
-          slice.position.z = -0.35 + (i / 6) * 0.7;
-          orb.add(slice);
-        }
-      } else {
-        const sphere = new THREE.Mesh(
-          new THREE.SphereGeometry(1.35, 14, 14),
-          new THREE.MeshBasicMaterial({ color: s.color })
-        );
-        const halo = new THREE.Mesh(
-          new THREE.SphereGeometry(2.3, 12, 12),
-          new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.28 })
-        );
-        orb.add(sphere, halo);
-      }
+      // 3D App Icon Tile travelling along the stream!
+      const orb = this.create3DBrandLogoOrb(s.brand, s.color);
       this.worldStimGroup.add(orb);
 
       return { ...s, curve, line, orb, currentPos: pEarth.clone() };
@@ -1708,7 +1788,7 @@ class PushnotOrbit {
     document.getElementById('pol-route').textContent = isLeo
       ? 'Threat → Proton (Denied) → OSINT Pivot → Meta/X Tokens → Apple/Google ID'
       : (isWorld
-        ? 'Planet Earth (Bejeweled / FB / IG / X) → Datacentre → Post Office → Phone'
+        ? 'Planet Earth (Bejeweled / FB / IG / X / Uber / Amazon) → Datacentre → Post Office → Phone'
         : (isPush
           ? 'Planet Earth Trigger → Datacentre → Post Office → Phone'
           : 'Apple/Google → Phone → Post Office → Datacentre'));
@@ -1969,13 +2049,13 @@ class PushnotOrbit {
         showPush = true;
       }
     } else if (this.mode === 'world') {
-      // MODE 3 · ALL WORLD STIMS (Bejeweled, Facebook, Instagram, X) streaming simultaneously from Planet Earth -> Datacentre -> Post Office -> Phone!
+      // MODE 3 · ALL WORLD STIMS (Bejeweled, Facebook, Instagram, X, Uber, Amazon) streaming simultaneously from Planet Earth -> Datacentre -> Post Office -> Phone!
       for (const s of this.worldStimStreams) {
         const u = (s.offset + t) % 1;
         const p = s.curve.getPoint(u);
         s.currentPos.copy(p);
         s.orb.position.copy(p);
-        if (s.img) s.orb.lookAt(this.camera.position);
+        s.orb.lookAt(this.camera.position);
       }
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (6 Beats):

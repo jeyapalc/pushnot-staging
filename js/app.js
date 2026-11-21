@@ -392,7 +392,7 @@ class PushnotOrbit {
       { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: RACK_H, uniformH: true, ry: 0 },
       { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: RACK_H, uniformH: true, ry: -Math.PI / 2 },
       { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'topbox',  row: 'front', path: 'models/dc/server_box.glb',    targetH: RACK_H, uniformH: true, ry: 0 }
+      { key: 'topbox',  row: 'front', path: 'models/dc/server_box.glb?v=3',    targetH: RACK_H, uniformH: true, ry: 0 }
     ];
 
     const loaded = {};
@@ -505,13 +505,15 @@ class PushnotOrbit {
       this.loader.load(s.path, (gltf) => {
         const obj = gltf.scene;
         if (s.ry) obj.rotation.y = s.ry;
+        obj.updateMatrixWorld(true);
         let box = new THREE.Box3().setFromObject(obj);
         const raw = box.getSize(new THREE.Vector3());
         const sy = s.targetH / (raw.y || 1);
-        const maxFootprint = s.row === 'top' ? 10 : 11;
+        const maxFootprint = 10.5;
         const sxz = Math.min(sy, maxFootprint / Math.max(raw.x || 1, raw.z || 1));
         obj.scale.set(sxz, s.uniformH ? sy : sxz, sxz);
 
+        obj.updateMatrixWorld(true);
         box = new THREE.Box3().setFromObject(obj);
         const c = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());

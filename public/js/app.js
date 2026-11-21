@@ -112,17 +112,6 @@ class PushnotOrbit {
     outer.position.y = 0.1;
     this.scene.add(outer);
 
-    // Directional polarity cones orbiting the ring
-    this.flowBeads = [];
-    this.beadMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
-    const beadGeo = new THREE.ConeGeometry(0.9, 2.6, 8);
-    beadGeo.rotateX(Math.PI / 2);
-    for (let i = 0; i < 12; i++) {
-      const m = new THREE.Mesh(beadGeo, this.beadMat);
-      this.scene.add(m);
-      this.flowBeads.push({ mesh: m, baseAngle: (i / 12) * Math.PI * 2 });
-    }
-
     // Elevated arcs between stations
     const pStore  = POS.store.clone().setY(18);
     const pPhone  = POS.phone.clone().setY(16);
@@ -135,6 +124,9 @@ class PushnotOrbit {
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-R - 10, 28, 0), pPost);
     this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(28));
 
+    this.setupCurves = [this.arcStoreToPhone, this.arcPostToPhone, this.arcPhoneToServer];
+    this.pushCurves  = [this.arcUfoToServer,  this.arcServerToPost, this.arcPostToPhone];
+
     this.setupLines = [
       this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4),
       this.addArc(this.arcPostToPhone,   0xfbbf24, 0.35),
@@ -144,6 +136,19 @@ class PushnotOrbit {
       this.addArc(this.arcServerToPost, 0x34d399, 0.45),
       this.addArc(this.arcPostToPhone,  0x34d399, 0.45)
     ];
+
+    // Directional flow cones gliding directly along the active mode's arcs (100% accurate polarity!)
+    this.flowCones = [];
+    this.beadMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    const coneGeo = new THREE.ConeGeometry(0.85, 2.4, 8);
+    coneGeo.rotateX(Math.PI / 2);
+    for (let c = 0; c < 3; c++) {
+      for (let k = 0; k < 3; k++) {
+        const mesh = new THREE.Mesh(coneGeo, this.beadMat);
+        this.scene.add(mesh);
+        this.flowCones.push({ mesh, curveIdx: c, offset: k / 3 });
+      }
+    }
 
     // Starfield
     const pts = [];
@@ -275,6 +280,67 @@ class PushnotOrbit {
     this.pushOrb.add(miniKey);
     this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
     this.scene.add(this.pushOrb);
+
+    // 7. 3D Token-Matching Zipper hovering above the Post Office
+    this.initZipper();
+  }
+
+  initZipper() {
+    this.zipperGroup = new THREE.Group();
+    this.zipperGroup.position.set(POS.post.x, 38, POS.post.z);
+    this.zipperTeeth = [];
+
+    const toothGeo = new THREE.BoxGeometry(2.4, 0.75, 0.75);
+    const count = 8;
+    for (let i = 0; i < count; i++) {
+      const y = (i - (count - 1) / 2) * 1.45;
+      const matL = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.8, metalness: 0.85, roughness: 0.2 });
+      const matR = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.8, metalness: 0.85, roughness: 0.2 });
+      const left  = new THREE.Mesh(toothGeo, matL);
+      const right = new THREE.Mesh(toothGeo, matR);
+      left.position.set(-3.2, y, 0);
+      right.position.set(3.2, y + 0.55, 0);
+      this.zipperGroup.add(left, right);
+      this.zipperTeeth.push({ left, right, matL, matR, y, idx: i / (count - 1) });
+    }
+
+    // Glowing zipper slider pull
+    this.zipSlider = new THREE.Mesh(
+      new THREE.BoxGeometry(2.6, 2.4, 1.5),
+      new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x10b981, emissiveIntensity: 1.0, metalness: 0.7, roughness: 0.2 })
+    );
+    this.zipperGroup.add(this.zipSlider, new THREE.PointLight(0x34d399, 3, 28));
+    this.zipperGroup.visible = false;
+    this.scene.add(this.zipperGroup);
+  }
+
+  updateZipper(progress) {
+    // progress 0..1 zips the left (server key) & right (registry key) teeth together!
+    const count = this.zipperTeeth.length;
+    const minY = this.zipperTeeth[0].y;
+    const maxY = this.zipperTeeth[count - 1].y;
+    const sliderY = minY + (maxY - minY) * progress;
+    this.zipSlider.position.set(0, sliderY, 0);
+
+    for (const pair of this.zipperTeeth) {
+      const zipped = progress >= pair.idx;
+      const openSpread = Math.max(0, (pair.idx - progress) * 4.5);
+      const xOffset = zipped ? 0.85 : 1.1 + openSpread;
+      pair.left.position.x = -xOffset;
+      pair.right.position.x = xOffset;
+
+      if (zipped) {
+        pair.matL.color.setHex(0x34d399);
+        pair.matL.emissive.setHex(0x059669);
+        pair.matR.color.setHex(0x34d399);
+        pair.matR.emissive.setHex(0x059669);
+      } else {
+        pair.matL.color.setHex(0xfbbf24);
+        pair.matL.emissive.setHex(0xb45309);
+        pair.matR.color.setHex(0x38bdf8);
+        pair.matR.emissive.setHex(0x0284c7);
+      }
+    }
   }
 
   loadModels() {
@@ -441,6 +507,7 @@ class PushnotOrbit {
     this.tokenKey.visible = false;
     this.pushOrb.visible = false;
     this.triggerBolt.visible = false;
+    this.zipperGroup.visible = false;
 
     // Bejeweled stays visibly installed on the phone once downloaded
     this.installedApp.visible = this.mode === 'push' || t >= 0.28;
@@ -449,7 +516,7 @@ class PushnotOrbit {
 
     // UFO tractor beam brightens when triggering an external event in Mode 2
     if (this.ufoBeamMat) {
-      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.28) ? 0.34 : 0.07;
+      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.22) ? 0.34 : 0.07;
     }
 
     let moverPos = null;
@@ -489,23 +556,35 @@ class PushnotOrbit {
         showSaved = true;
       }
     } else {
-      // PUSH DELIVERY MODE: UFO External Event -> Server (uses stored Key) -> Post Office -> Phone
-      if (t < 0.26) {
-        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.26));
+      // PUSH DELIVERY MODE:
+      // 0.00–0.22: UFO External Event -> App Server
+      // 0.22–0.44: App Server -> Post Office
+      // 0.44–0.64: 3D Zipper Token Matching at Post Office!
+      // 0.64–0.88: Post Office -> Phone
+      // 0.88–1.00: Delivered banner on Phone
+      if (t < 0.22) {
+        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.22));
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
         moverText = '⚡ External Event Trigger';
         moverCls = 'cyan';
-      } else if (t < 0.58) {
-        const p = this.arcServerToPost.getPoint(seg(t, 0.26, 0.58));
+      } else if (t < 0.44) {
+        const p = this.arcServerToPost.getPoint(seg(t, 0.22, 0.44));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
         moverText = '✉ Payload + 🔑 Key → Post Office';
         moverCls = 'push';
+      } else if (t < 0.64) {
+        const zp = seg(t, 0.44, 0.62);
+        this.zipperGroup.visible = true;
+        this.updateZipper(zp);
+        moverPos = new THREE.Vector3(POS.post.x, 45, POS.post.z);
+        moverText = zp < 0.92 ? '🔑 Matching Token…' : '✓ Token Matched!';
+        moverCls = zp < 0.92 ? '' : 'push';
       } else if (t < 0.88) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.58, 0.88));
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.64, 0.88));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
@@ -571,14 +650,21 @@ class PushnotOrbit {
       this.controls.target.set(0, 16, 0);
     }
 
-    // Directional polarity cones around ring
-    const dir = this.mode === 'setup' ? 1 : -1;
-    const phase = now * 0.00055 * dir;
-    for (const b of this.flowBeads) {
-      const a = b.baseAngle + phase;
-      b.mesh.position.set(Math.cos(a) * R, 0.4, Math.sin(a) * R);
-      const nextA = a + 0.05 * dir;
-      b.mesh.lookAt(Math.cos(nextA) * R, 0.4, Math.sin(nextA) * R);
+    // Directional flow cones glide directly along the active mode's arcs
+    const activeCurves = this.mode === 'setup' ? this.setupCurves : this.pushCurves;
+    const speed = (now * 0.00028) % 1;
+    for (const fc of this.flowCones) {
+      const curve = activeCurves[fc.curveIdx];
+      const u = (fc.offset + speed) % 1;
+      const p = curve.getPoint(u);
+      const pNext = curve.getPoint(Math.min(1, u + 0.02));
+      fc.mesh.position.copy(p);
+      fc.mesh.lookAt(pNext);
+    }
+
+    // Keep zipper facing the camera smoothly
+    if (this.zipperGroup && this.zipperGroup.visible) {
+      this.zipperGroup.lookAt(this.camera.position.x, this.zipperGroup.position.y, this.camera.position.z);
     }
 
     if (this.ufoGroup) {

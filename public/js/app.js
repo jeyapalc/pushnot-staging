@@ -365,7 +365,7 @@ class PushnotOrbit {
       { key: 'net',     row: 'back',  path: 'models/dc/network_rack.glb',  targetH: RACK_H, uniformH: true },
       { key: 'rack1',   row: 'back',  path: 'models/dc/rack_1.glb',        targetH: RACK_H, uniformH: true },
       { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: RACK_H, uniformH: true },
-      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: 9,      uniformH: false },
+      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: 15.5,   uniformH: true },
       { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: RACK_H, uniformH: true },
       { key: 'topbox',  row: 'top',   path: 'models/dc/server_box.glb',    targetH: 6,      uniformH: false }
     ];
@@ -374,8 +374,8 @@ class PushnotOrbit {
     let remaining = specs.length;
 
     const finalizeLayout = () => {
-      const gapX = 1.8;
-      const gapZ = 2.6;
+      const gapX = 0.2;
+      const gapZ = 0.8;
 
       // 1. Lay out BACK row side-by-side with exact measured widths (zero overlap)
       const backKeys = ['argos', 'main', 'net', 'rack1'].filter((k) => loaded[k]);

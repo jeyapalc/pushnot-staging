@@ -1721,8 +1721,8 @@ class PushnotOrbit {
   }
 
   initAppleGoogleSkyscraper(done) {
-    // Unified Shiny Black 3D Skyscraper HQ (`models/skyscraper.glb`) with 3D Apple & Google Logos mounted on top!
-    // Replaces both the old App Store Shopping Bag and the old Post Box.
+    // Unified Shiny Black 3D Office Building / Skyscraper HQ (`models/office_building.glb`)
+    // with 3D Apple & Google Logos mounted on the roof AND on the back of the skyscraper!
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.post.x, 0, POS.post.z);
     this.normalGroup.add(this.storeGroup);
@@ -1730,6 +1730,11 @@ class PushnotOrbit {
     this.roofIconsGroup = new THREE.Group();
     this.roofIconsGroup.position.set(0, 35.5, 0);
     this.storeGroup.add(this.roofIconsGroup);
+
+    // Back-facade logo mount group (placed flush against the back wall of the skyscraper!)
+    this.backIconsGroup = new THREE.Group();
+    this.backIconsGroup.position.set(0, 18, -5.5);
+    this.storeGroup.add(this.backIconsGroup);
 
     this.tops.post  = 41;
     this.tops.store = 41;
@@ -1747,8 +1752,8 @@ class PushnotOrbit {
       done();
     };
 
-    // 1. Load the 3D Skyscraper GLB and apply a sleek Shiny Black Obsidian Glass & Chrome finish
-    this.loader.load('models/skyscraper.glb?v=34', (gltf) => {
+    // 1. Load `models/office_building.glb` (optimized from user's Downloads/office_building.glb) in Shiny Black Obsidian & Glass
+    this.loader.load('models/office_building.glb?v=35', (gltf) => {
       const tower = gltf.scene;
 
       const obsidianWallMat = new THREE.MeshPhysicalMaterial({
@@ -1760,97 +1765,102 @@ class PushnotOrbit {
         envMapIntensity: 1.65
       });
       const obsidianGlassMat = new THREE.MeshPhysicalMaterial({
-        color: 0x0a1324,
+        color: 0x091526,
         emissive: 0x0ea5e9,
-        emissiveIntensity: 0.22,
+        emissiveIntensity: 0.25,
         metalness: 0.95,
         roughness: 0.05,
         clearcoat: 1.0,
         clearcoatRoughness: 0.03,
-        envMapIntensity: 2.1
+        envMapIntensity: 2.2
       });
       const darkChromeTrimMat = new THREE.MeshPhysicalMaterial({
         color: 0x111827,
         emissive: 0x38bdf8,
-        emissiveIntensity: 0.14,
+        emissiveIntensity: 0.12,
         metalness: 0.92,
         roughness: 0.10,
         clearcoat: 1.0,
         envMapIntensity: 1.8
       });
-      const roofPadMat = new THREE.MeshStandardMaterial({
-        color: 0x090d16,
-        metalness: 0.82,
-        roughness: 0.18,
-        envMapIntensity: 1.4
-      });
 
       tower.traverse((ch) => {
         if (!ch.isMesh) return;
+        const nName = (ch.name || '').toLowerCase();
         const mName = (ch.material?.name || '').toLowerCase();
-        if (mName.includes('window')) {
+        if (nName.includes('glass') || mName.includes('glass') || mName.includes('palette')) {
           ch.material = obsidianGlassMat;
-        } else if (mName.includes('trim')) {
+        } else if (nName.includes('rams') || nName.includes('03') || mName.includes('17')) {
           ch.material = darkChromeTrimMat;
-        } else if (mName.includes('roof')) {
-          ch.material = roofPadMat;
         } else {
-          ch.material = obsidianWallMat;
+          // Keep any emissive window texture while giving the exterior walls a shiny black obsidian finish
+          if (ch.material?.emissiveMap || ch.material?.map) {
+            ch.material = ch.material.clone();
+            if (ch.material.color) ch.material.color.setHex(0x0b101b);
+            ch.material.metalness = 0.85;
+            ch.material.roughness = 0.14;
+            ch.material.envMapIntensity = 1.6;
+          } else {
+            ch.material = obsidianWallMat;
+          }
         }
       });
 
-      // Scale skyscraper to height 31 and widen X/Z slightly for a commanding corporate HQ tower silhouette
+      // Scale office_building.glb to height 31 and ground it cleanly at (0, 0, 0)
       let box = new THREE.Box3().setFromObject(tower);
       const dim = box.getSize(new THREE.Vector3());
-      const sy = 31 / (dim.y || 1);
-      tower.scale.set(sy * 1.45, sy, sy * 1.45);
+      const s = 31 / (dim.y || 1);
+      tower.scale.setScalar(s);
 
+      tower.updateMatrixWorld(true);
       box = new THREE.Box3().setFromObject(tower);
       const c = box.getCenter(new THREE.Vector3());
+      const finalSize = box.getSize(new THREE.Vector3());
       tower.position.set(-c.x, -box.min.y, -c.z);
 
       this.storeGroup.add(tower);
 
-      // Glowing rooftop helipad / crown ring where the Apple & Google 3D icons sit
-      const crownY = box.max.y - box.min.y;
-      const crownRing = new THREE.Mesh(
-        new THREE.TorusGeometry(6.8, 0.18, 12, 48),
-        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 })
-      );
-      crownRing.rotation.x = Math.PI / 2;
-      crownRing.position.y = crownY + 0.25;
-      this.storeGroup.add(crownRing);
-
-      this.roofIconsGroup.position.y = crownY + 5.2;
-      this.tops.post  = crownY + 10.5;
-      this.tops.store = crownY + 10.5;
+      const crownY = finalSize.y;
+      this.roofIconsGroup.position.set(0, crownY + 4.8, 0);
+      // Position the back-facade logos flush on the back (-Z) face of the office building skyscraper!
+      this.backIconsGroup.position.set(0, crownY * 0.58, -(finalSize.z / 2 + 0.55));
+      this.tops.post  = crownY + 10.2;
+      this.tops.store = crownY + 10.2;
       checkClone();
     }, undefined, checkClone);
 
-    // 2. Mount 3D Apple & Google Logos side-by-side on top of the Shiny Black Skyscraper roof!
-    const mountRoofLogo = (path, offsetX, targetSize) => {
+    // 2. Mount 3D Apple & Google Logos both on TOP of the skyscraper AND on the BACK of the skyscraper!
+    const mountBuildingLogo = (path, offsetX, targetSize) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
         let box = new THREE.Box3().setFromObject(logo);
         const raw = box.getSize(new THREE.Vector3());
         const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
-        logo.scale.set(s, s, Math.min(s, 1.8 / (raw.z || 1)));
+        logo.scale.set(s, s, Math.min(s, 1.6 / (raw.z || 1)));
 
         logo.updateMatrixWorld(true);
         box = new THREE.Box3().setFromObject(logo);
         const c = box.getCenter(new THREE.Vector3());
 
-        const wrap = new THREE.Group();
+        // A. Rooftop logo (on top of the skyscraper)
+        const roofWrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
-        wrap.add(logo);
-        wrap.position.set(offsetX, 0, 0);
-        this.roofIconsGroup.add(wrap);
+        roofWrap.add(logo);
+        roofWrap.position.set(offsetX, 0, 0);
+        this.roofIconsGroup.add(roofWrap);
+
+        // B. Back-of-skyscraper logo (mounted flat on the back -Z wall facing outward!)
+        const backWrap = roofWrap.clone(true);
+        backWrap.position.set(-offsetX * 1.15, 0, 0);
+        backWrap.rotation.y = Math.PI;
+        this.backIconsGroup.add(backWrap);
+
         checkClone();
       }, undefined, checkClone);
     };
 
-    mountRoofLogo('models/apple_logo.glb',  -4.8, 8.2);
-    mountRoofLogo('models/google_logo.glb',  4.8, 8.2);
+    mountBuildingLogo('models/apple_logo.glb',  -5.2, 8.4);
+    mountBuildingLogo('models/google_logo.glb',  5.2, 8.4);
   }
 
   centerAndScale(obj, size) {
@@ -1939,7 +1949,7 @@ class PushnotOrbit {
     // and the camera glides in Video-Game Cinematic Mode to focus on the active node/packet!
     this.controls.enableZoom = auto;
     const btn = document.getElementById('btn-play');
-    btn.textContent = auto ? '▶ Auto' : '🎥 Step Cam';
+    btn.textContent = auto ? '▶' : '🎥';
     btn.classList.toggle('manual', !auto);
   }
 
@@ -2274,14 +2284,13 @@ class PushnotOrbit {
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), showNorm);
     this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 15, POS.ufo.z), showNorm);
 
-    // 4 Multi-Stream World Outbound Stimulus Pills (Bejeweled, Facebook, Instagram, X)
-    // Shown ONLY when Mode 3 (All World Stims) is active!
+    // 3D App Icon Tiles stream in Mode 3 (no 2D HUD pills attached to them, keeping the HUD clean!)
     const showStims = showNorm && this.mode === 'world';
     if (this.worldStimGroup) this.worldStimGroup.visible = showStims;
     if (this.worldStimStreams) {
       for (const s of this.worldStimStreams) {
         s.orb.visible = showStims;
-        this.place(s.id, s.currentPos.clone().add(new THREE.Vector3(0, 3.2, 0)), showStims);
+        this.place(s.id, null, false);
       }
     }
 

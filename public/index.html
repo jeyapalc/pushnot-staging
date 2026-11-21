@@ -62,8 +62,16 @@
   <div class="pin pin-event amber" id="pin-token">
     <span class="ev-ico">🔑</span>
     <div>
-      <div class="ev-title">Unique Device Key</div>
-      <div class="ev-sub">Secret address for this phone · 7f4a…e891</div>
+      <div class="ev-title">Unique Key on Phone · 7f4a…e891</div>
+      <div class="ev-sub">Outbound: Phone sends Key to App Maker · Inbound: Post Office routes pushes to Phone</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event red" id="pin-no-direct">
+    <span class="ev-ico">🛡️</span>
+    <div>
+      <div class="ev-title">No Direct App Maker ↔ Phone Connection</div>
+      <div class="ev-sub">OS blocks background sockets to save battery &amp; privacy · Only Post Office holds tunnel</div>
     </div>
   </div>
 
@@ -182,6 +190,6 @@
     </div>
   </nav>
 
-  <script type="module" src="js/app.js?v=10"></script>
+  <script type="module" src="js/app.js?v=11"></script>
 </body>
 </html>

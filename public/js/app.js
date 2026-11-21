@@ -392,7 +392,7 @@ class PushnotOrbit {
       { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: RACK_H, uniformH: true, ry: 0 },
       { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: RACK_H, uniformH: true, ry: -Math.PI / 2 },
       { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'topbox',  row: 'top',   path: 'models/dc/server_box.glb',    targetH: 6,      uniformH: false, ry: 0 }
+      { key: 'topbox',  row: 'front', path: 'models/dc/server_box.glb',    targetH: RACK_H, uniformH: true, ry: 0 }
     ];
 
     const loaded = {};
@@ -419,8 +419,8 @@ class PushnotOrbit {
         cx += item.size.x + gapX;
       }
 
-      // 2. Lay out FRONT row cleanly in front of back row's forward-most edge
-      const frontKeys = ['rack2', 'panel', 'console'].filter((k) => loaded[k]);
+      // 2. Lay out FRONT row (4 uniform-height units cleanly in front of back row)
+      const frontKeys = ['rack2', 'panel', 'console', 'topbox'].filter((k) => loaded[k]);
       const frontTotalW = frontKeys.reduce((s, k) => s + loaded[k].size.x, 0) + gapX * Math.max(0, frontKeys.length - 1);
       const frontMaxD = Math.max(4, ...frontKeys.map((k) => loaded[k].size.z));
       const frontZ = (frontMaxD / 2 + gapZ / 2);
@@ -434,14 +434,7 @@ class PushnotOrbit {
         cx += item.size.x + gapX;
       }
 
-      // 3. Stack TOP server box flush on top of the tallest center back-row rack
-      if (loaded.topbox && backPlaced.length) {
-        const anchor = backPlaced.find((b) => b.key === 'main') || backPlaced[Math.floor(backPlaced.length / 2)];
-        loaded.topbox.wrap.position.set(anchor.x, floorY + anchor.size.y + 0.15, anchor.z);
-        this.dcGroup.add(loaded.topbox.wrap);
-      }
-
-      // 4. Size the raised floor plinth to the exact combined footprint + clean margin
+      // 3. Size the raised floor plinth to the exact combined 4x2 footprint + clean margin
       const dcBox = new THREE.Box3().setFromObject(this.dcGroup);
       // Compute local bounds before world offset by measuring children
       const padW = Math.max(backTotalW, frontTotalW) + 5;
@@ -490,8 +483,7 @@ class PushnotOrbit {
       this.dcGroup.add(this.dcLight);
 
       const maxBackH = Math.max(18, ...backPlaced.map((b) => b.size.y));
-      const topExtra = loaded.topbox ? loaded.topbox.size.y : 0;
-      this.tops.server = floorY + maxBackH + topExtra + 3;
+      this.tops.server = floorY + maxBackH + 3;
 
       // Dock stored golden key cleanly outside the front-right edge (zero clipping)
       if (this.storedKey) {

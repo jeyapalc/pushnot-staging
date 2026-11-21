@@ -254,9 +254,9 @@ class PushnotOrbit {
     this.tokenKey = this.createTokenKey(1.2);
     this.scene.add(this.tokenKey);
 
-    // 4. Persistent Stored Token Key docked on front of the App Server!
+    // 4. Persistent Stored Token Key docked on front of the Datacentre!
     this.storedKey = this.createTokenKey(1.0);
-    this.storedKey.position.set(POS.server.x + 8, 22, POS.server.z + 8);
+    this.storedKey.position.set(POS.server.x + 12, 24, POS.server.z + 12);
     this.scene.add(this.storedKey);
 
     // 5. External Event Trigger Pulse (UFO -> App Server)
@@ -343,19 +343,93 @@ class PushnotOrbit {
     }
   }
 
+  initDatacentreCluster(done) {
+    // Tightly stacked Datacentre cluster built from all 8 server/console GLBs + flashing LEDs
+    this.dcGroup = new THREE.Group();
+    this.dcGroup.position.copy(POS.server);
+    this.dcGroup.rotation.y = Math.PI * 0.25;
+    this.scene.add(this.dcGroup);
+
+    // Raised glowing floor pad underneath the datacentre
+    const pad = new THREE.Mesh(
+      new THREE.BoxGeometry(34, 0.8, 22),
+      new THREE.MeshStandardMaterial({ color: 0x0b1220, metalness: 0.7, roughness: 0.3 })
+    );
+    pad.position.set(0, 0.4, 0);
+    pad.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(pad.geometry),
+      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 })
+    ));
+    this.dcGroup.add(pad);
+
+    // 8 stacked/clustered datacentre units (original rack + 7 new downloads)
+    const layout = [
+      // Back row: 4 tall racks shoulder-to-shoulder
+      { path: 'models/dc/cabinet_argos.glb', size: 22, x: -12, y: 0.8, z: -5,  ry: 0 },
+      { path: 'models/data_center_rack.glb', size: 24, x:  -4, y: 0.8, z: -5,  ry: 0 },
+      { path: 'models/dc/network_rack.glb',  size: 22, x:   4, y: 0.8, z: -5,  ry: 0 },
+      { path: 'models/dc/rack_1.glb',        size: 22, x:  12, y: 0.8, z: -5,  ry: 0 },
+      // Front row: 2 side racks + front command console
+      { path: 'models/dc/rack_2.glb',        size: 17, x: -10, y: 0.8, z:  4.5, ry: 0.15 },
+      { path: 'models/dc/rack_console.glb',  size: 17, x:  10, y: 0.8, z:  4.5, ry: -0.15 },
+      { path: 'models/dc/control_panel.glb', size: 11, x:   0, y: 0.8, z:  6.5, ry: 0 },
+      // Stacked on top of the center racks
+      { path: 'models/dc/server_box.glb',    size: 14, x:   0, y: 23,  z: -5,  ry: 0 }
+    ];
+
+    for (const item of layout) {
+      this.loader.load(item.path, (gltf) => {
+        const obj = gltf.scene;
+        obj.rotation.y = item.ry;
+        let box = new THREE.Box3().setFromObject(obj);
+        const dim = box.getSize(new THREE.Vector3());
+        const maxD = Math.max(dim.x, dim.y, dim.z) || 1;
+        obj.scale.setScalar(item.size / maxD);
+        box = new THREE.Box3().setFromObject(obj);
+        const c = box.getCenter(new THREE.Vector3());
+        obj.position.set(item.x - c.x, item.y - box.min.y, item.z - c.z);
+        this.dcGroup.add(obj);
+        done();
+      }, undefined, (err) => { console.warn('DC model failed:', item.path, err); done(); });
+    }
+
+    // Flashing server blade LEDs arrayed across the datacentre racks
+    this.dcLeds = [];
+    const ledGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45);
+    const palette = [0x38bdf8, 0x34d399, 0xfbbf24, 0xff2a55];
+    const cols = [-13, -11, -5, -3, 3, 5, 11, 13];
+    for (let i = 0; i < cols.length; i++) {
+      for (let row = 0; row < 5; row++) {
+        const hex = palette[(i + row) % palette.length];
+        const mat = new THREE.MeshBasicMaterial({ color: hex });
+        const led = new THREE.Mesh(ledGeo, mat);
+        led.position.set(cols[i], 4 + row * 3.8, -0.8);
+        this.dcGroup.add(led);
+        this.dcLeds.push({
+          mesh: led,
+          mat,
+          baseHex: hex,
+          speed: 3 + ((i * 7 + row * 13) % 9),
+          phase: (i * 1.7 + row * 2.3)
+        });
+      }
+    }
+
+    // Pulsing datacentre status light
+    this.dcLight = new THREE.PointLight(0x38bdf8, 3.2, 48);
+    this.dcLight.position.set(0, 16, 12);
+    this.dcGroup.add(this.dcLight);
+
+    this.tops.server = 35;
+  }
+
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 6;
+    let left = 13; // 8 datacentre units + phone + postbox + apple + google + ufo
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
-    // 1. Server Rack (front-left)
-    this.loader.load('models/data_center_rack.glb', (gltf) => {
-      const rack = gltf.scene;
-      rack.rotation.y = Math.PI * 0.25;
-      this.tops.server = this.ground(rack, 34, POS.server);
-      this.scene.add(rack);
-      done();
-    }, undefined, done);
+    // 1. Datacentre Cluster (front-left)
+    this.initDatacentreCluster(done);
 
     // 2. Smartphone (front-right)
     this.loader.load('models/generic_smartphone_game-ready.glb', (gltf) => {
@@ -460,8 +534,8 @@ class PushnotOrbit {
     document.getElementById('pol-arrow').textContent = isPush ? '↻' : '↺';
     document.getElementById('pol-label').textContent = isPush ? 'PUSH DELIVERY' : 'INSTALL & SETUP';
     document.getElementById('pol-route').textContent = isPush
-      ? 'UFO Event → Server → Post Office → Phone'
-      : 'Apple/Google → Phone → Post Office → Server';
+      ? 'UFO Event → Datacentre → Post Office → Phone'
+      : 'Apple/Google → Phone → Post Office → Datacentre';
   }
 
   setAutoOrbit(on) {
@@ -573,7 +647,7 @@ class PushnotOrbit {
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Store Key on Server';
+        moverText = '🔑 Store Key in Datacentre';
       } else {
         showSaved = true;
       }
@@ -707,6 +781,21 @@ class PushnotOrbit {
     }
     this.pushOrb.rotation.y = Math.sin(now * 0.003) * 0.35;
     this.stars.rotation.y += dt * 0.015;
+
+    // Animate flashing Datacentre LEDs (burst faster when triggered or saving!)
+    if (this.dcLeds) {
+      const busy = (this.mode === 'push' && this.t < 0.44) || (this.mode === 'setup' && this.t >= 0.85);
+      const mult = busy ? 2.6 : 1.0;
+      const tSec = now * 0.001;
+      for (const l of this.dcLeds) {
+        const on = Math.sin(tSec * l.speed * mult + l.phase) > -0.15;
+        l.mesh.visible = on;
+      }
+      if (this.dcLight) {
+        this.dcLight.color.setHex(busy ? 0x34d399 : 0x38bdf8);
+        this.dcLight.intensity = busy ? 4.5 + Math.sin(tSec * 14) * 1.5 : 2.8 + Math.sin(tSec * 4) * 0.6;
+      }
+    }
 
     this.controls.update();
     this.updateState();

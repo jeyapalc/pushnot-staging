@@ -1410,7 +1410,7 @@ class PushnotOrbit {
     this.bombFaceTex.colorSpace = THREE.SRGBColorSpace;
     this.lastBombTickKey = '';
 
-    // Mount the LED Faceplate & 4 physical 3D flashing LED bulbs right onto the C4 Bomb
+    // Mount the LED Faceplate & 4 physical 3D flashing LED bulbs right onto the front face (+Z) of the rotated C4 Bomb!
     const plateRimMat = new THREE.MeshStandardMaterial({
       color: 0x1e293b, metalness: 0.75, roughness: 0.28
     });
@@ -1419,7 +1419,7 @@ class PushnotOrbit {
       new THREE.BoxGeometry(8.6, 4.7, 0.45),
       [plateRimMat, plateRimMat, plateRimMat, plateRimMat, plateFaceMat, plateFaceMat]
     );
-    this.bombFaceplate.position.set(0, 3.4, 1.4);
+    this.bombFaceplate.position.set(0, 2.2, 2.35);
     this.bombFaceplate.add(new THREE.LineSegments(
       new THREE.EdgesGeometry(this.bombFaceplate.geometry),
       new THREE.LineBasicMaterial({ color: 0xff1e56 })
@@ -1430,10 +1430,10 @@ class PushnotOrbit {
     this.bombLedMeshes = [];
     const ledGeo = new THREE.SphereGeometry(0.42, 14, 14);
     const ledPositions = [
-      [-3.8, 5.3, 1.65],
-      [ 3.8, 5.3, 1.65],
-      [-3.8, 1.5, 1.65],
-      [ 3.8, 1.5, 1.65]
+      [-3.8, 4.1, 2.6],
+      [ 3.8, 4.1, 2.6],
+      [-3.8, 0.3, 2.6],
+      [ 3.8, 0.3, 2.6]
     ];
     for (let i = 0; i < ledPositions.length; i++) {
       const mat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff1e56 : 0xfbbf24 });
@@ -1444,16 +1444,20 @@ class PushnotOrbit {
     }
 
     this.bombStrobeLight = new THREE.PointLight(0xff1e56, 4.0, 32);
-    this.bombStrobeLight.position.set(0, 3.5, 3.0);
+    this.bombStrobeLight.position.set(0, 2.2, 4.0);
     group.add(this.bombStrobeLight);
 
-    // Load the user's simple_c4-_bomb.glb (`models/leo/c4_bomb.glb`) underneath the LED Faceplate!
-    this.loader.load('models/leo/c4_bomb.glb?v=32', (gltf) => {
+    // Load the user's simple_c4-_bomb.glb (`models/leo/c4_bomb.glb`), rotated 90° around Y and 90° upright so the wide C4 brick & keypad face forward (+Z) behind the LED faceplate!
+    this.loader.load('models/leo/c4_bomb.glb?v=37', (gltf) => {
       const c4 = gltf.scene;
       this.harmonizeAsset(c4, { minRough: 0.32, maxRough: 0.65, maxMetal: 0.45, envIntensity: 0.9 });
-      this.centerAndScale(c4, 10.5);
-      c4.position.set(0, 0, 0);
-      group.add(c4);
+      this.centerAndScale(c4, 11.5);
+      const c4Wrap = new THREE.Group();
+      c4Wrap.add(c4);
+      // Rotate the C4 bomb so its wide 6.6-unit dimension is horizontal (X), its keypad face points forward (+Z), and it sits flush behind the LED faceplate
+      c4Wrap.rotation.set(Math.PI / 2, Math.PI / 2, 0);
+      c4Wrap.position.set(0, 0.4, 0);
+      group.add(c4Wrap);
     });
 
     this.updateBombFaceplate(0);

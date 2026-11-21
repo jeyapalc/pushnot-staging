@@ -1699,9 +1699,9 @@ class PushnotOrbit {
     if (!this.rcmpCvs) return;
     const ctx = this.rcmpCvs.getContext('2d');
     ctx.save();
-    // Invert mapping for Cube_Screen_0 UVs
-    ctx.translate(1024, 1024);
-    ctx.scale(-1, -1);
+    // Correct mapping for monitor screen UVs (upright Y, normal left-to-right X)
+    ctx.translate(0, 1024);
+    ctx.scale(1, -1);
 
     // Deep tactical RCMP navy screen background
     const grad = ctx.createLinearGradient(0, 0, 0, 1024);

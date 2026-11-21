@@ -21,16 +21,16 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 const R = 46;
 const D = Math.SQRT1_2 * R;
 const POS = {
-  store:  new THREE.Vector3( D, 0, -D),
+  store:  new THREE.Vector3( 0, 0, -R),
   phone:  new THREE.Vector3( D, 0,  D),
   server: new THREE.Vector3(-D, 0,  D),
-  post:   new THREE.Vector3(-D, 0, -D),
+  post:   new THREE.Vector3( 0, 0, -R),
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 14, push: 11, world: 12, leo: 16 };
+const MODE_SECONDS = { setup: 13, push: 11, world: 12, leo: 16 };
 const MODE_STEPS = {
-  setup: [0.06, 0.27, 0.34, 0.44, 0.56, 0.68, 0.84, 0.96],
+  setup: [0.06, 0.25, 0.34, 0.44, 0.56, 0.68, 0.84, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
   world: [0.10, 0.30, 0.55, 0.80, 0.95],
   leo:   [0.08, 0.26, 0.45, 0.54, 0.64, 0.78, 0.96]
@@ -179,25 +179,24 @@ class PushnotOrbit {
     outer.position.y = 0.1;
     this.worldGroup.add(outer);
 
-    // Elevated arcs between stations
-    const pStore  = POS.store.clone().setY(18);
+    // Elevated arcs between the 3 unified stations (Apple & Google Skyscraper HQ <-> Phone <-> App Maker Datacentre)
     const pPhone  = POS.phone.clone().setY(16);
-    const pPost   = POS.post.clone().setY(18);
+    const pPost   = POS.post.clone().setY(22);
     const pServer = POS.server.clone().setY(18);
 
-    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pStore,  new THREE.Vector3(R + 10, 28, 0),  pPhone);
-    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 32, 0),       pPost);
-    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(0, 32, 0),       pPhone);
-    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 12, R + 12),  pServer);
-    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-R - 10, 28, 0), pPost);
+    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 8, 30, -8),  pPhone);
+    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(12, 34, -8),     pPost);
+    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 8, 30, -8),  pPhone);
+    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 10),  pServer);
+    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 8, 30, -8), pPost);
     this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(28));
 
-    this.setupCurves = [this.arcStoreToPhone, this.arcPostToPhone, this.arcPhoneToServer];
+    this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
     this.pushCurves  = [this.arcUfoToServer,  this.arcServerToPost, this.arcPostToPhone];
 
     this.setupLines = [
       this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4,  this.normalGroup),
-      this.addArc(this.arcPostToPhone,   0xfbbf24, 0.35, this.normalGroup),
+      this.addArc(this.arcPhoneToPost,   0xfbbf24, 0.38, this.normalGroup),
       this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.4,  this.normalGroup)
     ];
     this.pushLines = [
@@ -371,13 +370,13 @@ class PushnotOrbit {
     ];
 
     this.worldStimStreams = specs.map((s) => {
-      // Smooth continuous Catmull-Rom 3D path from Planet Earth -> Datacentre -> Post Office -> Phone!
+      // Smooth continuous Catmull-Rom 3D path from Planet Earth -> Datacentre -> Apple/Google Skyscraper HQ -> Phone!
       const pEarth  = POS.ufo.clone().add(s.spread);
       const pEarth2 = POS.ufo.clone().setY(35).add(s.spread.clone().multiplyScalar(1.25));
       const pServer = POS.server.clone().setY(19).add(s.mid1);
-      const pArc1   = new THREE.Vector3(-R - 10, 28, 0).add(s.mid1);
-      const pPost   = POS.post.clone().setY(19).add(s.mid2);
-      const pArc2   = new THREE.Vector3(0, 32, 0).add(s.mid2);
+      const pArc1   = new THREE.Vector3(-D - 6, 30, -8).add(s.mid1);
+      const pPost   = POS.post.clone().setY(23).add(s.mid2);
+      const pArc2   = new THREE.Vector3(D + 6, 30, -8).add(s.mid2);
       const pPhone  = POS.phone.clone().setY(17).add(s.mid2.clone().multiplyScalar(0.4));
 
       const curve = new THREE.CatmullRomCurve3([pEarth, pEarth2, pServer, pArc1, pPost, pArc2, pPhone]);
@@ -808,9 +807,9 @@ class PushnotOrbit {
   }
 
   initBrain() {
-    // Load the real Brain Point Cloud GLB above the Post Office
+    // Load the real Brain Point Cloud GLB above the Apple & Google Skyscraper HQ during Ledger matching
     this.brainGroup = new THREE.Group();
-    this.brainGroup.position.set(POS.post.x, 38.5, POS.post.z);
+    this.brainGroup.position.set(POS.post.x, 46, POS.post.z);
     this.brainMats = [];
     this.brainLight = new THREE.PointLight(0xf472b6, 3.5, 36);
     this.brainGroup.add(this.brainLight);
@@ -1595,11 +1594,11 @@ class PushnotOrbit {
     this.leoAgGroup.position.set(L.ag.x, 0, L.ag.z);
     this.leoGroup.add(this.leoAgGroup);
 
-    // Floating 3D Photo ID + 3D Credit Card hovering above the Apple/Google Shopping Bag
+    // Floating 3D Photo ID + 3D Credit Card hovering above the Apple & Google Skyscraper HQ
     this.leoIdStack = this.createSubscriberCardPair(1.1);
-    this.leoIdStack.position.set(0, 35, 0);
+    this.leoIdStack.position.set(0, 46, 0);
     this.leoAgGroup.add(this.leoIdStack);
-    this.leoTops.ag = 42;
+    this.leoTops.ag = 52;
 
     // LEO investigative arcs (OSINT step ascends to the elevated plane above the Police officer's head, then pivots down to Meta/X Datacentre!)
     const pBandit = L.bandit.clone().setY(16);
@@ -1654,7 +1653,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 17; // 8 datacentre + phone + postbox + apple + google + earth + bandit + swat + facebook + rcmp laptop
+    let left = 16; // 8 datacentre + phone + skyscraper + apple + google + earth + bandit + swat + facebook + rcmp laptop
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -1670,20 +1669,10 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 3. Edward VII Post Box — APNs/FCM (back-left)
-    this.loader.load('models/postbox.glb', (gltf) => {
-      const post = gltf.scene;
-      post.rotation.y = Math.PI * 0.25;
-      this.harmonizeAsset(post, { minRough: 0.32, maxRough: 0.60, maxMetal: 0.55, envIntensity: 0.85, liftDark: false });
-      this.tops.post = this.ground(post, 32, POS.post);
-      this.normalGroup.add(post);
-      done();
-    }, undefined, done);
+    // 3. Shiny Black 3D Skyscraper HQ (`models/skyscraper.glb`) topped with 3D Apple & Google Icons (Unified App Store + APNs/FCM Hub)
+    this.initAppleGoogleSkyscraper(done);
 
-    // 4. App Store Shopping Bag with Apple flat on front (+Z) and Google flat on back (-Z)
-    this.initAppStoreBag(done);
-
-    // 5. Planet Earth — Global World Stimulus Source hovering above the Datacentre (no tractor beam cone!)
+    // 4. Planet Earth — Global World Stimulus Source hovering above the Datacentre (no tractor beam cone!)
     this.loader.load('models/earth.glb?v=15', (gltf) => {
       this.ufoGroup = new THREE.Group();
       const earth = gltf.scene;
@@ -1696,7 +1685,7 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 6. Law Enforcement Models (mounted on underside leoGroup)
+    // 5. Law Enforcement Models (mounted on underside leoGroup)
     this.loader.load('models/leo/hack.glb?v=8', (gltf) => {
       const hacker = gltf.scene;
       hacker.rotation.y = -Math.PI * 0.35;
@@ -1715,7 +1704,7 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 7. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode (icon excluded from shine pass)
+    // 6. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode (icon excluded from shine pass)
     this.loader.load('models/leo/facebook.glb', (gltf) => {
       this.fbLogo = gltf.scene;
       this.centerAndScale(this.fbLogo, 12);
@@ -1724,144 +1713,144 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 8. 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot screen mounted on the elevated plane above the Police officer's head!
+    // 7. 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot screen mounted on the elevated plane above the Police officer's head!
     this.osintWebGroup = this.createRcmpOsintLaptop(done);
     this.osintWebGroup.position.copy(this.leoPos.osint);
     this.leoGroup.add(this.osintWebGroup);
     this.leoTops.osint = this.leoPos.osint.y + 10;
   }
 
-  initAppStoreBag(done) {
-    // Sculpted tapered dark-obsidian luxury shopping bag (high contrast for silver Apple + colorful Google!)
+  initAppleGoogleSkyscraper(done) {
+    // Unified Shiny Black 3D Skyscraper HQ (`models/skyscraper.glb`) with 3D Apple & Google Logos mounted on top!
+    // Replaces both the old App Store Shopping Bag and the old Post Box.
     this.storeGroup = new THREE.Group();
-    this.storeGroup.position.set(POS.store.x, 0, POS.store.z);
-    this.storeGroup.rotation.y = -Math.PI * 0.25;
+    this.storeGroup.position.set(POS.post.x, 0, POS.post.z);
     this.normalGroup.add(this.storeGroup);
 
-    const bagW = 19.5;
-    const bagH = 21.5;
-    const bagD = 9.6;
-    const topScaleX = 0.86;
-    const topScaleZ = 0.74;
+    this.roofIconsGroup = new THREE.Group();
+    this.roofIconsGroup.position.set(0, 35.5, 0);
+    this.storeGroup.add(this.roofIconsGroup);
 
-    const bagMat = new THREE.MeshStandardMaterial({
-      color: 0x111827, roughness: 0.50, metalness: 0.14, envMapIntensity: 0.9
-    });
-    const rimMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b, roughness: 0.42, metalness: 0.22, envMapIntensity: 0.9
-    });
-    const innerMat = new THREE.MeshStandardMaterial({
-      color: 0x020617, roughness: 0.95, metalness: 0.0
-    });
-    const trimMat = new THREE.MeshStandardMaterial({
-      color: 0xcbd5e1, roughness: 0.25, metalness: 0.85, envMapIntensity: 1.0
-    });
-    const cordMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8, emissive: 0x0369a1, emissiveIntensity: 0.4, roughness: 0.35, metalness: 0.25
-    });
+    this.tops.post  = 41;
+    this.tops.store = 41;
 
-    // Tapered bag body with authentic side gusset V-pinch
-    const bodyGeo = new THREE.BoxGeometry(bagW, bagH, bagD, 4, 8, 4);
-    const pos = bodyGeo.attributes.position;
-    for (let i = 0; i < pos.count; i++) {
-      let x = pos.getX(i);
-      const y = pos.getY(i);
-      let z = pos.getZ(i);
-      const tY = (y + bagH / 2) / bagH; // 0 at bottom, 1 at top
-      const sx = 1 - (1 - topScaleX) * tY;
-      const sz = 1 - (1 - topScaleZ) * tY;
-      x *= sx;
-      z *= sz;
-      // Subtle inward gusset fold along left/right side midlines (where |z| is near 0)
-      const isSide = Math.abs(Math.abs(x) - (bagW * sx) / 2) < 0.25;
-      if (isSide && Math.abs(z) < (bagD * sz) * 0.35) {
-        const fold = (1 - Math.abs(z) / ((bagD * sz) * 0.35)) * 1.15 * (0.3 + 0.7 * tY);
-        x -= Math.sign(x) * fold;
+    let partsReady = 0;
+    const checkClone = () => {
+      partsReady++;
+      if (partsReady === 3 && this.leoAgGroup) {
+        if (this.leoAgBag) this.leoAgGroup.remove(this.leoAgBag);
+        this.leoAgBag = this.storeGroup.clone(true);
+        this.leoAgBag.position.set(0, 0, 0);
+        this.leoAgBag.rotation.set(0, -Math.PI * 0.2, 0);
+        this.leoAgGroup.add(this.leoAgBag);
       }
-      pos.setXYZ(i, x, y, z);
-    }
-    bodyGeo.computeVertexNormals();
-    const body = new THREE.Mesh(bodyGeo, bagMat);
-    body.position.y = bagH / 2;
-    this.storeGroup.add(body);
+      done();
+    };
 
-    const topW = bagW * topScaleX;
-    const topD = bagD * topScaleZ;
+    // 1. Load the 3D Skyscraper GLB and apply a sleek Shiny Black Obsidian Glass & Chrome finish
+    this.loader.load('models/skyscraper.glb?v=34', (gltf) => {
+      const tower = gltf.scene;
 
-    // Dark recessed interior opening at top
-    const cavity = new THREE.Mesh(new THREE.BoxGeometry(topW - 1.1, 0.8, topD - 1.1), innerMat);
-    cavity.position.y = bagH - 0.32;
-    this.storeGroup.add(cavity);
+      const obsidianWallMat = new THREE.MeshPhysicalMaterial({
+        color: 0x05070c,
+        metalness: 0.88,
+        roughness: 0.12,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.06,
+        envMapIntensity: 1.65
+      });
+      const obsidianGlassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x0a1324,
+        emissive: 0x0ea5e9,
+        emissiveIntensity: 0.22,
+        metalness: 0.95,
+        roughness: 0.05,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.03,
+        envMapIntensity: 2.1
+      });
+      const darkChromeTrimMat = new THREE.MeshPhysicalMaterial({
+        color: 0x111827,
+        emissive: 0x38bdf8,
+        emissiveIntensity: 0.14,
+        metalness: 0.92,
+        roughness: 0.10,
+        clearcoat: 1.0,
+        envMapIntensity: 1.8
+      });
+      const roofPadMat = new THREE.MeshStandardMaterial({
+        color: 0x090d16,
+        metalness: 0.82,
+        roughness: 0.18,
+        envMapIntensity: 1.4
+      });
 
-    // Sleek reinforced cuff lip around top opening
-    const rim = new THREE.Mesh(new THREE.BoxGeometry(topW + 0.35, 1.3, topD + 0.35), rimMat);
-    rim.position.y = bagH - 0.65;
-    this.storeGroup.add(rim);
+      tower.traverse((ch) => {
+        if (!ch.isMesh) return;
+        const mName = (ch.material?.name || '').toLowerCase();
+        if (mName.includes('window')) {
+          ch.material = obsidianGlassMat;
+        } else if (mName.includes('trim')) {
+          ch.material = darkChromeTrimMat;
+        } else if (mName.includes('roof')) {
+          ch.material = roofPadMat;
+        } else {
+          ch.material = obsidianWallMat;
+        }
+      });
 
-    // Twin curved cord handles + silver grommet eyelets (front +Z and back -Z)
-    const handleSpan = 3.8;
-    const eyeletGeo = new THREE.TorusGeometry(0.5, 0.15, 8, 20);
-    for (const side of [1, -1]) {
-      const z = side * (topD / 2 + 0.14);
-      for (const sx of [-1, 1]) {
-        const eyelet = new THREE.Mesh(eyeletGeo, trimMat);
-        eyelet.position.set(sx * handleSpan, bagH - 2.0, z);
-        this.storeGroup.add(eyelet);
-      }
-      const handleCurve = new THREE.CubicBezierCurve3(
-        new THREE.Vector3(-handleSpan, bagH - 2.0, z),
-        new THREE.Vector3(-handleSpan * 0.88, bagH + 6.8, z),
-        new THREE.Vector3( handleSpan * 0.88, bagH + 6.8, z),
-        new THREE.Vector3( handleSpan, bagH - 2.0, z)
+      // Scale skyscraper to height 31 and widen X/Z slightly for a commanding corporate HQ tower silhouette
+      let box = new THREE.Box3().setFromObject(tower);
+      const dim = box.getSize(new THREE.Vector3());
+      const sy = 31 / (dim.y || 1);
+      tower.scale.set(sy * 1.45, sy, sy * 1.45);
+
+      box = new THREE.Box3().setFromObject(tower);
+      const c = box.getCenter(new THREE.Vector3());
+      tower.position.set(-c.x, -box.min.y, -c.z);
+
+      this.storeGroup.add(tower);
+
+      // Glowing rooftop helipad / crown ring where the Apple & Google 3D icons sit
+      const crownY = box.max.y - box.min.y;
+      const crownRing = new THREE.Mesh(
+        new THREE.TorusGeometry(6.8, 0.18, 12, 48),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 })
       );
-      const handle = new THREE.Mesh(new THREE.TubeGeometry(handleCurve, 28, 0.36, 10, false), cordMat);
-      this.storeGroup.add(handle);
-    }
+      crownRing.rotation.x = Math.PI / 2;
+      crownRing.position.y = crownY + 0.25;
+      this.storeGroup.add(crownRing);
 
-    this.tops.store = bagH + 9.2;
+      this.roofIconsGroup.position.y = crownY + 5.2;
+      this.tops.post  = crownY + 10.5;
+      this.tops.store = crownY + 10.5;
+      checkClone();
+    }, undefined, checkClone);
 
-    // Exact surface depth & slope angle at mid-bag height (y = 0.46 * bagH)
-    const logoY = bagH * 0.46;
-    const midDepth = bagD * (1 - (1 - topScaleZ) * 0.46);
-    const wallTilt = Math.atan2((bagD * (1 - topScaleZ)) / 2, bagH);
-
-    // Mount Apple flat on front (+Z) and Google flat on back (-Z), matching tapered wall angle!
-    let logosMounted = 0;
-    const mountLogoFlat = (path, sideSign, targetSize) => {
+    // 2. Mount 3D Apple & Google Logos side-by-side on top of the Shiny Black Skyscraper roof!
+    const mountRoofLogo = (path, offsetX, targetSize) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
         let box = new THREE.Box3().setFromObject(logo);
         const raw = box.getSize(new THREE.Vector3());
         const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
-        logo.scale.set(s, s, Math.min(s, 1.1 / (raw.z || 1)));
+        logo.scale.set(s, s, Math.min(s, 1.8 / (raw.z || 1)));
 
         logo.updateMatrixWorld(true);
         box = new THREE.Box3().setFromObject(logo);
         const c = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
 
         const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
         wrap.add(logo);
-        if (sideSign < 0) wrap.rotation.y = Math.PI;
-        wrap.rotation.x = -sideSign * wallTilt; // sit 100% flush against the tapered bag face!
-        wrap.position.set(0, logoY, sideSign * (midDepth / 2 + size.z / 2 + 0.12));
-        this.storeGroup.add(wrap);
-
-        // Once both Apple & Google logos are mounted, clone the complete bag onto the LEO Subscriber DB node!
-        if (++logosMounted === 2 && this.leoAgGroup) {
-          if (this.leoAgBag) this.leoAgGroup.remove(this.leoAgBag);
-          this.leoAgBag = this.storeGroup.clone(true);
-          this.leoAgBag.position.set(0, 0, 0);
-          this.leoAgBag.rotation.set(0, 0, 0);
-          this.leoAgGroup.add(this.leoAgBag);
-        }
-        done();
-      }, undefined, (err) => { console.warn('Store logo load failed:', path, err); done(); });
+        wrap.position.set(offsetX, 0, 0);
+        this.roofIconsGroup.add(wrap);
+        checkClone();
+      }, undefined, checkClone);
     };
 
-    mountLogoFlat('models/apple_logo.glb',  1, 10.2);
-    mountLogoFlat('models/google_logo.glb', -1, 10.2);
+    mountRoofLogo('models/apple_logo.glb',  -4.8, 8.2);
+    mountRoofLogo('models/google_logo.glb',  4.8, 8.2);
   }
 
   centerAndScale(obj, size) {
@@ -1924,12 +1913,12 @@ class PushnotOrbit {
       ? 'LAW ENFORCEMENT TRACE'
       : (isWorld ? 'ALL WORLD STIMS' : (isPush ? 'BEJEWELED PUSH' : 'INSTALL & SETUP'));
     document.getElementById('pol-route').textContent = isLeo
-      ? 'Threat → Proton (Denied) → OSINT Pivot → Meta/X Tokens → Apple/Google ID'
+      ? 'Threat → Proton (Denied) → RCMP OSINT Laptop → Meta/X Tokens → Apple/Google HQ'
       : (isWorld
-        ? 'Planet Earth (Bejeweled / FB / IG / X / Uber / Amazon) → Datacentre → Post Office → Phone'
+        ? 'Planet Earth (Bejeweled / FB / IG / X / Uber / Amazon) → Datacentre → Apple/Google HQ → Phone'
         : (isPush
-          ? 'Planet Earth Trigger → Datacentre → Post Office → Phone'
-          : 'Apple/Google → Phone → Post Office → Datacentre'));
+          ? 'Planet Earth Trigger → Datacentre → Apple/Google HQ → Phone'
+          : 'Apple/Google HQ → Phone → Unique Key → Datacentre'));
   }
 
   setAutoOrbit(on) {
@@ -2277,9 +2266,9 @@ class PushnotOrbit {
       }
     }
 
-    // Normal mode station labels (hidden when flipped to Law Enforcement)
+    // Normal mode station labels (3 Unified Ground Nodes + World above Datacentre; hidden when flipped to Law Enforcement)
     const showNorm = !isLeo && this.flipRoll < Math.PI * 0.45;
-    this.place('pin-store',  new THREE.Vector3(POS.store.x,  this.tops.store, POS.store.z), showNorm);
+    this.place('pin-store',  null, false);
     this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2, POS.post.z), showNorm);
     this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8), showNorm);
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), showNorm);
@@ -2316,7 +2305,7 @@ class PushnotOrbit {
     this.place('pin-no-direct', blockTop,  showNorm && showNoDirect);
     this.place('pin-saved',     serverTop, showNorm && showSaved);
     this.place('pin-push',      phoneFace, showNorm && showPush);
-    this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
+    this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 54, POS.post.z), showNorm && showLedger);
 
     // Law Enforcement contextual callouts (OSINT callout sits on the elevated OSINT plane above Police's head!)
     this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
@@ -2449,7 +2438,7 @@ class PushnotOrbit {
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {
       this.leoIdStack.rotation.y -= dt * 0.6;
-      this.leoIdStack.position.y = 35 + Math.sin(now * 0.003) * 1.1;
+      this.leoIdStack.position.y = 46 + Math.sin(now * 0.003) * 1.1;
     }
     if (this.leoDeliveredCards && this.leoDeliveredCards.visible) {
       this.leoDeliveredCards.rotation.y += dt * 0.7;
@@ -2516,19 +2505,19 @@ class PushnotOrbit {
       fc.mesh.lookAt(pNext);
     }
 
-    // Gently rotate ONLY the 3D Brain mesh when active above the Post Office (so the 3D Key & Padlock pair in front stays facing forward!)
+    // Gently rotate ONLY the 3D Brain mesh when active above the Apple & Google Skyscraper HQ
     if (this.brainGroup && this.brainGroup.visible) {
       if (this.brainMesh) this.brainMesh.rotation.y += dt * 0.9;
-      this.brainGroup.position.y = 38 + Math.sin(now * 0.004) * 0.8;
+      this.brainGroup.position.y = 46 + Math.sin(now * 0.004) * 0.8;
     }
 
     if (this.ufoGroup) {
       this.ufoGroup.rotation.y += dt * 0.7;
       this.ufoGroup.position.y = POS.ufo.y + Math.sin(now * 0.0025) * 1.4;
     }
-    if (this.storeGroup) {
-      // Gently spin the App Store shopping bag so both Apple & Google sides showcase smoothly
-      this.storeGroup.rotation.y += dt * 0.45;
+    if (this.roofIconsGroup) {
+      // Gently spin the 3D Apple & Google icons atop the shiny black Skyscraper HQ
+      this.roofIconsGroup.rotation.y += dt * 0.55;
     }
 
     this.appOrb.rotation.y += dt * 1.4;

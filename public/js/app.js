@@ -873,16 +873,12 @@ class PushnotOrbit {
     }, undefined, done);
 
     // 6. Law Enforcement Models (mounted on underside leoGroup)
-    this.loader.load('models/leo/bandit.glb?v=6', (gltf) => {
-      const rawModel = gltf.scene;
-      // bandit_from_stalker.glb is Z-up (head at -Z); rotate +90° around X to stand upright on Y!
-      const upright = new THREE.Group();
-      rawModel.rotation.x = Math.PI / 2;
-      upright.add(rawModel);
-      upright.rotation.y = -Math.PI * 0.35;
-      this.harmonizeAsset(rawModel, { minRough: 0.42, maxRough: 0.72, maxMetal: 0.30, envIntensity: 0.85, liftDark: false });
-      this.leoTops.bandit = this.ground(upright, 26, this.leoPos.bandit);
-      this.leoGroup.add(upright);
+    this.loader.load('models/leo/hack.glb?v=8', (gltf) => {
+      const hacker = gltf.scene;
+      hacker.rotation.y = -Math.PI * 0.35;
+      this.harmonizeAsset(hacker, { minRough: 0.36, maxRough: 0.68, maxMetal: 0.35, envIntensity: 0.85, liftDark: false });
+      this.leoTops.bandit = this.ground(hacker, 28, this.leoPos.bandit);
+      this.leoGroup.add(hacker);
       done();
     }, undefined, done);
 

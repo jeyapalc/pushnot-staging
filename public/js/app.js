@@ -1166,13 +1166,43 @@ class PushnotOrbit {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
       bandit: new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@protonmail.com)
-      swat:   new THREE.Vector3(-D, 0,  D), // front-left:  Police / SWAT LEO
+      swat:   new THREE.Vector3(-D, 0,  D), // front-left:  Canadian Police / RCMP / VPD
+      osint:  new THREE.Vector3(-D, 48, D), // upper plane directly above Police head: Canadian SpiderFoot OSINT Web!
       proton: new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (wind-animated flag!)
       ag:     new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Subscriber DB
-      bot:    new THREE.Vector3( 0, 0,  4)  // center:      Mirrored Meta/X Datacentre + Facebook + SpiderFoot
+      bot:    new THREE.Vector3( 0, 0,  4)  // center:      Mirrored Meta/X Datacentre + Facebook
     };
     this.leoPos = L;
-    this.leoTops = { bandit: 26, swat: 26, bot: 24, proton: 26, ag: 26 };
+    this.leoTops = { bandit: 26, swat: 26, osint: 62, bot: 26, proton: 26, ag: 26 };
+
+    // Elevated Holographic OSINT Plane directly above Canadian Police's head (mirrors Planet Earth's upper plane on normal side!)
+    this.osintPlaneGroup = new THREE.Group();
+    this.osintPlaneGroup.position.copy(L.osint);
+    const planeDisc = new THREE.Mesh(
+      new THREE.CylinderGeometry(16, 16, 0.35, 48),
+      new THREE.MeshBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.14 })
+    );
+    planeDisc.position.y = -11;
+    const planeRing = new THREE.Mesh(
+      new THREE.TorusGeometry(16.2, 0.22, 12, 64),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 })
+    );
+    planeRing.rotation.x = Math.PI / 2;
+    planeRing.position.y = -11;
+    const innerRing = new THREE.Mesh(
+      new THREE.TorusGeometry(11.0, 0.12, 10, 48),
+      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.45 })
+    );
+    innerRing.rotation.x = Math.PI / 2;
+    innerRing.position.y = -10.8;
+    // Vertical uplink beam connecting Police on the ground up to the OSINT plane above their head
+    this.osintBeamMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, transparent: true, opacity: 0.10, side: THREE.DoubleSide
+    });
+    const uplinkBeam = new THREE.Mesh(new THREE.ConeGeometry(11, 22, 32, 1, true), this.osintBeamMat);
+    uplinkBeam.position.y = -22;
+    this.osintPlaneGroup.add(planeDisc, planeRing, innerRing, uplinkBeam);
+    this.leoGroup.add(this.osintPlaneGroup);
 
     // Wind-Animated 3D Swiss Flag for Proton node (zero background)
     this.protonGroup = this.createWindSwissFlag();
@@ -1202,26 +1232,30 @@ class PushnotOrbit {
     this.leoAgGroup.add(this.leoIdStack);
     this.leoTops.ag = 42;
 
-    // LEO investigative arcs
+    // LEO investigative arcs (OSINT step ascends to the elevated plane above the Police officer's head, then pivots down to Meta/X Datacentre!)
     const pBandit = L.bandit.clone().setY(16);
-    const pSwat   = L.swat.clone().setY(16);
+    const pSwat   = L.swat.clone().setY(22);
+    const pOsint  = L.osint.clone().setY(44);
     const pProton = L.proton.clone().setY(14);
-    const pBot    = L.bot.clone().setY(14);
+    const pBot    = L.bot.clone().setY(16);
     const pAg     = L.ag.clone().setY(15);
 
-    this.arcLeoThreat = new THREE.QuadraticBezierCurve3(pBandit, new THREE.Vector3(0, 22, R + 8), pSwat);
-    this.arcLeoProton = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(-R - 8, 26, 0), pProton);
-    this.arcLeoOsint  = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(-16, 24, 18),   pBot);
-    this.arcLeoTokens = new THREE.QuadraticBezierCurve3(pBot,    new THREE.Vector3(-16, 28, 20),   pSwat);
-    this.arcLeoToAg   = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(0, 34, 0),      pAg);
-    this.arcLeoFromAg = new THREE.QuadraticBezierCurve3(pAg,     new THREE.Vector3(0, 26, 12),     pSwat);
+    this.arcLeoThreat      = new THREE.QuadraticBezierCurve3(pBandit, new THREE.Vector3(0, 22, R + 8), pSwat);
+    this.arcLeoProton      = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(-R - 8, 26, 0), pProton);
+    this.arcLeoOsint       = new THREE.LineCurve3(pSwat, pOsint); // Straight up from Police to the elevated OSINT plane above their head!
+    this.arcLeoOsintToMeta = new THREE.QuadraticBezierCurve3(pOsint,  new THREE.Vector3(-16, 42, 18),   pBot);
+    this.arcLeoTokens      = new THREE.QuadraticBezierCurve3(pBot,    new THREE.Vector3(-16, 28, 20),   pSwat);
+    this.arcLeoToAg        = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(0, 34, 0),      pAg);
+    this.arcLeoFromAg      = new THREE.QuadraticBezierCurve3(pAg,     new THREE.Vector3(0, 26, 12),     pSwat);
 
     this.leoLines = [
-      this.addArc(this.arcLeoThreat, 0xf43f5e, 0.5, this.leoGroup),
-      this.addArc(this.arcLeoProton, 0xf43f5e, 0.35, this.leoGroup),
-      this.addArc(this.arcLeoOsint,  0xfbbf24, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoToAg,   0x38bdf8, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoFromAg, 0x34d399, 0.5, this.leoGroup)
+      this.addArc(this.arcLeoThreat,      0xf43f5e, 0.5,  this.leoGroup),
+      this.addArc(this.arcLeoProton,      0xf43f5e, 0.35, this.leoGroup),
+      this.addArc(this.arcLeoOsint,       0xfbbf24, 0.55, this.leoGroup),
+      this.addArc(this.arcLeoOsintToMeta, 0xfbbf24, 0.45, this.leoGroup),
+      this.addArc(this.arcLeoTokens,      0xfbbf24, 0.45, this.leoGroup),
+      this.addArc(this.arcLeoToAg,        0x38bdf8, 0.45, this.leoGroup),
+      this.addArc(this.arcLeoFromAg,      0x34d399, 0.5,  this.leoGroup)
     ];
 
     // LEO moving packets (threat/demand/token/ID)
@@ -1317,26 +1351,26 @@ class PushnotOrbit {
     // 7. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode (icon excluded from shine pass)
     this.loader.load('models/leo/facebook.glb', (gltf) => {
       this.fbLogo = gltf.scene;
-      this.centerAndScale(this.fbLogo, 10.5);
-      this.fbLogo.position.set(this.leoPos.bot.x - 13, 21, this.leoPos.bot.z - 5);
+      this.centerAndScale(this.fbLogo, 12);
+      this.fbLogo.position.set(this.leoPos.bot.x, 22, this.leoPos.bot.z - 5);
       this.leoGroup.add(this.fbLogo);
       done();
     }, undefined, done);
 
-    // 8. Canadian SpiderFoot Email OSINT Knowledge Web (knowledge_base.glb redesigned for badguy@protonmail.com & Canadian Law)
-    this.loader.load('models/leo/knowledge_base.glb?v=16', (gltf) => {
+    // 8. Canadian SpiderFoot Email OSINT Knowledge Web mounted on its own elevated plane directly above the Police officer's head!
+    this.loader.load('models/leo/knowledge_base.glb?v=18', (gltf) => {
       this.osintWebGroup = new THREE.Group();
-      this.osintWebGroup.position.set(this.leoPos.bot.x, 30, this.leoPos.bot.z - 2);
+      this.osintWebGroup.position.copy(this.leoPos.osint);
 
       const kb = gltf.scene;
-      this.centerAndScale(kb, 26);
+      this.centerAndScale(kb, 25);
       const hub = this.customizeCanadianSpiderFootWeb(kb);
       this.osintWebCloud = kb;
       this.osintWebHub = hub;
 
       this.osintWebGroup.add(kb, hub, new THREE.PointLight(0x38bdf8, 3.5, 42));
       this.leoGroup.add(this.osintWebGroup);
-      this.leoTops.bot = 43;
+      this.leoTops.osint = this.leoPos.osint.y + 13;
       done();
     }, undefined, done);
   }
@@ -1821,27 +1855,41 @@ class PushnotOrbit {
           showLeoDenied = true;
         }
       } else if (t < 0.50) {
-        const p = this.arcLeoOsint.getPoint(seg(t, 0.34, 0.44));
-        this.leoPacket.visible = t < 0.45;
+        // Beat 3: Police sends email query UP to the elevated SpiderFoot OSINT Plane directly above their head!
+        const p = this.arcLeoOsint.getPoint(seg(t, 0.34, 0.42));
+        this.leoPacket.visible = t < 0.43;
         this.leoPacket.position.copy(p);
         this.leoPacketMat.color.setHex(0xfbbf24);
         this.leoPacketMat.emissive.setHex(0xb45309);
         this.leoPacketLight.color.setHex(0xfbbf24);
-        if (t < 0.43) {
+        if (t < 0.42) {
           moverPos = p;
           moverText = '🕸️ SpiderFoot Email Scan: badguy@protonmail.com';
         } else {
           showLeoOsint = true;
         }
       } else if (t < 0.68) {
-        const p = this.arcLeoTokens.getPoint(seg(t, 0.50, 0.63));
-        this.leoKey.visible = true;
-        this.leoKey.position.copy(p);
-        if (t < 0.62) {
+        // Beat 4: OSINT Web pivots down to Meta/X Datacentre (0.50–0.56), and Meta/X return Push Tokens (0.56–0.68)!
+        if (t < 0.56) {
+          const p = this.arcLeoOsintToMeta.getPoint(seg(t, 0.50, 0.56));
+          this.leoPacket.visible = true;
+          this.leoPacket.position.copy(p);
+          this.leoPacketMat.color.setHex(0x38bdf8);
+          this.leoPacketMat.emissive.setHex(0x0284c7);
+          this.leoPacketLight.color.setHex(0x38bdf8);
           moverPos = p;
-          moverText = '🔑 s. 487.11 Cr. Code · Meta & X Return Push Tokens';
+          moverText = '🇨🇦 s. 487.11 Exigent Request → Meta & X';
+          moverCls = 'cyan';
         } else {
-          showLeoTokens = true;
+          const p = this.arcLeoTokens.getPoint(seg(t, 0.56, 0.64));
+          this.leoKey.visible = true;
+          this.leoKey.position.copy(p);
+          if (t < 0.63) {
+            moverPos = p;
+            moverText = '🔑 s. 487.11 Cr. Code · Meta & X Return Push Tokens';
+          } else {
+            showLeoTokens = true;
+          }
         }
       } else if (t < 0.86) {
         const p = this.arcLeoToAg.getPoint(seg(t, 0.68, 0.84));
@@ -1888,11 +1936,12 @@ class PushnotOrbit {
     // Law Enforcement station labels (visible when flipped upside down!)
     const showLeoPins = isLeo && this.flipRoll > Math.PI * 0.55;
     const L = this.leoPos;
-    this.place('pin-leo-bandit', new THREE.Vector3(L.bandit.x, -1.5, L.bandit.z + 8), showLeoPins, this.leoGroup);
-    this.place('pin-leo-swat',   new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 8),   showLeoPins, this.leoGroup);
-    this.place('pin-leo-bot',    new THREE.Vector3(L.bot.x,    -1.5, L.bot.z + 8),    showLeoPins, this.leoGroup);
-    this.place('pin-leo-proton', new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
-    this.place('pin-leo-ag',     new THREE.Vector3(L.ag.x,     this.leoTops.ag + 2, L.ag.z), showLeoPins, this.leoGroup);
+    this.place('pin-leo-bandit',      new THREE.Vector3(L.bandit.x, -1.5, L.bandit.z + 8), showLeoPins, this.leoGroup);
+    this.place('pin-leo-swat',        new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 8),   showLeoPins, this.leoGroup);
+    this.place('pin-leo-bot',         new THREE.Vector3(L.bot.x,    -1.5, L.bot.z + 8),    showLeoPins, this.leoGroup);
+    this.place('pin-leo-osint-plane', new THREE.Vector3(L.osint.x,  this.leoTops.osint + 2, L.osint.z), showLeoPins, this.leoGroup);
+    this.place('pin-leo-proton',      new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
+    this.place('pin-leo-ag',          new THREE.Vector3(L.ag.x,     this.leoTops.ag + 2, L.ag.z), showLeoPins, this.leoGroup);
 
     // Normal contextual callouts
     const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 11, POS.phone.z);
@@ -1905,10 +1954,10 @@ class PushnotOrbit {
     this.place('pin-push',      phoneTop,  showNorm && showPush);
     this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
 
-    // Law Enforcement contextual callouts
+    // Law Enforcement contextual callouts (OSINT callout sits on the elevated OSINT plane above Police's head!)
     this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
     this.place('pin-leo-denied', new THREE.Vector3(L.proton.x, this.leoTops.proton + 6, L.proton.z), showLeoPins && showLeoDenied, this.leoGroup);
-    this.place('pin-leo-osint',  new THREE.Vector3(L.bot.x,    this.leoTops.bot + 5,    L.bot.z),    showLeoPins && showLeoOsint,  this.leoGroup);
+    this.place('pin-leo-osint',  new THREE.Vector3(L.osint.x,  this.leoTops.osint + 4,  L.osint.z),  showLeoPins && showLeoOsint,  this.leoGroup);
     this.place('pin-leo-tokens', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoTokens, this.leoGroup);
     this.place('pin-leo-id',     new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoId,     this.leoGroup);
 
@@ -1969,7 +2018,7 @@ class PushnotOrbit {
 
     if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
     if (this.osintWebGroup && this.leoGroup.visible) {
-      const osintActive = this.mode === 'leo' && this.t >= 0.34 && this.t < 0.68;
+      const osintActive = this.mode === 'leo' && this.t >= 0.34 && this.t < 0.60;
       if (this.osintWebCloud) {
         this.osintWebCloud.rotation.y += dt * (osintActive ? 0.55 : 0.22);
       }
@@ -1978,7 +2027,10 @@ class PushnotOrbit {
       }
       const targetScale = osintActive ? 1.18 + Math.sin(now * 0.008) * 0.04 : 0.95;
       this.osintWebGroup.scale.setScalar(targetScale);
-      this.osintWebGroup.position.y = 30 + Math.sin(now * 0.003) * 0.9;
+      this.osintWebGroup.position.y = this.leoPos.osint.y + Math.sin(now * 0.003) * 1.1;
+      if (this.osintBeamMat) {
+        this.osintBeamMat.opacity = osintActive ? 0.32 : 0.08;
+      }
     }
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {

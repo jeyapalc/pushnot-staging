@@ -2040,212 +2040,161 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- 3D ProtonMail Threat Email + Round Bomb (`comical_bomb.glb`) with Sparkling Wick Animation! ---- */
-  createProtonThreatAndRoundBomb() {
-    const group = new THREE.Group();
+  /* ---- 3D Hacker Laptop Screen: ProtonMail Encrypted Threat Email ---- */
+  createHackerEmailScreenTexture() {
+    const cvs = document.createElement('canvas');
+    cvs.width = 1024;
+    cvs.height = 1024;
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.center.set(0.5, 0.5);
+    tex.rotation = Math.PI; // Invert because model UVs are upside-down
 
-    // 1. ProtonMail-styled 3D Email Compose Window (appears on the plane above Suspect's head as he types, then flies with the round bomb to Police!)
-    this.emailCvs = document.createElement('canvas');
-    this.emailCvs.width = 640;
-    this.emailCvs.height = 460;
-    this.emailCtx = this.emailCvs.getContext('2d');
-    this.emailTex = new THREE.CanvasTexture(this.emailCvs);
-    this.emailTex.colorSpace = THREE.SRGBColorSpace;
-    this.lastEmailStep = -1;
-
-    const rimMat = new THREE.MeshStandardMaterial({ color: 0x6d4aff, emissive: 0x4c1d95, emissiveIntensity: 0.55, metalness: 0.4, roughness: 0.3 });
-    const faceMat = new THREE.MeshBasicMaterial({ map: this.emailTex });
-    this.emailBoard = new THREE.Mesh(
-      new THREE.BoxGeometry(13.8, 9.9, 0.45),
-      [rimMat, rimMat, rimMat, rimMat, faceMat, faceMat]
-    );
-    this.emailBoard.position.set(-4.2, 2.2, 0);
-    this.emailBoard.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(this.emailBoard.geometry),
-      new THREE.LineBasicMaterial({ color: 0x8b5cf6 })
-    ));
-    group.add(this.emailBoard);
-
-    // 2. Round Bomb GLB (`models/leo/comical_bomb.glb`) + Sparkling Wick Emitter at exact wick tip!
-    this.roundBombHolder = new THREE.Group();
-    this.roundBombHolder.position.set(6.4, 1.2, 0.8);
-    group.add(this.roundBombHolder);
-
-    // Sparkling wick particle cluster + glowing ember core right at the tip of the bomb fuse wick
-    this.wickSparkGroup = new THREE.Group();
-    this.wickSparkGroup.position.set(-1.47, 3.79, 0.50);
-    this.roundBombHolder.add(this.wickSparkGroup);
-
-    const emberCore = new THREE.Mesh(
-      new THREE.SphereGeometry(0.45, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffffff })
-    );
-    const emberHalo = new THREE.Mesh(
-      new THREE.SphereGeometry(0.85, 12, 12),
-      new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.75 })
-    );
-    this.wickLight = new THREE.PointLight(0xffaa00, 4.5, 28);
-    this.wickSparkGroup.add(emberCore, emberHalo, this.wickLight);
-    this.wickEmberHalo = emberHalo;
-
-    // 18 shooting 3D spark rays / particles bursting from the wick tip
-    this.wickSparks = [];
-    const sparkGeo = new THREE.OctahedronGeometry(0.26, 0);
-    const sparkColors = [0xffffff, 0xfef08a, 0xfbbf24, 0xff5500, 0xff1e56];
-    for (let i = 0; i < 18; i++) {
-      const mat = new THREE.MeshBasicMaterial({ color: sparkColors[i % sparkColors.length] });
-      const mesh = new THREE.Mesh(sparkGeo, mat);
-      const dir = new THREE.Vector3(
-        (Math.random() - 0.5) * 2.4,
-        (Math.random() - 0.2) * 2.4,
-        (Math.random() - 0.5) * 2.4
-      ).normalize();
-      this.wickSparkGroup.add(mesh);
-      this.wickSparks.push({
-        mesh,
-        dir,
-        speed: 1.8 + (i % 5) * 0.55,
-        phase: (i / 18)
-      });
-    }
-
-    this.loader.load('models/leo/comical_bomb.glb?v=39', (gltf) => {
-      const bomb = gltf.scene;
-      this.harmonizeAsset(bomb, { minRough: 0.25, maxRough: 0.55, maxMetal: 0.65, envIntensity: 1.1 });
-      this.centerAndScale(bomb, 7.8);
-      this.roundBombHolder.add(bomb);
-    });
-
-    this.updateProtonEmailCanvas(1.0);
-    return group;
+    this.hackerScreenCvs = cvs;
+    this.hackerScreenTex = tex;
+    this.updateHackerEmailScreen(1.0);
+    return tex;
   }
 
-  updateProtonEmailCanvas(typeProgress = 1.0) {
-    if (!this.emailCtx || !this.emailTex) return;
-    const step = Math.floor(clamp01(typeProgress) * 24);
-    if (step === this.lastEmailStep) return;
-    this.lastEmailStep = step;
+  updateHackerEmailScreen(progress = 1.0) {
+    if (!this.hackerScreenCvs) return;
+    const ctx = this.hackerScreenCvs.getContext('2d');
+    const W = 1024, H = 1024;
 
-    const ctx = this.emailCtx;
-    const W = 640, H = 460;
-
-    // ProtonMail Dark Theme Window Background
-    ctx.fillStyle = '#161426';
+    // Dark sleek cyberpunk desktop background
+    ctx.fillStyle = '#080711';
     ctx.fillRect(0, 0, W, H);
 
+    // ProtonMail window centered on screen
+    const pad = 40;
+    const winW = W - pad * 2;
+    const winH = H - pad * 2;
+    const winX = pad;
+    const winY = pad;
+
+    // Window shadow / outer glow
+    ctx.fillStyle = 'rgba(109, 74, 255, 0.25)';
+    ctx.fillRect(winX - 6, winY - 6, winW + 12, winH + 12);
+
+    // Window background
+    ctx.fillStyle = '#121024';
+    ctx.fillRect(winX, winY, winW, winH);
+
+    // Window border
+    ctx.strokeStyle = '#6d4aff';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(winX, winY, winW, winH);
+
     // Proton Purple Header Bar
-    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    const grad = ctx.createLinearGradient(winX, winY, winX + winW, winY);
     grad.addColorStop(0, '#6d4aff');
-    grad.addColorStop(1, '#4c1d95');
+    grad.addColorStop(0.7, '#4c1d95');
+    grad.addColorStop(1, '#2e1065');
     ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, W, 56);
+    ctx.fillRect(winX, winY, winW, 80);
 
-    // Window Dots + ProtonMail Composer Title
-    const dotCols = ['#ff5f56', '#ffbd2e', '#27c93f'];
-    for (let i = 0; i < 3; i++) {
-      ctx.fillStyle = dotCols[i];
-      ctx.beginPath(); ctx.arc(24 + i * 22, 28, 7, 0, Math.PI * 2); ctx.fill();
-    }
+    // Window Control Dots (macOS/Linux style)
+    const dots = ['#ef4444', '#f59e0b', '#10b981'];
+    dots.forEach((col, i) => {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.arc(winX + 45 + i * 36, winY + 40, 12, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // Proton Mail Header Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 25px "Space Grotesk", sans-serif';
+    ctx.font = '900 38px "Space Grotesk", sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText('🇨🇭 Proton Mail · Encrypted Compose', 102, 36);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🇨🇭 Proton Mail · Encrypted Threat Composer', winX + 175, winY + 42);
 
-    // Progressive typing helper
-    const clipText = (str, startP, endP) => {
-      const p = clamp01((typeProgress - startP) / (endP - startP));
+    // Helper for progressive text typing
+    const clip = (str, startP, endP) => {
+      const p = clamp01((progress - startP) / (endP - startP));
       return str.slice(0, Math.ceil(str.length * p));
     };
 
-    // Email Metadata Rows (TO / FROM / SUBJECT)
-    const drawRow = (y, label, val, valCol = '#f8fafc') => {
+    // Metadata field rows (TO, FROM, SUBJECT)
+    const drawField = (y, label, val, color) => {
       ctx.fillStyle = '#94a3b8';
-      ctx.font = 'bold 23px "JetBrains Mono", monospace';
-      ctx.fillText(label, 24, y);
-      ctx.fillStyle = valCol;
-      ctx.font = 'bold 25px "JetBrains Mono", monospace';
-      ctx.fillText(val, 155, y);
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.28)';
+      ctx.font = '700 32px "JetBrains Mono", monospace';
+      ctx.fillText(label, winX + 36, winY + y);
+
+      ctx.fillStyle = color;
+      ctx.font = '900 36px "JetBrains Mono", monospace';
+      ctx.fillText(val, winX + 220, winY + y);
+
+      // Separator line
+      ctx.strokeStyle = 'rgba(109, 74, 255, 0.35)';
       ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(20, y + 14); ctx.lineTo(W - 20, y + 14); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(winX + 30, winY + y + 26);
+      ctx.lineTo(winX + winW - 30, winY + y + 26);
+      ctx.stroke();
     };
 
-    drawRow(96,  'TO:',      clipText('911@POJ.CA', 0.0, 0.22),       '#38bdf8');
-    drawRow(144, 'FROM:',    clipText('BADGUY@PROTON.ME', 0.18, 0.45), '#c4b5fd');
-    drawRow(192, 'SUBJECT:', clipText('RISE UP!', 0.42, 0.65),         '#fb7185');
+    drawField(150, 'TO:',      clip('911@POJ.CA', 0.0, 0.25),        '#38bdf8');
+    drawField(230, 'FROM:',    clip('BADGUY@PROTON.ME', 0.20, 0.50),  '#c4b5fd');
+    drawField(310, 'SUBJECT:', clip('RISE UP! THREAT NOTICE', 0.45, 0.70), '#fb7185');
 
-    // Dark Body Area inside ProtonMail Composer
-    ctx.fillStyle = '#0d0b18';
-    ctx.fillRect(20, 218, W - 40, 222);
-    ctx.strokeStyle = '#6d4aff';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(20, 218, W - 40, 222);
+    // Message Body Area
+    const bodyY = 380;
+    const bodyH = winH - bodyY - 110;
+    ctx.fillStyle = '#0a0915';
+    ctx.fillRect(winX + 30, winY + bodyY, winW - 60, bodyH);
+    ctx.strokeStyle = 'rgba(109, 74, 255, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(winX + 30, winY + bodyY, winW - 60, bodyH);
 
-    // Draw Pixel-Art Skull & Crossbones + Pixel-Art Round Bomb inside the Email Body once typing reaches body!
-    if (typeProgress >= 0.55) {
-      const bodyAlpha = clamp01((typeProgress - 0.55) / 0.35);
+    // Body content lines
+    if (progress >= 0.55) {
+      const bodyAlpha = clamp01((progress - 0.55) / 0.35);
       ctx.save();
       ctx.globalAlpha = bodyAlpha;
 
-      // 16x16 Pixel-Art Skull & Crossbones Grid (left-center of body)
-      const skullGrid = [
-        '..XX........XX..',
-        '.XXXX......XXXX.',
-        '..XXXX.XX.XXXX..',
-        '...XXXXXXXXXX...',
-        '....XXXXXXXX....',
-        '...XXXXXXXXXX...',
-        '...XX..XX..XX...',
-        '...XX..XX..XX...',
-        '...XXXXXXXXXX...',
-        '....XXX..XXX....',
-        '.....XXXXXX.....',
-        '...XXXX..XXXX...',
-        '..XXXX.XX.XXXX..',
-        '.XXXX......XXXX.',
-        '..XX........XX..'
-      ];
-      const px = 11;
-      const sx = 68, sy = 246;
       ctx.fillStyle = '#f8fafc';
-      for (let r = 0; r < skullGrid.length; r++) {
-        const row = skullGrid[r];
-        for (let c = 0; c < row.length; c++) {
-          if (row[c] === 'X') {
-            ctx.fillRect(sx + c * px, sy + r * px, px - 1, px - 1);
-          }
-        }
-      }
+      ctx.font = '700 30px "JetBrains Mono", monospace';
+      ctx.fillText('> TARGET: CANADIAN POLICE HEADQUARTERS', winX + 60, winY + bodyY + 65);
 
-      // 12x12 Pixel-Art Round Bomb with Sparkling Wick (right-center of body)
-      const bombGrid = [
-        '.......YY*..',
-        '......Y.....',
-        '.....W......',
-        '....WWWW....',
-        '..BBBBBBBB..',
-        '.BBWWBBBBBB.',
-        '.BBWBBBBBBB.',
-        '.BBBBBBBBBB.',
-        '.BBBBBBBBBB.',
-        '..BBBBBBBB..',
-        '...BBBBBB...'
-      ];
-      const bx = 370, by = 262, bpx = 14;
-      for (let r = 0; r < bombGrid.length; r++) {
-        const row = bombGrid[r];
-        for (let c = 0; c < row.length; c++) {
-          const ch = row[c];
-          if (ch === '.') continue;
-          ctx.fillStyle = ch === 'B' ? '#334155' : (ch === 'W' ? '#cbd5e1' : (ch === 'Y' ? '#fbbf24' : '#ff1e56'));
-          ctx.fillRect(bx + c * bpx, by + r * bpx, bpx - 1, bpx - 1);
-        }
-      }
+      ctx.fillStyle = '#ef4444';
+      ctx.font = '900 34px "JetBrains Mono", monospace';
+      ctx.fillText('⚠ THREAT: IMMINENT ATTACK SCHEDULED', winX + 60, winY + bodyY + 125);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 26px "JetBrains Mono", monospace';
+      ctx.fillText('ENCRYPTION: 4096-bit RSA · ZERO-ACCESS PGP', winX + 60, winY + bodyY + 185);
+      ctx.fillText('ORIGIN: SWISS RELAY · IP ANONYMIZED', winX + 60, winY + bodyY + 230);
+
+      // Skull & warning badge
+      ctx.fillStyle = '#f43f5e';
+      ctx.font = 'bold 54px monospace';
+      ctx.fillText('☠ 💣 ⚠', winX + 60, winY + bodyY + 310);
 
       ctx.restore();
     }
 
-    this.emailTex.needsUpdate = true;
+    // Status bar at bottom
+    const statusY = winY + winH - 75;
+    ctx.fillStyle = '#161426';
+    ctx.fillRect(winX + 30, statusY, winW - 60, 55);
+    ctx.strokeStyle = '#22c55e';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(winX + 30, statusY, winW - 60, 55);
+
+    ctx.fillStyle = '#22c55e';
+    ctx.font = '900 28px "JetBrains Mono", monospace';
+    ctx.fillText('✔ STATUS: DISPATCHED [SWISS ZERO-ACCESS]', winX + 60, statusY + 36);
+
+    // Send button icon
+    ctx.fillStyle = '#6d4aff';
+    ctx.fillRect(winX + winW - 200, statusY + 8, 150, 40);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 22px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('SENT ✉', winX + winW - 125, statusY + 34);
+
+    this.hackerScreenTex.needsUpdate = true;
   }
 
   animateWickSparks(nowMs) {
@@ -2275,7 +2224,6 @@ class PushnotOrbit {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
       bandit:      new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@proton.me)
-      banditPlane: new THREE.Vector3( D, 44, D), // upper plane directly above Suspect's head: ProtonMail Email Composer + Round Bomb!
       swat:        new THREE.Vector3(-D, 0,  D), // front-left:  Canadian Police / RCMP / VPD
       osint:       new THREE.Vector3(-D, 48, D), // upper plane directly above Police head: 3D RCMP OSINT Laptop!
       proton:      new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (wind-animated flag!)
@@ -2285,24 +2233,7 @@ class PushnotOrbit {
     this.leoPos = L;
     this.leoTops = { bandit: 26, swat: 26, osint: 62, bot: 26, proton: 26, ag: 26 };
 
-    // 1. Elevated Plane directly above Suspect's head where the ProtonMail Email (`TO: 911@POJ.CA / FROM: BADGUY@PROTON.ME / SUBJECT: RISE UP!`) & Round Bomb materialize as he types!
-    this.banditPlaneGroup = new THREE.Group();
-    this.banditPlaneGroup.position.copy(L.banditPlane);
-    const bDisc = new THREE.Mesh(
-      new THREE.CylinderGeometry(14, 14, 0.35, 48),
-      new THREE.MeshBasicMaterial({ color: 0x6d4aff, transparent: true, opacity: 0.16 })
-    );
-    bDisc.position.y = -5;
-    const bRing = new THREE.Mesh(
-      new THREE.TorusGeometry(14.2, 0.22, 12, 64),
-      new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.65 })
-    );
-    bRing.rotation.x = Math.PI / 2;
-    bRing.position.y = -5;
-    this.banditPlaneGroup.add(bDisc, bRing);
-    this.leoGroup.add(this.banditPlaneGroup);
-
-    // 2. Elevated Holographic OSINT Plane directly above Canadian Police's head (no tractor beam cone underneath!)
+    // 1. Elevated Holographic OSINT Plane directly above Canadian Police's head
     this.osintPlaneGroup = new THREE.Group();
     this.osintPlaneGroup.position.copy(L.osint);
     const planeDisc = new THREE.Mesh(
@@ -2353,17 +2284,13 @@ class PushnotOrbit {
     this.leoAgGroup.add(this.leoIdStack);
     this.leoTops.ag = 52;
 
-    // LEO investigative arcs (Suspect types email on elevated plane above his head, then sends Round Bomb + Email across to Police!)
-    const pBandit      = L.bandit.clone().setY(18);
-    const pBanditPlane = L.banditPlane.clone();
+    // LEO investigative arcs (Police queries Proton -> OSINT investigation -> Meta/X Push Tokens -> Apple/Google HQ)
     const pSwat        = L.swat.clone().setY(22);
     const pOsint       = L.osint.clone().setY(44);
     const pProton      = L.proton.clone().setY(14);
     const pBot         = L.bot.clone().setY(16);
     const pAg          = L.ag.clone().setY(15);
 
-    this.arcLeoTypeUp      = new THREE.LineCurve3(pBandit, pBanditPlane);
-    this.arcLeoThreat      = new THREE.QuadraticBezierCurve3(pBanditPlane, new THREE.Vector3(0, 38, R + 6), pSwat);
     this.arcLeoProton      = new THREE.QuadraticBezierCurve3(pSwat,        new THREE.Vector3(-R - 8, 26, 0), pProton);
     this.arcLeoOsint       = new THREE.LineCurve3(pSwat, pOsint);
     this.arcLeoOsintToMeta = new THREE.QuadraticBezierCurve3(pOsint,       new THREE.Vector3(-16, 42, 18),   pBot);
@@ -2372,9 +2299,7 @@ class PushnotOrbit {
     this.arcLeoFromAg      = new THREE.QuadraticBezierCurve3(pAg,          new THREE.Vector3(0, 26, 12),     pSwat);
 
     this.leoLines = [
-      this.addArc(this.arcLeoTypeUp,      0x8b5cf6, 0.5,  this.leoGroup),
-      this.addArc(this.arcLeoThreat,      0xf43f5e, 0.55, this.leoGroup),
-      this.addArc(this.arcLeoProton,      0xf43f5e, 0.35, this.leoGroup),
+      this.addArc(this.arcLeoProton,      0xf43f5e, 0.45, this.leoGroup),
       this.addArc(this.arcLeoOsint,       0xfbbf24, 0.55, this.leoGroup),
       this.addArc(this.arcLeoOsintToMeta, 0xfbbf24, 0.45, this.leoGroup),
       this.addArc(this.arcLeoTokens,      0xfbbf24, 0.45, this.leoGroup),
@@ -2394,10 +2319,7 @@ class PushnotOrbit {
     this.leoKey.visible = false;
     this.leoGroup.add(this.leoKey);
 
-    // 3D ProtonMail Threat Email (`TO: 911@POJ.CA / FROM: BADGUY@PROTON.ME / SUBJECT: RISE UP!`) + Round Bomb (`comical_bomb.glb`) with Sparkling Wick!
-    this.leoBomb = this.createProtonThreatAndRoundBomb();
-    this.leoBomb.visible = false;
-    this.leoGroup.add(this.leoBomb);
+    this.leoBomb = null;
 
     // 3D Photo ID + 3D Credit Card that fly from Apple/Google -> Police in final beat!
     this.leoDeliveredCards = this.createSubscriberCardPair(1.25);
@@ -2483,8 +2405,30 @@ class PushnotOrbit {
       const hacker = gltf.scene;
       hacker.rotation.y = -Math.PI * 0.35;
       hacker.userData.stationKey = 'bandit';
-      hacker.traverse(c => { if (c.isMesh) c.userData.stationKey = 'bandit'; });
       this.harmonizeAsset(hacker, { minRough: 0.36, maxRough: 0.68, maxMetal: 0.35, envIntensity: 0.85, liftDark: false });
+
+      // Live ProtonMail Threat Email mapped directly onto Hacker's Laptop Screen!
+      const screenTex = this.createHackerEmailScreenTexture();
+      const screenMat = new THREE.MeshBasicMaterial({
+        map: screenTex,
+        side: THREE.DoubleSide
+      });
+
+      hacker.traverse(c => {
+        if (!c.isMesh) return;
+        c.userData.stationKey = 'bandit';
+        const mName = c.material ? (c.material.name || '') : '';
+        if (mName.includes('blinn4') || c.name.includes('blinn4')) {
+          c.material = screenMat;
+          this.hackerScreenMesh = c;
+        }
+      });
+
+      // Cool purple/blue screen glow illuminating the hacker's face and hands
+      const screenGlow = new THREE.PointLight(0x8b5cf6, 2.5, 20);
+      screenGlow.position.set(0, 16, 4);
+      hacker.add(screenGlow);
+
       this.leoTops.bandit = this.ground(hacker, 28, this.leoPos.bandit);
       this.leoGroup.add(hacker);
       done();
@@ -3143,37 +3087,16 @@ class PushnotOrbit {
         this.updateRcmpLaptopScreen(t);
       }
 
-      if (t < 0.11) {
-        // Beat 1a: Bad guy types ProtonMail email (`TO: 911@POJ.CA / FROM: BADGUY@PROTON.ME / SUBJECT: RISE UP!`)
-        // — it materializes on the elevated plane directly above his head alongside the round bomb with sparkling wick!
-        const tp = seg(t, 0, 0.09);
-        if (this.leoBomb) {
-          this.leoBomb.visible = true;
-          this.leoBomb.position.copy(this.leoPos.banditPlane);
-          this.leoBomb.scale.setScalar(1.0);
-          this.updateProtonEmailCanvas(tp);
-        }
-        moverPos = this.leoPos.banditPlane.clone().add(new THREE.Vector3(0, 6.5, 0));
-        moverText = '⌨️ Typing ProtonMail Threat…';
+      if (t < 0.20) {
+        // Bad guy types ProtonMail threat email directly on his laptop screen
+        const tp = seg(t, 0, 0.16);
+        this.updateHackerEmailScreen(tp);
+        moverPos = this.leoPos.bandit.clone().add(new THREE.Vector3(0, 16, 0));
+        moverText = t < 0.15 ? '💻 badguy@proton.me composing encrypted threat…' : '✉ Threat Sent: badguy@proton.me → 911@poj.ca';
         moverCls = 'red';
-      } else if (t < 0.23) {
-        // Beat 1b: Send the Round Bomb GLB (with sparkling wick) + ProtonMail Email from the plane above Suspect's head -> Police!
-        const p = this.arcLeoThreat.getPoint(seg(t, 0.11, 0.20));
-        if (this.leoBomb) {
-          this.leoBomb.visible = true;
-          this.leoBomb.position.copy(p);
-          this.leoBomb.scale.setScalar(0.85);
-          this.updateProtonEmailCanvas(1.0);
-        }
-        if (t < 0.20) {
-          moverPos = p.clone().add(new THREE.Vector3(0, 5.5, 0));
-          moverText = '💣 Send Bomb + Proton Email → Police';
-          moverCls = 'red';
-        } else {
-          showLeoThreat = true;
-        }
       } else if (t < 0.36) {
-        const u = seg(t, 0.23, 0.31);
+        showLeoThreat = true;
+        const u = seg(t, 0.22, 0.31);
         const p = this.arcLeoProton.getPoint(u);
         this.leoPacket.visible = t < 0.32;
         this.leoPacket.position.copy(p);
@@ -3329,7 +3252,10 @@ class PushnotOrbit {
       }
     } else {
       focusGroup = this.leoGroup;
-      if (showLeoThreat || showLeoTokens || showLeoId) {
+      if (t < 0.20) {
+        focusLocal = new THREE.Vector3(L.bandit.x, 14, L.bandit.z);
+        focusDist = 65;
+      } else if (showLeoThreat || showLeoTokens || showLeoId) {
         focusLocal = new THREE.Vector3(L.swat.x, 14, L.swat.z);
         focusDist = 82;
       } else if (showLeoDenied) {

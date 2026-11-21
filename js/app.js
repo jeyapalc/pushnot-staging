@@ -1722,22 +1722,24 @@ class PushnotOrbit {
 
   initAppleGoogleSkyscraper(done) {
     // Unified Shiny Black 3D Office Building / Skyscraper HQ (`models/office_building.glb`)
-    // with 3D Apple & Google Logos mounted on the roof AND on the back of the skyscraper!
+    // preserving its authentic transparent glass & lit rooms, with ONE Apple logo on the front
+    // and ONE Google logo on the outside back of the skyscraper!
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.post.x, 0, POS.post.z);
     this.normalGroup.add(this.storeGroup);
 
-    this.roofIconsGroup = new THREE.Group();
-    this.roofIconsGroup.position.set(0, 35.5, 0);
-    this.storeGroup.add(this.roofIconsGroup);
+    // Front-facade logo mount group (Apple on the outside front wall)
+    this.frontIconsGroup = new THREE.Group();
+    this.frontIconsGroup.position.set(0, 20, 9.2);
+    this.storeGroup.add(this.frontIconsGroup);
 
-    // Back-facade logo mount group (placed flush against the back wall of the skyscraper!)
+    // Back-facade logo mount group (Google on the outside back wall)
     this.backIconsGroup = new THREE.Group();
-    this.backIconsGroup.position.set(0, 18, -5.5);
+    this.backIconsGroup.position.set(0, 20, -9.2);
     this.storeGroup.add(this.backIconsGroup);
 
-    this.tops.post  = 41;
-    this.tops.store = 41;
+    this.tops.post  = 34;
+    this.tops.store = 34;
 
     let partsReady = 0;
     const checkClone = () => {
@@ -1752,56 +1754,60 @@ class PushnotOrbit {
       done();
     };
 
-    // 1. Load `models/office_building.glb` (optimized from user's Downloads/office_building.glb) in Shiny Black Obsidian & Glass
-    this.loader.load('models/office_building.glb?v=35', (gltf) => {
+    // 1. Load `models/office_building.glb` (optimized with `--palette false --join false` so all 10 glass/window/interior materials stay 100% intact!)
+    this.loader.load('models/office_building.glb?v=36', (gltf) => {
       const tower = gltf.scene;
 
-      const obsidianWallMat = new THREE.MeshPhysicalMaterial({
-        color: 0x05070c,
-        metalness: 0.88,
-        roughness: 0.12,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.06,
-        envMapIntensity: 1.65
-      });
-      const obsidianGlassMat = new THREE.MeshPhysicalMaterial({
-        color: 0x091526,
-        emissive: 0x0ea5e9,
-        emissiveIntensity: 0.25,
-        metalness: 0.95,
-        roughness: 0.05,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.03,
-        envMapIntensity: 2.2
-      });
-      const darkChromeTrimMat = new THREE.MeshPhysicalMaterial({
-        color: 0x111827,
-        emissive: 0x38bdf8,
-        emissiveIntensity: 0.12,
-        metalness: 0.92,
-        roughness: 0.10,
-        clearcoat: 1.0,
-        envMapIntensity: 1.8
-      });
-
       tower.traverse((ch) => {
-        if (!ch.isMesh) return;
+        if (!ch.isMesh || !ch.material) return;
         const nName = (ch.name || '').toLowerCase();
-        const mName = (ch.material?.name || '').toLowerCase();
-        if (nName.includes('glass') || mName.includes('glass') || mName.includes('palette')) {
-          ch.material = obsidianGlassMat;
-        } else if (nName.includes('rams') || nName.includes('03') || mName.includes('17')) {
-          ch.material = darkChromeTrimMat;
+        const mName = (ch.material.name || '').toLowerCase();
+
+        if (nName.includes('glass') || mName.includes('glass')) {
+          // Authentic reflective dark-tinted architectural glass (transparent so you see the lit interior windows & rooms!)
+          ch.material = new THREE.MeshPhysicalMaterial({
+            color: 0x0a192f,
+            transparent: true,
+            opacity: 0.36,
+            metalness: 0.15,
+            roughness: 0.04,
+            transmission: 0.72,
+            reflectivity: 1.0,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.03,
+            envMapIntensity: 2.4,
+            side: THREE.DoubleSide,
+            depthWrite: false
+          });
+        } else if (mName.includes('walls_exterior') || mName.includes('rams')) {
+          // Sleek shiny black obsidian exterior structural frame & mullions
+          ch.material = new THREE.MeshPhysicalMaterial({
+            color: 0x05070c,
+            metalness: 0.88,
+            roughness: 0.12,
+            clearcoat: 1.0,
+            clearcoatRoughness: 0.06,
+            envMapIntensity: 1.85,
+            side: THREE.DoubleSide
+          });
+        } else if (mName.includes('material_17')) {
+          // Lit interior ceiling/window strips inside the glass floors
+          ch.material = new THREE.MeshStandardMaterial({
+            color: 0xe0f2fe,
+            emissive: 0x7dd3fc,
+            emissiveIntensity: 0.85,
+            roughness: 0.25
+          });
         } else {
-          // Keep any emissive window texture while giving the exterior walls a shiny black obsidian finish
-          if (ch.material?.emissiveMap || ch.material?.map) {
-            ch.material = ch.material.clone();
-            if (ch.material.color) ch.material.color.setHex(0x0b101b);
-            ch.material.metalness = 0.85;
-            ch.material.roughness = 0.14;
-            ch.material.envMapIntensity = 1.6;
-          } else {
-            ch.material = obsidianWallMat;
+          // Preserve the original textured building walls (`walls_BLD_OFFICE_05`, `material`, `Blinds_Roman_Hobbled_Blue`)
+          // while giving the dark facade a sleek glossy finish
+          ch.material = ch.material.clone();
+          ch.material.metalness = 0.55;
+          ch.material.roughness = 0.18;
+          ch.material.envMapIntensity = 1.45;
+          if (ch.material.emissiveMap) {
+            ch.material.emissive = new THREE.Color(0xffffff);
+            ch.material.emissiveIntensity = 1.15;
           }
         }
       });
@@ -1821,46 +1827,45 @@ class PushnotOrbit {
       this.storeGroup.add(tower);
 
       const crownY = finalSize.y;
-      this.roofIconsGroup.position.set(0, crownY + 4.8, 0);
-      // Position the back-facade logos flush on the back (-Z) face of the office building skyscraper!
-      this.backIconsGroup.position.set(0, crownY * 0.58, -(finalSize.z / 2 + 0.55));
-      this.tops.post  = crownY + 10.2;
-      this.tops.store = crownY + 10.2;
+      const halfDepth = finalSize.z / 2;
+      // Place Apple logo on the outside front wall (+Z) and Google logo on the outside back wall (-Z)
+      this.frontIconsGroup.position.set(0, crownY * 0.62,  halfDepth + 0.75);
+      this.backIconsGroup.position.set(0,  crownY * 0.62, -(halfDepth + 0.75));
+      this.tops.post  = crownY + 3.5;
+      this.tops.store = crownY + 3.5;
       checkClone();
     }, undefined, checkClone);
 
-    // 2. Mount 3D Apple & Google Logos both on TOP of the skyscraper AND on the BACK of the skyscraper!
-    const mountBuildingLogo = (path, offsetX, targetSize) => {
+    // 2. Mount ONE 3D Apple Logo on the outside front (+Z) and ONE 3D Google Logo on the outside back (-Z) of the skyscraper!
+    const mountExteriorLogo = (path, sideSign, targetSize) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
         let box = new THREE.Box3().setFromObject(logo);
         const raw = box.getSize(new THREE.Vector3());
         const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
-        logo.scale.set(s, s, Math.min(s, 1.6 / (raw.z || 1)));
+        logo.scale.set(s, s, Math.min(s, 1.5 / (raw.z || 1)));
 
         logo.updateMatrixWorld(true);
         box = new THREE.Box3().setFromObject(logo);
         const c = box.getCenter(new THREE.Vector3());
 
-        // A. Rooftop logo (on top of the skyscraper)
-        const roofWrap = new THREE.Group();
+        const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
-        roofWrap.add(logo);
-        roofWrap.position.set(offsetX, 0, 0);
-        this.roofIconsGroup.add(roofWrap);
+        wrap.add(logo);
 
-        // B. Back-of-skyscraper logo (mounted flat on the back -Z wall facing outward!)
-        const backWrap = roofWrap.clone(true);
-        backWrap.position.set(-offsetX * 1.15, 0, 0);
-        backWrap.rotation.y = Math.PI;
-        this.backIconsGroup.add(backWrap);
+        if (sideSign > 0) {
+          this.frontIconsGroup.add(wrap);
+        } else {
+          wrap.rotation.y = Math.PI;
+          this.backIconsGroup.add(wrap);
+        }
 
         checkClone();
       }, undefined, checkClone);
     };
 
-    mountBuildingLogo('models/apple_logo.glb',  -5.2, 8.4);
-    mountBuildingLogo('models/google_logo.glb',  5.2, 8.4);
+    mountExteriorLogo('models/apple_logo.glb',   1, 10.5);
+    mountExteriorLogo('models/google_logo.glb', -1, 10.5);
   }
 
   centerAndScale(obj, size) {
@@ -2524,9 +2529,9 @@ class PushnotOrbit {
       this.ufoGroup.rotation.y += dt * 0.7;
       this.ufoGroup.position.y = POS.ufo.y + Math.sin(now * 0.0025) * 1.4;
     }
-    if (this.roofIconsGroup) {
-      // Gently spin the 3D Apple & Google icons atop the shiny black Skyscraper HQ
-      this.roofIconsGroup.rotation.y += dt * 0.55;
+    if (this.storeGroup) {
+      // Gently rotate the skyscraper HQ so both the outside front (Apple) & outside back (Google) walls showcase smoothly
+      this.storeGroup.rotation.y += dt * 0.35;
     }
 
     this.appOrb.rotation.y += dt * 1.4;

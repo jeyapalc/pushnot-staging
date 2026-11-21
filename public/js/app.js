@@ -28,12 +28,12 @@ const POS = {
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 14, push: 11, world: 12, leo: 15 };
+const MODE_SECONDS = { setup: 14, push: 11, world: 12, leo: 16 };
 const MODE_STEPS = {
-  setup: [0.06, 0.28, 0.40, 0.54, 0.68, 0.84, 0.96],
+  setup: [0.06, 0.27, 0.34, 0.44, 0.56, 0.68, 0.84, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
   world: [0.10, 0.30, 0.55, 0.80, 0.95],
-  leo:   [0.08, 0.25, 0.42, 0.60, 0.78, 0.94]
+  leo:   [0.08, 0.26, 0.45, 0.54, 0.64, 0.78, 0.96]
 };
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
@@ -182,6 +182,7 @@ class PushnotOrbit {
     const pServer = POS.server.clone().setY(18);
 
     this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pStore,  new THREE.Vector3(R + 10, 28, 0),  pPhone);
+    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 32, 0),       pPost);
     this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(0, 32, 0),       pPhone);
     this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 12, R + 12),  pServer);
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-R - 10, 28, 0), pPost);
@@ -196,6 +197,7 @@ class PushnotOrbit {
       this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.4,  this.normalGroup)
     ];
     this.pushLines = [
+      this.addArc(this.arcUfoToServer,  0x38bdf8, 0.4,  this.normalGroup),
       this.addArc(this.arcServerToPost, 0x34d399, 0.45, this.normalGroup),
       this.addArc(this.arcPostToPhone,  0x34d399, 0.45, this.normalGroup)
     ];
@@ -770,12 +772,13 @@ class PushnotOrbit {
       }
 
       // Mirror the completed Datacentre into the Upside-Down Law Enforcement world (Meta / X Datacentre)!
+      // Use uniform positive scale (0.68) so backface culling never turns server racks inside-out!
       if (this.leoGroup && this.leoPos) {
         if (this.leoDcMirror) this.leoGroup.remove(this.leoDcMirror);
         this.leoDcMirror = this.dcGroup.clone(true);
         this.leoDcMirror.position.set(this.leoPos.bot.x, 0, this.leoPos.bot.z - 5);
         this.leoDcMirror.rotation.y = 0;
-        this.leoDcMirror.scale.set(-0.68, 0.68, 0.68); // mirrored X for the Upside Down!
+        this.leoDcMirror.scale.setScalar(0.68);
         this.leoGroup.add(this.leoDcMirror);
       }
     };
@@ -1292,20 +1295,13 @@ class PushnotOrbit {
     // 4. App Store Shopping Bag with Apple flat on front (+Z) and Google flat on back (-Z)
     this.initAppStoreBag(done);
 
-    // 5. Planet Earth — Global World Stimulus Source hovering above the Datacentre!
+    // 5. Planet Earth — Global World Stimulus Source hovering above the Datacentre (no tractor beam cone!)
     this.loader.load('models/earth.glb?v=15', (gltf) => {
       this.ufoGroup = new THREE.Group();
       const earth = gltf.scene;
       this.harmonizeAsset(earth, { minRough: 0.34, maxRough: 0.72, maxMetal: 0.25, envIntensity: 0.9, liftDark: false });
       this.centerAndScale(earth, 26);
       this.ufoGroup.add(earth);
-
-      this.ufoBeamMat = new THREE.MeshBasicMaterial({
-        color: 0x38bdf8, transparent: true, opacity: 0.08, side: THREE.DoubleSide
-      });
-      const beam = new THREE.Mesh(new THREE.ConeGeometry(12, 24, 32, 1, true), this.ufoBeamMat);
-      beam.position.y = -13;
-      this.ufoGroup.add(beam);
 
       this.ufoGroup.position.copy(POS.ufo);
       this.normalGroup.add(this.ufoGroup);
@@ -1670,11 +1666,6 @@ class PushnotOrbit {
     // Key stays persistently stored on the server once registered!
     this.storedKey.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.92);
 
-    // Planet Earth tractor beam brightens when triggering an external event in Mode 2 or Mode 3
-    if (this.ufoBeamMat) {
-      this.ufoBeamMat.opacity = (this.mode === 'world' || (this.mode === 'push' && t < 0.16)) ? 0.34 : 0.07;
-    }
-
     let moverPos = null;
     let moverParent = this.worldGroup;
     let moverText = '';
@@ -1701,11 +1692,19 @@ class PushnotOrbit {
         moverPos = p;
         moverText = '💎 Installing Bejeweled';
         moverCls = 'cyan';
-      } else if (t < 0.32) {
+      } else if (t < 0.30) {
         showInstall = true;
-      } else if (t < 0.46) {
+      } else if (t < 0.38) {
+        // Explicit registration request from Phone -> Post Office before the Post Office prints the new Unique Key!
+        const p = this.arcPhoneToPost.getPoint(seg(t, 0.30, 0.38));
+        this.triggerBolt.visible = true;
+        this.triggerBolt.position.copy(p);
+        moverPos = p;
+        moverText = '📲 Phone Requests Push Key → Post Office';
+        moverCls = 'cyan';
+      } else if (t < 0.50) {
         // 3D Laser-Printing / Holographic Materialization of the brand-new Unique Device Key at Post Office!
-        const mp = seg(t, 0.32, 0.46);
+        const mp = seg(t, 0.38, 0.50);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
         this.keyForge.position.copy(forgePos);
@@ -1727,8 +1726,8 @@ class PushnotOrbit {
         moverPos = forgePos;
         moverText = '🔑 Printing New Unique Key';
         moverCls = 'cyan';
-      } else if (t < 0.60) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.46, 0.60));
+      } else if (t < 0.62) {
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.50, 0.62));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;

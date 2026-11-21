@@ -28,10 +28,10 @@ const POS = {
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 12, push: 9, leo: 15 };
+const MODE_SECONDS = { setup: 14, push: 11, leo: 15 };
 const MODE_STEPS = {
-  setup: [0.06, 0.30, 0.42, 0.56, 0.68, 0.82, 0.96],
-  push:  [0.10, 0.32, 0.52, 0.64, 0.78, 0.95],
+  setup: [0.06, 0.28, 0.40, 0.54, 0.68, 0.84, 0.96],
+  push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
   leo:   [0.08, 0.25, 0.42, 0.60, 0.78, 0.94]
 };
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -361,6 +361,53 @@ class PushnotOrbit {
     return group;
   }
 
+  /* ---- 3D Firewall Shield + Blocked Direct Line (Why App Maker cannot push directly to Phone) ---- */
+  createDirectBlockVisual() {
+    const group = new THREE.Group();
+
+    // Red dashed direct line from Datacentre -> Phone (stopped at midpoint firewall)
+    const pServer = POS.server.clone().setY(16);
+    const pMid    = new THREE.Vector3(0, 16, POS.phone.z);
+    const pPhone  = POS.phone.clone().setY(16);
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(
+      new THREE.LineCurve3(pServer, pPhone).getPoints(40)
+    );
+    const lineMat = new THREE.LineDashedMaterial({
+      color: 0xff1e56, dashSize: 2.0, gapSize: 1.4, transparent: true, opacity: 0.85
+    });
+    const redLine = new THREE.Line(lineGeo, lineMat);
+    redLine.computeLineDistances();
+    group.add(redLine);
+
+    // 3D Hexagonal OS Firewall Barrier + Red X at midpoint between Datacentre & Phone
+    this.firewallBarrier = new THREE.Group();
+    this.firewallBarrier.position.copy(pMid);
+
+    const shieldGeo = new THREE.CylinderGeometry(8.5, 8.5, 0.45, 6);
+    shieldGeo.rotateZ(Math.PI / 2);
+    const shieldMat = new THREE.MeshPhysicalMaterial({
+      color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.65,
+      transparent: true, opacity: 0.38, roughness: 0.15, metalness: 0.2
+    });
+    const shield = new THREE.Mesh(shieldGeo, shieldMat);
+    shield.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(shieldGeo),
+      new THREE.LineBasicMaterial({ color: 0xff4d6d })
+    ));
+    this.firewallBarrier.add(shield);
+
+    const xMat = new THREE.MeshBasicMaterial({ color: 0xff1e56 });
+    const x1 = new THREE.Mesh(new THREE.BoxGeometry(8.2, 1.35, 1.35), xMat); x1.rotation.z =  Math.PI / 4;
+    const x2 = new THREE.Mesh(new THREE.BoxGeometry(8.2, 1.35, 1.35), xMat); x2.rotation.z = -Math.PI / 4;
+    x1.position.z = 0.6;
+    x2.position.z = 0.6;
+    this.firewallBarrier.add(x1, x2, new THREE.PointLight(0xf43f5e, 4, 34));
+    group.add(this.firewallBarrier);
+
+    group.visible = false;
+    return group;
+  }
+
   initMovers() {
     // 1. Bejeweled app travelling App Stores -> Phone
     this.appOrb = this.createBejeweledCluster(1.2);
@@ -380,6 +427,10 @@ class PushnotOrbit {
     this.keyForge.position.set(POS.post.x, 28, POS.post.z);
     this.keyForge.visible = false;
     this.normalGroup.add(this.keyForge);
+
+    // 3c. OS Firewall Barrier blocking direct App Maker <-> Phone push connections
+    this.directBlockGroup = this.createDirectBlockVisual();
+    this.normalGroup.add(this.directBlockGroup);
 
     // 4. Persistent Stored Token Key docked on front of the Datacentre!
     this.storedKey = this.createTokenKey(1.0);
@@ -1248,6 +1299,7 @@ class PushnotOrbit {
     this.tokenKey.visible = false;
     this.tokenKey.scale.setScalar(1.2);
     this.keyForge.visible = false;
+    this.directBlockGroup.visible = false;
     this.pushOrb.visible = false;
     this.triggerBolt.visible = false;
     this.brainGroup.visible = false;
@@ -1259,13 +1311,13 @@ class PushnotOrbit {
     const isLeo = this.mode === 'leo';
 
     // Bejeweled stays visibly installed on the phone once downloaded
-    this.installedApp.visible = !isLeo && (this.mode === 'push' || t >= 0.26);
+    this.installedApp.visible = !isLeo && (this.mode === 'push' || t >= 0.24);
     // Key stays persistently stored on the server once registered!
-    this.storedKey.visible = !isLeo && (this.mode === 'push' || t >= 0.90);
+    this.storedKey.visible = !isLeo && (this.mode === 'push' || t >= 0.92);
 
     // UFO tractor beam brightens when triggering an external event in Mode 2
     if (this.ufoBeamMat) {
-      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.20) ? 0.34 : 0.07;
+      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.16) ? 0.34 : 0.07;
     }
 
     let moverPos = null;
@@ -1275,6 +1327,7 @@ class PushnotOrbit {
 
     let showInstall = false;
     let showToken = false;
+    let showNoDirect = false;
     let showSaved = false;
     let showPush = false;
     let showLedger = false;
@@ -1286,18 +1339,18 @@ class PushnotOrbit {
     let showLeoId     = false;
 
     if (this.mode === 'setup') {
-      if (t < 0.26) {
-        const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.26));
+      if (t < 0.24) {
+        const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.24));
         this.appOrb.visible = true;
         this.appOrb.position.copy(p);
         moverPos = p;
         moverText = '💎 Installing Bejeweled';
         moverCls = 'cyan';
-      } else if (t < 0.34) {
+      } else if (t < 0.32) {
         showInstall = true;
-      } else if (t < 0.48) {
+      } else if (t < 0.46) {
         // 3D Laser-Printing / Holographic Materialization of the brand-new Unique Device Key at Post Office!
-        const mp = seg(t, 0.34, 0.48);
+        const mp = seg(t, 0.32, 0.46);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
         this.keyForge.position.copy(forgePos);
@@ -1319,49 +1372,66 @@ class PushnotOrbit {
         moverPos = forgePos;
         moverText = '🔑 Printing New Unique Key';
         moverCls = 'cyan';
-      } else if (t < 0.64) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.48, 0.64));
+      } else if (t < 0.60) {
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.46, 0.60));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
         moverText = '🔑 Delivering Unique Key → Phone';
-      } else if (t < 0.72) {
+      } else if (t < 0.76) {
+        // Dedicated beat on Phone explaining what the Unique Key represents in Outbound/Inbound push & why no direct connection exists!
+        this.tokenKey.visible = true;
+        this.tokenKey.position.set(POS.phone.x, this.tops.phone + 12.5, POS.phone.z);
+        this.tokenKey.scale.setScalar(1.45);
+        this.directBlockGroup.visible = true;
         showToken = true;
+        showNoDirect = true;
       } else if (t < 0.92) {
-        const p = this.arcPhoneToServer.getPoint(seg(t, 0.72, 0.92));
+        const p = this.arcPhoneToServer.getPoint(seg(t, 0.76, 0.92));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Saving Unique Key in Datacentre';
+        moverText = '🔑 Outbound: Phone Sends Key → App Maker';
       } else {
         showSaved = true;
       }
     } else if (this.mode === 'push') {
-      if (t < 0.20) {
-        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.20));
+      if (t < 0.16) {
+        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.16));
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
         moverText = '⚡ Streak Timer Trigger';
         moverCls = 'cyan';
-      } else if (t < 0.42) {
-        const p = this.arcServerToPost.getPoint(seg(t, 0.20, 0.42));
+      } else if (t < 0.30) {
+        // Beat 2 in Push Delivery: App Maker tries to reach Phone directly -> Blocked by OS Firewall! Must go via Post Office
+        const bp = seg(t, 0.16, 0.30);
+        this.directBlockGroup.visible = true;
+        const pServer = POS.server.clone().setY(16);
+        const pMid    = new THREE.Vector3(0, 16, POS.phone.z);
+        const bounceU = bp < 0.65 ? (bp / 0.65) : (1 - (bp - 0.65) / 0.35 * 0.45);
+        const p = pServer.clone().lerp(pMid, clamp01(bounceU));
+        this.pushOrb.visible = true;
+        this.pushOrb.position.copy(p);
+        showNoDirect = true;
+      } else if (t < 0.48) {
+        const p = this.arcServerToPost.getPoint(seg(t, 0.30, 0.48));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
         moverText = '✉ "Don\'t lose your streak!" + 🔑 Key → Post Office';
         moverCls = 'push';
-      } else if (t < 0.68) {
-        const bp = seg(t, 0.42, 0.68);
+      } else if (t < 0.70) {
+        const bp = seg(t, 0.48, 0.70);
         this.brainGroup.visible = true;
         this.updateBrainAndLedger(bp);
         showLedger = true;
       } else if (t < 0.90) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.68, 0.90));
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.70, 0.90));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ "Don\'t lose your streak!" → Phone';
+        moverText = '✉ Inbound Tunnel: Post Office → Phone';
         moverCls = 'push';
       } else {
         showPush = true;
@@ -1470,11 +1540,13 @@ class PushnotOrbit {
     // Normal contextual callouts
     const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 11, POS.phone.z);
     const serverTop = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
-    this.place('pin-install', phoneTop,  showNorm && showInstall);
-    this.place('pin-token',   phoneTop,  showNorm && showToken);
-    this.place('pin-saved',   serverTop, showNorm && showSaved);
-    this.place('pin-push',    phoneTop,  showNorm && showPush);
-    this.place('pin-ledger',  new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
+    const blockTop  = new THREE.Vector3(0, 29, POS.phone.z);
+    this.place('pin-install',   phoneTop,  showNorm && showInstall);
+    this.place('pin-token',     phoneTop,  showNorm && showToken);
+    this.place('pin-no-direct', blockTop,  showNorm && showNoDirect);
+    this.place('pin-saved',     serverTop, showNorm && showSaved);
+    this.place('pin-push',      phoneTop,  showNorm && showPush);
+    this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
 
     // Law Enforcement contextual callouts
     this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
@@ -1552,6 +1624,10 @@ class PushnotOrbit {
     if (this.rejectX && this.rejectX.visible) {
       const s = 1 + Math.sin(now * 0.015) * 0.12;
       this.rejectX.scale.setScalar(s);
+    }
+    if (this.directBlockGroup && this.directBlockGroup.visible && this.firewallBarrier) {
+      const s = 1 + Math.sin(now * 0.012) * 0.08;
+      this.firewallBarrier.scale.setScalar(s);
     }
 
     if (this.playing) {

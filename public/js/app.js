@@ -375,16 +375,17 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 4. Apple & Google App Store Logos (back-right, side-by-side)
+    // 4. Apple & Google App Store Logos (back-right, stacked vertically)
     this.storeGroup = new THREE.Group();
-    this.storeGroup.position.set(POS.store.x, 15, POS.store.z);
+    this.storeGroup.position.set(POS.store.x, 19, POS.store.z);
     this.storeGroup.rotation.y = -Math.PI * 0.25;
+    this.tops.store = 36;
     this.scene.add(this.storeGroup);
 
     this.loader.load('models/apple_logo.glb', (gltf) => {
       this.appleLogo = gltf.scene;
       this.centerAndScale(this.appleLogo, 14);
-      this.appleLogo.position.set(-9, 0, 0);
+      this.appleLogo.position.set(0, 8.5, 0);
       this.storeGroup.add(this.appleLogo);
       done();
     }, undefined, done);
@@ -392,7 +393,7 @@ class PushnotOrbit {
     this.loader.load('models/google_logo.glb', (gltf) => {
       this.googleLogo = gltf.scene;
       this.centerAndScale(this.googleLogo, 14);
-      this.googleLogo.position.set(9, 0, 0);
+      this.googleLogo.position.set(0, -8.5, 0);
       this.storeGroup.add(this.googleLogo);
       done();
     }, undefined, done);
@@ -468,6 +469,15 @@ class PushnotOrbit {
     document.getElementById('btn-orbit').classList.toggle('on', on);
   }
 
+  setPlaying(auto) {
+    this.playing = auto;
+    // In Manual Scrub mode, mouse wheel / trackpad scroll scrubs the action cycle instead of zooming
+    this.controls.enableZoom = auto;
+    const btn = document.getElementById('btn-play');
+    btn.textContent = auto ? '▶ Auto' : '🖱 Scroll';
+    btn.classList.toggle('manual', !auto);
+  }
+
   initUI() {
     document.getElementById('mode-setup').addEventListener('click', () => this.setMode('setup'));
     document.getElementById('mode-push').addEventListener('click', () => this.setMode('push'));
@@ -476,11 +486,11 @@ class PushnotOrbit {
     });
 
     document.getElementById('scrub').addEventListener('input', (e) => {
-      this.playing = false;
+      if (this.playing) this.setPlaying(false);
       this.t = parseInt(e.target.value, 10) / 1000;
     });
     document.getElementById('btn-play').addEventListener('click', () => {
-      this.playing = !this.playing;
+      this.setPlaying(!this.playing);
     });
     document.getElementById('btn-orbit').addEventListener('click', () => this.setAutoOrbit(!this.autoOrbit));
     document.getElementById('btn-fullscreen').addEventListener('click', () => {
@@ -488,20 +498,32 @@ class PushnotOrbit {
       else document.exitFullscreen();
     });
 
+    // Mouse wheel / trackpad scroll scrubs the action cycle when in Manual Scrub mode
+    this.renderer.domElement.addEventListener('wheel', (e) => {
+      if (this.playing) return;
+      e.preventDefault();
+      const delta = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 120) * 0.0006;
+      this.t = ((this.t + delta) % 1 + 1) % 1;
+    }, { passive: false });
+
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
-      if (e.code === 'Space') { e.preventDefault(); this.playing = !this.playing; }
+      if (e.code === 'Space') { e.preventDefault(); this.setPlaying(!this.playing); }
       else if (e.key === 'Tab') { e.preventDefault(); this.setMode(this.mode === 'setup' ? 'push' : 'setup'); }
       else if (e.key === '1') this.setMode('setup');
       else if (e.key === '2') this.setMode('push');
+      else if (e.key === 'ArrowRight') { if (this.playing) this.setPlaying(false); this.t = (this.t + 0.04) % 1; }
+      else if (e.key === 'ArrowLeft')  { if (this.playing) this.setPlaying(false); this.t = (this.t - 0.04 + 1) % 1; }
     });
+
+    this.setPlaying(true);
   }
 
   /* ---------------- render state from (mode, t) ---------------- */
   updateState() {
     const t = this.t;
     document.getElementById('scrub').value = Math.round(t * 1000);
-    document.getElementById('btn-play').textContent = this.playing ? '❚❚' : '▶';
+    document.getElementById('scrub-pct').textContent = Math.round(t * 100) + '%';
 
     this.appOrb.visible = false;
     this.tokenKey.visible = false;

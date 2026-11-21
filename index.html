@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=35" />
+  <link rel="stylesheet" href="css/style.css?v=40" />
   <script type="importmap">
     { "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -25,6 +25,10 @@
     <span>PUSHNOT</span>
   </div>
   <div class="top-right">
+    <div class="os-toggle" id="os-toggle" title="Switch Operating System (iOS / Android)">
+      <button class="btn-os active ios" id="btn-os-ios"> iOS</button>
+      <button class="btn-os android" id="btn-os-android">🤖 Android</button>
+    </div>
     <button class="btn-leo" id="btn-leo" title="Flip Upside Down · Law Enforcement Trace (L)">⚖ Law Enforcement</button>
     <button class="btn-fs" id="btn-fullscreen" title="Fullscreen">⛶</button>
   </div>
@@ -38,8 +42,9 @@
 
   <!-- Minimal 3-station ground labels + World (Normal Mode) -->
   <div class="pin pin-node" id="pin-store" style="display:none"></div>
-  <div class="pin pin-node" id="pin-phone">PHONE</div>
-  <div class="pin pin-node" id="pin-post">APPLE &amp; GOOGLE</div>
+  <div class="pin pin-node" id="pin-phone">IPHONE (iOS)</div>
+  <div class="pin pin-os-float" id="pin-phone-os" title="Click to toggle between iOS and Android"><span id="phone-os-badge"> iOS</span> <span style="opacity:0.6;font-size:0.6rem">⇄ SWITCH</span></div>
+  <div class="pin pin-node" id="pin-post">APPLE APNs (iTUNES / APP STORE)</div>
   <div class="pin pin-node" id="pin-server">APP SERVER</div>
   <div class="pin pin-node" id="pin-ufo">WORLD</div>
 
@@ -191,6 +196,6 @@
     </div>
   </nav>
 
-  <script type="module" src="js/app.js?v=39"></script>
+  <script type="module" src="js/app.js?v=40"></script>
 </body>
 </html>

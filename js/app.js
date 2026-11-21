@@ -184,17 +184,17 @@ class PushnotOrbit {
     outer.position.y = 0.1;
     this.worldGroup.add(outer);
 
-    // Elevated arcs between the 3 unified stations (Apple & Google Skyscraper HQ <-> Phone <-> App Maker Datacentre)
-    const pPhone  = POS.phone.clone().setY(16);
-    const pPost   = POS.post.clone().setY(22);
-    const pServer = POS.server.clone().setY(18);
+    // Arcs emerging cleanly from the San Francisco buildings area (not floating above in empty air!)
+    const pPhone  = POS.phone.clone().setY(15);
+    const pPost   = POS.post.clone().add(new THREE.Vector3(0, 11, 2)); // emerging directly from the buildings area!
+    const pServer = POS.server.clone().setY(15);
 
-    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 8, 30, -8),  pPhone);
-    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(12, 34, -8),     pPost);
-    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 8, 30, -8),  pPhone);
-    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 10),  pServer);
-    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 8, 30, -8), pPost);
-    this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(28));
+    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 4, 18, -6), pPhone);
+    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(10, 19, -6),    pPost);
+    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 4, 18, -6), pPhone);
+    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 8),  pServer);
+    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
+    this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(26));
 
     this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
     this.pushCurves  = [this.arcUfoToServer,  this.arcServerToPost, this.arcPostToPhone];
@@ -378,11 +378,11 @@ class PushnotOrbit {
       // Smooth continuous Catmull-Rom 3D path from Planet Earth -> Datacentre -> Apple/Google Skyscraper HQ -> Phone!
       const pEarth  = POS.ufo.clone().add(s.spread);
       const pEarth2 = POS.ufo.clone().setY(35).add(s.spread.clone().multiplyScalar(1.25));
-      const pServer = POS.server.clone().setY(19).add(s.mid1);
-      const pArc1   = new THREE.Vector3(-D - 6, 30, -8).add(s.mid1);
-      const pPost   = POS.post.clone().setY(23).add(s.mid2);
-      const pArc2   = new THREE.Vector3(D + 6, 30, -8).add(s.mid2);
-      const pPhone  = POS.phone.clone().setY(17).add(s.mid2.clone().multiplyScalar(0.4));
+      const pServer = POS.server.clone().setY(16).add(s.mid1);
+      const pArc1   = new THREE.Vector3(-D - 4, 18, -6).add(s.mid1);
+      const pPost   = POS.post.clone().setY(11).add(s.mid2);
+      const pArc2   = new THREE.Vector3(D + 4, 18, -6).add(s.mid2);
+      const pPhone  = POS.phone.clone().setY(15).add(s.mid2.clone().multiplyScalar(0.4));
 
       const curve = new THREE.CatmullRomCurve3([pEarth, pEarth2, pServer, pArc1, pPost, pArc2, pPhone]);
       const line = this.addArc(curve, s.color, 0.52, this.worldStimGroup);
@@ -2549,11 +2549,12 @@ class PushnotOrbit {
         roughness: 0.75,
         metalness: 0.05,
         polygonOffset: true,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2
+        polygonOffsetFactor: -6,
+        polygonOffsetUnits: -6,
+        side: THREE.DoubleSide
       });
-      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(16, 5.2), chestMat);
-      chestPatch.position.set(0.2, 120, 17.2);
+      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(18, 5.8), chestMat);
+      chestPatch.position.set(0.2, 121, 20.2);
       m.add(chestPatch);
 
       // Back RCMP POLICE panel
@@ -2563,11 +2564,12 @@ class PushnotOrbit {
         roughness: 0.75,
         metalness: 0.05,
         polygonOffset: true,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2
+        polygonOffsetFactor: -6,
+        polygonOffsetUnits: -6,
+        side: THREE.DoubleSide
       });
-      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(20, 9.4), backMat);
-      backPatch.position.set(0.2, 122, -17.2);
+      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(21, 9.8), backMat);
+      backPatch.position.set(0.2, 123, -19.5);
       backPatch.rotation.y = Math.PI;
       m.add(backPatch);
 
@@ -2578,19 +2580,18 @@ class PushnotOrbit {
         roughness: 0.75,
         metalness: 0.05,
         polygonOffset: true,
-        polygonOffsetFactor: -2,
-        polygonOffsetUnits: -2
+        polygonOffsetFactor: -6,
+        polygonOffsetUnits: -6,
+        side: THREE.DoubleSide
       });
-      const leftFlash = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 7.8), shoulderMat);
-      leftFlash.position.set(-27.2, 134, 1.2);
-      leftFlash.rotation.y = -Math.PI * 0.5;
-      leftFlash.rotation.z = -0.12;
+      const leftFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
+      leftFlash.position.set(-29.0, 134, 1.8);
+      leftFlash.rotation.set(0, -Math.PI * 0.48, -0.12);
       m.add(leftFlash);
 
-      const rightFlash = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 7.8), shoulderMat);
-      rightFlash.position.set(27.2, 134, 1.2);
-      rightFlash.rotation.y = Math.PI * 0.5;
-      rightFlash.rotation.z = 0.12;
+      const rightFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
+      rightFlash.position.set(29.0, 134, 3.2);
+      rightFlash.rotation.set(0, Math.PI * 0.48, 0.12);
       m.add(rightFlash);
 
       this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);
@@ -2758,27 +2759,28 @@ class PushnotOrbit {
     mountLogo('models/apple_logo.glb', -5.8, true);
     mountLogo('models/google_logo.glb',  5.8, false);
 
-    // 3. Genuine 3D Block Text for "SILICON VALLEY" overlooking the San Francisco node
+    // 3. Genuine 3D Block Text for "SILICON VALLEY" at SEA LEVEL in RED
     const fontLoader = new FontLoader();
     fontLoader.load('fonts/helvetiker_bold.typeface.json', (font) => {
       const textGeo = new TextGeometry('SILICON VALLEY', {
         font: font,
-        size: 1.65,
-        height: 0.65, // 3D block extrusion depth
+        size: 1.85,
+        height: 0.75, // 3D block extrusion depth
         curveSegments: 6,
         bevelEnabled: true,
-        bevelThickness: 0.12,
-        bevelSize: 0.06,
+        bevelThickness: 0.14,
+        bevelSize: 0.07,
         bevelSegments: 3
       });
       textGeo.computeBoundingBox();
       const textDim = textGeo.boundingBox.getSize(new THREE.Vector3());
       textGeo.translate(-textDim.x * 0.5, -textDim.y * 0.5, -textDim.z * 0.5);
 
+      // Vibrant, bold architectural RED with glowing crimson emissive illumination!
       const textMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        emissive: 0x38bdf8,
-        emissiveIntensity: 0.38,
+        color: 0xef4444, // Vibrant bold red
+        emissive: 0xdc2626, // Glowing crimson red
+        emissiveIntensity: 0.85,
         metalness: 0.35,
         roughness: 0.22
       });
@@ -2788,15 +2790,20 @@ class PushnotOrbit {
 
       // Sleek architectural dark plinth under 3D block text
       const plinth = new THREE.Mesh(
-        new THREE.BoxGeometry(textDim.x + 2.4, 0.45, 1.8),
+        new THREE.BoxGeometry(textDim.x + 2.5, 0.45, 1.8),
         new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.3 })
       );
       plinth.position.y = -textDim.y * 0.5 - 0.24;
       textWrap.add(plinth);
 
-      // Positioned directly below the matched Apple & Google logos
-      textWrap.position.set(0, -2.4, 0);
-      this.frontLogosGroup.add(textWrap);
+      // Vibrant red accent ground glow at sea level
+      const redLight = new THREE.PointLight(0xef4444, 4.0, 32);
+      redLight.position.set(0, 1.0, 2.5);
+      textWrap.add(redLight);
+
+      // Positioned right at SEA LEVEL (y = 1.3) at the shoreline of the San Francisco node facing front!
+      textWrap.position.set(0, 1.3, 21.0);
+      this.storeGroup.add(textWrap);
 
       checkClone();
     }, undefined, checkClone);

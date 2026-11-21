@@ -1676,32 +1676,32 @@ class PushnotOrbit {
   /* ---- Authentic RCMP ERT Tactical Uniform Patches (Solid Ranger Green & Subdued Insignia) ---- */
   createPoliceChestPatchTexture() {
     const cvs = document.createElement('canvas');
-    cvs.width = 512;
-    cvs.height = 160;
+    cvs.width = 1024;
+    cvs.height = 320;
     const ctx = cvs.getContext('2d');
 
-    // Solid Ranger Green background (#48563f)
+    // Solid Ranger Green background (#48563f) matching Canadian RCMP ERT uniform
     ctx.fillStyle = '#48563f';
     ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-    // Dark tactical embroidered border
-    ctx.strokeStyle = '#273322';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(5, 5, cvs.width - 10, cvs.height - 10);
+    // Dark tactical embroidered outer border
+    ctx.strokeStyle = '#1b2318';
+    ctx.lineWidth = 18;
+    ctx.strokeRect(9, 9, cvs.width - 18, cvs.height - 18);
 
     // Subtle inner stitched thread border
-    ctx.setLineDash([8, 6]);
-    ctx.strokeStyle = '#32402c';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(14, 14, cvs.width - 28, cvs.height - 28);
+    ctx.setLineDash([16, 12]);
+    ctx.strokeStyle = '#2d3726';
+    ctx.lineWidth = 5;
+    ctx.strokeRect(28, 28, cvs.width - 56, cvs.height - 56);
     ctx.setLineDash([]);
 
-    // Bold solid black block "POLICE"
+    // Bold solid black block "POLICE" in all caps
     ctx.fillStyle = '#0a0a0a';
-    ctx.font = '900 96px "Impact", "Arial Black", sans-serif';
+    ctx.font = '900 180px "Impact", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('POLICE', cvs.width / 2, cvs.height / 2 + 2);
+    ctx.fillText('POLICE', cvs.width / 2, cvs.height / 2 + 4);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -1710,35 +1710,36 @@ class PushnotOrbit {
 
   createRcmpBackPatchTexture() {
     const cvs = document.createElement('canvas');
-    cvs.width = 512;
-    cvs.height = 240;
+    cvs.width = 1024;
+    cvs.height = 480;
     const ctx = cvs.getContext('2d');
 
     // Solid Ranger Green background (#48563f)
     ctx.fillStyle = '#48563f';
     ctx.fillRect(0, 0, cvs.width, cvs.height);
 
-    // Dark tactical embroidered border
-    ctx.strokeStyle = '#273322';
-    ctx.lineWidth = 12;
-    ctx.strokeRect(6, 6, cvs.width - 12, cvs.height - 12);
+    // Dark tactical embroidered outer border
+    ctx.strokeStyle = '#1b2318';
+    ctx.lineWidth = 22;
+    ctx.strokeRect(11, 11, cvs.width - 22, cvs.height - 22);
 
     // Inner stitching
-    ctx.setLineDash([10, 6]);
-    ctx.strokeStyle = '#32402c';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(16, 16, cvs.width - 32, cvs.height - 32);
+    ctx.setLineDash([18, 12]);
+    ctx.strokeStyle = '#2d3726';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(32, 32, cvs.width - 64, cvs.height - 64);
     ctx.setLineDash([]);
 
-    // Prominent bold black "RCMP" and "POLICE"
+    // Prominent bold solid black "RCMP" on back panel
     ctx.fillStyle = '#0a0a0a';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = '900 96px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('RCMP', cvs.width / 2, 78);
+    ctx.font = '900 190px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('RCMP', cvs.width / 2, 156);
 
-    ctx.font = '900 68px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('POLICE', cvs.width / 2, 168);
+    // Bold solid black "POLICE" on back panel
+    ctx.font = '900 136px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('POLICE', cvs.width / 2, 336);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -1747,8 +1748,8 @@ class PushnotOrbit {
 
   createRcmpSubduedShoulderFlashTexture() {
     const cvs = document.createElement('canvas');
-    cvs.width = 384;
-    cvs.height = 480;
+    cvs.width = 768;
+    cvs.height = 960;
     const ctx = cvs.getContext('2d');
 
     // Shield path (Canadian police shoulder flash shape)
@@ -1758,7 +1759,7 @@ class PushnotOrbit {
       const h = cvs.height - pad * 2;
       const x0 = pad;
       const y0 = pad;
-      const r = 24;
+      const r = 48;
       ctx.moveTo(x0 + r, y0);
       ctx.lineTo(x0 + w - r, y0);
       ctx.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + r);
@@ -1771,67 +1772,67 @@ class PushnotOrbit {
     }
 
     // Solid Ranger Green base fill
-    drawShieldPath(4);
+    drawShieldPath(8);
     ctx.fillStyle = '#48563f';
     ctx.fill();
 
     // Dark embroidered outer border
     ctx.strokeStyle = '#1b2318';
-    ctx.lineWidth = 14;
+    ctx.lineWidth = 26;
     ctx.stroke();
 
     // Inner stitching
-    drawShieldPath(18);
-    ctx.setLineDash([8, 6]);
+    drawShieldPath(36);
+    ctx.setLineDash([16, 12]);
     ctx.strokeStyle = '#2d3726';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 6;
     ctx.stroke();
     ctx.setLineDash([]);
 
     // Arched banner at top: "ROYAL CANADIAN MOUNTED POLICE"
     ctx.fillStyle = '#111710';
-    ctx.font = '900 24px "Impact", "Arial Black", sans-serif';
+    ctx.font = '900 48px "Impact", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('ROYAL CANADIAN', 192, 54);
-    ctx.font = '900 22px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('MOUNTED POLICE', 192, 82);
+    ctx.fillText('ROYAL CANADIAN', 384, 108);
+    ctx.font = '900 44px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('MOUNTED POLICE', 384, 164);
 
     // Subdued Crown at top center of crest
     ctx.beginPath();
-    ctx.arc(192, 138, 12, 0, Math.PI * 2);
+    ctx.arc(384, 276, 24, 0, Math.PI * 2);
     ctx.fill();
-    ctx.fillRect(160, 148, 64, 8);
-    ctx.fillRect(168, 132, 48, 14);
+    ctx.fillRect(320, 296, 128, 16);
+    ctx.fillRect(336, 264, 96, 28);
 
     // Circular garter ring
     ctx.beginPath();
-    ctx.arc(192, 235, 62, 0, Math.PI * 2);
-    ctx.lineWidth = 12;
+    ctx.arc(384, 470, 124, 0, Math.PI * 2);
+    ctx.lineWidth = 24;
     ctx.strokeStyle = '#111710';
     ctx.stroke();
 
     // Subdued Bison / Buffalo head silhouette in center
     ctx.beginPath();
-    ctx.arc(192, 222, 28, 0, Math.PI * 2);
-    ctx.arc(192, 248, 18, 0, Math.PI * 2);
+    ctx.arc(384, 444, 56, 0, Math.PI * 2);
+    ctx.arc(384, 496, 36, 0, Math.PI * 2);
     ctx.fill();
     // Horns
     ctx.beginPath();
-    ctx.arc(162, 206, 12, 0, Math.PI * 1.5);
-    ctx.arc(222, 206, 12, Math.PI * 1.5, Math.PI * 3);
-    ctx.lineWidth = 6;
+    ctx.arc(324, 412, 24, 0, Math.PI * 1.5);
+    ctx.arc(444, 412, 24, Math.PI * 1.5, Math.PI * 3);
+    ctx.lineWidth = 12;
     ctx.strokeStyle = '#111710';
     ctx.stroke();
 
     // Scroll at bottom: "MAINTIENS LE DROIT"
     ctx.fillStyle = '#111710';
-    ctx.font = '900 18px "Impact", "Arial Black", sans-serif';
+    ctx.font = '900 36px "Impact", "Arial Black", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('MAINTIENS LE DROIT', 192, 335);
+    ctx.fillText('MAINTIENS LE DROIT', 384, 670);
 
     // Subdued tactical unit badge: "RCMP · ERT"
-    ctx.font = '900 32px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('RCMP · ERT', 192, 388);
+    ctx.font = '900 64px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('RCMP · ERT', 384, 776);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;

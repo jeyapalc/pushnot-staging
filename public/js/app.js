@@ -344,83 +344,159 @@ class PushnotOrbit {
   }
 
   initDatacentreCluster(done) {
-    // Tightly stacked Datacentre cluster built from all 8 server/console GLBs + flashing LEDs
+    // Collision-free Datacentre cluster: measure exact bounding boxes of all 8 GLBs,
+    // then lay out back row, front row, top unit, plinth, and front-bezel LEDs with zero clipping.
     this.dcGroup = new THREE.Group();
     this.dcGroup.position.copy(POS.server);
     this.dcGroup.rotation.y = Math.PI * 0.25;
     this.scene.add(this.dcGroup);
 
-    // Raised glowing floor pad underneath the datacentre
-    const pad = new THREE.Mesh(
-      new THREE.BoxGeometry(34, 0.8, 22),
-      new THREE.MeshStandardMaterial({ color: 0x0b1220, metalness: 0.7, roughness: 0.3 })
-    );
-    pad.position.set(0, 0.4, 0);
-    pad.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(pad.geometry),
-      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 })
-    ));
-    this.dcGroup.add(pad);
-
-    // 8 stacked/clustered datacentre units (original rack + 7 new downloads)
-    const layout = [
-      // Back row: 4 tall racks shoulder-to-shoulder
-      { path: 'models/dc/cabinet_argos.glb', size: 22, x: -12, y: 0.8, z: -5,  ry: 0 },
-      { path: 'models/data_center_rack.glb', size: 24, x:  -4, y: 0.8, z: -5,  ry: 0 },
-      { path: 'models/dc/network_rack.glb',  size: 22, x:   4, y: 0.8, z: -5,  ry: 0 },
-      { path: 'models/dc/rack_1.glb',        size: 22, x:  12, y: 0.8, z: -5,  ry: 0 },
-      // Front row: 2 side racks + front command console
-      { path: 'models/dc/rack_2.glb',        size: 17, x: -10, y: 0.8, z:  4.5, ry: 0.15 },
-      { path: 'models/dc/rack_console.glb',  size: 17, x:  10, y: 0.8, z:  4.5, ry: -0.15 },
-      { path: 'models/dc/control_panel.glb', size: 11, x:   0, y: 0.8, z:  6.5, ry: 0 },
-      // Stacked on top of the center racks
-      { path: 'models/dc/server_box.glb',    size: 14, x:   0, y: 23,  z: -5,  ry: 0 }
+    const floorY = 0.8;
+    const specs = [
+      { key: 'argos',   row: 'back',  path: 'models/dc/cabinet_argos.glb', targetH: 18 },
+      { key: 'main',    row: 'back',  path: 'models/data_center_rack.glb', targetH: 19 },
+      { key: 'net',     row: 'back',  path: 'models/dc/network_rack.glb',  targetH: 18 },
+      { key: 'rack1',   row: 'back',  path: 'models/dc/rack_1.glb',        targetH: 18 },
+      { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: 13 },
+      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: 8.5 },
+      { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: 13 },
+      { key: 'topbox',  row: 'top',   path: 'models/dc/server_box.glb',    targetH: 6.5 }
     ];
 
-    for (const item of layout) {
-      this.loader.load(item.path, (gltf) => {
+    const loaded = {};
+    let remaining = specs.length;
+
+    const finalizeLayout = () => {
+      const gapX = 1.8;
+      const gapZ = 2.6;
+
+      // 1. Lay out BACK row side-by-side with exact measured widths (zero overlap)
+      const backKeys = ['argos', 'main', 'net', 'rack1'].filter((k) => loaded[k]);
+      const backTotalW = backKeys.reduce((s, k) => s + loaded[k].size.x, 0) + gapX * Math.max(0, backKeys.length - 1);
+      const backMaxD = Math.max(4, ...backKeys.map((k) => loaded[k].size.z));
+      const backZ = -(backMaxD / 2 + gapZ / 2);
+
+      let cx = -backTotalW / 2;
+      const backPlaced = [];
+      for (const k of backKeys) {
+        const item = loaded[k];
+        const x = cx + item.size.x / 2;
+        item.wrap.position.set(x, floorY, backZ);
+        this.dcGroup.add(item.wrap);
+        backPlaced.push({ key: k, x, z: backZ, size: item.size });
+        cx += item.size.x + gapX;
+      }
+
+      // 2. Lay out FRONT row cleanly in front of back row's forward-most edge
+      const frontKeys = ['rack2', 'panel', 'console'].filter((k) => loaded[k]);
+      const frontTotalW = frontKeys.reduce((s, k) => s + loaded[k].size.x, 0) + gapX * Math.max(0, frontKeys.length - 1);
+      const frontMaxD = Math.max(4, ...frontKeys.map((k) => loaded[k].size.z));
+      const frontZ = (frontMaxD / 2 + gapZ / 2);
+
+      cx = -frontTotalW / 2;
+      for (const k of frontKeys) {
+        const item = loaded[k];
+        const x = cx + item.size.x / 2;
+        item.wrap.position.set(x, floorY, frontZ);
+        this.dcGroup.add(item.wrap);
+        cx += item.size.x + gapX;
+      }
+
+      // 3. Stack TOP server box flush on top of the tallest center back-row rack
+      if (loaded.topbox && backPlaced.length) {
+        const anchor = backPlaced.find((b) => b.key === 'main') || backPlaced[Math.floor(backPlaced.length / 2)];
+        loaded.topbox.wrap.position.set(anchor.x, floorY + anchor.size.y + 0.15, anchor.z);
+        this.dcGroup.add(loaded.topbox.wrap);
+      }
+
+      // 4. Size the raised floor plinth to the exact combined footprint + clean margin
+      const dcBox = new THREE.Box3().setFromObject(this.dcGroup);
+      // Compute local bounds before world offset by measuring children
+      const padW = Math.max(backTotalW, frontTotalW) + 5;
+      const padD = backMaxD + frontMaxD + gapZ + 5;
+      const pad = new THREE.Mesh(
+        new THREE.BoxGeometry(padW, floorY, padD),
+        new THREE.MeshStandardMaterial({ color: 0x0b1220, metalness: 0.7, roughness: 0.3 })
+      );
+      pad.position.set(0, floorY / 2, (frontZ + backZ) / 2);
+      pad.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(pad.geometry),
+        new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 })
+      ));
+      this.dcGroup.add(pad);
+
+      // 5. Place flashing LEDs cleanly on the exact front bezel of each back-row rack
+      this.dcLeds = [];
+      const ledGeo = new THREE.BoxGeometry(0.42, 0.42, 0.42);
+      const palette = [0x38bdf8, 0x34d399, 0xfbbf24, 0xff2a55];
+      backPlaced.forEach((b, bi) => {
+        const frontFaceZ = b.z + b.size.z / 2 + 0.3;
+        for (let col = -1; col <= 1; col += 2) {
+          for (let row = 0; row < 5; row++) {
+            const hex = palette[(bi + row + (col > 0 ? 1 : 0)) % palette.length];
+            const mat = new THREE.MeshBasicMaterial({ color: hex });
+            const led = new THREE.Mesh(ledGeo, mat);
+            led.position.set(
+              b.x + col * Math.min(1.6, b.size.x * 0.25),
+              floorY + 2.5 + row * ((b.size.y - 4.5) / 4),
+              frontFaceZ
+            );
+            this.dcGroup.add(led);
+            this.dcLeds.push({
+              mesh: led,
+              mat,
+              speed: 3 + ((bi * 7 + row * 11 + (col > 0 ? 3 : 0)) % 9),
+              phase: bi * 1.7 + row * 2.3 + col
+            });
+          }
+        }
+      });
+
+      // 6. Pulsing datacentre status light & updated top height
+      this.dcLight = new THREE.PointLight(0x38bdf8, 3.2, 55);
+      this.dcLight.position.set(0, 18, frontZ + 10);
+      this.dcGroup.add(this.dcLight);
+
+      const maxBackH = Math.max(18, ...backPlaced.map((b) => b.size.y));
+      const topExtra = loaded.topbox ? loaded.topbox.size.y : 0;
+      this.tops.server = floorY + maxBackH + topExtra + 3;
+
+      // Dock stored golden key cleanly outside the front-right edge (zero clipping)
+      if (this.storedKey) {
+        this.storedKey.position.set(POS.server.x + padW * 0.42, 22, POS.server.z + padD * 0.42);
+      }
+    };
+
+    for (const s of specs) {
+      this.loader.load(s.path, (gltf) => {
         const obj = gltf.scene;
-        obj.rotation.y = item.ry;
+        // Scale by height (capped so ultra-wide models don't blow up footprint)
         let box = new THREE.Box3().setFromObject(obj);
-        const dim = box.getSize(new THREE.Vector3());
-        const maxD = Math.max(dim.x, dim.y, dim.z) || 1;
-        obj.scale.setScalar(item.size / maxD);
+        const raw = box.getSize(new THREE.Vector3());
+        const scaleByH = s.targetH / (raw.y || 1);
+        const maxFootprint = s.row === 'top' ? 10 : 12;
+        const scaleCap = maxFootprint / Math.max(raw.x || 1, raw.z || 1);
+        const scale = Math.min(scaleByH, scaleCap);
+        obj.scale.setScalar(scale);
+
         box = new THREE.Box3().setFromObject(obj);
         const c = box.getCenter(new THREE.Vector3());
-        obj.position.set(item.x - c.x, item.y - box.min.y, item.z - c.z);
-        this.dcGroup.add(obj);
+        const size = box.getSize(new THREE.Vector3());
+
+        // Wrap so wrap origin sits at bottom-center (x=0, y=0, z=0)
+        const wrap = new THREE.Group();
+        obj.position.set(-c.x, -box.min.y, -c.z);
+        wrap.add(obj);
+
+        loaded[s.key] = { wrap, size };
+        if (--remaining === 0) finalizeLayout();
         done();
-      }, undefined, (err) => { console.warn('DC model failed:', item.path, err); done(); });
+      }, undefined, (err) => {
+        console.warn('DC model failed:', s.path, err);
+        if (--remaining === 0) finalizeLayout();
+        done();
+      });
     }
-
-    // Flashing server blade LEDs arrayed across the datacentre racks
-    this.dcLeds = [];
-    const ledGeo = new THREE.BoxGeometry(0.45, 0.45, 0.45);
-    const palette = [0x38bdf8, 0x34d399, 0xfbbf24, 0xff2a55];
-    const cols = [-13, -11, -5, -3, 3, 5, 11, 13];
-    for (let i = 0; i < cols.length; i++) {
-      for (let row = 0; row < 5; row++) {
-        const hex = palette[(i + row) % palette.length];
-        const mat = new THREE.MeshBasicMaterial({ color: hex });
-        const led = new THREE.Mesh(ledGeo, mat);
-        led.position.set(cols[i], 4 + row * 3.8, -0.8);
-        this.dcGroup.add(led);
-        this.dcLeds.push({
-          mesh: led,
-          mat,
-          baseHex: hex,
-          speed: 3 + ((i * 7 + row * 13) % 9),
-          phase: (i * 1.7 + row * 2.3)
-        });
-      }
-    }
-
-    // Pulsing datacentre status light
-    this.dcLight = new THREE.PointLight(0x38bdf8, 3.2, 48);
-    this.dcLight.position.set(0, 16, 12);
-    this.dcGroup.add(this.dcLight);
-
-    this.tops.server = 35;
   }
 
   loadModels() {

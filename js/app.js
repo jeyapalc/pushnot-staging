@@ -47,12 +47,15 @@ class PushnotOrbit {
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
     this.loader.setDRACOLoader(draco);
 
-    this.mode = 'setup'; // 'setup' | 'push' | 'leo'
+    this.mode = 'setup'; // 'setup' | 'push' | 'world' | 'leo'
     this.prevNormalMode = 'setup';
     this.t = 0.0;
     this.targetT = 0.0;
     this.playing = true;
     this.autoOrbit = true;
+    this.cinematicFollow = false;
+    this.cineLookAt = new THREE.Vector3(0, 16, 0);
+    this.cineCamPos = new THREE.Vector3(42, 58, 134);
     this.orbitAngle = 0.35;
     this.flipRoll = 0;
     this.flipTarget = 0;
@@ -113,11 +116,12 @@ class PushnotOrbit {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.target.set(0, 16, 0);
-    this.controls.minDistance = 50;
+    this.controls.minDistance = 42;
     this.controls.maxDistance = 260;
     this.controls.maxPolarAngle = Math.PI * 0.48;
     this.controls.addEventListener('start', () => {
       if (this.autoOrbit) this.setAutoOrbit(false);
+      this.cinematicFollow = false;
     });
 
     addEventListener('resize', () => {
@@ -934,42 +938,81 @@ class PushnotOrbit {
         this.storedKey.position.set(POS.server.x + padW * 0.42, 22, POS.server.z + padD * 0.42);
       }
 
-      // Mirror the completed Datacentre into the Upside-Down Law Enforcement world (Meta / X Datacentre)!
-      // Use uniform positive scale (0.68) so backface culling never turns server racks inside-out!
+      // Build the Law Enforcement Meta / X Datacentre from freshly normalized clones of each raw gltf.scene!
+      // (Avoids Three.js .clone(true) matrixWorld offset bugs that caused server_box.glb to float on the LEO side!)
       if (this.leoGroup && this.leoPos) {
         if (this.leoDcMirror) this.leoGroup.remove(this.leoDcMirror);
-        this.leoDcMirror = this.dcGroup.clone(true);
+        this.leoDcMirror = new THREE.Group();
         this.leoDcMirror.position.set(this.leoPos.bot.x, 0, this.leoPos.bot.z - 5);
-        this.leoDcMirror.rotation.y = 0;
         this.leoDcMirror.scale.setScalar(0.68);
+
+        let lx = -backTotalW / 2;
+        for (const k of backKeys) {
+          const item = loaded[k];
+          const x = lx + item.size.x / 2;
+          const wrapClone = item.makeCleanWrap();
+          wrapClone.position.set(x, floorY, backZ);
+          this.leoDcMirror.add(wrapClone);
+          lx += item.size.x + gapX;
+        }
+
+        lx = -frontTotalW / 2;
+        for (const k of frontKeys) {
+          const item = loaded[k];
+          const x = lx + item.size.x / 2;
+          const wrapClone = item.makeCleanWrap();
+          wrapClone.position.set(x, floorY, frontZ);
+          this.leoDcMirror.add(wrapClone);
+          lx += item.size.x + gapX;
+        }
+
+        const leoPad = new THREE.Mesh(
+          new THREE.BoxGeometry(padW, floorY, padD),
+          new THREE.MeshStandardMaterial({ color: 0x0b1220, metalness: 0.7, roughness: 0.3 })
+        );
+        leoPad.position.set(0, floorY / 2, (frontZ + backZ) / 2);
+        leoPad.add(new THREE.LineSegments(
+          new THREE.EdgesGeometry(leoPad.geometry),
+          new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 })
+        ));
+        this.leoDcMirror.add(leoPad);
         this.leoGroup.add(this.leoDcMirror);
       }
     };
 
     for (const s of specs) {
       this.loader.load(s.path, (gltf) => {
-        const obj = gltf.scene;
-        if (s.ry) obj.rotation.y = s.ry;
-        obj.updateMatrixWorld(true);
-        let box = new THREE.Box3().setFromObject(obj);
-        const raw = box.getSize(new THREE.Vector3());
-        const sy = s.targetH / (raw.y || 1);
-        const maxFootprint = 10.5;
-        const sxz = Math.min(sy, maxFootprint / Math.max(raw.x || 1, raw.z || 1));
-        obj.scale.set(sxz, s.uniformH ? sy : sxz, sxz);
+        const rawScene = gltf.scene;
 
-        obj.updateMatrixWorld(true);
-        box = new THREE.Box3().setFromObject(obj);
-        const c = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3());
+        // Helper that creates a freshly grounded & centered rack wrapper at y = 0 with zero parent-offset bleed!
+        const makeCleanWrap = () => {
+          const obj = rawScene.clone(true);
+          if (s.ry) obj.rotation.y = s.ry;
+          obj.updateMatrixWorld(true);
+          let box = new THREE.Box3().setFromObject(obj);
+          const raw = box.getSize(new THREE.Vector3());
+          const sy = s.targetH / (raw.y || 1);
+          const maxFootprint = 10.5;
+          const sxz = Math.min(sy, maxFootprint / Math.max(raw.x || 1, raw.z || 1));
+          obj.scale.set(sxz, s.uniformH ? sy : sxz, sxz);
 
-        // Wrap so wrap origin sits at bottom-center (x=0, y=0, z=0)
-        const wrap = new THREE.Group();
-        obj.position.set(-c.x, -box.min.y, -c.z);
-        this.harmonizeAsset(obj, { minRough: 0.30, maxRough: 0.58, maxMetal: 0.70, envIntensity: 0.9 });
-        wrap.add(obj);
+          obj.updateMatrixWorld(true);
+          box = new THREE.Box3().setFromObject(obj);
+          const c = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
 
-        loaded[s.key] = { wrap, size };
+          const wrap = new THREE.Group();
+          obj.position.set(-c.x, -box.min.y, -c.z);
+          this.harmonizeAsset(obj, { minRough: 0.30, maxRough: 0.58, maxMetal: 0.70, envIntensity: 0.9 });
+          wrap.add(obj);
+          wrap.userData.size = size;
+          return wrap;
+        };
+
+        const wrap = makeCleanWrap();
+        const size = wrap.userData.size;
+
+        loaded[s.key] = { wrap, size, makeCleanWrap };
         if (--remaining === 0) finalizeLayout();
         done();
       }, undefined, (err) => {
@@ -1673,22 +1716,30 @@ class PushnotOrbit {
 
   setAutoOrbit(on) {
     this.autoOrbit = on;
+    if (on) this.cinematicFollow = false;
     document.getElementById('btn-orbit').classList.toggle('on', on);
   }
 
   setPlaying(auto) {
     this.playing = auto;
-    if (!auto) this.targetT = this.t;
-    // In Manual Scroll mode, mouse wheel / trackpad scroll smoothly scrubs the action cycle
+    if (!auto) {
+      this.targetT = this.t;
+      this.cinematicFollow = true;
+    } else {
+      this.cinematicFollow = false;
+    }
+    // In Manual Scroll / Step-by-Step mode, mouse wheel / trackpad scroll smoothly scrubs the action cycle
+    // and the camera glides in Video-Game Cinematic Mode to focus on the active node/packet!
     this.controls.enableZoom = auto;
     const btn = document.getElementById('btn-play');
-    btn.textContent = auto ? '▶ Auto' : '🖱 Scroll';
+    btn.textContent = auto ? '▶ Auto' : '🎥 Step Cam';
     btn.classList.toggle('manual', !auto);
   }
 
   stepCycle(dir) {
-    // Step cleanly to the next or previous narrative beat with smooth gliding
+    // Step cleanly to the next or previous narrative beat with smooth cinematic camera tracking
     if (this.playing) this.setPlaying(false);
+    this.cinematicFollow = true;
     const stops = MODE_STEPS[this.mode];
     const eps = 0.015;
     if (dir > 0) {
@@ -1716,6 +1767,7 @@ class PushnotOrbit {
 
     document.getElementById('scrub').addEventListener('input', (e) => {
       if (this.playing) this.setPlaying(false);
+      this.cinematicFollow = true;
       this.targetT = parseInt(e.target.value, 10) / 1000;
     });
     document.getElementById('btn-play').addEventListener('click', () => {
@@ -1729,10 +1781,11 @@ class PushnotOrbit {
       else document.exitFullscreen();
     });
 
-    // Smooth mouse wheel / trackpad scroll scrubbing in Manual Scroll mode
+    // Smooth mouse wheel / trackpad scroll scrubbing in Manual Scroll / Step Cam mode
     this.renderer.domElement.addEventListener('wheel', (e) => {
       if (this.playing) return;
       e.preventDefault();
+      this.cinematicFollow = true;
       const delta = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 100) * 0.00055;
       this.targetT = clamp01(this.targetT + delta);
     }, { passive: false });
@@ -2068,6 +2121,69 @@ class PushnotOrbit {
     mv.className = 'pin pin-mover' + (moverCls ? ' ' + moverCls : '');
     mv.textContent = moverText;
     this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.5, 0)) : null, !!moverPos, moverParent);
+
+    // Compute exact 3D world-space focus point for Video-Game Cinematic Step-by-Step Camera!
+    let focusLocal = null;
+    let focusGroup = this.worldGroup;
+    let focusDist = 72;
+    let focusLift = 22;
+
+    if (moverPos) {
+      focusLocal = moverPos.clone();
+      focusGroup = moverParent;
+      focusDist = 66;
+      focusLift = 20;
+    } else if (!isLeo) {
+      if (showInstall || showPush) {
+        focusLocal = new THREE.Vector3(POS.phone.x, 16, POS.phone.z);
+        focusDist = 64;
+      } else if (showToken || showNoDirect) {
+        focusLocal = showToken
+          ? new THREE.Vector3(POS.phone.x * 0.55, 18, POS.phone.z)
+          : new THREE.Vector3(0, 17, POS.phone.z);
+        focusDist = 68;
+      } else if (showLedger) {
+        focusLocal = new THREE.Vector3(POS.post.x, 34, POS.post.z);
+        focusDist = 62;
+        focusLift = 14;
+      } else if (showSaved) {
+        focusLocal = new THREE.Vector3(POS.server.x, 16, POS.server.z);
+        focusDist = 66;
+      } else if (this.mode === 'world' && this.worldStimStreams?.length) {
+        focusLocal = this.worldStimStreams[0].currentPos.clone();
+        focusDist = 78;
+      }
+    } else {
+      focusGroup = this.leoGroup;
+      if (showLeoThreat || showLeoTokens || showLeoId) {
+        focusLocal = new THREE.Vector3(L.swat.x, 18, L.swat.z);
+        focusDist = 64;
+      } else if (showLeoDenied) {
+        focusLocal = new THREE.Vector3(L.proton.x, 16, L.proton.z);
+        focusDist = 64;
+      } else if (showLeoOsint) {
+        focusLocal = new THREE.Vector3(L.osint.x, L.osint.y, L.osint.z);
+        focusDist = 60;
+        focusLift = 12;
+      }
+    }
+
+    if (focusLocal) {
+      const worldFocus = focusLocal.applyMatrix4(focusGroup.matrixWorld);
+      this.cineLookAt.copy(worldFocus);
+
+      // Position the cinematic camera radially outward + slightly angled like a console action-RPG third-person camera!
+      const radial = new THREE.Vector3(worldFocus.x, 0, worldFocus.z);
+      if (radial.lengthSq() < 16) radial.set(0.35, 0, 1);
+      radial.normalize();
+      const side = new THREE.Vector3(-radial.z, 0, radial.x);
+
+      this.cineCamPos
+        .copy(worldFocus)
+        .addScaledVector(radial, focusDist * 0.86)
+        .addScaledVector(side, focusDist * 0.36);
+      this.cineCamPos.y = Math.max(24, worldFocus.y + focusLift);
+    }
   }
 
   place(id, localPos, show, parentGroup = this.worldGroup) {
@@ -2178,15 +2294,23 @@ class PushnotOrbit {
       if (Math.abs(this.targetT - this.t) < 0.0004) this.t = this.targetT;
     }
 
-    if (this.autoOrbit) {
+    if (!this.playing && this.cinematicFollow) {
+      // Video-Game Cinematic Step-by-Step Camera: smoothly dolly & pan onto the active packet / node!
+      const camLerp = Math.min(1, dt * 4.2);
+      const tgtLerp = Math.min(1, dt * 6.0);
+      this.camera.position.lerp(this.cineCamPos, camLerp);
+      this.controls.target.lerp(this.cineLookAt, tgtLerp);
+      this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
+    } else if (this.autoOrbit) {
       this.orbitAngle += dt * 0.12;
       const camR = 136;
-      this.camera.position.set(
+      const desiredPos = new THREE.Vector3(
         Math.sin(this.orbitAngle) * camR,
         56 + Math.sin(this.orbitAngle * 0.7) * 6,
         Math.cos(this.orbitAngle) * camR
       );
-      this.controls.target.set(0, 16, 0);
+      this.camera.position.lerp(desiredPos, Math.min(1, dt * 3.5));
+      this.controls.target.lerp(new THREE.Vector3(0, 16, 0), Math.min(1, dt * 4.0));
     }
 
     // Directional flow cones glide directly along the active mode's arcs

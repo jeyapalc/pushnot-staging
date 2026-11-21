@@ -72,14 +72,9 @@ body.leo-mode {
 .pin-event.red { border-color: rgba(244, 63, 94, 0.8); box-shadow: 0 0 32px rgba(244, 63, 94, 0.4); }
 .pin-mover.red { border-color: #fb7185; color: #fda4af; box-shadow: 0 0 18px rgba(244, 63, 94, 0.4); }
 
-/* Crisp top-center polarity indicator */
+/* Crisp top-center polarity indicator (hidden for clean presentation HUD) */
 .polarity-banner {
-  position: absolute; top: 18px; left: 50%; transform: translateX(-50%); z-index: 10;
-  display: flex; align-items: center; gap: 10px; padding: 7px 16px; border-radius: 999px;
-  background: var(--glass); border: 1px solid rgba(251,191,36,.45);
-  backdrop-filter: blur(16px); font-family: var(--mono); font-size: .74rem;
-  box-shadow: 0 8px 28px rgba(0,0,0,.45); transition: border-color .3s;
-  white-space: nowrap;
+  display: none !important;
 }
 .polarity-banner.push { border-color: rgba(52,211,153,.55); }
 .pol-arrow { font-size: 1rem; color: var(--amber); font-weight: 700; }
@@ -249,63 +244,52 @@ body.leo-mode {
 }
 .addr-row.match-row { color: var(--green); font-weight: 700; }
 
-/* Sleek bottom orbit dock with Polarity Switch */
+/* Sleek compact single-row bottom presentation bar */
 .orbit-dock {
-  position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%); z-index: 10;
-  width: 720px; max-width: 94vw; padding: 12px 16px; border-radius: 18px;
-  background: var(--glass); border: 1px solid var(--line);
-  backdrop-filter: blur(20px); box-shadow: 0 16px 48px rgba(0,0,0,.6);
-  display: flex; flex-direction: column; gap: 10px;
+  position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 10;
+  width: 640px; max-width: 94vw; padding: 7px 12px; border-radius: 999px;
+  background: rgba(8, 12, 22, 0.72); border: 1px solid rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(18px); box-shadow: 0 12px 32px rgba(0,0,0,.5);
+  display: flex; flex-direction: row; align-items: center; gap: 12px;
 }
 
-@media (max-width: 920px) {
-  .polarity-banner { top: 64px; }
-  .orbit-dock { bottom: 56px; }
+@media (max-width: 720px) {
+  .orbit-dock { flex-wrap: wrap; border-radius: 16px; bottom: 14px; }
 }
 
-.polarity-switch { display: flex; align-items: center; gap: 8px; }
+.polarity-switch { display: flex; align-items: center; gap: 6px; }
 .pol-btn {
-  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px;
-  padding: 9px 10px; border-radius: 11px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
+  padding: 6px 12px; border-radius: 999px; cursor: pointer;
   background: rgba(255,255,255,.04); border: 1px solid var(--line); color: var(--muted);
-  font-family: var(--sans); font-size: .81rem; font-weight: 600; transition: all .25s;
+  font-family: var(--sans); font-size: .76rem; font-weight: 700; transition: all .22s;
   white-space: nowrap;
 }
 .pol-btn:hover { color: var(--text); background: rgba(255,255,255,.08); }
 .pol-btn.setup.active {
   color: #05080f; background: var(--amber); border-color: var(--amber);
-  box-shadow: 0 0 22px rgba(251,191,36,.35);
+  box-shadow: 0 0 16px rgba(251,191,36,.32);
 }
 .pol-btn.push.active {
   color: #05080f; background: var(--green); border-color: var(--green);
-  box-shadow: 0 0 22px rgba(52,211,153,.35);
+  box-shadow: 0 0 16px rgba(52,211,153,.32);
 }
 .pol-btn.world.active {
   color: #05080f; background: var(--cyan); border-color: var(--cyan);
-  box-shadow: 0 0 22px rgba(56,189,248,.35);
+  box-shadow: 0 0 16px rgba(56,189,248,.32);
 }
-.pol-sym { font-family: var(--mono); font-size: 1rem; font-weight: 700; }
 
-.pol-flip {
-  width: 40px; height: 40px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
-  background: rgba(255,255,255,.07); border: 1px solid var(--line); color: var(--text);
-  font-size: 1.05rem; transition: transform .3s, background .2s;
-}
-.pol-flip:hover { background: rgba(255,255,255,.16); transform: rotate(180deg); }
-
-.controls { display: flex; align-items: center; gap: 10px; }
+.controls { flex: 1; display: flex; align-items: center; gap: 7px; }
 .ctl {
-  height: 32px; padding: 0 12px; border-radius: 8px; cursor: pointer;
+  height: 28px; padding: 0 10px; border-radius: 999px; cursor: pointer;
   background: rgba(255,255,255,.06); border: 1px solid var(--line); color: var(--text);
-  font-family: var(--mono); font-size: .74rem; transition: all .2s; white-space: nowrap;
+  font-family: var(--mono); font-size: .72rem; transition: all .2s; white-space: nowrap;
 }
 .ctl:hover { background: rgba(255,255,255,.14); }
-.ctl.play { min-width: 96px; background: var(--amber); border-color: var(--amber); color: #05080f; font-weight: 700; }
+.ctl.play { min-width: 36px; background: var(--amber); border-color: var(--amber); color: #05080f; font-weight: 700; }
 .ctl.play.push { background: var(--green); border-color: var(--green); }
 .ctl.play.manual { background: rgba(255,255,255,.1); border-color: var(--cyan); color: var(--cyan); }
 .ctl.orbit-toggle.on { border-color: rgba(56,189,248,.5); color: var(--cyan); background: rgba(56,189,248,.12); }
 
-.scrub-pct { font-family: var(--mono); font-size: .72rem; color: var(--muted); min-width: 34px; text-align: right; }
-
-#scrub { flex: 1; accent-color: var(--amber); cursor: pointer; height: 5px; }
+#scrub { flex: 1; accent-color: var(--amber); cursor: pointer; height: 4px; }
 #scrub.push { accent-color: var(--green); }

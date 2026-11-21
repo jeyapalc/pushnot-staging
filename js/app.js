@@ -2331,7 +2331,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 9; // single server tower + phone + skyscraper + apple + google + earth + bandit + swat + facebook + rcmp laptop
+    let left = 8; // single server tower + phone + apple + google + earth + bandit + swat + rcmp laptop
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -2545,18 +2545,7 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 6. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode
-    this.loader.load('models/leo/facebook.glb', (gltf) => {
-      this.fbLogo = gltf.scene;
-      this.fbLogo.userData.stationKey = 'facebook';
-      this.fbLogo.traverse(c => { if (c.isMesh) c.userData.stationKey = 'facebook'; });
-      this.centerAndScale(this.fbLogo, 12);
-      this.fbLogo.position.set(this.leoPos.bot.x, 22, this.leoPos.bot.z - 5);
-      this.leoGroup.add(this.fbLogo);
-      done();
-    }, undefined, done);
-
-    // 7. 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot screen mounted on the elevated plane above the Police officer's head!
+    // 6. 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot screen mounted on the elevated plane above the Police officer's head!
     this.osintWebGroup = this.createRcmpOsintLaptop(done);
     this.osintWebGroup.position.copy(this.leoPos.osint);
     this.leoGroup.add(this.osintWebGroup);
@@ -3332,11 +3321,6 @@ class PushnotOrbit {
       this.swissFlagMesh.geometry.computeVertexNormals();
     }
 
-    if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
-    // Sparkling fuse wick animation at the tip of the round bomb (`comical_bomb.glb`)
-    if (this.leoBomb && this.leoBomb.visible) {
-      this.animateWickSparks(now);
-    }
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {
       this.leoIdStack.rotation.y -= dt * 0.6;

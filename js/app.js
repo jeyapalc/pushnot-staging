@@ -751,12 +751,16 @@ class PushnotOrbit {
     }, undefined, done);
 
     // 6. Law Enforcement Models (mounted on underside leoGroup)
-    this.loader.load('models/leo/bandit.glb', (gltf) => {
-      const m = gltf.scene;
-      m.rotation.y = -Math.PI * 0.35;
-      this.harmonizeAsset(m, { minRough: 0.38, maxRough: 0.68, maxMetal: 0.40, envIntensity: 0.8, liftDark: false });
-      this.leoTops.bandit = this.ground(m, 26, this.leoPos.bandit);
-      this.leoGroup.add(m);
+    this.loader.load('models/leo/bandit.glb?v=6', (gltf) => {
+      const rawModel = gltf.scene;
+      // bandit_from_stalker.glb is Z-up (head at -Z); rotate +90° around X to stand upright on Y!
+      const upright = new THREE.Group();
+      rawModel.rotation.x = Math.PI / 2;
+      upright.add(rawModel);
+      upright.rotation.y = -Math.PI * 0.35;
+      this.harmonizeAsset(rawModel, { minRough: 0.42, maxRough: 0.72, maxMetal: 0.30, envIntensity: 0.85, liftDark: false });
+      this.leoTops.bandit = this.ground(upright, 26, this.leoPos.bandit);
+      this.leoGroup.add(upright);
       done();
     }, undefined, done);
 
@@ -780,79 +784,100 @@ class PushnotOrbit {
   }
 
   initAppStoreBag(done) {
-    // Sleek luxury retail shopping bag grounded at POS.store,
-    // with Apple logo mounted flat on front (+Z) and Google logo mounted flat on back (-Z).
+    // Sculpted tapered dark-obsidian luxury shopping bag (high contrast for silver Apple + colorful Google!)
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.store.x, 0, POS.store.z);
     this.storeGroup.rotation.y = -Math.PI * 0.25;
     this.normalGroup.add(this.storeGroup);
 
-    const bagW = 19;
-    const bagH = 22;
-    const bagD = 9.5;
+    const bagW = 19.5;
+    const bagH = 21.5;
+    const bagD = 9.6;
+    const topScaleX = 0.86;
+    const topScaleZ = 0.74;
 
-    const paperMat = new THREE.MeshStandardMaterial({
-      color: 0xe6edf6, roughness: 0.52, metalness: 0.06
+    const bagMat = new THREE.MeshStandardMaterial({
+      color: 0x111827, roughness: 0.50, metalness: 0.14, envMapIntensity: 0.9
     });
-    const creaseMat = new THREE.MeshStandardMaterial({
-      color: 0xcbd5e1, roughness: 0.65, metalness: 0.05
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b, roughness: 0.42, metalness: 0.22, envMapIntensity: 0.9
     });
     const innerMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a, roughness: 0.9, metalness: 0.0
+      color: 0x020617, roughness: 0.95, metalness: 0.0
     });
     const trimMat = new THREE.MeshStandardMaterial({
-      color: 0x94a3b8, roughness: 0.3, metalness: 0.8
+      color: 0xcbd5e1, roughness: 0.25, metalness: 0.85, envMapIntensity: 1.0
     });
     const cordMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8, emissive: 0x0369a1, emissiveIntensity: 0.35, roughness: 0.35, metalness: 0.25
+      color: 0x38bdf8, emissive: 0x0369a1, emissiveIntensity: 0.4, roughness: 0.35, metalness: 0.25
     });
 
-    // Main bag body (grounded: bottom at y = 0)
-    const body = new THREE.Mesh(new THREE.BoxGeometry(bagW, bagH, bagD), paperMat);
+    // Tapered bag body with authentic side gusset V-pinch
+    const bodyGeo = new THREE.BoxGeometry(bagW, bagH, bagD, 4, 8, 4);
+    const pos = bodyGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      let x = pos.getX(i);
+      const y = pos.getY(i);
+      let z = pos.getZ(i);
+      const tY = (y + bagH / 2) / bagH; // 0 at bottom, 1 at top
+      const sx = 1 - (1 - topScaleX) * tY;
+      const sz = 1 - (1 - topScaleZ) * tY;
+      x *= sx;
+      z *= sz;
+      // Subtle inward gusset fold along left/right side midlines (where |z| is near 0)
+      const isSide = Math.abs(Math.abs(x) - (bagW * sx) / 2) < 0.25;
+      if (isSide && Math.abs(z) < (bagD * sz) * 0.35) {
+        const fold = (1 - Math.abs(z) / ((bagD * sz) * 0.35)) * 1.15 * (0.3 + 0.7 * tY);
+        x -= Math.sign(x) * fold;
+      }
+      pos.setXYZ(i, x, y, z);
+    }
+    bodyGeo.computeVertexNormals();
+    const body = new THREE.Mesh(bodyGeo, bagMat);
     body.position.y = bagH / 2;
     this.storeGroup.add(body);
 
-    // Subtle dark interior opening at top rim
-    const cavity = new THREE.Mesh(new THREE.BoxGeometry(bagW - 1.2, 0.8, bagD - 1.2), innerMat);
-    cavity.position.y = bagH - 0.3;
+    const topW = bagW * topScaleX;
+    const topD = bagD * topScaleZ;
+
+    // Dark recessed interior opening at top
+    const cavity = new THREE.Mesh(new THREE.BoxGeometry(topW - 1.1, 0.8, topD - 1.1), innerMat);
+    cavity.position.y = bagH - 0.32;
     this.storeGroup.add(cavity);
 
-    // Folded side gusset vertical creases (left & right)
-    const creaseGeo = new THREE.BoxGeometry(0.35, bagH - 1.2, 0.35);
-    const leftCrease = new THREE.Mesh(creaseGeo, creaseMat);
-    leftCrease.position.set(-bagW / 2 - 0.05, bagH / 2, 0);
-    const rightCrease = new THREE.Mesh(creaseGeo, creaseMat);
-    rightCrease.position.set(bagW / 2 + 0.05, bagH / 2, 0);
-    this.storeGroup.add(leftCrease, rightCrease);
-
-    // Top folded lip reinforcement strip
-    const rim = new THREE.Mesh(new THREE.BoxGeometry(bagW + 0.25, 1.4, bagD + 0.25), creaseMat);
-    rim.position.y = bagH - 0.7;
+    // Sleek reinforced cuff lip around top opening
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(topW + 0.35, 1.3, topD + 0.35), rimMat);
+    rim.position.y = bagH - 0.65;
     this.storeGroup.add(rim);
 
-    // Twin curved cord handles + metallic grommet eyelets (front +Z and back -Z)
-    const handleSpan = 4.2;
-    const eyeletGeo = new THREE.TorusGeometry(0.55, 0.16, 8, 20);
+    // Twin curved cord handles + silver grommet eyelets (front +Z and back -Z)
+    const handleSpan = 3.8;
+    const eyeletGeo = new THREE.TorusGeometry(0.5, 0.15, 8, 20);
     for (const side of [1, -1]) {
-      const z = side * (bagD / 2 + 0.08);
+      const z = side * (topD / 2 + 0.14);
       for (const sx of [-1, 1]) {
         const eyelet = new THREE.Mesh(eyeletGeo, trimMat);
-        eyelet.position.set(sx * handleSpan, bagH - 2.2, z);
+        eyelet.position.set(sx * handleSpan, bagH - 2.0, z);
         this.storeGroup.add(eyelet);
       }
       const handleCurve = new THREE.CubicBezierCurve3(
-        new THREE.Vector3(-handleSpan, bagH - 2.2, z),
-        new THREE.Vector3(-handleSpan * 0.9, bagH + 7.2, z),
-        new THREE.Vector3( handleSpan * 0.9, bagH + 7.2, z),
-        new THREE.Vector3( handleSpan, bagH - 2.2, z)
+        new THREE.Vector3(-handleSpan, bagH - 2.0, z),
+        new THREE.Vector3(-handleSpan * 0.88, bagH + 6.8, z),
+        new THREE.Vector3( handleSpan * 0.88, bagH + 6.8, z),
+        new THREE.Vector3( handleSpan, bagH - 2.0, z)
       );
-      const handle = new THREE.Mesh(new THREE.TubeGeometry(handleCurve, 28, 0.38, 10, false), cordMat);
+      const handle = new THREE.Mesh(new THREE.TubeGeometry(handleCurve, 28, 0.36, 10, false), cordMat);
       this.storeGroup.add(handle);
     }
 
-    this.tops.store = bagH + 9.5;
+    this.tops.store = bagH + 9.2;
 
-    // Helper: mount a logo GLB flat & flush onto the front (+1) or back (-1) face of the bag
+    // Exact surface depth & slope angle at mid-bag height (y = 0.46 * bagH)
+    const logoY = bagH * 0.46;
+    const midDepth = bagD * (1 - (1 - topScaleZ) * 0.46);
+    const wallTilt = Math.atan2((bagD * (1 - topScaleZ)) / 2, bagH);
+
+    // Mount Apple flat on front (+Z) and Google flat on back (-Z), matching tapered wall angle!
     let logosMounted = 0;
     const mountLogoFlat = (path, sideSign, targetSize) => {
       this.loader.load(path, (gltf) => {
@@ -860,8 +885,9 @@ class PushnotOrbit {
         let box = new THREE.Box3().setFromObject(logo);
         const raw = box.getSize(new THREE.Vector3());
         const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
-        logo.scale.set(s, s, Math.min(s, 1.2 / (raw.z || 1))); // keep flat embossed relief
+        logo.scale.set(s, s, Math.min(s, 1.1 / (raw.z || 1)));
 
+        logo.updateMatrixWorld(true);
         box = new THREE.Box3().setFromObject(logo);
         const c = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
@@ -869,8 +895,9 @@ class PushnotOrbit {
         const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
         wrap.add(logo);
-        if (sideSign < 0) wrap.rotation.y = Math.PI; // face cleanly outward on back side
-        wrap.position.set(0, bagH * 0.48, sideSign * (bagD / 2 + size.z / 2 + 0.12));
+        if (sideSign < 0) wrap.rotation.y = Math.PI;
+        wrap.rotation.x = -sideSign * wallTilt; // sit 100% flush against the tapered bag face!
+        wrap.position.set(0, logoY, sideSign * (midDepth / 2 + size.z / 2 + 0.12));
         this.storeGroup.add(wrap);
 
         // Once both Apple & Google logos are mounted, clone the complete bag onto the LEO Subscriber DB node!
@@ -885,9 +912,8 @@ class PushnotOrbit {
       }, undefined, (err) => { console.warn('Store logo load failed:', path, err); done(); });
     };
 
-    // Apple flat on front (+Z), Google flat on back (-Z)
-    mountLogoFlat('models/apple_logo.glb',  1, 10.5);
-    mountLogoFlat('models/google_logo.glb', -1, 10.5);
+    mountLogoFlat('models/apple_logo.glb',  1, 10.2);
+    mountLogoFlat('models/google_logo.glb', -1, 10.2);
   }
 
   centerAndScale(obj, size) {

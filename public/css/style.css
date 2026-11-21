@@ -134,7 +134,7 @@ body.leo-mode {
 
 /* Spiral Notepad Ledger above 3D Brain */
 .ledger-pad {
-  flex-direction: column; width: 320px; padding: 12px 12px 10px; border-radius: 12px;
+  flex-direction: column; width: 344px; padding: 12px 12px 10px; border-radius: 12px;
   background: rgba(15, 21, 34, 0.95); border: 1px solid rgba(244, 114, 182, 0.6);
   box-shadow: 0 14px 36px rgba(0,0,0,.65), 0 0 26px rgba(244, 114, 182, 0.25);
   backdrop-filter: blur(16px); font-family: var(--mono);

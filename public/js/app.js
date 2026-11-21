@@ -1161,7 +1161,7 @@ class PushnotOrbit {
     this.leoPos = L;
     this.leoTops = { bandit: 26, swat: 26, osint: 62, bot: 26, proton: 26, ag: 26 };
 
-    // Elevated Holographic OSINT Plane directly above Canadian Police's head (mirrors Planet Earth's upper plane on normal side!)
+    // Elevated Holographic OSINT Plane directly above Canadian Police's head (no tractor beam cone underneath!)
     this.osintPlaneGroup = new THREE.Group();
     this.osintPlaneGroup.position.copy(L.osint);
     const planeDisc = new THREE.Mesh(
@@ -1181,13 +1181,7 @@ class PushnotOrbit {
     );
     innerRing.rotation.x = Math.PI / 2;
     innerRing.position.y = -10.8;
-    // Vertical uplink beam connecting Police on the ground up to the OSINT plane above their head
-    this.osintBeamMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8, transparent: true, opacity: 0.10, side: THREE.DoubleSide
-    });
-    const uplinkBeam = new THREE.Mesh(new THREE.ConeGeometry(11, 22, 32, 1, true), this.osintBeamMat);
-    uplinkBeam.position.y = -22;
-    this.osintPlaneGroup.add(planeDisc, planeRing, innerRing, uplinkBeam);
+    this.osintPlaneGroup.add(planeDisc, planeRing, innerRing);
     this.leoGroup.add(this.osintPlaneGroup);
 
     // Wind-Animated 3D Swiss Flag for Proton node (zero background)
@@ -2010,9 +2004,6 @@ class PushnotOrbit {
       const targetScale = osintActive ? 1.18 + Math.sin(now * 0.008) * 0.04 : 0.95;
       this.osintWebGroup.scale.setScalar(targetScale);
       this.osintWebGroup.position.y = this.leoPos.osint.y + Math.sin(now * 0.003) * 1.1;
-      if (this.osintBeamMat) {
-        this.osintBeamMat.opacity = osintActive ? 0.32 : 0.08;
-      }
     }
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {

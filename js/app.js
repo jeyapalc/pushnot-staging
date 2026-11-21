@@ -408,7 +408,7 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- 3D Cutout of Monopoly Officer Edgar Mallory (Zero background, rotated upright, facing LEFT!) ---- */
+  /* ---- 3D Diamond-Angled Monopoly "GO TO JAIL" Tile (Using original picture, facing LEFT, rotated 45° as a diamond!) ---- */
   createMonopolyRedirectSign(scale = 1) {
     const group = new THREE.Group();
 
@@ -417,114 +417,97 @@ class PushnotOrbit {
     const cvs = document.createElement('canvas');
     cvs.width = W; cvs.height = H;
     const ctx = cvs.getContext('2d');
+    ctx.fillStyle = '#f8f7f2';
+    ctx.fillRect(0, 0, W, H);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
 
     const img = new Image();
     img.onload = () => {
-      // 1. Draw the raw source image onto an offscreen canvas at 512x512
-      const srcCvs = document.createElement('canvas');
-      srcCvs.width = W; srcCvs.height = H;
-      const sctx = srcCvs.getContext('2d');
-      sctx.drawImage(img, 0, 0, W, H);
+      // Crop just inside the outer black frame of the original photo and mirror horizontally so he faces LEFT!
+      const sx = img.width * 0.085;
+      const sy = img.height * 0.085;
+      const sw = img.width * 0.83;
+      const sh = img.height * 0.83;
 
-      // 2. Erase the outer black frame, the "GO TO" text (top-right), and the "JAIL" text (bottom-left)
-      //    so ONLY the policeman figure remains!
-      sctx.fillStyle = '#ffffff';
-      // Outer border
-      sctx.fillRect(0, 0, W, 52);
-      sctx.fillRect(0, H - 52, W, 52);
-      sctx.fillRect(0, 0, 52, H);
-      sctx.fillRect(W - 52, 0, 52, H);
+      ctx.fillStyle = '#f8f7f2';
+      ctx.fillRect(0, 0, W, H);
 
-      // Erase "GO TO" (angled along top-right)
-      sctx.save();
-      sctx.translate(362, 128);
-      sctx.rotate(Math.PI / 4);
-      sctx.fillRect(-130, -56, 260, 112);
-      sctx.restore();
-
-      // Erase "JAIL" (angled along bottom-left)
-      sctx.save();
-      sctx.translate(148, 356);
-      sctx.rotate(Math.PI / 4);
-      sctx.fillRect(-115, -56, 230, 112);
-      sctx.restore();
-
-      // 3. Flood-fill from corners (56, 56) to remove ALL exterior white background around the cop,
-      //    while keeping his white face, hand, and collar 100% opaque!
-      const imgData = sctx.getImageData(0, 0, W, H);
-      const d = imgData.data;
-      const visited = new Uint8Array(W * H);
-      const isBgWhite = (idx) => {
-        const p = idx * 4;
-        const r = d[p], g = d[p + 1], b = d[p + 2];
-        // Background off-white is very bright (r,g,b > 205) and neutral (not blue sleeve/cap where b - r > 22)
-        return r > 200 && g > 200 && b > 200 && (b - r) < 22;
-      };
-
-      const queue = new Int32Array(W * H);
-      let head = 0, tail = 0;
-      const pushSeed = (x, y) => {
-        const idx = y * W + x;
-        if (!visited[idx]) { visited[idx] = 1; queue[tail++] = idx; }
-      };
-      pushSeed(56, 56);
-      pushSeed(W - 56, 56);
-      pushSeed(56, H - 56);
-      pushSeed(W - 56, H - 56);
-
-      while (head < tail) {
-        const idx = queue[head++];
-        d[idx * 4 + 3] = 0; // Make background transparent!
-        const x = idx % W;
-        const y = (idx - x) / W;
-        if (x > 0)     { const n = idx - 1; if (!visited[n] && isBgWhite(n)) { visited[n] = 1; queue[tail++] = n; } }
-        if (x < W - 1) { const n = idx + 1; if (!visited[n] && isBgWhite(n)) { visited[n] = 1; queue[tail++] = n; } }
-        if (y > 0)     { const n = idx - W; if (!visited[n] && isBgWhite(n)) { visited[n] = 1; queue[tail++] = n; } }
-        if (y < H - 1) { const n = idx + W; if (!visited[n] && isBgWhite(n)) { visited[n] = 1; queue[tail++] = n; } }
-      }
-      sctx.putImageData(imgData, 0, 0);
-
-      // 4. Render the cut-out policeman onto the texture canvas:
-      //    - Mirrored horizontally (`scale(-1, 1)`) so he faces LEFT
-      //    - Rotated +34° upright so his head, cap, and pointing arm are level instead of looking down!
-      ctx.clearRect(0, 0, W, H);
       ctx.save();
-      ctx.translate(W * 0.5, H * 0.52);
-      ctx.scale(-1, 1);           // Face LEFT
-      ctx.rotate(-0.58);          // Pitch up +33° so he faces upright & points straight horizontally!
-      ctx.scale(1.22, 1.22);      // Fill canvas cleanly
-      ctx.drawImage(srcCvs, -W * 0.44, -H * 0.47);
+      ctx.translate(W, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, W, H);
       ctx.restore();
+
+      // Re-stamp crisp un-mirrored "GO TO" and "JAIL" so the text isn't backwards when flipped!
+      ctx.fillStyle = '#f8f7f2';
+      ctx.save();
+      ctx.translate(145, 130);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillRect(-115, -55, 230, 110);
+      ctx.restore();
+      ctx.save();
+      ctx.translate(362, 355);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillRect(-105, -55, 210, 110);
+      ctx.restore();
+
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '900 54px "Space Grotesk", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.save();
+      ctx.translate(135, 125);
+      ctx.rotate(-Math.PI * 0.25);
+      ctx.fillText('GO TO', 0, 0);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(356, 352);
+      ctx.rotate(-Math.PI * 0.25);
+      ctx.fillText('JAIL', 0, 0);
+      ctx.restore();
+
+      // Crisp black border around the diamond tile
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 16;
+      ctx.strokeRect(8, 8, W - 16, H - 16);
 
       tex.needsUpdate = true;
     };
     img.src = 'models/go_to_jail.jpg';
 
-    // 3D volumetric multi-slice cutout extrusion (14 stacked alpha-tested planes across Z depth = 1.6 units)
-    // Gives the cut-out policeman true 3D thickness with zero background!
-    const sliceCount = 14;
-    const depth = 1.6;
-    const planeGeo = new THREE.PlaneGeometry(17.5, 17.5);
-    for (let i = 0; i < sliceCount; i++) {
-      const isOuter = (i === 0 || i === sliceCount - 1);
-      const mat = new THREE.MeshStandardMaterial({
-        map: tex,
-        transparent: true,
-        alphaTest: 0.25,
-        side: THREE.DoubleSide,
-        roughness: isOuter ? 0.28 : 0.65,
-        metalness: 0.08,
-        color: isOuter ? 0xffffff : 0xcbd5e1
-      });
-      const slice = new THREE.Mesh(planeGeo, mat);
-      slice.position.z = -depth / 2 + (i / (sliceCount - 1)) * depth;
-      group.add(slice);
-    }
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, roughness: 0.3, metalness: 0.5
+    });
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.75, roughness: 0.25, metalness: 0.4
+    });
+    const faceMat = new THREE.MeshPhysicalMaterial({
+      map: tex, roughness: 0.18, metalness: 0.08, clearcoat: 1.0, clearcoatRoughness: 0.1
+    });
 
-    group.add(new THREE.PointLight(0x38bdf8, 3.2, 34));
+    // Diamond-angled container (`rotation.z = -Math.PI / 4`) so the square sits on a 45° diamond angle
+    // AND the policeman inside is angled upright while pointing left!
+    const diamond = new THREE.Group();
+    diamond.rotation.z = -Math.PI / 4;
+
+    const tile = new THREE.Mesh(
+      new THREE.BoxGeometry(13.2, 13.2, 1.3),
+      [frameMat, frameMat, frameMat, frameMat, faceMat, faceMat]
+    );
+    const borderEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(13.6, 13.6, 1.45)),
+      new THREE.LineBasicMaterial({ color: 0xfbbf24 })
+    );
+    const backingRim = new THREE.Mesh(
+      new THREE.BoxGeometry(14.0, 14.0, 0.9),
+      rimMat
+    );
+    diamond.add(tile, borderEdges, backingRim);
+    group.add(diamond, new THREE.PointLight(0xf43f5e, 4, 34));
     group.scale.setScalar(scale);
     return group;
   }

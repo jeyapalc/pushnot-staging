@@ -37,64 +37,59 @@
   </div>
 
   <!-- Minimal 5-station labels (Normal Mode) -->
-  <div class="pin pin-node" id="pin-store">APPLE &amp; GOOGLE STORES</div>
+  <div class="pin pin-node" id="pin-store">APP STORES</div>
   <div class="pin pin-node" id="pin-phone">PHONE</div>
   <div class="pin pin-node" id="pin-post">POST OFFICE · APNs/FCM</div>
   <div class="pin pin-node" id="pin-server">DATACENTRE</div>
-  <div class="pin pin-node" id="pin-ufo">PLANET EARTH · WORLD TRIGGERS</div>
+  <div class="pin pin-node" id="pin-ufo">WORLD</div>
 
   <!-- Multi-stream world outbound stimulus pills flowing from Planet Earth -> Push Pipeline -> Phone -->
-  <div class="pin pin-stim cyan" id="pin-stim-0">💎 Bejeweled Notification</div>
-  <div class="pin pin-stim blue" id="pin-stim-1">📘 Facebook Message</div>
-  <div class="pin pin-stim pink" id="pin-stim-2">📸 Instagram Notification</div>
-  <div class="pin pin-stim amber" id="pin-stim-3">𝕏 X Message</div>
+  <div class="pin pin-stim cyan" id="pin-stim-0">💎 Bejeweled</div>
+  <div class="pin pin-stim blue" id="pin-stim-1"><img class="stim-avatar" src="models/zuck.jpg" alt="Zuck" />📘 Facebook</div>
+  <div class="pin pin-stim pink" id="pin-stim-2">📸 Instagram</div>
+  <div class="pin pin-stim amber" id="pin-stim-3"><img class="stim-avatar" src="models/elon.webp" alt="Elon" />𝕏 Message</div>
 
   <!-- Law Enforcement Mode station labels (visible when flipped upside down) -->
-  <div class="pin pin-node leo-pin" id="pin-leo-bandit">SUSPECT · badguy@protonmail.com</div>
-  <div class="pin pin-node leo-pin" id="pin-leo-swat">🇨🇦 CANADIAN POLICE · RCMP / VPD</div>
-  <div class="pin pin-node leo-pin" id="pin-leo-bot">META / X DATACENTRE</div>
-  <div class="pin pin-node leo-pin" id="pin-leo-osint-plane">🇨🇦 SPIDERFOOT OSINT WEB</div>
-  <div class="pin pin-node leo-pin" id="pin-leo-proton">🇨🇭 PROTON (SWITZERLAND)</div>
-  <div class="pin pin-node leo-pin" id="pin-leo-ag">APPLE &amp; GOOGLE · SUBSCRIBER DB</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-bandit">SUSPECT</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-swat">🇨🇦 POLICE</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-bot">META / X</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-osint-plane">🇨🇦 OSINT WEB</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-proton">🇨🇭 PROTON</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-ag">APPLE &amp; GOOGLE</div>
 
   <!-- Single active contextual callout -->
   <div class="pin pin-event cyan" id="pin-install">
     <span class="ev-ico">💎</span>
     <div>
       <div class="ev-title">Bejeweled Installed</div>
-      <div class="ev-sub">Downloaded from App Store</div>
     </div>
   </div>
 
   <div class="pin pin-event amber" id="pin-token">
     <span class="ev-ico">🔑</span>
     <div>
-      <div class="ev-title">Unique Key on Phone · 7f4a…e891</div>
-      <div class="ev-sub">Outbound: Phone sends Key to App Maker · Inbound: Post Office routes pushes to Phone</div>
+      <div class="ev-title">Unique Key · 7f4a…e891</div>
     </div>
   </div>
 
   <div class="pin pin-event red" id="pin-no-direct">
     <span class="ev-ico">🛡️</span>
     <div>
-      <div class="ev-title">No Direct App Maker ↔ Phone Connection</div>
-      <div class="ev-sub">OS blocks background sockets to save battery &amp; privacy · Only Post Office holds tunnel</div>
+      <div class="ev-title">No Direct Connection</div>
     </div>
   </div>
 
   <div class="pin pin-event amber" id="pin-saved">
     <span class="ev-ico">✓</span>
     <div>
-      <div class="ev-title">Address Saved</div>
-      <div class="ev-sub">Datacentre stores player → key</div>
+      <div class="ev-title">Key Saved</div>
     </div>
   </div>
 
   <div class="pin pin-event green" id="pin-push">
     <span class="ev-ico">💎</span>
     <div>
-      <div class="ev-title">Bejeweled · Don't lose your streak!</div>
-      <div class="ev-sub">Come back &amp; match gems today</div>
+      <div class="ev-title">"Don't lose your streak!"</div>
     </div>
   </div>
 
@@ -102,40 +97,37 @@
   <div class="pin pin-event red" id="pin-leo-threat">
     <span class="ev-ico">🚨</span>
     <div>
-      <div class="ev-title">Bomb Threat Email</div>
-      <div class="ev-sub">badguy@protonmail.com → Canadian Police (RCMP / VPD)</div>
+      <div class="ev-title">Bomb Threat</div>
+      <div class="ev-sub">badguy@protonmail.com</div>
     </div>
   </div>
 
   <div class="pin pin-event red" id="pin-leo-denied">
     <span class="ev-ico">🇨🇭</span>
     <div>
-      <div class="ev-title">Proton · Emergency Request Rejected</div>
-      <div class="ev-sub">Swiss MLAT required · Zero subscriber data returned</div>
+      <div class="ev-title">Proton · Denied</div>
     </div>
   </div>
 
   <div class="pin pin-event amber" id="pin-leo-osint">
     <span class="ev-ico">🕸️</span>
     <div>
-      <div class="ev-title">SpiderFoot OSINT Web · Canadian Law Pivot</div>
-      <div class="ev-sub">R. v. Spencer · s. 487.014 Cr. Code · Links badguy@protonmail.com → IG &amp; X</div>
+      <div class="ev-title">SpiderFoot OSINT</div>
+      <div class="ev-sub">Email → IG &amp; X</div>
     </div>
   </div>
 
   <div class="pin pin-event amber" id="pin-leo-tokens">
     <span class="ev-ico">🔑</span>
     <div>
-      <div class="ev-title">Exigent Push Tokens Returned</div>
-      <div class="ev-sub">s. 487.11 Cr. Code · Meta &amp; X return APNs / FCM tokens</div>
+      <div class="ev-title">Push Tokens Returned</div>
     </div>
   </div>
 
   <div class="pin pin-event green" id="pin-leo-id">
     <span class="ev-ico">🪪</span>
     <div>
-      <div class="ev-title">Canadian Subscriber Unmasked</div>
-      <div class="ev-sub">Apple / Google · BC Driver's Licence, Billing, Tel, IPs</div>
+      <div class="ev-title">Subscriber Unmasked</div>
     </div>
   </div>
 
@@ -200,6 +192,6 @@
     </div>
   </nav>
 
-  <script type="module" src="js/app.js?v=21"></script>
+  <script type="module" src="js/app.js?v=23"></script>
 </body>
 </html>

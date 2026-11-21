@@ -249,11 +249,13 @@ class PushnotOrbit {
     this.worldStimGroup = new THREE.Group();
     this.normalGroup.add(this.worldStimGroup);
 
+    const texLoader = new THREE.TextureLoader();
+
     const specs = [
-      { id: 'pin-stim-0', color: 0x38bdf8, offset: 0.00, spread: new THREE.Vector3(-7.5,  3.5, -5.5), mid1: new THREE.Vector3(-4.0,  2.5,  1.5), mid2: new THREE.Vector3( 0.0,  3.5, -3.0) },
-      { id: 'pin-stim-1', color: 0x3b82f6, offset: 0.25, spread: new THREE.Vector3( 7.5,  2.5, -4.5), mid1: new THREE.Vector3( 4.0,  1.5, -1.5), mid2: new THREE.Vector3( 0.0,  1.5,  3.0) },
-      { id: 'pin-stim-2', color: 0xec4899, offset: 0.50, spread: new THREE.Vector3(-6.5, -2.5,  6.5), mid1: new THREE.Vector3(-3.0, -1.5,  3.0), mid2: new THREE.Vector3( 0.0, -1.5, -2.0) },
-      { id: 'pin-stim-3', color: 0xfbbf24, offset: 0.75, spread: new THREE.Vector3( 6.5, -3.5,  6.5), mid1: new THREE.Vector3( 3.0, -2.5, -2.5), mid2: new THREE.Vector3( 0.0, -3.0,  2.5) }
+      { id: 'pin-stim-0', color: 0x38bdf8, offset: 0.00, img: null,               spread: new THREE.Vector3(-7.5,  3.5, -5.5), mid1: new THREE.Vector3(-4.0,  2.5,  1.5), mid2: new THREE.Vector3( 0.0,  3.5, -3.0) },
+      { id: 'pin-stim-1', color: 0x3b82f6, offset: 0.25, img: 'models/zuck.jpg',  spread: new THREE.Vector3( 7.5,  2.5, -4.5), mid1: new THREE.Vector3( 4.0,  1.5, -1.5), mid2: new THREE.Vector3( 0.0,  1.5,  3.0) },
+      { id: 'pin-stim-2', color: 0xec4899, offset: 0.50, img: null,               spread: new THREE.Vector3(-6.5, -2.5,  6.5), mid1: new THREE.Vector3(-3.0, -1.5,  3.0), mid2: new THREE.Vector3( 0.0, -1.5, -2.0) },
+      { id: 'pin-stim-3', color: 0xfbbf24, offset: 0.75, img: 'models/elon.webp', spread: new THREE.Vector3( 6.5, -3.5,  6.5), mid1: new THREE.Vector3( 3.0, -2.5, -2.5), mid2: new THREE.Vector3( 0.0, -3.0,  2.5) }
     ];
 
     this.worldStimStreams = specs.map((s) => {
@@ -269,17 +271,34 @@ class PushnotOrbit {
       const curve = new THREE.CatmullRomCurve3([pEarth, pEarth2, pServer, pArc1, pPost, pArc2, pPhone]);
       const line = this.addArc(curve, s.color, 0.52, this.worldStimGroup);
 
-      // Glowing 3D stimulus pulse orb + trail cone
+      // Glowing 3D stimulus pulse orb (or 3D portrait token for Mark Zuckerberg / Elon Musk!)
       const orb = new THREE.Group();
-      const sphere = new THREE.Mesh(
-        new THREE.SphereGeometry(1.35, 14, 14),
-        new THREE.MeshBasicMaterial({ color: s.color })
-      );
-      const halo = new THREE.Mesh(
-        new THREE.SphereGeometry(2.3, 12, 12),
-        new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.28 })
-      );
-      orb.add(sphere, halo);
+      if (s.img) {
+        const tex = texLoader.load(s.img);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        const rimMat = new THREE.MeshStandardMaterial({ color: s.color, emissive: s.color, emissiveIntensity: 0.65, metalness: 0.5, roughness: 0.25 });
+        const faceMat = new THREE.MeshBasicMaterial({ map: tex });
+        // CylinderGeometry materials: [side, top, bottom] -> rotateX(PI/2) so top/bottom face +Z/-Z!
+        const coinGeo = new THREE.CylinderGeometry(3.2, 3.2, 0.55, 32);
+        coinGeo.rotateX(Math.PI / 2);
+        coinGeo.rotateZ(Math.PI / 2);
+        const coin = new THREE.Mesh(coinGeo, [rimMat, faceMat, faceMat]);
+        const ring = new THREE.Mesh(
+          new THREE.TorusGeometry(3.35, 0.22, 12, 36),
+          new THREE.MeshBasicMaterial({ color: s.color })
+        );
+        orb.add(coin, ring);
+      } else {
+        const sphere = new THREE.Mesh(
+          new THREE.SphereGeometry(1.35, 14, 14),
+          new THREE.MeshBasicMaterial({ color: s.color })
+        );
+        const halo = new THREE.Mesh(
+          new THREE.SphereGeometry(2.3, 12, 12),
+          new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.28 })
+        );
+        orb.add(sphere, halo);
+      }
       this.worldStimGroup.add(orb);
 
       return { ...s, curve, line, orb, currentPos: pEarth.clone() };
@@ -508,8 +527,30 @@ class PushnotOrbit {
       new THREE.BoxGeometry(14.0, 14.0, 0.9),
       rimMat
     );
+    this.jailBackingMat = rimMat;
     diamond.add(tile, borderEdges, backingRim);
-    group.add(diamond, new THREE.PointLight(0xf43f5e, 4, 34));
+
+    // Subtle red & blue police strobe lights positioned just behind the diamond tile!
+    this.jailStrobeRed = new THREE.PointLight(0xff1e56, 3.5, 28);
+    this.jailStrobeRed.position.set(-4.5, 2.5, -2.2);
+    this.jailStrobeBlue = new THREE.PointLight(0x2563eb, 3.5, 28);
+    this.jailStrobeBlue.position.set(4.5, -2.5, -2.2);
+
+    const haloGeo = new THREE.PlaneGeometry(9.5, 9.5);
+    this.jailHaloRedMat = new THREE.MeshBasicMaterial({
+      color: 0xff1e56, transparent: true, opacity: 0.25, side: THREE.DoubleSide
+    });
+    this.jailHaloBlueMat = new THREE.MeshBasicMaterial({
+      color: 0x3b82f6, transparent: true, opacity: 0.25, side: THREE.DoubleSide
+    });
+    const haloRed = new THREE.Mesh(haloGeo, this.jailHaloRedMat);
+    haloRed.position.set(-3.2, 2.0, -1.0);
+    haloRed.rotation.z = Math.PI / 4;
+    const haloBlue = new THREE.Mesh(haloGeo, this.jailHaloBlueMat);
+    haloBlue.position.set(3.2, -2.0, -1.0);
+    haloBlue.rotation.z = Math.PI / 4;
+
+    group.add(diamond, haloRed, haloBlue, this.jailStrobeRed, this.jailStrobeBlue);
     group.scale.setScalar(scale);
     return group;
   }
@@ -1655,8 +1696,8 @@ class PushnotOrbit {
 
     const isLeo = this.mode === 'leo';
 
-    // Bejeweled stays visibly installed on the phone once downloaded
-    this.installedApp.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.24);
+    // Bejeweled gemstones stay visibly installed on the phone ONLY in Mode 1 (after install) & Mode 2 (Bejeweled push) — hidden during Mode 3 multi-app push stream!
+    this.installedApp.visible = !isLeo && (this.mode === 'push' || (this.mode === 'setup' && t >= 0.24));
     // Key stays persistently stored on the server once registered!
     this.storedKey.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.92);
 
@@ -1684,7 +1725,7 @@ class PushnotOrbit {
         this.appOrb.visible = true;
         this.appOrb.position.copy(p);
         moverPos = p;
-        moverText = '💎 Installing Bejeweled';
+        moverText = '💎 Install App';
         moverCls = 'cyan';
       } else if (t < 0.30) {
         showInstall = true;
@@ -1694,7 +1735,7 @@ class PushnotOrbit {
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
-        moverText = '📲 Phone Requests Push Key → Post Office';
+        moverText = '📲 Request Key';
         moverCls = 'cyan';
       } else if (t < 0.50) {
         // 3D Laser-Printing / Holographic Materialization of the brand-new Unique Device Key at Post Office!
@@ -1718,14 +1759,14 @@ class PushnotOrbit {
         this.tokenKey.scale.set(1.2 * easeScale, 1.2 * Math.max(0.08, mp), 1.2 * easeScale);
 
         moverPos = forgePos;
-        moverText = '🔑 Printing New Unique Key';
+        moverText = '🔑 Printing Unique Key';
         moverCls = 'cyan';
       } else if (t < 0.62) {
         const p = this.arcPostToPhone.getPoint(seg(t, 0.50, 0.62));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Delivering Unique Key → Phone';
+        moverText = '🔑 Unique Key → Phone';
       } else if (t < 0.76) {
         // Dedicated beat on Phone explaining what the Unique Key represents in Outbound/Inbound push & why no direct connection exists!
         this.tokenKey.visible = true;
@@ -1739,7 +1780,7 @@ class PushnotOrbit {
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Outbound: Phone Sends Key → App Maker';
+        moverText = '🔑 Save Key → Datacentre';
       } else {
         showSaved = true;
       }
@@ -1749,7 +1790,7 @@ class PushnotOrbit {
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
-        moverText = '⚡ Streak Timer Trigger';
+        moverText = '⚡ Streak Trigger';
         moverCls = 'cyan';
       } else if (t < 0.30) {
         // Beat 2 in Push Delivery: App Maker tries to reach Phone directly -> Blocked by OS Firewall! Must go via Post Office
@@ -1767,7 +1808,7 @@ class PushnotOrbit {
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ "Don\'t lose your streak!" + 🔑 Key → Post Office';
+        moverText = '✉ Push + 🔑 Key';
         moverCls = 'push';
       } else if (t < 0.70) {
         const bp = seg(t, 0.48, 0.70);
@@ -1779,7 +1820,7 @@ class PushnotOrbit {
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ Inbound Tunnel: Post Office → Phone';
+        moverText = '✉ Deliver Push';
         moverCls = 'push';
       } else {
         showPush = true;
@@ -1791,15 +1832,10 @@ class PushnotOrbit {
         const p = s.curve.getPoint(u);
         s.currentPos.copy(p);
         s.orb.position.copy(p);
+        if (s.img) s.orb.lookAt(this.camera.position);
       }
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (6 Beats):
-      // 0.00–0.16: Bandit sends bomb threat email (badguy@protonmail.com) -> Police
-      // 0.16–0.34: Police emergency demand -> Proton Switzerland -> DENIED / BOUNCED!
-      // 0.34–0.50: SpiderFoot / Meta & X LEO Portals confirm IG & X accounts
-      // 0.50–0.68: Emergency demand to Meta & X -> Push Tokens (🔑) returned to Police!
-      // 0.68–0.86: Police serves emergency demand + Tokens to Apple & Google
-      // 0.86–1.00: Apple & Google return full Subscriber Identity to Police!
       moverParent = this.leoGroup;
       if (t < 0.16) {
         const p = this.arcLeoThreat.getPoint(seg(t, 0, 0.12));
@@ -1810,7 +1846,7 @@ class PushnotOrbit {
         this.leoPacketLight.color.setHex(0xf43f5e);
         if (t < 0.12) {
           moverPos = p;
-          moverText = '✉ Threat · badguy@protonmail.com';
+          moverText = '✉ Bomb Threat';
           moverCls = 'red';
         } else {
           showLeoThreat = true;
@@ -1824,7 +1860,7 @@ class PushnotOrbit {
         this.leoPacketMat.emissive.setHex(0xbe123c);
         if (t < 0.26) {
           moverPos = p;
-          moverText = '🇨🇦 RCMP/VPD Request → Proton (CH)';
+          moverText = '🇨🇦 Police → Proton';
           moverCls = 'red';
         } else {
           this.rejectX.visible = true;
@@ -1840,7 +1876,7 @@ class PushnotOrbit {
         this.leoPacketLight.color.setHex(0xfbbf24);
         if (t < 0.42) {
           moverPos = p;
-          moverText = '🕸️ SpiderFoot Email Scan: badguy@protonmail.com';
+          moverText = '🕸️ SpiderFoot Scan';
         } else {
           showLeoOsint = true;
         }
@@ -1854,7 +1890,7 @@ class PushnotOrbit {
           this.leoPacketMat.emissive.setHex(0x0284c7);
           this.leoPacketLight.color.setHex(0x38bdf8);
           moverPos = p;
-          moverText = '🇨🇦 s. 487.11 Exigent Request → Meta & X';
+          moverText = '🇨🇦 Exigent Request → Meta / X';
           moverCls = 'cyan';
         } else {
           const p = this.arcLeoTokens.getPoint(seg(t, 0.56, 0.64));
@@ -1862,7 +1898,7 @@ class PushnotOrbit {
           this.leoKey.position.copy(p);
           if (t < 0.63) {
             moverPos = p;
-            moverText = '🔑 s. 487.11 Cr. Code · Meta & X Return Push Tokens';
+            moverText = '🔑 Push Tokens Returned';
           } else {
             showLeoTokens = true;
           }
@@ -1872,7 +1908,7 @@ class PushnotOrbit {
         this.leoKey.visible = true;
         this.leoKey.position.copy(p);
         moverPos = p;
-        moverText = '🇨🇦 Production Order (s. 487.014) + 🔑 Tokens → Apple/Google';
+        moverText = '🇨🇦 Order + 🔑 Tokens → Apple / Google';
         moverCls = 'cyan';
       } else {
         // Beat 6: 3D Photo ID + Credit Card fly from Apple/Google -> Police and fan out above Police!
@@ -1881,7 +1917,7 @@ class PushnotOrbit {
         if (t < 0.94) {
           this.leoDeliveredCards.position.copy(p);
           moverPos = p;
-          moverText = '🪪 Returning BC Driver\'s Licence + Billing Card';
+          moverText = '🪪 ID + Billing Card';
           moverCls = 'push';
         } else {
           this.leoDeliveredCards.position.set(this.leoPos.swat.x, this.leoTops.swat + 8, this.leoPos.swat.z);
@@ -2019,9 +2055,20 @@ class PushnotOrbit {
       const s = 1 + Math.sin(now * 0.015) * 0.12;
       this.rejectX.scale.setScalar(s);
     }
-    if (this.directBlockGroup && this.directBlockGroup.visible && this.firewallBarrier) {
-      const s = 1 + Math.sin(now * 0.012) * 0.08;
-      this.firewallBarrier.scale.setScalar(s);
+    if (this.directBlockGroup && this.directBlockGroup.visible) {
+      // Subtle alternating red / blue police strobe just behind the diamond tile (no scale throbbing!)
+      const pulse = Math.sin(now * 0.011);
+      const redWeight  = pulse > 0 ? 1.0 : 0.15;
+      const blueWeight = pulse > 0 ? 0.15 : 1.0;
+      if (this.jailStrobeRed)   this.jailStrobeRed.intensity = 4.2 * redWeight;
+      if (this.jailStrobeBlue)  this.jailStrobeBlue.intensity = 4.2 * blueWeight;
+      if (this.jailHaloRedMat)  this.jailHaloRedMat.opacity = 0.28 * redWeight;
+      if (this.jailHaloBlueMat) this.jailHaloBlueMat.opacity = 0.28 * blueWeight;
+      if (this.jailBackingMat) {
+        const hex = pulse > 0 ? 0xff1e56 : 0x2563eb;
+        this.jailBackingMat.color.setHex(hex);
+        this.jailBackingMat.emissive.setHex(hex);
+      }
     }
 
     if (this.playing) {

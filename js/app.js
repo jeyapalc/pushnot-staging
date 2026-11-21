@@ -1154,8 +1154,7 @@ class PushnotOrbit {
     return g;
   }
 
-  /* ---- Redesign knowledge_base.glb into a Canadian Police SpiderFoot Email OSINT Web
-          centered on badguy@protonmail.com (Canadian Criminal Code & R. v. Spencer, zero USA!) ---- */
+  /* ---- Custom Clean 3D Canadian SpiderFoot OSINT Web (No messy GLB!) ---- */
   makeSpiderFootLabelTexture(title, sub, borderHex = '#38bdf8', badge = '🇨🇦') {
     const cvs = document.createElement('canvas');
     cvs.width = 512; cvs.height = 160;
@@ -1186,129 +1185,100 @@ class PushnotOrbit {
     return tex;
   }
 
-  customizeCanadianSpiderFootWeb(kbRoot) {
-    // 1. Cycle through all 70 text-card materials inside knowledge_base.glb and replace their generic
-    //    textures with Canadian Law & SpiderFoot Email OSINT findings for badguy@protonmail.com!
-    const canadianOsintEntries = [
-      { title: 'badguy@protonmail.com', sub: 'TARGET SEED · SPIDERFOOT SCAN', color: '#f43f5e', badge: '🎯' },
-      { title: 'IG: @badguy_604',       sub: 'META RECOVERY EMAIL MATCH',     color: '#ec4899', badge: '📸' },
-      { title: 'X: @badguy_yvr',        sub: 'X / TWITTER HANDLE CORRELATED', color: '#38bdf8', badge: '𝕏' },
-      { title: 'FB: John Doe (YVR)',    sub: 'META GRAPH · VANCOUVER BC',     color: '#3b82f6', badge: '📘' },
-      { title: 'RCMP · NC3 CYBER',      sub: 'NATIONAL CYBERCRIME COORD',     color: '#ef4444', badge: '🇨🇦' },
-      { title: 'VPD · CYBERCRIME',      sub: 'VANCOUVER POLICE DEPT OSINT',   color: '#38bdf8', badge: '🇨🇦' },
-      { title: 'OPP · DIGITAL INTEL',   sub: 'ONTARIO PROVINCIAL POLICE',     color: '#38bdf8', badge: '🇨🇦' },
-      { title: 's. 487.014 Cr. Code',   sub: 'PRODUCTION ORDER · GENERAL',    color: '#fbbf24', badge: '⚖️' },
-      { title: 's. 487.016 Cr. Code',   sub: 'TRANSMISSION DATA ORDER',       color: '#fbbf24', badge: '⚖️' },
-      { title: 's. 487.0195 Cr. Code',  sub: 'PRESERVATION DEMAND (CANADA)',  color: '#fbbf24', badge: '⚖️' },
-      { title: 's. 487.11 Cr. Code',    sub: 'EXIGENT CIRCUMSTANCES · THREAT',color: '#f43f5e', badge: '🚨' },
-      { title: 'R. v. Spencer (SCC)',   sub: '2014 SCC 43 · SUBSCRIBER ID',   color: '#34d399', badge: '🇨🇦' },
-      { title: 'Charter s. 8 (Canada)', sub: 'LAWFUL AUTHORITY & PRIVACY',    color: '#34d399', badge: '🍁' },
-      { title: 'PIPEDA s. 7(3)(c.1)',   sub: 'LAWFUL AUTHORITY DISCLOSURE',   color: '#34d399', badge: '🇨🇦' },
-      { title: 'PGP KEY: 0x9F4A…E891',  sub: 'PROTON KEYSERVER FINGERPRINT',  color: '#a855f7', badge: '🔐' },
-      { title: 'HIBP BREACHPIVOT',      sub: 'USERNAME REUSE: badguy_604',    color: '#f59e0b', badge: '🕸️' },
-      { title: 'GITHUB: badguy-yvr',    sub: 'COMMIT EMAIL: badguy@proton',   color: '#38bdf8', badge: '💻' },
-      { title: 'TELUS / ROGERS ASN',    sub: 'CANADIAN ISP · BC / ONTARIO',   color: '#34d399', badge: '📡' },
-      { title: 'META LEO PORTAL (CA)',  sub: 'EXIGENT PUSH TOKEN REQUEST',    color: '#3b82f6', badge: '🔑' },
-      { title: 'X LEGAL PORTAL (CA)',   sub: 'EMERGENCY DISCLOSURE · TOKENS', color: '#38bdf8', badge: '🔑' }
-    ];
+  createCustomSpiderFootWeb() {
+    const group = new THREE.Group();
 
-    const texPool = canadianOsintEntries.map((e) =>
-      this.makeSpiderFootLabelTexture(e.title, e.sub, e.color, e.badge)
-    );
+    // 1. Sleek 3D Geometric SpiderWeb Grid (3 concentric octagon rings + 8 radial web threads)
+    const webFrame = new THREE.Group();
+    const ringMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.42 });
+    const radii = [5.5, 10.5, 15.5];
+    const segs = 8;
 
-    const spherePalette = [0xf43f5e, 0x38bdf8, 0xfbbf24, 0x34d399, 0xec4899, 0x3b82f6];
-    let texIdx = 0;
-    let nodeIdx = 0;
-
-    kbRoot.traverse((child) => {
-      if (!child.isMesh || !child.material) return;
-      const vCount = child.geometry?.attributes?.position?.count || 0;
-      const mat = child.material.clone();
-
-      if (mat.map || vCount <= 12) {
-        // 4-vertex floating label planes inside knowledge_base.glb -> Canadian SpiderFoot OSINT badges!
-        const newTex = texPool[texIdx % texPool.length];
-        texIdx++;
-        mat.map = newTex;
-        mat.color = new THREE.Color(0xffffff);
-        mat.emissive = new THREE.Color(0xffffff);
-        mat.emissiveMap = newTex;
-        mat.emissiveIntensity = 0.55;
-        mat.transparent = false;
-        mat.opacity = 1.0;
-        mat.roughness = 0.25;
-        mat.metalness = 0.1;
-        // Scale up label quads slightly so key Canadian OSINT findings read crisply in 3D
-        child.scale.multiplyScalar(1.35);
-      } else if (vCount > 200) {
-        // 674-vertex graph node spheres -> glowing cyber nodes (red/cyan/amber/green)
-        const hex = spherePalette[nodeIdx % spherePalette.length];
-        nodeIdx++;
-        mat.color = new THREE.Color(hex);
-        mat.emissive = new THREE.Color(hex);
-        mat.emissiveIntensity = 0.75;
-        mat.roughness = 0.2;
-        mat.metalness = 0.4;
-      } else {
-        // 99-vertex SpiderFoot web connector edges -> glowing cyan/red neural links
-        mat.color = new THREE.Color(0x38bdf8);
-        mat.emissive = new THREE.Color(0x0284c7);
-        mat.emissiveIntensity = 0.65;
-        mat.roughness = 0.3;
-        mat.metalness = 0.5;
+    for (const r of radii) {
+      const pts = [];
+      for (let i = 0; i <= segs; i++) {
+        const a = (i / segs) * Math.PI * 2;
+        pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r * 0.72, Math.sin(a * 2) * 1.1));
       }
-      mat.needsUpdate = true;
-      child.material = mat;
-    });
+      const geo = new THREE.BufferGeometry().setFromPoints(pts);
+      webFrame.add(new THREE.Line(geo, ringMat));
+    }
 
-    // 2. Add a prominent central 3D SpiderFoot Target Hub (`badguy@protonmail.com`) + radial Canadian Pivot Nodes
-    //    so the live audience immediately sees how the email search connects to Meta/X & Canadian law!
+    // 8 radial web spokes + glowing intersection pearls
+    const nodeGeo = new THREE.SphereGeometry(0.42, 10, 10);
+    const nodeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    for (let i = 0; i < segs; i++) {
+      const a = (i / segs) * Math.PI * 2;
+      const outerPt = new THREE.Vector3(Math.cos(a) * 15.5, Math.sin(a) * 15.5 * 0.72, Math.sin(a * 2) * 1.1);
+      const spokeGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), outerPt]);
+      webFrame.add(new THREE.Line(spokeGeo, ringMat));
+
+      for (const r of radii) {
+        const dot = new THREE.Mesh(nodeGeo, nodeMat);
+        dot.position.set(Math.cos(a) * r, Math.sin(a) * r * 0.72, Math.sin(a * 2) * 1.1);
+        webFrame.add(dot);
+      }
+    }
+    group.add(webFrame);
+    this.osintWebCloud = webFrame;
+
+    // 2. Central Target Seed Hub (`badguy@protonmail.com`) + 6 Crisp Radial Canadian OSINT Pivot Cards
     const hub = new THREE.Group();
     const coreTex = this.makeSpiderFootLabelTexture(
       'badguy@protonmail.com',
-      'SPIDERFOOT SEED · RCMP / VPD OSINT',
+      'SPIDERFOOT SEED · RCMP / VPD',
       '#f43f5e',
       '🎯'
     );
     const coreMat = new THREE.MeshBasicMaterial({ map: coreTex });
-    const coreEdge = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.8 });
+    const coreEdge = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.85 });
     const coreBox = new THREE.Mesh(
-      new THREE.BoxGeometry(11.5, 3.6, 0.5),
+      new THREE.BoxGeometry(10.8, 3.3, 0.55),
       [coreEdge, coreEdge, coreEdge, coreEdge, coreMat, coreMat]
     );
     hub.add(coreBox);
 
     const pivots = [
-      { pos: [-9.5,  5.5,  3.5], title: 'IG: @badguy_604',      sub: 'RECOVERY EMAIL MATCH',    color: '#ec4899', hex: 0xec4899, badge: '📸' },
-      { pos: [ 9.5,  5.5,  3.5], title: 'X: @badguy_yvr',       sub: 'USERNAME PIVOT · YVR',    color: '#38bdf8', hex: 0x38bdf8, badge: '𝕏' },
-      { pos: [-9.5, -5.2, -3.0], title: 's. 487.014 / 487.11',  sub: 'CRIMINAL CODE (CANADA)',  color: '#fbbf24', hex: 0xfbbf24, badge: '🇨🇦' },
-      { pos: [ 9.5, -5.2, -3.0], title: 'R. v. Spencer (SCC)',  sub: 'CHARTER s. 8 · PIPEDA',   color: '#34d399', hex: 0x34d399, badge: '⚖️' }
+      { pos: [-11.5,  6.2,  1.8], title: 'IG: @badguy_604',     sub: 'META RECOVERY MATCH',   color: '#ec4899', hex: 0xec4899, badge: '📸' },
+      { pos: [ 11.5,  6.2,  1.8], title: 'X: @badguy_yvr',      sub: 'HANDLE PIVOT · YVR',    color: '#38bdf8', hex: 0x38bdf8, badge: '𝕏' },
+      { pos: [-13.0,  0.0, -1.2], title: 'FB: John Doe (BC)',   sub: 'VANCOUVER SOCIAL GRAPH',color: '#3b82f6', hex: 0x3b82f6, badge: '📘' },
+      { pos: [ 13.0,  0.0, -1.2], title: 'HIBP / USERNAME',     sub: 'REUSE: badguy_604',     color: '#a855f7', hex: 0xa855f7, badge: '🕸️' },
+      { pos: [-11.0, -6.2,  1.5], title: 's. 487.014 / 487.11', sub: 'CRIMINAL CODE (CANADA)',color: '#fbbf24', hex: 0xfbbf24, badge: '🇨🇦' },
+      { pos: [ 11.0, -6.2,  1.5], title: 'R. v. Spencer (SCC)', sub: 'CHARTER s. 8 · PIPEDA', color: '#34d399', hex: 0x34d399, badge: '⚖️' }
     ];
 
-    for (const p of pivots) {
+    this.osintPulses = [];
+    for (let i = 0; i < pivots.length; i++) {
+      const p = pivots[i];
       const pTex = this.makeSpiderFootLabelTexture(p.title, p.sub, p.color, p.badge);
       const pFace = new THREE.MeshBasicMaterial({ map: pTex });
-      const pRim  = new THREE.MeshStandardMaterial({ color: p.hex, emissive: p.hex, emissiveIntensity: 0.6 });
+      const pRim  = new THREE.MeshStandardMaterial({ color: p.hex, emissive: p.hex, emissiveIntensity: 0.65 });
       const card = new THREE.Mesh(
-        new THREE.BoxGeometry(8.6, 2.7, 0.35),
+        new THREE.BoxGeometry(8.4, 2.6, 0.4),
         [pRim, pRim, pRim, pRim, pFace, pFace]
       );
       card.position.set(...p.pos);
       hub.add(card);
 
-      // Glowing SpiderFoot correlation spoke from center seed (`badguy@protonmail.com`) to each pivot card
+      // Glowing correlation spoke from center seed to each pivot card + animated data pulse bead
+      const targetVec = new THREE.Vector3(...p.pos);
       const spokeGeo = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(...p.pos)
+        targetVec
       ]);
-      const spoke = new THREE.Line(
-        spokeGeo,
-        new THREE.LineBasicMaterial({ color: p.hex })
+      hub.add(new THREE.Line(spokeGeo, new THREE.LineBasicMaterial({ color: p.hex })));
+
+      const pulseOrb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.55, 12, 12),
+        new THREE.MeshBasicMaterial({ color: p.hex })
       );
-      hub.add(spoke);
+      hub.add(pulseOrb);
+      this.osintPulses.push({ mesh: pulseOrb, target: targetVec, offset: i / pivots.length });
     }
 
-    return hub;
+    group.add(hub, new THREE.PointLight(0x38bdf8, 3.5, 42));
+    this.osintWebHub = hub;
+    return group;
   }
 
   initLeoStage() {
@@ -1423,7 +1393,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 17; // 8 datacentre + phone + postbox + apple + google + earth + bandit + swat + facebook + knowledge_base
+    let left = 16; // 8 datacentre + phone + postbox + apple + google + earth + bandit + swat + facebook
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -1493,22 +1463,11 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 8. Canadian SpiderFoot Email OSINT Knowledge Web mounted on its own elevated plane directly above the Police officer's head!
-    this.loader.load('models/leo/knowledge_base.glb?v=18', (gltf) => {
-      this.osintWebGroup = new THREE.Group();
-      this.osintWebGroup.position.copy(this.leoPos.osint);
-
-      const kb = gltf.scene;
-      this.centerAndScale(kb, 25);
-      const hub = this.customizeCanadianSpiderFootWeb(kb);
-      this.osintWebCloud = kb;
-      this.osintWebHub = hub;
-
-      this.osintWebGroup.add(kb, hub, new THREE.PointLight(0x38bdf8, 3.5, 42));
-      this.leoGroup.add(this.osintWebGroup);
-      this.leoTops.osint = this.leoPos.osint.y + 13;
-      done();
-    }, undefined, done);
+    // 8. Custom 3D Canadian SpiderFoot Email OSINT Web mounted on its own elevated plane directly above the Police officer's head (no messy GLB!)
+    this.osintWebGroup = this.createCustomSpiderFootWeb();
+    this.osintWebGroup.position.copy(this.leoPos.osint);
+    this.leoGroup.add(this.osintWebGroup);
+    this.leoTops.osint = this.leoPos.osint.y + 11;
   }
 
   initAppStoreBag(done) {
@@ -2164,14 +2123,21 @@ class PushnotOrbit {
     if (this.osintWebGroup && this.leoGroup.visible) {
       const osintActive = this.mode === 'leo' && this.t >= 0.34 && this.t < 0.60;
       if (this.osintWebCloud) {
-        this.osintWebCloud.rotation.y += dt * (osintActive ? 0.55 : 0.22);
+        this.osintWebCloud.rotation.z += dt * (osintActive ? 0.45 : 0.16);
       }
       if (this.osintWebHub) {
-        this.osintWebHub.rotation.y = Math.sin(now * 0.0022) * 0.28;
+        this.osintWebHub.rotation.y = Math.sin(now * 0.0022) * 0.22;
       }
-      const targetScale = osintActive ? 1.18 + Math.sin(now * 0.008) * 0.04 : 0.95;
+      if (this.osintPulses) {
+        const pSpeed = (now * 0.0009) % 1;
+        for (const p of this.osintPulses) {
+          const u = (p.offset + pSpeed) % 1;
+          p.mesh.position.copy(p.target).multiplyScalar(u);
+        }
+      }
+      const targetScale = osintActive ? 1.12 + Math.sin(now * 0.008) * 0.03 : 0.95;
       this.osintWebGroup.scale.setScalar(targetScale);
-      this.osintWebGroup.position.y = this.leoPos.osint.y + Math.sin(now * 0.003) * 1.1;
+      this.osintWebGroup.position.y = this.leoPos.osint.y + Math.sin(now * 0.003) * 0.9;
     }
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {

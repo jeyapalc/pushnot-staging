@@ -172,15 +172,69 @@ class PushnotOrbit {
     return line;
   }
 
-  initMovers() {
-    // App install cube (cyan)
-    this.appOrb = new THREE.Group();
-    this.appOrb.add(new THREE.Mesh(
-      new THREE.BoxGeometry(2.8, 2.8, 2.8),
-      new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.9, metalness: 0.5, roughness: 0.2 })
+  createBejeweledCluster(scale = 1) {
+    // 5 magic neon-glow faceted gemstones matching the artwork:
+    // Ruby Red, Amber Gold, Emerald Green, Sapphire Blue, Amethyst Purple
+    const group = new THREE.Group();
+    const specs = [
+      { color: 0xff2a55, emissive: 0xd90429, geo: new THREE.CylinderGeometry(0.9, 1.1, 3.0, 5), pos: [-2.8,  0.4,  0.6], rot: [0.2, 0.4,  0.15] },
+      { color: 0xffaa00, emissive: 0xe85d04, geo: new THREE.ConeGeometry(1.4, 2.6, 4),           pos: [-1.4, -0.7, -1.1], rot: [0.1, 0.8, -0.25] },
+      { color: 0x22ff88, emissive: 0x059669, geo: new THREE.OctahedronGeometry(1.8, 0),          pos: [ 0.0,  0.9,  0.0], rot: [0.1, 0.2,  0.0]  },
+      { color: 0x2299ff, emissive: 0x1d4ed8, geo: new THREE.CylinderGeometry(1.3, 0.8, 2.7, 4), pos: [ 1.6, -0.5,  1.0], rot: [-0.2, 0.5, -0.15] },
+      { color: 0xc026ff, emissive: 0x7e22ce, geo: new THREE.DodecahedronGeometry(1.4, 0),        pos: [ 2.7,  0.5, -0.7], rot: [0.3, -0.4,  0.2]  }
+    ];
+
+    for (const s of specs) {
+      const mat = new THREE.MeshPhysicalMaterial({
+        color: s.color,
+        emissive: s.emissive,
+        emissiveIntensity: 0.75,
+        roughness: 0.12,
+        metalness: 0.15,
+        clearcoat: 1.0,
+        clearcoatRoughness: 0.08,
+        flatShading: true
+      });
+      const mesh = new THREE.Mesh(s.geo, mat);
+      mesh.position.set(...s.pos);
+      mesh.rotation.set(...s.rot);
+      // Crisp neon facet rim highlight
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(s.geo),
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 })
+      );
+      mesh.add(edges);
+      group.add(mesh);
+    }
+
+    // Magic neon sparkle motes around the gemstones
+    const motePts = [];
+    for (let i = 0; i < 28; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 2.2 + Math.random() * 2.4;
+      motePts.push(Math.cos(a) * r, (Math.random() - 0.5) * 4.5, Math.sin(a) * r);
+    }
+    const moteGeo = new THREE.BufferGeometry();
+    moteGeo.setAttribute('position', new THREE.Float32BufferAttribute(motePts, 3));
+    group.add(new THREE.Points(
+      moteGeo,
+      new THREE.PointsMaterial({ color: 0xffffff, size: 0.55, transparent: true, opacity: 0.85 })
     ));
-    this.appOrb.add(new THREE.PointLight(0x38bdf8, 3, 28));
+
+    group.add(new THREE.PointLight(0x22ff88, 3, 28));
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  initMovers() {
+    // Bejeweled App (5 magic neon gemstones travelling App Store -> Phone)
+    this.appOrb = this.createBejeweledCluster(1.25);
     this.scene.add(this.appOrb);
+
+    // Installed Bejeweled Gems hovering above the Phone once installed
+    this.installedApp = this.createBejeweledCluster(1.0);
+    this.installedApp.position.set(POS.phone.x, 31, POS.phone.z);
+    this.scene.add(this.installedApp);
 
     // Token octahedron (amber)
     this.tokenOrb = new THREE.Group();
@@ -348,6 +402,7 @@ class PushnotOrbit {
     this.appOrb.visible = false;
     this.tokenOrb.visible = false;
     this.pushOrb.visible = false;
+    this.installedApp.visible = this.mode === 'push' || t >= 0.28;
 
     let moverPos = null;
     let moverText = '';
@@ -359,18 +414,12 @@ class PushnotOrbit {
     let showPush = false;
 
     if (this.mode === 'setup') {
-      // 0.00–0.28: App Store -> Phone (Install MyApp)
-      // 0.28–0.38: Installed callout
-      // 0.38–0.62: Post Office -> Phone (Mint Device Token)
-      // 0.62–0.70: Token callout
-      // 0.70–0.92: Phone -> App Server (Register Token)
-      // 0.92–1.00: Saved callout
       if (t < 0.28) {
         const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.28));
         this.appOrb.visible = true;
         this.appOrb.position.copy(p);
         moverPos = p;
-        moverText = '⬇ Installing MyApp';
+        moverText = '💎 Installing Bejeweled';
         moverCls = 'cyan';
       } else if (t < 0.38) {
         showInstall = true;
@@ -392,16 +441,12 @@ class PushnotOrbit {
         showSaved = true;
       }
     } else {
-      // PUSH DELIVERY MODE (reversed polarity!)
-      // 0.00–0.42: App Server -> Post Office (Send Payload + Token)
-      // 0.42–0.84: Post Office -> Phone (Deliver Push Notification)
-      // 0.84–1.00: Phone displays Order Shipped banner
       if (t < 0.42) {
         const p = this.arcServerToPost.getPoint(seg(t, 0, 0.42));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ Payload + Token → Post Office';
+        moverText = '✉ Bejeweled Push → Post Office';
         moverCls = 'push';
       } else if (t < 0.84) {
         const p = this.arcPostToPhone.getPoint(seg(t, 0.42, 0.84));
@@ -421,8 +466,8 @@ class PushnotOrbit {
     this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8),  true);
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), true);
 
-    // Contextual callouts (at most 1 visible at any instant)
-    const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 4,  POS.phone.z);
+    // Contextual callouts (positioned cleanly above the floating Bejeweled gems)
+    const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 11, POS.phone.z);
     const serverTop = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
     this.place('pin-install', phoneTop,  showInstall);
     this.place('pin-token',   phoneTop,  showToken);
@@ -487,8 +532,11 @@ class PushnotOrbit {
       this.ufoGroup.position.y = 22 + Math.sin(now * 0.0025) * 1.6;
     }
 
-    this.appOrb.rotation.y += dt * 2.0;
-    this.appOrb.rotation.x += dt * 1.2;
+    this.appOrb.rotation.y += dt * 1.4;
+    if (this.installedApp && this.installedApp.visible) {
+      this.installedApp.rotation.y += dt * 0.9;
+      this.installedApp.position.y = this.tops.phone + 5 + Math.sin(now * 0.003) * 0.9;
+    }
     this.tokenOrb.rotation.y += dt * 2.5;
     this.pushOrb.rotation.y = Math.sin(now * 0.003) * 0.35;
     this.stars.rotation.y += dt * 0.015;

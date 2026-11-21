@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 /* =====================================================================
    PUSHNOT // 3D Push Notification Orbit
@@ -99,8 +100,13 @@ class PushnotOrbit {
     this.renderer.setSize(innerWidth, innerHeight);
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.45;
+    this.renderer.toneMappingExposure = 1.18;
     this.container.appendChild(this.renderer.domElement);
+
+    // Unified Studio IBL Environment Map for cohesive metallic & satin reflections
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
 
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
@@ -121,10 +127,36 @@ class PushnotOrbit {
   }
 
   initLights() {
-    this.scene.add(new THREE.AmbientLight(0xeef6ff, 1.5));
-    const key = new THREE.DirectionalLight(0xffffff, 2.0); key.position.set(60, 130, 80); this.scene.add(key);
-    const fill = new THREE.DirectionalLight(0x38bdf8, 1.4); fill.position.set(-80, 90, -50); this.scene.add(fill);
-    const warm = new THREE.DirectionalLight(0xfbbf24, 1.1); warm.position.set(0, 50, -110); this.scene.add(warm);
+    // Harmonized 3-point studio lighting rig (balanced fill, key, cyan rim, warm back-fill)
+    this.scene.add(new THREE.HemisphereLight(0xdbeafe, 0x1e293b, 0.95));
+    const key = new THREE.DirectionalLight(0xfff7ed, 1.55); key.position.set(65, 130, 85); this.scene.add(key);
+    const rim = new THREE.DirectionalLight(0x38bdf8, 1.05); rim.position.set(-85, 85, -55); this.scene.add(rim);
+    const back = new THREE.DirectionalLight(0xfbbf24, 0.65); back.position.set(0, 55, -110); this.scene.add(back);
+  }
+
+  /* ---- Studio Light & Shine Harmonization Pass (applied to all 3D hardware/characters,
+          explicitly skipping icons like Apple/Google/Meta logos and the Swiss Flag) ---- */
+  harmonizeAsset(obj, { minRough = 0.28, maxRough = 0.62, maxMetal = 0.72, envIntensity = 0.85, liftDark = true } = {}) {
+    obj.traverse((child) => {
+      if (!child.isMesh || !child.material) return;
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      for (const m of mats) {
+        if (!m.isMeshStandardMaterial && !m.isMeshPhysicalMaterial) continue;
+        if (typeof m.roughness === 'number') {
+          m.roughness = Math.max(minRough, Math.min(maxRough, m.roughness));
+        }
+        if (typeof m.metalness === 'number') {
+          m.metalness = Math.min(maxMetal, m.metalness);
+        }
+        m.envMapIntensity = envIntensity;
+        if (liftDark && m.color && !m.map) {
+          const hsl = { h: 0, s: 0, l: 0 };
+          m.color.getHSL(hsl);
+          if (hsl.l < 0.1) m.color.setHSL(hsl.h, hsl.s, 0.12);
+        }
+        m.needsUpdate = true;
+      }
+    });
   }
 
   initOrbitRing() {
@@ -521,6 +553,7 @@ class PushnotOrbit {
         // Wrap so wrap origin sits at bottom-center (x=0, y=0, z=0)
         const wrap = new THREE.Group();
         obj.position.set(-c.x, -box.min.y, -c.z);
+        this.harmonizeAsset(obj, { minRough: 0.30, maxRough: 0.58, maxMetal: 0.70, envIntensity: 0.9 });
         wrap.add(obj);
 
         loaded[s.key] = { wrap, size };
@@ -668,7 +701,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 17; // 8 datacentre + phone + postbox + apple + google + ufo + bandit + swat + osint_bot + facebook
+    let left = 16; // 8 datacentre + phone + postbox + apple + google + ufo + bandit + swat + facebook
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -678,6 +711,7 @@ class PushnotOrbit {
     this.loader.load('models/generic_smartphone_game-ready.glb', (gltf) => {
       const phone = gltf.scene;
       phone.rotation.y = -Math.PI * 0.25;
+      this.harmonizeAsset(phone, { minRough: 0.22, maxRough: 0.55, maxMetal: 0.72, envIntensity: 0.95 });
       this.tops.phone = this.ground(phone, 28, POS.phone);
       this.normalGroup.add(phone);
       done();
@@ -687,6 +721,7 @@ class PushnotOrbit {
     this.loader.load('models/postbox.glb', (gltf) => {
       const post = gltf.scene;
       post.rotation.y = Math.PI * 0.25;
+      this.harmonizeAsset(post, { minRough: 0.32, maxRough: 0.60, maxMetal: 0.55, envIntensity: 0.85, liftDark: false });
       this.tops.post = this.ground(post, 32, POS.post);
       this.normalGroup.add(post);
       done();
@@ -699,6 +734,7 @@ class PushnotOrbit {
     this.loader.load('models/ufo.glb', (gltf) => {
       this.ufoGroup = new THREE.Group();
       const ufo = gltf.scene;
+      this.harmonizeAsset(ufo, { minRough: 0.26, maxRough: 0.55, maxMetal: 0.75, envIntensity: 0.95 });
       this.centerAndScale(ufo, 28);
       this.ufoGroup.add(ufo);
 
@@ -718,6 +754,7 @@ class PushnotOrbit {
     this.loader.load('models/leo/bandit.glb', (gltf) => {
       const m = gltf.scene;
       m.rotation.y = -Math.PI * 0.35;
+      this.harmonizeAsset(m, { minRough: 0.38, maxRough: 0.68, maxMetal: 0.40, envIntensity: 0.8, liftDark: false });
       this.leoTops.bandit = this.ground(m, 26, this.leoPos.bandit);
       this.leoGroup.add(m);
       done();
@@ -726,19 +763,13 @@ class PushnotOrbit {
     this.loader.load('models/leo/swat.glb', (gltf) => {
       const m = gltf.scene;
       m.rotation.y = Math.PI * 0.35;
+      this.harmonizeAsset(m, { minRough: 0.36, maxRough: 0.66, maxMetal: 0.45, envIntensity: 0.85, liftDark: false });
       this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);
       this.leoGroup.add(m);
       done();
     }, undefined, done);
 
-    this.loader.load('models/leo/osint_bot.glb', (gltf) => {
-      this.osintBot = gltf.scene;
-      this.leoTops.bot = this.ground(this.osintBot, 16, new THREE.Vector3(this.leoPos.bot.x, 0, this.leoPos.bot.z + 11));
-      this.leoGroup.add(this.osintBot);
-      done();
-    }, undefined, done);
-
-    // 7. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode
+    // 7. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode (icon excluded from shine pass)
     this.loader.load('models/leo/facebook.glb', (gltf) => {
       this.fbLogo = gltf.scene;
       this.centerAndScale(this.fbLogo, 12);
@@ -890,15 +921,6 @@ class PushnotOrbit {
     const isPush = mode === 'push';
     const isLeo  = mode === 'leo';
     this.flipTarget = isLeo ? Math.PI : 0;
-
-    // Lazy-load Hacker 13 transparent Sketchfab embed when entering Law Enforcement mode
-    if (isLeo) {
-      const ifr = document.getElementById('hacker-iframe');
-      if (ifr && !ifr.dataset.loaded) {
-        ifr.src = 'https://sketchfab.com/models/6c14849eea654ab79b0483ebdf59de8f/embed?autostart=1&transparent=1&ui_infos=0&ui_controls=0&ui_watermark=0&ui_stop=0&ui_hint=0';
-        ifr.dataset.loaded = '1';
-      }
-    }
 
     const color = isLeo ? 0xf43f5e : (isPush ? 0x34d399 : 0xfbbf24);
     this.ringMat.color.setHex(color);
@@ -1219,8 +1241,7 @@ class PushnotOrbit {
     this.place('pin-push',    phoneTop,  showNorm && showPush);
     this.place('pin-ledger',  new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
 
-    // Law Enforcement contextual callouts + Hacker 13 embed at Suspect station
-    this.place('pin-hacker-embed', new THREE.Vector3(L.bandit.x, this.leoTops.bandit + 4, L.bandit.z), showLeoPins, this.leoGroup);
+    // Law Enforcement contextual callouts
     this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
     this.place('pin-leo-denied', new THREE.Vector3(L.proton.x, this.leoTops.proton + 6, L.proton.z), showLeoPins && showLeoDenied, this.leoGroup);
     this.place('pin-leo-osint',  new THREE.Vector3(L.bot.x,    this.leoTops.bot + 5,    L.bot.z),    showLeoPins && showLeoOsint,  this.leoGroup);

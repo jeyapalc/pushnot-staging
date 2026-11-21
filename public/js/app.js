@@ -199,6 +199,10 @@ class PushnotOrbit {
       this.addArc(this.arcPostToPhone,  0x34d399, 0.45, this.normalGroup)
     ];
 
+    // 4 Multi-Stream World Outbound Stimulus Lines from Planet Earth -> Datacentre -> Post Office -> Phone
+    // (Bejeweled Notification, Facebook Message, Instagram Notification, X Message)
+    this.initWorldStimStreams();
+
     // Directional flow cones gliding directly along the active mode's arcs (100% accurate polarity!)
     this.flowCones = [];
     this.beadMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
@@ -235,6 +239,48 @@ class PushnotOrbit {
     line.computeLineDistances();
     parent.add(line);
     return line;
+  }
+
+  /* ---- 4 Animated World Outbound Stimulus Lines from Planet Earth -> Push Pipeline -> Phone ---- */
+  initWorldStimStreams() {
+    this.worldStimGroup = new THREE.Group();
+    this.normalGroup.add(this.worldStimGroup);
+
+    const specs = [
+      { id: 'pin-stim-0', color: 0x38bdf8, offset: 0.00, spread: new THREE.Vector3(-7.5,  3.5, -5.5), mid1: new THREE.Vector3(-4.0,  2.5,  1.5), mid2: new THREE.Vector3( 0.0,  3.5, -3.0) },
+      { id: 'pin-stim-1', color: 0x3b82f6, offset: 0.25, spread: new THREE.Vector3( 7.5,  2.5, -4.5), mid1: new THREE.Vector3( 4.0,  1.5, -1.5), mid2: new THREE.Vector3( 0.0,  1.5,  3.0) },
+      { id: 'pin-stim-2', color: 0xec4899, offset: 0.50, spread: new THREE.Vector3(-6.5, -2.5,  6.5), mid1: new THREE.Vector3(-3.0, -1.5,  3.0), mid2: new THREE.Vector3( 0.0, -1.5, -2.0) },
+      { id: 'pin-stim-3', color: 0xfbbf24, offset: 0.75, spread: new THREE.Vector3( 6.5, -3.5,  6.5), mid1: new THREE.Vector3( 3.0, -2.5, -2.5), mid2: new THREE.Vector3( 0.0, -3.0,  2.5) }
+    ];
+
+    this.worldStimStreams = specs.map((s) => {
+      // Smooth continuous Catmull-Rom 3D path from Planet Earth -> Datacentre -> Post Office -> Phone!
+      const pEarth  = POS.ufo.clone().add(s.spread);
+      const pEarth2 = POS.ufo.clone().setY(35).add(s.spread.clone().multiplyScalar(1.25));
+      const pServer = POS.server.clone().setY(19).add(s.mid1);
+      const pArc1   = new THREE.Vector3(-R - 10, 28, 0).add(s.mid1);
+      const pPost   = POS.post.clone().setY(19).add(s.mid2);
+      const pArc2   = new THREE.Vector3(0, 32, 0).add(s.mid2);
+      const pPhone  = POS.phone.clone().setY(17).add(s.mid2.clone().multiplyScalar(0.4));
+
+      const curve = new THREE.CatmullRomCurve3([pEarth, pEarth2, pServer, pArc1, pPost, pArc2, pPhone]);
+      const line = this.addArc(curve, s.color, 0.52, this.worldStimGroup);
+
+      // Glowing 3D stimulus pulse orb + trail cone
+      const orb = new THREE.Group();
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.35, 14, 14),
+        new THREE.MeshBasicMaterial({ color: s.color })
+      );
+      const halo = new THREE.Mesh(
+        new THREE.SphereGeometry(2.3, 12, 12),
+        new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.28 })
+      );
+      orb.add(sphere, halo);
+      this.worldStimGroup.add(orb);
+
+      return { ...s, curve, line, orb, currentPos: pEarth.clone() };
+    });
   }
 
   /* ---- 5 magic neon-glow faceted gemstones representing Bejeweled ---- */
@@ -1069,16 +1115,16 @@ class PushnotOrbit {
     // 4. App Store Shopping Bag with Apple flat on front (+Z) and Google flat on back (-Z)
     this.initAppStoreBag(done);
 
-    // 5. UFO — External Event Trigger hovering above the App Server!
-    this.loader.load('models/ufo.glb', (gltf) => {
+    // 5. Planet Earth — Global World Stimulus Source hovering above the Datacentre!
+    this.loader.load('models/earth.glb?v=15', (gltf) => {
       this.ufoGroup = new THREE.Group();
-      const ufo = gltf.scene;
-      this.harmonizeAsset(ufo, { minRough: 0.26, maxRough: 0.55, maxMetal: 0.75, envIntensity: 0.95 });
-      this.centerAndScale(ufo, 28);
-      this.ufoGroup.add(ufo);
+      const earth = gltf.scene;
+      this.harmonizeAsset(earth, { minRough: 0.34, maxRough: 0.72, maxMetal: 0.25, envIntensity: 0.9, liftDark: false });
+      this.centerAndScale(earth, 26);
+      this.ufoGroup.add(earth);
 
       this.ufoBeamMat = new THREE.MeshBasicMaterial({
-        color: 0x34d399, transparent: true, opacity: 0.08, side: THREE.DoubleSide
+        color: 0x38bdf8, transparent: true, opacity: 0.08, side: THREE.DoubleSide
       });
       const beam = new THREE.Mesh(new THREE.ConeGeometry(12, 24, 32, 1, true), this.ufoBeamMat);
       beam.position.y = -13;
@@ -1310,7 +1356,7 @@ class PushnotOrbit {
     document.getElementById('pol-route').textContent = isLeo
       ? 'Threat → Proton (Denied) → OSINT Pivot → Meta/X Tokens → Apple/Google ID'
       : (isPush
-        ? 'UFO Event → Datacentre → Post Office → Phone'
+        ? 'Planet Earth Stims → Datacentre → Post Office → Phone'
         : 'Apple/Google → Phone → Post Office → Datacentre');
   }
 
@@ -1627,7 +1673,18 @@ class PushnotOrbit {
     this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2, POS.post.z), showNorm);
     this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8), showNorm);
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), showNorm);
-    this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 10, POS.ufo.z), showNorm);
+    this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 15, POS.ufo.z), showNorm);
+
+    // 4 Multi-Stream World Outbound Stimulus Pills (Bejeweled, Facebook, Instagram, X)
+    // Flowing from Planet Earth -> Push Pipeline -> Phone!
+    const showStims = showNorm;
+    if (this.worldStimGroup) this.worldStimGroup.visible = showNorm;
+    if (this.worldStimStreams) {
+      for (const s of this.worldStimStreams) {
+        s.orb.visible = showNorm;
+        this.place(s.id, s.currentPos.clone().add(new THREE.Vector3(0, 3.2, 0)), showStims);
+      }
+    }
 
     // Law Enforcement station labels (visible when flipped upside down!)
     const showLeoPins = isLeo && this.flipRoll > Math.PI * 0.55;
@@ -1761,6 +1818,18 @@ class PushnotOrbit {
       const pNext = curve.getPoint(Math.min(1, u + 0.02));
       fc.mesh.position.copy(p);
       fc.mesh.lookAt(pNext);
+    }
+
+    // Animate the 4 World Outbound Stimulus Streams (Bejeweled, Facebook, Instagram, X)
+    // travelling along their 3D lines from Planet Earth -> Datacentre -> Post Office -> Phone!
+    if (this.worldStimStreams && this.normalGroup.visible) {
+      const stimSpeed = (now * 0.00011) % 1;
+      for (const s of this.worldStimStreams) {
+        const u = (s.offset + stimSpeed) % 1;
+        const p = s.curve.getPoint(u);
+        s.currentPos.copy(p);
+        s.orb.position.copy(p);
+      }
     }
 
     // Gently rotate the 3D Brain & neural sparks when active above the Post Office

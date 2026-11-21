@@ -1982,13 +1982,11 @@ class PushnotOrbit {
         moverPos = p;
         moverText = '🔑 Unique Key → Phone';
       } else if (t < 0.76) {
-        // Dedicated beat on Phone explaining what the Unique Key represents in Outbound/Inbound push & why no direct connection exists!
+        // Dedicated beat on Phone showing the Unique Gold Key on the Phone (no Go To Jail card during installation!)
         this.tokenKey.visible = true;
         this.tokenKey.position.set(POS.phone.x, this.tops.phone + 12.5, POS.phone.z);
         this.tokenKey.scale.setScalar(1.45);
-        this.directBlockGroup.visible = true;
         showToken = true;
-        showNoDirect = true;
       } else if (t < 0.92) {
         const p = this.arcPhoneToServer.getPoint(seg(t, 0.76, 0.92));
         this.tokenKey.visible = true;
@@ -2214,13 +2212,11 @@ class PushnotOrbit {
       focusDist = 66;
       focusLift = 20;
     } else if (!isLeo) {
-      if (showInstall || showPush) {
+      if (showInstall || showPush || showToken) {
         focusLocal = new THREE.Vector3(POS.phone.x, 16, POS.phone.z);
         focusDist = 64;
-      } else if (showToken || showNoDirect) {
-        focusLocal = showToken
-          ? new THREE.Vector3(POS.phone.x * 0.55, 18, POS.phone.z)
-          : new THREE.Vector3(0, 17, POS.phone.z);
+      } else if (showNoDirect) {
+        focusLocal = new THREE.Vector3(0, 17, POS.phone.z);
         focusDist = 68;
       } else if (showLedger) {
         focusLocal = new THREE.Vector3(POS.post.x, 34, POS.post.z);

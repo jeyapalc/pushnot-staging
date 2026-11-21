@@ -3,6 +3,8 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 /* =====================================================================
    PUSHNOT // 3D Push Notification Orbit
@@ -760,9 +762,9 @@ class PushnotOrbit {
 
   updateLogoHighlight() {
     if (!this.appleLogoMesh || !this.googleLogoMesh) return;
-    const isIos = this.currentOS === 'ios';
-    this.appleLogoMesh.scale.setScalar(isIos ? 1.25 : 0.72);
-    this.googleLogoMesh.scale.setScalar(isIos ? 0.72 : 1.25);
+    // Make Google and Apple logos exactly the same scale and balanced prominence
+    this.appleLogoMesh.scale.setScalar(1.0);
+    this.googleLogoMesh.scale.setScalar(1.0);
   }
 
   /* ---- Dynamic Phone Screen Canvas (Interactive iOS vs Android + Bejeweled Blitz) ---- */
@@ -2632,9 +2634,10 @@ class PushnotOrbit {
     this.tops.store = 34;
 
     let partsReady = 0;
+    const partsExpected = 4;
     const checkClone = () => {
       partsReady++;
-      if (partsReady === 3 && this.leoAgGroup) {
+      if (partsReady === partsExpected && this.leoAgGroup) {
         if (this.leoAgBag) this.leoAgGroup.remove(this.leoAgBag);
         this.leoAgBag = this.storeGroup.clone(true);
         this.leoAgBag.position.set(0, 0, 0);
@@ -2709,18 +2712,29 @@ class PushnotOrbit {
       this.tops.post  = crownY + 4;
       this.tops.store = crownY + 4;
 
-      // Position the Apple and Google logos overlooking the skyline facing +Z towards camera
+      // Position the Apple & Google logos and SILICON VALLEY 3D text overlooking the skyline facing +Z towards camera
       this.frontLogosGroup.position.set(0, crownY * 0.72, 16);
 
       checkClone();
     }, undefined, checkClone);
 
-    // 2. Mount Apple Logo (left) and Google Logo (right) facing front (+Z)
-    const mountLogo = (path, xOffset, targetSize, isApple) => {
+    // 2. Mount Apple Logo (left) and Google Logo (right) - Exactly the same size and matching finish
+    const mountLogo = (path, xOffset, isApple) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
+        // Harmonize logo materials to identical metallic satin finish
+        logo.traverse((ch) => {
+          if (ch.isMesh && ch.material) {
+            ch.material.metalness = 0.52;
+            ch.material.roughness = 0.24;
+            ch.material.envMapIntensity = 1.25;
+            ch.castShadow = true;
+          }
+        });
         let box = new THREE.Box3().setFromObject(logo);
         const raw = box.getSize(new THREE.Vector3());
+        // Same exact target size for both logos
+        const targetSize = 7.2;
         const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
         logo.scale.setScalar(s);
         logo.updateMatrixWorld(true);
@@ -2730,7 +2744,7 @@ class PushnotOrbit {
         const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
         wrap.add(logo);
-        wrap.position.set(xOffset, 0, 0);
+        wrap.position.set(xOffset, 2.6, 0);
 
         if (isApple) this.appleLogoMesh = wrap;
         else this.googleLogoMesh = wrap;
@@ -2741,8 +2755,51 @@ class PushnotOrbit {
       }, undefined, checkClone);
     };
 
-    mountLogo('models/apple_logo.glb',  -7.5, 9.5, true);
-    mountLogo('models/google_logo.glb',  7.5, 9.5, false);
+    mountLogo('models/apple_logo.glb', -5.8, true);
+    mountLogo('models/google_logo.glb',  5.8, false);
+
+    // 3. Genuine 3D Block Text for "SILICON VALLEY" overlooking the San Francisco node
+    const fontLoader = new FontLoader();
+    fontLoader.load('fonts/helvetiker_bold.typeface.json', (font) => {
+      const textGeo = new TextGeometry('SILICON VALLEY', {
+        font: font,
+        size: 1.65,
+        height: 0.65, // 3D block extrusion depth
+        curveSegments: 6,
+        bevelEnabled: true,
+        bevelThickness: 0.12,
+        bevelSize: 0.06,
+        bevelSegments: 3
+      });
+      textGeo.computeBoundingBox();
+      const textDim = textGeo.boundingBox.getSize(new THREE.Vector3());
+      textGeo.translate(-textDim.x * 0.5, -textDim.y * 0.5, -textDim.z * 0.5);
+
+      const textMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: 0x38bdf8,
+        emissiveIntensity: 0.38,
+        metalness: 0.35,
+        roughness: 0.22
+      });
+      const textMesh = new THREE.Mesh(textGeo, textMat);
+      const textWrap = new THREE.Group();
+      textWrap.add(textMesh);
+
+      // Sleek architectural dark plinth under 3D block text
+      const plinth = new THREE.Mesh(
+        new THREE.BoxGeometry(textDim.x + 2.4, 0.45, 1.8),
+        new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.3 })
+      );
+      plinth.position.y = -textDim.y * 0.5 - 0.24;
+      textWrap.add(plinth);
+
+      // Positioned directly below the matched Apple & Google logos
+      textWrap.position.set(0, -2.4, 0);
+      this.frontLogosGroup.add(textWrap);
+
+      checkClone();
+    }, undefined, checkClone);
   }
 
   centerAndScale(obj, size) {

@@ -138,10 +138,16 @@ body.leo-mode {
 .polarity-banner.push .pol-label { color: var(--green); }
 .pol-route { color: var(--muted); padding-left: 8px; border-left: 1px solid var(--line); }
 
-/* 3D projected pins */
-.pin {
-  position: absolute; display: none; pointer-events: none; z-index: 5;
-  transform: translate(-50%, -100%);
+/* Clean Presentation Mode: Complete Wipe Out of all 2D floating HUD clutter */
+.pin,
+.pin-node,
+.pin-os-float,
+.pin-event,
+.polarity-banner,
+.ledger-pad,
+.push-banner-toast,
+.pin-mover {
+  display: none !important;
 }
 .pin-node {
   transform: translate(-50%, 0);

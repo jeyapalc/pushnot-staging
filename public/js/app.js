@@ -28,10 +28,11 @@ const POS = {
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 14, push: 11, leo: 15 };
+const MODE_SECONDS = { setup: 14, push: 11, world: 12, leo: 15 };
 const MODE_STEPS = {
   setup: [0.06, 0.28, 0.40, 0.54, 0.68, 0.84, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
+  world: [0.10, 0.30, 0.55, 0.80, 0.95],
   leo:   [0.08, 0.25, 0.42, 0.60, 0.78, 0.94]
 };
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
@@ -1501,39 +1502,44 @@ class PushnotOrbit {
       this.targetT = 0;
     }
 
-    const isPush = mode === 'push';
-    const isLeo  = mode === 'leo';
+    const isPush  = mode === 'push';
+    const isWorld = mode === 'world';
+    const isLeo   = mode === 'leo';
     this.flipTarget = isLeo ? Math.PI : 0;
 
-    const color = isLeo ? 0xf43f5e : (isPush ? 0x34d399 : 0xfbbf24);
+    const color = isLeo ? 0xf43f5e : (isWorld ? 0x38bdf8 : (isPush ? 0x34d399 : 0xfbbf24));
     this.ringMat.color.setHex(color);
     this.beadMat.color.setHex(color);
     this.setupLines.forEach((l) => (l.visible = mode === 'setup'));
     this.pushLines.forEach((l) => (l.visible = isPush));
-    this.flowCones.forEach((fc) => (fc.mesh.visible = !isLeo));
+    this.flowCones.forEach((fc) => (fc.mesh.visible = !isLeo && !isWorld));
     this.leoLines.forEach((l) => (l.visible = isLeo));
 
     document.body.classList.toggle('leo-mode', isLeo);
     document.getElementById('btn-leo').classList.toggle('active', isLeo);
     document.getElementById('mode-setup').classList.toggle('active', mode === 'setup');
     document.getElementById('mode-push').classList.toggle('active', isPush);
-    document.getElementById('brand-dot').classList.toggle('push', isPush);
+    const btnWorld = document.getElementById('mode-world');
+    if (btnWorld) btnWorld.classList.toggle('active', isWorld);
+    document.getElementById('brand-dot').classList.toggle('push', isPush || isWorld);
     document.getElementById('brand-dot').classList.toggle('leo', isLeo);
-    document.getElementById('btn-play').classList.toggle('push', isPush);
-    document.getElementById('scrub').classList.toggle('push', isPush);
+    document.getElementById('btn-play').classList.toggle('push', isPush || isWorld);
+    document.getElementById('scrub').classList.toggle('push', isPush || isWorld);
 
     const banner = document.getElementById('polarity-banner');
-    banner.classList.toggle('push', isPush);
+    banner.classList.toggle('push', isPush || isWorld);
     banner.classList.toggle('leo', isLeo);
-    document.getElementById('pol-arrow').textContent = isLeo ? '⚖' : (isPush ? '↻' : '↺');
+    document.getElementById('pol-arrow').textContent = isLeo ? '⚖' : (isWorld ? '🌐' : (isPush ? '↻' : '↺'));
     document.getElementById('pol-label').textContent = isLeo
       ? 'LAW ENFORCEMENT TRACE'
-      : (isPush ? 'PUSH DELIVERY' : 'INSTALL & SETUP');
+      : (isWorld ? 'ALL WORLD STIMS' : (isPush ? 'BEJEWELED PUSH' : 'INSTALL & SETUP'));
     document.getElementById('pol-route').textContent = isLeo
       ? 'Threat → Proton (Denied) → OSINT Pivot → Meta/X Tokens → Apple/Google ID'
-      : (isPush
-        ? 'Planet Earth Stims → Datacentre → Post Office → Phone'
-        : 'Apple/Google → Phone → Post Office → Datacentre');
+      : (isWorld
+        ? 'Planet Earth (Bejeweled / FB / IG / X) → Datacentre → Post Office → Phone'
+        : (isPush
+          ? 'Planet Earth Trigger → Datacentre → Post Office → Phone'
+          : 'Apple/Google → Phone → Post Office → Datacentre'));
   }
 
   setAutoOrbit(on) {
@@ -1568,11 +1574,15 @@ class PushnotOrbit {
   initUI() {
     document.getElementById('mode-setup').addEventListener('click', () => this.setMode('setup'));
     document.getElementById('mode-push').addEventListener('click', () => this.setMode('push'));
+    const btnWorld = document.getElementById('mode-world');
+    if (btnWorld) btnWorld.addEventListener('click', () => this.setMode('world'));
     document.getElementById('btn-leo').addEventListener('click', () => {
       this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
     });
     document.getElementById('btn-flip').addEventListener('click', () => {
-      this.setMode(this.mode === 'setup' ? 'push' : 'setup');
+      const order = ['setup', 'push', 'world'];
+      const next = order[(order.indexOf(this.mode) + 1) % order.length];
+      this.setMode(next);
     });
 
     document.getElementById('scrub').addEventListener('input', (e) => {
@@ -1601,9 +1611,14 @@ class PushnotOrbit {
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
       if (e.code === 'Space') { e.preventDefault(); this.setPlaying(!this.playing); }
-      else if (e.key === 'Tab') { e.preventDefault(); this.setMode(this.mode === 'setup' ? 'push' : 'setup'); }
+      else if (e.key === 'Tab') {
+        e.preventDefault();
+        const order = ['setup', 'push', 'world'];
+        this.setMode(order[(order.indexOf(this.mode) + 1) % order.length]);
+      }
       else if (e.key === '1') this.setMode('setup');
       else if (e.key === '2') this.setMode('push');
+      else if (e.key === '3') this.setMode('world');
       else if (e.key.toLowerCase() === 'l') this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
       else if (e.key === 'ArrowRight') this.stepCycle(1);
       else if (e.key === 'ArrowLeft')  this.stepCycle(-1);
@@ -1634,13 +1649,13 @@ class PushnotOrbit {
     const isLeo = this.mode === 'leo';
 
     // Bejeweled stays visibly installed on the phone once downloaded
-    this.installedApp.visible = !isLeo && (this.mode === 'push' || t >= 0.24);
+    this.installedApp.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.24);
     // Key stays persistently stored on the server once registered!
-    this.storedKey.visible = !isLeo && (this.mode === 'push' || t >= 0.92);
+    this.storedKey.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.92);
 
-    // UFO tractor beam brightens when triggering an external event in Mode 2
+    // Planet Earth tractor beam brightens when triggering an external event in Mode 2 or Mode 3
     if (this.ufoBeamMat) {
-      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.16) ? 0.34 : 0.07;
+      this.ufoBeamMat.opacity = (this.mode === 'world' || (this.mode === 'push' && t < 0.16)) ? 0.34 : 0.07;
     }
 
     let moverPos = null;
@@ -1759,6 +1774,14 @@ class PushnotOrbit {
       } else {
         showPush = true;
       }
+    } else if (this.mode === 'world') {
+      // MODE 3 · ALL WORLD STIMS (Bejeweled, Facebook, Instagram, X) streaming simultaneously from Planet Earth -> Datacentre -> Post Office -> Phone!
+      for (const s of this.worldStimStreams) {
+        const u = (s.offset + t) % 1;
+        const p = s.curve.getPoint(u);
+        s.currentPos.copy(p);
+        s.orb.position.copy(p);
+      }
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (6 Beats):
       // 0.00–0.16: Bandit sends bomb threat email (badguy@protonmail.com) -> Police
@@ -1852,12 +1875,12 @@ class PushnotOrbit {
     this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 15, POS.ufo.z), showNorm);
 
     // 4 Multi-Stream World Outbound Stimulus Pills (Bejeweled, Facebook, Instagram, X)
-    // Flowing from Planet Earth -> Push Pipeline -> Phone!
-    const showStims = showNorm;
-    if (this.worldStimGroup) this.worldStimGroup.visible = showNorm;
+    // Shown ONLY when Mode 3 (All World Stims) is active!
+    const showStims = showNorm && this.mode === 'world';
+    if (this.worldStimGroup) this.worldStimGroup.visible = showStims;
     if (this.worldStimStreams) {
       for (const s of this.worldStimStreams) {
-        s.orb.visible = showNorm;
+        s.orb.visible = showStims;
         this.place(s.id, s.currentPos.clone().add(new THREE.Vector3(0, 3.2, 0)), showStims);
       }
     }
@@ -2006,18 +2029,6 @@ class PushnotOrbit {
       const pNext = curve.getPoint(Math.min(1, u + 0.02));
       fc.mesh.position.copy(p);
       fc.mesh.lookAt(pNext);
-    }
-
-    // Animate the 4 World Outbound Stimulus Streams (Bejeweled, Facebook, Instagram, X)
-    // travelling along their 3D lines from Planet Earth -> Datacentre -> Post Office -> Phone!
-    if (this.worldStimStreams && this.normalGroup.visible) {
-      const stimSpeed = (now * 0.00011) % 1;
-      for (const s of this.worldStimStreams) {
-        const u = (s.offset + stimSpeed) % 1;
-        const p = s.curve.getPoint(u);
-        s.currentPos.copy(p);
-        s.orb.position.copy(p);
-      }
     }
 
     // Gently rotate the 3D Brain & neural sparks when active above the Post Office

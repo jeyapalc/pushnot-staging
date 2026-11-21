@@ -117,12 +117,14 @@ class PushnotOrbit {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.target.set(0, 16, 0);
-    this.controls.minDistance = 42;
-    this.controls.maxDistance = 260;
-    this.controls.maxPolarAngle = Math.PI * 0.48;
+    this.controls.minDistance = 15;
+    this.controls.maxDistance = 450;
+    this.controls.maxPolarAngle = Math.PI * 0.52;
     this.controls.addEventListener('start', () => {
       if (this.autoOrbit) this.setAutoOrbit(false);
       this.cinematicFollow = false;
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
     });
 
     addEventListener('resize', () => {
@@ -1090,29 +1092,29 @@ class PushnotOrbit {
     let lift = 14;
 
     if (key === 'phone') {
-      target = POS.phone.clone().setY(10);
-      dist = 36; lift = 12;
+      target = POS.phone.clone().setY(16);
+      dist = 78;
     } else if (key === 'server') {
-      target = POS.server.clone().setY(14);
-      dist = 38; lift = 14;
+      target = POS.server.clone().setY(16);
+      dist = 82;
     } else if (key === 'post' || key === 'store') {
-      target = POS.post.clone().setY(16);
-      dist = 48; lift = 16;
+      target = POS.post.clone().setY(22);
+      dist = 94;
     } else if (key === 'world' || key === 'ufo') {
-      target = POS.ufo.clone();
-      dist = 42; lift = 10;
+      target = POS.ufo.clone().setY(22);
+      dist = 74;
     } else if (key === 'bandit') {
-      target = this.leoPos.bandit.clone().setY(12);
-      dist = 36; lift = 12;
+      target = this.leoPos.bandit.clone().setY(14);
+      dist = 82; // Comfortable framing, not zoomed into face!
     } else if (key === 'swat') {
-      target = this.leoPos.swat.clone().setY(12);
-      dist = 36; lift = 12;
+      target = this.leoPos.swat.clone().setY(14);
+      dist = 82; // Clear view of Ranger Green RCMP officer & patches!
     } else if (key === 'osint') {
-      target = this.leoPos.osint.clone();
-      dist = 28; lift = 8;
+      target = this.leoPos.osint.clone().setY(22);
+      dist = 56;
     } else if (key === 'facebook') {
-      target = this.leoPos.bot.clone().setY(14);
-      dist = 36; lift = 12;
+      target = this.leoPos.bot.clone().setY(16);
+      dist = 78;
     }
 
     if (!target) return;
@@ -1123,9 +1125,14 @@ class PushnotOrbit {
     if (btnOrbit) btnOrbit.classList.remove('on');
 
     this.focusTargetPos = target.clone();
-    const camDir = this.camera.position.clone().sub(target).normalize();
-    if (camDir.lengthSq() < 0.01) camDir.set(1, 0.4, 1).normalize();
-    this.focusCamPos = target.clone().add(camDir.multiplyScalar(dist)).add(new THREE.Vector3(0, lift, 0));
+
+    // Snap strictly to the OUTSIDE of the orbit ring, facing IN LATERALLY at eye level (no bird's eye view!)
+    const radial = new THREE.Vector3(target.x, 0, target.z);
+    if (radial.lengthSq() < 1) radial.set(0, 0, 1);
+    radial.normalize();
+
+    this.focusCamPos = target.clone().addScaledVector(radial, dist);
+    this.focusCamPos.y = target.y + 1.5; // Lateral eye-level!
 
     // Shallow depth-of-field focal spotlight
     if (!this.focusSpot) {
@@ -1135,7 +1142,7 @@ class PushnotOrbit {
     }
     this.focusSpot.visible = true;
     this.focusSpot.target.position.copy(target);
-    this.focusSpot.position.copy(target).add(new THREE.Vector3(0, 42, 22));
+    this.focusSpot.position.copy(target).add(new THREE.Vector3(0, 32, 18));
   }
 
   resetFocus() {
@@ -1662,6 +1669,171 @@ class PushnotOrbit {
     g.add(idCard, ccCard, new THREE.PointLight(0x38bdf8, 3.2, 40));
     g.scale.setScalar(scale);
     return g;
+  }
+
+  /* ---- Authentic RCMP ERT Tactical Uniform Patches (Solid Ranger Green & Subdued Insignia) ---- */
+  createPoliceChestPatchTexture() {
+    const cvs = document.createElement('canvas');
+    cvs.width = 512;
+    cvs.height = 160;
+    const ctx = cvs.getContext('2d');
+
+    // Solid Ranger Green background (#48563f)
+    ctx.fillStyle = '#48563f';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+    // Dark tactical embroidered border
+    ctx.strokeStyle = '#273322';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(5, 5, cvs.width - 10, cvs.height - 10);
+
+    // Subtle inner stitched thread border
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = '#32402c';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(14, 14, cvs.width - 28, cvs.height - 28);
+    ctx.setLineDash([]);
+
+    // Bold solid black block "POLICE"
+    ctx.fillStyle = '#0a0a0a';
+    ctx.font = '900 96px "Impact", "Arial Black", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('POLICE', cvs.width / 2, cvs.height / 2 + 2);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  createRcmpBackPatchTexture() {
+    const cvs = document.createElement('canvas');
+    cvs.width = 512;
+    cvs.height = 240;
+    const ctx = cvs.getContext('2d');
+
+    // Solid Ranger Green background (#48563f)
+    ctx.fillStyle = '#48563f';
+    ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+    // Dark tactical embroidered border
+    ctx.strokeStyle = '#273322';
+    ctx.lineWidth = 12;
+    ctx.strokeRect(6, 6, cvs.width - 12, cvs.height - 12);
+
+    // Inner stitching
+    ctx.setLineDash([10, 6]);
+    ctx.strokeStyle = '#32402c';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(16, 16, cvs.width - 32, cvs.height - 32);
+    ctx.setLineDash([]);
+
+    // Prominent bold black "RCMP" and "POLICE"
+    ctx.fillStyle = '#0a0a0a';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = '900 96px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('RCMP', cvs.width / 2, 78);
+
+    ctx.font = '900 68px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('POLICE', cvs.width / 2, 168);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  createRcmpSubduedShoulderFlashTexture() {
+    const cvs = document.createElement('canvas');
+    cvs.width = 384;
+    cvs.height = 480;
+    const ctx = cvs.getContext('2d');
+
+    // Shield path (Canadian police shoulder flash shape)
+    function drawShieldPath(pad = 0) {
+      ctx.beginPath();
+      const w = cvs.width - pad * 2;
+      const h = cvs.height - pad * 2;
+      const x0 = pad;
+      const y0 = pad;
+      const r = 24;
+      ctx.moveTo(x0 + r, y0);
+      ctx.lineTo(x0 + w - r, y0);
+      ctx.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + r);
+      ctx.lineTo(x0 + w, y0 + h * 0.62);
+      ctx.bezierCurveTo(x0 + w, y0 + h * 0.86, x0 + w * 0.65, y0 + h * 0.96, x0 + w * 0.5, y0 + h);
+      ctx.bezierCurveTo(x0 + w * 0.35, y0 + h * 0.96, x0, y0 + h * 0.86, x0, y0 + h * 0.62);
+      ctx.lineTo(x0, y0 + r);
+      ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
+      ctx.closePath();
+    }
+
+    // Solid Ranger Green base fill
+    drawShieldPath(4);
+    ctx.fillStyle = '#48563f';
+    ctx.fill();
+
+    // Dark embroidered outer border
+    ctx.strokeStyle = '#1b2318';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    // Inner stitching
+    drawShieldPath(18);
+    ctx.setLineDash([8, 6]);
+    ctx.strokeStyle = '#2d3726';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Arched banner at top: "ROYAL CANADIAN MOUNTED POLICE"
+    ctx.fillStyle = '#111710';
+    ctx.font = '900 24px "Impact", "Arial Black", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('ROYAL CANADIAN', 192, 54);
+    ctx.font = '900 22px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('MOUNTED POLICE', 192, 82);
+
+    // Subdued Crown at top center of crest
+    ctx.beginPath();
+    ctx.arc(192, 138, 12, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillRect(160, 148, 64, 8);
+    ctx.fillRect(168, 132, 48, 14);
+
+    // Circular garter ring
+    ctx.beginPath();
+    ctx.arc(192, 235, 62, 0, Math.PI * 2);
+    ctx.lineWidth = 12;
+    ctx.strokeStyle = '#111710';
+    ctx.stroke();
+
+    // Subdued Bison / Buffalo head silhouette in center
+    ctx.beginPath();
+    ctx.arc(192, 222, 28, 0, Math.PI * 2);
+    ctx.arc(192, 248, 18, 0, Math.PI * 2);
+    ctx.fill();
+    // Horns
+    ctx.beginPath();
+    ctx.arc(162, 206, 12, 0, Math.PI * 1.5);
+    ctx.arc(222, 206, 12, Math.PI * 1.5, Math.PI * 3);
+    ctx.lineWidth = 6;
+    ctx.strokeStyle = '#111710';
+    ctx.stroke();
+
+    // Scroll at bottom: "MAINTIENS LE DROIT"
+    ctx.fillStyle = '#111710';
+    ctx.font = '900 18px "Impact", "Arial Black", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('MAINTIENS LE DROIT', 192, 335);
+
+    // Subdued tactical unit badge: "RCMP · ERT"
+    ctx.font = '900 32px "Impact", "Arial Black", sans-serif';
+    ctx.fillText('RCMP · ERT', 192, 388);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
   }
 
   /* ---- 3D RCMP OSINT Laptop (`personal_computer.glb`) with Live Kali Linux Recon Terminal Animation! ---- */
@@ -2319,8 +2491,106 @@ class PushnotOrbit {
       const m = gltf.scene;
       m.rotation.y = Math.PI * 0.35;
       m.userData.stationKey = 'swat';
-      m.traverse(c => { if (c.isMesh) c.userData.stationKey = 'swat'; });
-      this.harmonizeAsset(m, { minRough: 0.36, maxRough: 0.66, maxMetal: 0.45, envIntensity: 0.85, liftDark: false });
+
+      m.traverse(c => {
+        if (!c.isMesh) return;
+        c.userData.stationKey = 'swat';
+
+        const matName = c.material ? (c.material.name || '') : '';
+        const normMap = c.material?.normalMap || null;
+
+        if (matName.includes('rifle')) {
+          // Tactical matte black carbine / rifle
+          c.material = new THREE.MeshStandardMaterial({
+            color: 0x141414,
+            metalness: 0.65,
+            roughness: 0.35,
+            normalMap: normMap
+          });
+        } else if (matName.includes('Surface5SG')) {
+          // Tactical assault boots - solid matte black
+          c.material = new THREE.MeshStandardMaterial({
+            color: 0x121212,
+            metalness: 0.2,
+            roughness: 0.8,
+            normalMap: normMap
+          });
+        } else if (matName.includes('Surface8SG')) {
+          // Goggles lens - dark smoke polarized glass
+          c.material = new THREE.MeshStandardMaterial({
+            color: 0x0f172a,
+            metalness: 0.9,
+            roughness: 0.08
+          });
+        } else if (matName.includes('Surface6SG') || matName.includes('Surface14SG')) {
+          // Comms headset & radio mic wire - solid matte black
+          c.material = new THREE.MeshStandardMaterial({
+            color: 0x181818,
+            metalness: 0.3,
+            roughness: 0.7
+          });
+        } else {
+          // Solid Canadian RCMP ERT Ranger Green uniform, plate carrier vest, helmet, pouches, and BDU
+          c.material = new THREE.MeshStandardMaterial({
+            color: 0x48563f, // Solid authentic Ranger Green (#48563f)
+            metalness: 0.12,
+            roughness: 0.68,
+            normalMap: normMap
+          });
+        }
+      });
+
+      // Front chest POLICE patch (Velcro plate on tactical vest)
+      const chestTex = this.createPoliceChestPatchTexture();
+      const chestMat = new THREE.MeshStandardMaterial({
+        map: chestTex,
+        roughness: 0.75,
+        metalness: 0.05,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
+      });
+      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(16, 5.2), chestMat);
+      chestPatch.position.set(0.2, 120, 17.2);
+      m.add(chestPatch);
+
+      // Back RCMP POLICE panel
+      const backTex = this.createRcmpBackPatchTexture();
+      const backMat = new THREE.MeshStandardMaterial({
+        map: backTex,
+        roughness: 0.75,
+        metalness: 0.05,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
+      });
+      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(20, 9.4), backMat);
+      backPatch.position.set(0.2, 122, -17.2);
+      backPatch.rotation.y = Math.PI;
+      m.add(backPatch);
+
+      // Subdued RCMP shoulder flashes on sleeves
+      const shoulderTex = this.createRcmpSubduedShoulderFlashTexture();
+      const shoulderMat = new THREE.MeshStandardMaterial({
+        map: shoulderTex,
+        roughness: 0.75,
+        metalness: 0.05,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
+      });
+      const leftFlash = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 7.8), shoulderMat);
+      leftFlash.position.set(-27.2, 134, 1.2);
+      leftFlash.rotation.y = -Math.PI * 0.5;
+      leftFlash.rotation.z = -0.12;
+      m.add(leftFlash);
+
+      const rightFlash = new THREE.Mesh(new THREE.PlaneGeometry(6.2, 7.8), shoulderMat);
+      rightFlash.position.set(27.2, 134, 1.2);
+      rightFlash.rotation.y = Math.PI * 0.5;
+      rightFlash.rotation.z = 0.12;
+      m.add(rightFlash);
+
       this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);
       this.leoGroup.add(m);
       done();
@@ -2388,32 +2658,25 @@ class PushnotOrbit {
           return;
         }
 
-        if (mName.includes('cristal') || nName.includes('14')) {
-          // Authentic reflective transparent Sky-Blue architectural glass for the SF skyscrapers!
-          ch.material = new THREE.MeshPhysicalMaterial({
-            color: 0x38bdf8,
-            emissive: 0x0284c7,
-            emissiveIntensity: 0.35,
-            transparent: true,
-            opacity: 0.52,
-            metalness: 0.35,
-            roughness: 0.05,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.03,
-            envMapIntensity: 2.5,
-            side: THREE.DoubleSide,
-            depthWrite: false
-          });
-        } else if (mName.includes('concreto') || mName.includes('chicos') || mName.includes('base') || mName.includes('tierra')) {
-          // Modern tech-campus architectural finishes
-          if (ch.material) {
-            ch.material = ch.material.clone();
-            ch.material.metalness = 0.55;
-            ch.material.roughness = 0.28;
-            ch.material.envMapIntensity = 1.4;
+        // Preserve all authentic original textures, colors, and glowing night emissive maps!
+        if (ch.material) {
+          ch.material.side = THREE.DoubleSide;
+          if (ch.material.map) ch.material.map.colorSpace = THREE.SRGBColorSpace;
+          if (ch.material.emissiveMap) {
+            ch.material.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+            ch.material.emissiveIntensity = 1.35; // Rich glowing night lights & illuminated bridges!
           }
+          ch.material.roughness = 0.35;
+          ch.material.metalness = 0.25;
+          ch.material.needsUpdate = true;
         }
       });
+
+      // Cinematic campus and skyline accent lighting for San Francisco
+      this.sfCityGroup.add(new THREE.PointLight(0xfbbf24, 3.2, 85)); // warm amber city glow at base
+      const coolSkyLight = new THREE.PointLight(0x38bdf8, 2.8, 110);
+      coolSkyLight.position.set(0, 24, 10);
+      this.sfCityGroup.add(coolSkyLight); // cool cyan tech skyline wash
 
       // Compute bounding box ignoring the hidden water tile
       const visibleBox = new THREE.Box3();
@@ -2564,9 +2827,8 @@ class PushnotOrbit {
     } else {
       this.cinematicFollow = false;
     }
-    // In Manual Scroll / Step-by-Step mode, mouse wheel / trackpad scroll smoothly scrubs the action cycle
-    // and the camera glides in Video-Game Cinematic Mode to focus on the active node/packet!
-    this.controls.enableZoom = auto;
+    // Always allow 100% free zoom on mouse wheel and trackpad pinch
+    this.controls.enableZoom = true;
     const btn = document.getElementById('btn-play');
     btn.textContent = auto ? '▶' : '🎥';
     btn.classList.toggle('manual', !auto);
@@ -2700,14 +2962,12 @@ class PushnotOrbit {
       }
     });
 
-    // Smooth mouse wheel / trackpad scroll scrubbing in Manual Scroll / Step Cam mode
-    this.renderer.domElement.addEventListener('wheel', (e) => {
-      if (this.playing) return;
-      e.preventDefault();
-      this.cinematicFollow = true;
-      const delta = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 100) * 0.00055;
-      this.targetT = clamp01(this.targetT + delta);
-    }, { passive: false });
+    // Wheel zoom releases cinematic follow and focus lock so user has instant free zoom
+    this.renderer.domElement.addEventListener('wheel', () => {
+      this.cinematicFollow = false;
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
+    }, { passive: true });
 
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
@@ -3068,47 +3328,43 @@ class PushnotOrbit {
     mv.textContent = moverText;
     this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.5, 0)) : null, !!moverPos, moverParent);
 
-    // Compute exact 3D world-space focus point for Video-Game Cinematic Step-by-Step Camera!
+    // Compute exact 3D world-space focus point for Cinematic Step-by-Step Camera!
     let focusLocal = null;
     let focusGroup = this.worldGroup;
-    let focusDist = 72;
-    let focusLift = 22;
+    let focusDist = 80;
 
     if (moverPos) {
       focusLocal = moverPos.clone();
       focusGroup = moverParent;
-      focusDist = 66;
-      focusLift = 20;
+      focusDist = 80;
     } else if (!isLeo) {
       if (showInstall || showPush || showToken) {
         focusLocal = new THREE.Vector3(POS.phone.x, 16, POS.phone.z);
-        focusDist = 64;
+        focusDist = 78;
       } else if (showNoDirect) {
-        focusLocal = new THREE.Vector3(0, 17, POS.phone.z);
-        focusDist = 68;
+        focusLocal = new THREE.Vector3(0, 16, POS.phone.z);
+        focusDist = 80;
       } else if (showLedger) {
-        focusLocal = new THREE.Vector3(POS.post.x, 34, POS.post.z);
-        focusDist = 62;
-        focusLift = 14;
+        focusLocal = new THREE.Vector3(POS.post.x, 22, POS.post.z);
+        focusDist = 94;
       } else if (showSaved) {
         focusLocal = new THREE.Vector3(POS.server.x, 16, POS.server.z);
-        focusDist = 66;
+        focusDist = 82;
       } else if (this.mode === 'world' && this.worldStimStreams?.length) {
         focusLocal = this.worldStimStreams[0].currentPos.clone();
-        focusDist = 78;
+        focusDist = 82;
       }
     } else {
       focusGroup = this.leoGroup;
       if (showLeoThreat || showLeoTokens || showLeoId) {
-        focusLocal = new THREE.Vector3(L.swat.x, 18, L.swat.z);
-        focusDist = 64;
+        focusLocal = new THREE.Vector3(L.swat.x, 14, L.swat.z);
+        focusDist = 82;
       } else if (showLeoDenied) {
         focusLocal = new THREE.Vector3(L.proton.x, 16, L.proton.z);
-        focusDist = 64;
+        focusDist = 80;
       } else if (showLeoOsint) {
         focusLocal = new THREE.Vector3(L.osint.x, L.osint.y, L.osint.z);
-        focusDist = 60;
-        focusLift = 12;
+        focusDist = 58;
       }
     }
 
@@ -3116,17 +3372,15 @@ class PushnotOrbit {
       const worldFocus = focusLocal.applyMatrix4(focusGroup.matrixWorld);
       this.cineLookAt.copy(worldFocus);
 
-      // Position the cinematic camera radially outward + slightly angled like a console action-RPG third-person camera!
+      // Snap strictly to the OUTSIDE facing IN LATERALLY at eye level (NO bird's eye view from top!)
       const radial = new THREE.Vector3(worldFocus.x, 0, worldFocus.z);
-      if (radial.lengthSq() < 16) radial.set(0.35, 0, 1);
+      if (radial.lengthSq() < 1) radial.set(0, 0, 1);
       radial.normalize();
-      const side = new THREE.Vector3(-radial.z, 0, radial.x);
 
       this.cineCamPos
         .copy(worldFocus)
-        .addScaledVector(radial, focusDist * 0.86)
-        .addScaledVector(side, focusDist * 0.36);
-      this.cineCamPos.y = Math.max(24, worldFocus.y + focusLift);
+        .addScaledVector(radial, focusDist);
+      this.cineCamPos.y = worldFocus.y + 1.5; // Lateral eye-level!
     }
   }
 
@@ -3228,13 +3482,20 @@ class PushnotOrbit {
       this.controls.target.lerp(this.focusTargetPos, Math.min(1, dt * 5.0));
       this.camera.position.lerp(this.focusCamPos, Math.min(1, dt * 4.2));
       this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
+      if (this.camera.position.distanceTo(this.focusCamPos) < 1.0) {
+        this.focusTargetPos = null;
+        this.focusCamPos = null;
+      }
     } else if (!this.playing && this.cinematicFollow) {
       // Video-Game Cinematic Step-by-Step Camera: smoothly dolly & pan onto the active packet / node!
-      const camLerp = Math.min(1, dt * 4.2);
-      const tgtLerp = Math.min(1, dt * 6.0);
+      const camLerp = Math.min(1, dt * 3.8);
+      const tgtLerp = Math.min(1, dt * 5.0);
       this.camera.position.lerp(this.cineCamPos, camLerp);
       this.controls.target.lerp(this.cineLookAt, tgtLerp);
       this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
+      if (this.camera.position.distanceTo(this.cineCamPos) < 1.2) {
+        this.cinematicFollow = false;
+      }
     } else if (this.autoOrbit) {
       this.orbitAngle += dt * 0.12;
       const camR = 136;

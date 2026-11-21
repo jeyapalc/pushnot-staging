@@ -603,19 +603,31 @@ class PushnotOrbit {
     this.rejectX.visible = false;
     this.leoGroup.add(this.rejectX);
 
-    // Apple & Google Subscriber Vault beacon on LEO side (back-right)
-    this.leoAgBeacon = new THREE.Group();
-    this.leoAgBeacon.position.set(L.ag.x, 14, L.ag.z);
-    const vault = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(7, 1),
-      new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0369a1, emissiveIntensity: 0.65, wireframe: true })
-    );
-    const core = new THREE.Mesh(
-      new THREE.OctahedronGeometry(3.6, 0),
-      new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x059669, emissiveIntensity: 0.85, metalness: 0.7, roughness: 0.2 })
-    );
-    this.leoAgBeacon.add(vault, core, new THREE.PointLight(0x38bdf8, 3, 40));
-    this.leoGroup.add(this.leoAgBeacon);
+    // Apple & Google Subscriber Vault (cloned Shopping Bag mounts here once logos finish loading,
+    // topped with a glowing 3D Subscriber ID Card stack!)
+    this.leoAgGroup = new THREE.Group();
+    this.leoAgGroup.position.set(L.ag.x, 0, L.ag.z);
+    this.leoGroup.add(this.leoAgGroup);
+
+    // Floating 3D Subscriber ID Card stack above the Apple/Google Shopping Bag
+    this.leoIdStack = new THREE.Group();
+    this.leoIdStack.position.set(0, 34, 0);
+    const cardMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.75, metalness: 0.5, roughness: 0.25
+    });
+    for (let i = 0; i < 3; i++) {
+      const card = new THREE.Mesh(new THREE.BoxGeometry(8.5, 5.2, 0.45), cardMat);
+      card.position.set((i - 1) * 0.9, (i - 1) * 0.5, (i - 1) * 1.1);
+      card.rotation.y = (i - 1) * 0.14;
+      card.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(card.geometry),
+        new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.85 })
+      ));
+      this.leoIdStack.add(card);
+    }
+    this.leoIdStack.add(new THREE.PointLight(0x38bdf8, 3.5, 42));
+    this.leoAgGroup.add(this.leoIdStack);
+    this.leoTops.ag = 39;
 
     // LEO investigative arcs
     const pBandit = L.bandit.clone().setY(16);
@@ -810,6 +822,7 @@ class PushnotOrbit {
     this.tops.store = bagH + 9.5;
 
     // Helper: mount a logo GLB flat & flush onto the front (+1) or back (-1) face of the bag
+    let logosMounted = 0;
     const mountLogoFlat = (path, sideSign, targetSize) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
@@ -828,6 +841,15 @@ class PushnotOrbit {
         if (sideSign < 0) wrap.rotation.y = Math.PI; // face cleanly outward on back side
         wrap.position.set(0, bagH * 0.48, sideSign * (bagD / 2 + size.z / 2 + 0.12));
         this.storeGroup.add(wrap);
+
+        // Once both Apple & Google logos are mounted, clone the complete bag onto the LEO Subscriber DB node!
+        if (++logosMounted === 2 && this.leoAgGroup) {
+          if (this.leoAgBag) this.leoAgGroup.remove(this.leoAgBag);
+          this.leoAgBag = this.storeGroup.clone(true);
+          this.leoAgBag.position.set(0, 0, 0);
+          this.leoAgBag.rotation.set(0, 0, 0);
+          this.leoAgGroup.add(this.leoAgBag);
+        }
         done();
       }, undefined, (err) => { console.warn('Store logo load failed:', path, err); done(); });
     };
@@ -1261,7 +1283,11 @@ class PushnotOrbit {
     }
 
     if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
-    if (this.leoAgBeacon) { this.leoAgBeacon.rotation.y += dt * 0.7; this.leoAgBeacon.rotation.x += dt * 0.35; }
+    if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
+    if (this.leoIdStack && this.leoGroup.visible) {
+      this.leoIdStack.rotation.y -= dt * 0.8;
+      this.leoIdStack.position.y = 34 + Math.sin(now * 0.003) * 1.1;
+    }
     if (this.osintBot)    this.osintBot.rotation.y += dt * 0.55;
     if (this.leoKey && this.leoKey.visible) this.leoKey.rotation.y += dt * 2.4;
     if (this.rejectX && this.rejectX.visible) {

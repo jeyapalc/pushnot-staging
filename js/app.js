@@ -1342,14 +1342,14 @@ class PushnotOrbit {
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
-        moverText = '⚡ External Event Trigger';
+        moverText = '⚡ Streak Timer Trigger';
         moverCls = 'cyan';
       } else if (t < 0.42) {
         const p = this.arcServerToPost.getPoint(seg(t, 0.20, 0.42));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ Payload + 🔑 Key → Post Office';
+        moverText = '✉ "Don\'t lose your streak!" + 🔑 Key → Post Office';
         moverCls = 'push';
       } else if (t < 0.68) {
         const bp = seg(t, 0.42, 0.68);
@@ -1361,7 +1361,7 @@ class PushnotOrbit {
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ Delivering Push → Phone';
+        moverText = '✉ "Don\'t lose your streak!" → Phone';
         moverCls = 'push';
       } else {
         showPush = true;

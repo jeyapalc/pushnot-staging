@@ -27,10 +27,11 @@ const POS = {
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 11, push: 9 };
+const MODE_SECONDS = { setup: 11, push: 9, leo: 15 };
 const MODE_STEPS = {
   setup: [0.06, 0.33, 0.50, 0.66, 0.82, 0.96],
-  push:  [0.10, 0.32, 0.52, 0.64, 0.78, 0.95]
+  push:  [0.10, 0.32, 0.52, 0.64, 0.78, 0.95],
+  leo:   [0.08, 0.25, 0.42, 0.60, 0.78, 0.94]
 };
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
@@ -44,12 +45,15 @@ class PushnotOrbit {
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
     this.loader.setDRACOLoader(draco);
 
-    this.mode = 'setup';
+    this.mode = 'setup'; // 'setup' | 'push' | 'leo'
+    this.prevNormalMode = 'setup';
     this.t = 0.0;
     this.targetT = 0.0;
     this.playing = true;
     this.autoOrbit = true;
     this.orbitAngle = 0.35;
+    this.flipRoll = 0;
+    this.flipTarget = 0;
     this.lastFrame = performance.now();
     this.tops = { phone: 28, server: 34, post: 32, store: 28 };
 
@@ -57,6 +61,7 @@ class PushnotOrbit {
     this.initLights();
     this.initOrbitRing();
     this.initMovers();
+    this.initLeoStage();
     this.loadModels();
     this.initUI();
     this.setMode('setup', false);
@@ -66,6 +71,22 @@ class PushnotOrbit {
   initScene() {
     this.scene = new THREE.Scene();
     this.scene.fog = new THREE.FogExp2(0x05080f, 0.003);
+
+    // World Pivot allows smoothly flipping the entire 3D orbit 180° upside down!
+    this.worldPivot = new THREE.Group();
+    this.worldPivot.position.set(0, 14, 0);
+    this.scene.add(this.worldPivot);
+
+    this.worldGroup = new THREE.Group();
+    this.worldGroup.position.set(0, -14, 0);
+    this.worldPivot.add(this.worldGroup);
+
+    // Underside Law Enforcement Group (mounted upside-down on the bottom of the disc,
+    // so when worldPivot flips 180°, the LEO world swings right-side-up!)
+    this.leoGroup = new THREE.Group();
+    this.leoGroup.rotation.z = Math.PI;
+    this.leoGroup.position.set(0, -1.0, 0);
+    this.worldGroup.add(this.leoGroup);
 
     this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
     this.camera.position.set(42, 58, 134);
@@ -107,7 +128,7 @@ class PushnotOrbit {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 12, 128), this.ringMat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.15;
-    this.scene.add(ring);
+    this.worldGroup.add(ring);
 
     const outer = new THREE.Mesh(
       new THREE.TorusGeometry(R + 11, 0.08, 8, 128),
@@ -115,7 +136,7 @@ class PushnotOrbit {
     );
     outer.rotation.x = Math.PI / 2;
     outer.position.y = 0.1;
-    this.scene.add(outer);
+    this.worldGroup.add(outer);
 
     // Elevated arcs between stations
     const pStore  = POS.store.clone().setY(18);
@@ -150,7 +171,7 @@ class PushnotOrbit {
     for (let c = 0; c < 3; c++) {
       for (let k = 0; k < 3; k++) {
         const mesh = new THREE.Mesh(coneGeo, this.beadMat);
-        this.scene.add(mesh);
+        this.worldGroup.add(mesh);
         this.flowCones.push({ mesh, curveIdx: c, offset: k / 3 });
       }
     }
@@ -171,12 +192,12 @@ class PushnotOrbit {
     this.scene.add(this.stars);
   }
 
-  addArc(curve, color, opacity) {
+  addArc(curve, color, opacity, parent = this.worldGroup) {
     const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(64));
     const mat = new THREE.LineDashedMaterial({ color, dashSize: 2.2, gapSize: 1.4, transparent: true, opacity });
     const line = new THREE.Line(geo, mat);
     line.computeLineDistances();
-    this.scene.add(line);
+    parent.add(line);
     return line;
   }
 
@@ -248,21 +269,21 @@ class PushnotOrbit {
   initMovers() {
     // 1. Bejeweled app travelling App Stores -> Phone
     this.appOrb = this.createBejeweledCluster(1.2);
-    this.scene.add(this.appOrb);
+    this.worldGroup.add(this.appOrb);
 
     // 2. Installed Bejeweled hovering above the Phone
     this.installedApp = this.createBejeweledCluster(0.85);
     this.installedApp.position.set(POS.phone.x, 32, POS.phone.z);
-    this.scene.add(this.installedApp);
+    this.worldGroup.add(this.installedApp);
 
     // 3. Moving Device Token (3D Metallic Key)
     this.tokenKey = this.createTokenKey(1.2);
-    this.scene.add(this.tokenKey);
+    this.worldGroup.add(this.tokenKey);
 
     // 4. Persistent Stored Token Key docked on front of the Datacentre!
     this.storedKey = this.createTokenKey(1.0);
     this.storedKey.position.set(POS.server.x + 12, 24, POS.server.z + 12);
-    this.scene.add(this.storedKey);
+    this.worldGroup.add(this.storedKey);
 
     // 5. External Event Trigger Pulse (UFO -> App Server)
     this.triggerBolt = new THREE.Mesh(
@@ -270,7 +291,7 @@ class PushnotOrbit {
       new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
     );
     this.triggerBolt.add(new THREE.PointLight(0x38bdf8, 4, 30));
-    this.scene.add(this.triggerBolt);
+    this.worldGroup.add(this.triggerBolt);
 
     // 6. Push Notification Envelope (carrying a mini golden Key stamped on top!)
     this.pushOrb = new THREE.Group();
@@ -284,7 +305,7 @@ class PushnotOrbit {
     miniKey.position.set(0, 2.2, 0);
     this.pushOrb.add(miniKey);
     this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
-    this.scene.add(this.pushOrb);
+    this.worldGroup.add(this.pushOrb);
 
     // 7. 3D Neural Brain popping up above the Post Office for routing lookup
     this.initBrain();
@@ -298,7 +319,7 @@ class PushnotOrbit {
     this.brainLight = new THREE.PointLight(0xf472b6, 3.5, 36);
     this.brainGroup.add(this.brainLight);
     this.brainGroup.visible = false;
-    this.scene.add(this.brainGroup);
+    this.worldGroup.add(this.brainGroup);
 
     this.loader.load('models/brain_point_cloud.glb', (gltf) => {
       const brain = gltf.scene;
@@ -355,7 +376,7 @@ class PushnotOrbit {
     this.dcGroup = new THREE.Group();
     this.dcGroup.position.copy(POS.server);
     this.dcGroup.rotation.y = Math.PI * 0.25;
-    this.scene.add(this.dcGroup);
+    this.worldGroup.add(this.dcGroup);
 
     const floorY = 0.8;
     const RACK_H = 18;
@@ -505,9 +526,96 @@ class PushnotOrbit {
     }
   }
 
+  initLeoStage() {
+    // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
+    const L = {
+      bandit: new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@protonmail.com)
+      swat:   new THREE.Vector3(-D, 0,  D), // front-left:  Police / SWAT LEO
+      proton: new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (dead end!)
+      ag:     new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Subscriber DB
+      bot:    new THREE.Vector3( 0, 0,  4)  // center:      OSINT / SpiderFoot + Meta & X Portals
+    };
+    this.leoPos = L;
+    this.leoTops = { bandit: 26, swat: 26, bot: 18, proton: 22, ag: 26 };
+
+    // Swiss Proton Shield emblem (crimson octagonal vault + white Swiss cross)
+    this.protonGroup = new THREE.Group();
+    this.protonGroup.position.set(L.proton.x, 12, L.proton.z);
+    const shield = new THREE.Mesh(
+      new THREE.CylinderGeometry(8.5, 8.5, 2.2, 8),
+      new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0x7f1d1d, emissiveIntensity: 0.7, metalness: 0.5, roughness: 0.3 })
+    );
+    shield.rotation.x = Math.PI / 2;
+    const crossMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const barV = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.5, 2.6), crossMat);
+    const barH = new THREE.Mesh(new THREE.BoxGeometry(8.5, 2.4, 2.6), crossMat);
+    this.protonGroup.add(shield, barV, barH, new THREE.PointLight(0xf43f5e, 3, 36));
+    this.leoGroup.add(this.protonGroup);
+
+    // Glowing red rejection X flash at Proton when demand bounces
+    this.rejectX = new THREE.Group();
+    const xMat = new THREE.MeshBasicMaterial({ color: 0xff1e56 });
+    const x1 = new THREE.Mesh(new THREE.BoxGeometry(10, 1.5, 1.5), xMat); x1.rotation.z =  Math.PI / 4;
+    const x2 = new THREE.Mesh(new THREE.BoxGeometry(10, 1.5, 1.5), xMat); x2.rotation.z = -Math.PI / 4;
+    this.rejectX.add(x1, x2);
+    this.rejectX.position.set(L.proton.x, 22, L.proton.z + 4);
+    this.rejectX.visible = false;
+    this.leoGroup.add(this.rejectX);
+
+    // Apple & Google Subscriber Vault beacon on LEO side (back-right)
+    this.leoAgBeacon = new THREE.Group();
+    this.leoAgBeacon.position.set(L.ag.x, 14, L.ag.z);
+    const vault = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(7, 1),
+      new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0369a1, emissiveIntensity: 0.65, wireframe: true })
+    );
+    const core = new THREE.Mesh(
+      new THREE.OctahedronGeometry(3.6, 0),
+      new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x059669, emissiveIntensity: 0.85, metalness: 0.7, roughness: 0.2 })
+    );
+    this.leoAgBeacon.add(vault, core, new THREE.PointLight(0x38bdf8, 3, 40));
+    this.leoGroup.add(this.leoAgBeacon);
+
+    // LEO investigative arcs
+    const pBandit = L.bandit.clone().setY(16);
+    const pSwat   = L.swat.clone().setY(16);
+    const pProton = L.proton.clone().setY(14);
+    const pBot    = L.bot.clone().setY(14);
+    const pAg     = L.ag.clone().setY(15);
+
+    this.arcLeoThreat = new THREE.QuadraticBezierCurve3(pBandit, new THREE.Vector3(0, 22, R + 8), pSwat);
+    this.arcLeoProton = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(-R - 8, 26, 0), pProton);
+    this.arcLeoOsint  = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(-16, 24, 18),   pBot);
+    this.arcLeoTokens = new THREE.QuadraticBezierCurve3(pBot,    new THREE.Vector3(-16, 28, 20),   pSwat);
+    this.arcLeoToAg   = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(0, 34, 0),      pAg);
+    this.arcLeoFromAg = new THREE.QuadraticBezierCurve3(pAg,     new THREE.Vector3(0, 26, 12),     pSwat);
+
+    this.leoLines = [
+      this.addArc(this.arcLeoThreat, 0xf43f5e, 0.5, this.leoGroup),
+      this.addArc(this.arcLeoProton, 0xf43f5e, 0.35, this.leoGroup),
+      this.addArc(this.arcLeoOsint,  0xfbbf24, 0.45, this.leoGroup),
+      this.addArc(this.arcLeoToAg,   0x38bdf8, 0.45, this.leoGroup),
+      this.addArc(this.arcLeoFromAg, 0x34d399, 0.5, this.leoGroup)
+    ];
+
+    // LEO moving packets (threat/demand/token/ID)
+    this.leoPacketMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xbe123c, emissiveIntensity: 0.9, metalness: 0.4, roughness: 0.25 });
+    this.leoPacket = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, 0.8), this.leoPacketMat);
+    this.leoPacketLight = new THREE.PointLight(0xf43f5e, 3.5, 30);
+    this.leoPacket.add(this.leoPacketLight);
+    this.leoPacket.visible = false;
+    this.leoGroup.add(this.leoPacket);
+
+    this.leoKey = this.createTokenKey(1.3);
+    this.leoKey.visible = false;
+    this.leoGroup.add(this.leoKey);
+
+    this.leoGroup.visible = false;
+  }
+
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 13; // 8 datacentre units + phone + postbox + apple + google + ufo
+    let left = 16; // 8 datacentre + phone + postbox + apple + google + ufo + bandit + swat + osint_bot
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -518,7 +626,7 @@ class PushnotOrbit {
       const phone = gltf.scene;
       phone.rotation.y = -Math.PI * 0.25;
       this.tops.phone = this.ground(phone, 28, POS.phone);
-      this.scene.add(phone);
+      this.worldGroup.add(phone);
       done();
     }, undefined, done);
 
@@ -527,7 +635,7 @@ class PushnotOrbit {
       const post = gltf.scene;
       post.rotation.y = Math.PI * 0.25;
       this.tops.post = this.ground(post, 32, POS.post);
-      this.scene.add(post);
+      this.worldGroup.add(post);
       done();
     }, undefined, done);
 
@@ -549,7 +657,31 @@ class PushnotOrbit {
       this.ufoGroup.add(beam);
 
       this.ufoGroup.position.copy(POS.ufo);
-      this.scene.add(this.ufoGroup);
+      this.worldGroup.add(this.ufoGroup);
+      done();
+    }, undefined, done);
+
+    // 6. Law Enforcement Models (mounted on underside leoGroup)
+    this.loader.load('models/leo/bandit.glb', (gltf) => {
+      const m = gltf.scene;
+      m.rotation.y = -Math.PI * 0.35;
+      this.leoTops.bandit = this.ground(m, 26, this.leoPos.bandit);
+      this.leoGroup.add(m);
+      done();
+    }, undefined, done);
+
+    this.loader.load('models/leo/swat.glb', (gltf) => {
+      const m = gltf.scene;
+      m.rotation.y = Math.PI * 0.35;
+      this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);
+      this.leoGroup.add(m);
+      done();
+    }, undefined, done);
+
+    this.loader.load('models/leo/osint_bot.glb', (gltf) => {
+      this.osintBot = gltf.scene;
+      this.leoTops.bot = this.ground(this.osintBot, 18, this.leoPos.bot);
+      this.leoGroup.add(this.osintBot);
       done();
     }, undefined, done);
   }
@@ -560,7 +692,7 @@ class PushnotOrbit {
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.store.x, 0, POS.store.z);
     this.storeGroup.rotation.y = -Math.PI * 0.25;
-    this.scene.add(this.storeGroup);
+    this.worldGroup.add(this.storeGroup);
 
     const bagW = 19;
     const bagH = 22;
@@ -674,8 +806,9 @@ class PushnotOrbit {
     return new THREE.Box3().setFromObject(obj).max.y;
   }
 
-  /* ---------------- Polarity Mode Switch ---------------- */
+  /* ---------------- Polarity & Law Enforcement Mode Switch ---------------- */
   setMode(mode, resetT = true) {
+    if (mode !== 'leo') this.prevNormalMode = mode;
     this.mode = mode;
     if (resetT) {
       this.t = 0;
@@ -683,25 +816,39 @@ class PushnotOrbit {
     }
 
     const isPush = mode === 'push';
-    const color = isPush ? 0x34d399 : 0xfbbf24;
+    const isLeo  = mode === 'leo';
+    this.flipTarget = isLeo ? Math.PI : 0;
+    this.leoGroup.visible = true; // keep mounted during flip so you see the upside-down transition!
+
+    const color = isLeo ? 0xf43f5e : (isPush ? 0x34d399 : 0xfbbf24);
     this.ringMat.color.setHex(color);
     this.beadMat.color.setHex(color);
-    this.setupLines.forEach((l) => (l.visible = !isPush));
+    this.setupLines.forEach((l) => (l.visible = mode === 'setup'));
     this.pushLines.forEach((l) => (l.visible = isPush));
+    this.flowCones.forEach((fc) => (fc.mesh.visible = !isLeo));
+    this.leoLines.forEach((l) => (l.visible = isLeo));
 
-    document.getElementById('mode-setup').classList.toggle('active', !isPush);
+    document.body.classList.toggle('leo-mode', isLeo);
+    document.getElementById('btn-leo').classList.toggle('active', isLeo);
+    document.getElementById('mode-setup').classList.toggle('active', mode === 'setup');
     document.getElementById('mode-push').classList.toggle('active', isPush);
     document.getElementById('brand-dot').classList.toggle('push', isPush);
+    document.getElementById('brand-dot').classList.toggle('leo', isLeo);
     document.getElementById('btn-play').classList.toggle('push', isPush);
     document.getElementById('scrub').classList.toggle('push', isPush);
 
     const banner = document.getElementById('polarity-banner');
     banner.classList.toggle('push', isPush);
-    document.getElementById('pol-arrow').textContent = isPush ? '↻' : '↺';
-    document.getElementById('pol-label').textContent = isPush ? 'PUSH DELIVERY' : 'INSTALL & SETUP';
-    document.getElementById('pol-route').textContent = isPush
-      ? 'UFO Event → Datacentre → Post Office → Phone'
-      : 'Apple/Google → Phone → Post Office → Datacentre';
+    banner.classList.toggle('leo', isLeo);
+    document.getElementById('pol-arrow').textContent = isLeo ? '⚖' : (isPush ? '↻' : '↺');
+    document.getElementById('pol-label').textContent = isLeo
+      ? 'LAW ENFORCEMENT TRACE'
+      : (isPush ? 'PUSH DELIVERY' : 'INSTALL & SETUP');
+    document.getElementById('pol-route').textContent = isLeo
+      ? 'Threat → Proton (Denied) → OSINT Pivot → Meta/X Tokens → Apple/Google ID'
+      : (isPush
+        ? 'UFO Event → Datacentre → Post Office → Phone'
+        : 'Apple/Google → Phone → Post Office → Datacentre');
   }
 
   setAutoOrbit(on) {
@@ -736,6 +883,9 @@ class PushnotOrbit {
   initUI() {
     document.getElementById('mode-setup').addEventListener('click', () => this.setMode('setup'));
     document.getElementById('mode-push').addEventListener('click', () => this.setMode('push'));
+    document.getElementById('btn-leo').addEventListener('click', () => {
+      this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
+    });
     document.getElementById('btn-flip').addEventListener('click', () => {
       this.setMode(this.mode === 'setup' ? 'push' : 'setup');
     });
@@ -769,6 +919,7 @@ class PushnotOrbit {
       else if (e.key === 'Tab') { e.preventDefault(); this.setMode(this.mode === 'setup' ? 'push' : 'setup'); }
       else if (e.key === '1') this.setMode('setup');
       else if (e.key === '2') this.setMode('push');
+      else if (e.key.toLowerCase() === 'l') this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
       else if (e.key === 'ArrowRight') this.stepCycle(1);
       else if (e.key === 'ArrowLeft')  this.stepCycle(-1);
     });
@@ -787,11 +938,16 @@ class PushnotOrbit {
     this.pushOrb.visible = false;
     this.triggerBolt.visible = false;
     this.brainGroup.visible = false;
+    this.leoPacket.visible = false;
+    this.leoKey.visible = false;
+    this.rejectX.visible = false;
+
+    const isLeo = this.mode === 'leo';
 
     // Bejeweled stays visibly installed on the phone once downloaded
-    this.installedApp.visible = this.mode === 'push' || t >= 0.28;
+    this.installedApp.visible = !isLeo && (this.mode === 'push' || t >= 0.28);
     // Key stays persistently stored on the server once registered!
-    this.storedKey.visible = this.mode === 'push' || t >= 0.90;
+    this.storedKey.visible = !isLeo && (this.mode === 'push' || t >= 0.90);
 
     // UFO tractor beam brightens when triggering an external event in Mode 2
     if (this.ufoBeamMat) {
@@ -799,6 +955,7 @@ class PushnotOrbit {
     }
 
     let moverPos = null;
+    let moverParent = this.worldGroup;
     let moverText = '';
     let moverCls = '';
 
@@ -807,6 +964,12 @@ class PushnotOrbit {
     let showSaved = false;
     let showPush = false;
     let showLedger = false;
+
+    let showLeoThreat = false;
+    let showLeoDenied = false;
+    let showLeoOsint  = false;
+    let showLeoTokens = false;
+    let showLeoId     = false;
 
     if (this.mode === 'setup') {
       if (t < 0.28) {
@@ -835,13 +998,7 @@ class PushnotOrbit {
       } else {
         showSaved = true;
       }
-    } else {
-      // PUSH DELIVERY MODE:
-      // 0.00–0.20: UFO External Event -> Datacentre
-      // 0.20–0.42: Datacentre -> Post Office
-      // 0.42–0.68: 3D Brain pops up + Notepad Ledger scrolls & matches destination!
-      // 0.68–0.90: Push Envelope departs Post Office -> Phone
-      // 0.90–1.00: Delivered banner on Phone
+    } else if (this.mode === 'push') {
       if (t < 0.20) {
         const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.20));
         this.triggerBolt.visible = true;
@@ -871,34 +1028,136 @@ class PushnotOrbit {
       } else {
         showPush = true;
       }
+    } else {
+      // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (6 Beats):
+      // 0.00–0.16: Bandit sends bomb threat email (badguy@protonmail.com) -> Police
+      // 0.16–0.34: Police emergency demand -> Proton Switzerland -> DENIED / BOUNCED!
+      // 0.34–0.50: SpiderFoot / Meta & X LEO Portals confirm IG & X accounts
+      // 0.50–0.68: Emergency demand to Meta & X -> Push Tokens (🔑) returned to Police!
+      // 0.68–0.86: Police serves emergency demand + Tokens to Apple & Google
+      // 0.86–1.00: Apple & Google return full Subscriber Identity to Police!
+      moverParent = this.leoGroup;
+      if (t < 0.16) {
+        const p = this.arcLeoThreat.getPoint(seg(t, 0, 0.12));
+        this.leoPacket.visible = true;
+        this.leoPacket.position.copy(p);
+        this.leoPacketMat.color.setHex(0xf43f5e);
+        this.leoPacketMat.emissive.setHex(0xbe123c);
+        this.leoPacketLight.color.setHex(0xf43f5e);
+        if (t < 0.12) {
+          moverPos = p;
+          moverText = '✉ Threat · badguy@protonmail.com';
+          moverCls = 'red';
+        } else {
+          showLeoThreat = true;
+        }
+      } else if (t < 0.34) {
+        const u = seg(t, 0.16, 0.28);
+        const p = this.arcLeoProton.getPoint(u);
+        this.leoPacket.visible = t < 0.29;
+        this.leoPacket.position.copy(p);
+        this.leoPacketMat.color.setHex(0xf43f5e);
+        this.leoPacketMat.emissive.setHex(0xbe123c);
+        if (t < 0.26) {
+          moverPos = p;
+          moverText = '⚖ Emergency Demand → Proton (CH)';
+          moverCls = 'red';
+        } else {
+          this.rejectX.visible = true;
+          showLeoDenied = true;
+        }
+      } else if (t < 0.50) {
+        const p = this.arcLeoOsint.getPoint(seg(t, 0.34, 0.44));
+        this.leoPacket.visible = t < 0.45;
+        this.leoPacket.position.copy(p);
+        this.leoPacketMat.color.setHex(0xfbbf24);
+        this.leoPacketMat.emissive.setHex(0xb45309);
+        this.leoPacketLight.color.setHex(0xfbbf24);
+        if (t < 0.43) {
+          moverPos = p;
+          moverText = '🔎 Query SpiderFoot / Meta & X Portals';
+        } else {
+          showLeoOsint = true;
+        }
+      } else if (t < 0.68) {
+        const p = this.arcLeoTokens.getPoint(seg(t, 0.50, 0.63));
+        this.leoKey.visible = true;
+        this.leoKey.position.copy(p);
+        if (t < 0.62) {
+          moverPos = p;
+          moverText = '🔑 Meta & X Return Push Tokens';
+        } else {
+          showLeoTokens = true;
+        }
+      } else if (t < 0.86) {
+        const p = this.arcLeoToAg.getPoint(seg(t, 0.68, 0.84));
+        this.leoKey.visible = true;
+        this.leoKey.position.copy(p);
+        moverPos = p;
+        moverText = '⚖ Emergency Demand + 🔑 Tokens → Apple/Google';
+        moverCls = 'cyan';
+      } else {
+        const p = this.arcLeoFromAg.getPoint(seg(t, 0.86, 0.94));
+        this.leoPacket.visible = t < 0.94;
+        this.leoPacket.position.copy(p);
+        this.leoPacketMat.color.setHex(0x34d399);
+        this.leoPacketMat.emissive.setHex(0x059669);
+        this.leoPacketLight.color.setHex(0x34d399);
+        if (t < 0.93) {
+          moverPos = p;
+          moverText = '🪪 Returning Subscriber Identity';
+          moverCls = 'push';
+        } else {
+          showLeoId = true;
+        }
+      }
     }
 
-    // Station labels
-    this.place('pin-store',  new THREE.Vector3(POS.store.x,  this.tops.store, POS.store.z), true);
-    this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2, POS.post.z), true);
-    this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8), true);
-    this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), true);
-    this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 10, POS.ufo.z), true);
+    // Normal mode station labels (hidden when flipped to Law Enforcement)
+    const showNorm = !isLeo && this.flipRoll < Math.PI * 0.45;
+    this.place('pin-store',  new THREE.Vector3(POS.store.x,  this.tops.store, POS.store.z), showNorm);
+    this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2, POS.post.z), showNorm);
+    this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8), showNorm);
+    this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), showNorm);
+    this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 10, POS.ufo.z), showNorm);
 
+    // Law Enforcement station labels (visible when flipped upside down!)
+    const showLeoPins = isLeo && this.flipRoll > Math.PI * 0.55;
+    const L = this.leoPos;
+    this.place('pin-leo-bandit', new THREE.Vector3(L.bandit.x, -1.5, L.bandit.z + 8), showLeoPins, this.leoGroup);
+    this.place('pin-leo-swat',   new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 8),   showLeoPins, this.leoGroup);
+    this.place('pin-leo-bot',    new THREE.Vector3(L.bot.x,    -1.5, L.bot.z + 8),    showLeoPins, this.leoGroup);
+    this.place('pin-leo-proton', new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
+    this.place('pin-leo-ag',     new THREE.Vector3(L.ag.x,     this.leoTops.ag + 2, L.ag.z), showLeoPins, this.leoGroup);
+
+    // Normal contextual callouts
     const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 11, POS.phone.z);
     const serverTop = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
-    this.place('pin-install', phoneTop,  showInstall);
-    this.place('pin-token',   phoneTop,  showToken);
-    this.place('pin-saved',   serverTop, showSaved);
-    this.place('pin-push',    phoneTop,  showPush);
-    this.place('pin-ledger',  new THREE.Vector3(POS.post.x, 46, POS.post.z), showLedger);
+    this.place('pin-install', phoneTop,  showNorm && showInstall);
+    this.place('pin-token',   phoneTop,  showNorm && showToken);
+    this.place('pin-saved',   serverTop, showNorm && showSaved);
+    this.place('pin-push',    phoneTop,  showNorm && showPush);
+    this.place('pin-ledger',  new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
+
+    // Law Enforcement contextual callouts
+    this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
+    this.place('pin-leo-denied', new THREE.Vector3(L.proton.x, this.leoTops.proton + 6, L.proton.z), showLeoPins && showLeoDenied, this.leoGroup);
+    this.place('pin-leo-osint',  new THREE.Vector3(L.bot.x,    this.leoTops.bot + 5,    L.bot.z),    showLeoPins && showLeoOsint,  this.leoGroup);
+    this.place('pin-leo-tokens', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoTokens, this.leoGroup);
+    this.place('pin-leo-id',     new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoId,     this.leoGroup);
 
     const mv = document.getElementById('pin-mover');
     mv.className = 'pin pin-mover' + (moverCls ? ' ' + moverCls : '');
     mv.textContent = moverText;
-    this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.5, 0)) : null, !!moverPos);
+    this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.5, 0)) : null, !!moverPos, moverParent);
   }
 
-  place(id, worldPos, show) {
+  place(id, localPos, show, parentGroup = this.worldGroup) {
     const el = document.getElementById(id);
     if (!el) return;
-    if (!show || !worldPos) { el.style.display = 'none'; return; }
-    const p = worldPos.clone().project(this.camera);
+    if (!show || !localPos) { el.style.display = 'none'; return; }
+    const worldPos = localPos.clone().applyMatrix4(parentGroup.matrixWorld);
+    const p = worldPos.project(this.camera);
     if (p.z > 1 || p.z < -1) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     const w = el.offsetWidth || 120;
@@ -915,6 +1174,22 @@ class PushnotOrbit {
     const now = performance.now();
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
+
+    // Smooth 180° upside-down world flip animation!
+    this.flipRoll += (this.flipTarget - this.flipRoll) * Math.min(1, dt * 4.5);
+    if (Math.abs(this.flipTarget - this.flipRoll) < 0.002) this.flipRoll = this.flipTarget;
+    this.worldPivot.rotation.z = this.flipRoll;
+    this.leoGroup.visible = this.flipRoll > 0.05;
+    this.worldPivot.updateMatrixWorld(true);
+
+    if (this.protonGroup) this.protonGroup.rotation.y += dt * 0.6;
+    if (this.leoAgBeacon) { this.leoAgBeacon.rotation.y += dt * 0.7; this.leoAgBeacon.rotation.x += dt * 0.35; }
+    if (this.osintBot)    this.osintBot.rotation.y += dt * 0.55;
+    if (this.leoKey && this.leoKey.visible) this.leoKey.rotation.y += dt * 2.4;
+    if (this.rejectX && this.rejectX.visible) {
+      const s = 1 + Math.sin(now * 0.015) * 0.12;
+      this.rejectX.scale.setScalar(s);
+    }
 
     if (this.playing) {
       this.t = (this.t + dt / MODE_SECONDS[this.mode]) % 1;

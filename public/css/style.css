@@ -38,13 +38,39 @@ html, body {
 }
 .top-brand .dot.push { background: var(--green); box-shadow: 0 0 12px var(--green); }
 
+.top-right {
+  position: absolute; top: 18px; right: 22px; z-index: 12;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.btn-leo {
+  height: 36px; padding: 0 14px; border-radius: 10px; cursor: pointer;
+  background: rgba(244, 63, 94, 0.14); border: 1px solid rgba(244, 63, 94, 0.5);
+  color: #fda4af; font-family: var(--sans); font-size: .8rem; font-weight: 700;
+  letter-spacing: .4px; backdrop-filter: blur(12px); transition: all .25s;
+}
+.btn-leo:hover { background: rgba(244, 63, 94, 0.28); color: #fff; }
+.btn-leo.active {
+  background: linear-gradient(135deg, #e11d48, #2563eb); border-color: #fb7185; color: #fff;
+  box-shadow: 0 0 22px rgba(225, 29, 72, 0.55);
+}
+
 .btn-fs {
-  position: absolute; top: 18px; right: 22px; z-index: 10;
   width: 36px; height: 36px; border-radius: 10px; cursor: pointer;
   background: var(--glass); border: 1px solid var(--line); color: var(--muted);
   font-size: 1rem; backdrop-filter: blur(12px); transition: all .2s;
 }
 .btn-fs:hover { color: var(--text); border-color: rgba(255,255,255,.3); }
+
+body.leo-mode {
+  background: radial-gradient(circle at 50% 42%, #1d0914 0%, #05070e 72%);
+}
+.polarity-banner.leo { border-color: rgba(244, 63, 94, 0.7); }
+.polarity-banner.leo .pol-arrow,
+.polarity-banner.leo .pol-label { color: #fb7185; }
+.top-brand .dot.leo { background: #f43f5e; box-shadow: 0 0 14px #f43f5e; }
+.pin-event.red { border-color: rgba(244, 63, 94, 0.8); box-shadow: 0 0 32px rgba(244, 63, 94, 0.4); }
+.pin-mover.red { border-color: #fb7185; color: #fda4af; box-shadow: 0 0 18px rgba(244, 63, 94, 0.4); }
 
 /* Crisp top-center polarity indicator */
 .polarity-banner {

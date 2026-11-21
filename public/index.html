@@ -24,7 +24,10 @@
     <span class="dot" id="brand-dot"></span>
     <span>PUSHNOT</span>
   </div>
-  <button class="btn-fs" id="btn-fullscreen" title="Fullscreen">⛶</button>
+  <div class="top-right">
+    <button class="btn-leo" id="btn-leo" title="Flip Upside Down · Law Enforcement Trace (L)">⚖ Law Enforcement</button>
+    <button class="btn-fs" id="btn-fullscreen" title="Fullscreen">⛶</button>
+  </div>
 
   <!-- Crisp polarity direction indicator -->
   <div class="polarity-banner" id="polarity-banner">
@@ -33,12 +36,19 @@
     <span class="pol-route" id="pol-route">App Store → Phone → Post Office → Server</span>
   </div>
 
-  <!-- Minimal 5-station labels -->
+  <!-- Minimal 5-station labels (Normal Mode) -->
   <div class="pin pin-node" id="pin-store">APPLE &amp; GOOGLE STORES</div>
   <div class="pin pin-node" id="pin-phone">PHONE</div>
   <div class="pin pin-node" id="pin-post">POST OFFICE · APNs/FCM</div>
   <div class="pin pin-node" id="pin-server">DATACENTRE</div>
   <div class="pin pin-node" id="pin-ufo">EVENT TRIGGER</div>
+
+  <!-- Law Enforcement Mode station labels (visible when flipped upside down) -->
+  <div class="pin pin-node leo-pin" id="pin-leo-bandit">SUSPECT · badguy@protonmail.com</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-swat">POLICE · LEO</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-bot">OSINT · SPIDERFOOT / META &amp; X</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-proton">🇨🇭 PROTON (SWITZERLAND)</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-ag">APPLE &amp; GOOGLE · SUBSCRIBER DB</div>
 
   <!-- Single active contextual callout -->
   <div class="pin pin-event cyan" id="pin-install">
@@ -70,6 +80,47 @@
     <div>
       <div class="ev-title">Bejeweled · Bonus Ready!</div>
       <div class="ev-sub">Daily gem chest unlocked</div>
+    </div>
+  </div>
+
+  <!-- Law Enforcement Scenario Callouts (Upside-Down Reverse Trace) -->
+  <div class="pin pin-event red" id="pin-leo-threat">
+    <span class="ev-ico">🚨</span>
+    <div>
+      <div class="ev-title">Bomb Threat Email</div>
+      <div class="ev-sub">badguy@protonmail.com → Police</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event red" id="pin-leo-denied">
+    <span class="ev-ico">🇨🇭</span>
+    <div>
+      <div class="ev-title">Proton · Demand Rejected</div>
+      <div class="ev-sub">Swiss jurisdiction · Zero data returned</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-leo-osint">
+    <span class="ev-ico">🔎</span>
+    <div>
+      <div class="ev-title">OSINT / LEO Portal Pivot</div>
+      <div class="ev-sub">SpiderFoot · Meta &amp; X accounts linked</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-leo-tokens">
+    <span class="ev-ico">🔑</span>
+    <div>
+      <div class="ev-title">Push Tokens Returned</div>
+      <div class="ev-sub">Meta &amp; X return APNs / FCM tokens</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event green" id="pin-leo-id">
+    <span class="ev-ico">🪪</span>
+    <div>
+      <div class="ev-title">Subscriber Identity Unmasked</div>
+      <div class="ev-sub">Apple / Google · Name, Billing, Phone, IPs</div>
     </div>
   </div>
 

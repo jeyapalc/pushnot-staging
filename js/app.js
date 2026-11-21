@@ -184,9 +184,9 @@ class PushnotOrbit {
     outer.position.y = 0.1;
     this.worldGroup.add(outer);
 
-    // Arcs emerging cleanly from the San Francisco buildings area (not floating above in empty air!)
+    // Arcs emerging cleanly between Apple and Google signs
     const pPhone  = POS.phone.clone().setY(15);
-    const pPost   = POS.post.clone().add(new THREE.Vector3(0, 11, 2)); // emerging directly from the buildings area!
+    const pPost   = POS.post.clone().setY(10.5); // centered right between Apple and Google signs
     const pServer = POS.server.clone().setY(15);
 
     this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 4, 18, -6), pPhone);
@@ -2554,12 +2554,12 @@ class PushnotOrbit {
         polygonOffsetUnits: -8,
         side: THREE.DoubleSide
       });
-      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(16.5, 5.4), chestMat);
-      chestPatch.position.set(0.0, 131.5, 23.2);
-      chestPatch.rotation.x = -0.10;
+      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(16.5, 5.8), chestMat);
+      chestPatch.position.set(0.0, 142.5, 21.0);
+      chestPatch.rotation.x = -0.14;
       m.add(chestPatch);
 
-      // Back RCMP POLICE panel on upper back above equipment pack
+      // Back RCMP POLICE panel on upper back plate
       const backTex = this.createRcmpBackPatchTexture();
       const backMat = new THREE.MeshStandardMaterial({
         map: backTex,
@@ -2570,9 +2570,9 @@ class PushnotOrbit {
         polygonOffsetUnits: -8,
         side: THREE.DoubleSide
       });
-      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(22, 10.5), backMat);
-      backPatch.position.set(0.0, 137.5, -18.2);
-      backPatch.rotation.set(0.08, Math.PI, 0);
+      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(21.0, 9.5), backMat);
+      backPatch.position.set(0.0, 150.0, -18.0);
+      backPatch.rotation.set(0.12, Math.PI, 0);
       m.add(backPatch);
 
       // Subdued RCMP shoulder flashes on sleeves
@@ -2587,13 +2587,13 @@ class PushnotOrbit {
         side: THREE.DoubleSide
       });
       const leftFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
-      leftFlash.position.set(-27.5, 133.0, 3.5);
-      leftFlash.rotation.set(0, -Math.PI * 0.48, -0.15);
+      leftFlash.position.set(-27.0, 137.0, 2.0);
+      leftFlash.rotation.set(0, -Math.PI * 0.48, -0.08);
       m.add(leftFlash);
 
       const rightFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
-      rightFlash.position.set(27.5, 133.0, 3.5);
-      rightFlash.rotation.set(0, Math.PI * 0.48, 0.15);
+      rightFlash.position.set(27.0, 137.0, 2.0);
+      rightFlash.rotation.set(0, Math.PI * 0.48, 0.08);
       m.add(rightFlash);
 
       this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);
@@ -2620,24 +2620,53 @@ class PushnotOrbit {
   }
 
   initAppleGoogleSkyscraper(done) {
-    // San Francisco Headquarters Scene (`models/san_francisco_city.glb`) with genuine reflective glass skyscrapers,
-    // bridges, and tech campus skyline — mounted with 3D Apple and Google Logos facing the orbit camera!
+    // Push Service / App Stores Station — Apple & Google Signs ONLY
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.post.x, 0, POS.post.z);
     this.normalGroup.add(this.storeGroup);
 
-    this.sfCityGroup = new THREE.Group();
-    this.storeGroup.add(this.sfCityGroup);
+    // Sleek dark architectural cyber-plinth at ground level
+    const plinthGeo = new THREE.CylinderGeometry(14, 15.5, 1.2, 48);
+    const plinthMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0f1d,
+      roughness: 0.35,
+      metalness: 0.8
+    });
+    const plinth = new THREE.Mesh(plinthGeo, plinthMat);
+    plinth.position.y = 0.6;
+    this.storeGroup.add(plinth);
 
-    // Front-facing logo mount group for Apple and Google logos overlooking the skyline
+    // Glowing cyan cyber rim ring around plinth
+    const ringGeo = new THREE.TorusGeometry(14.8, 0.18, 16, 64);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI * 0.5;
+    ring.position.y = 1.22;
+    this.storeGroup.add(ring);
+
+    // Front-facing logo mount group for Apple and Google signs
     this.frontLogosGroup = new THREE.Group();
+    this.frontLogosGroup.position.set(0, 10.5, 0);
     this.storeGroup.add(this.frontLogosGroup);
 
-    this.tops.post  = 34;
-    this.tops.store = 34;
+    // Illumination for the signs
+    const signLight = new THREE.PointLight(0xffffff, 2.8, 60);
+    signLight.position.set(0, 14, 12);
+    this.storeGroup.add(signLight);
+
+    const cyanGlow = new THREE.PointLight(0x38bdf8, 2.0, 35);
+    cyanGlow.position.set(-6.8, 8, 4);
+    this.storeGroup.add(cyanGlow);
+
+    const amberGlow = new THREE.PointLight(0xf59e0b, 2.0, 35);
+    amberGlow.position.set(6.8, 8, 4);
+    this.storeGroup.add(amberGlow);
+
+    this.tops.post  = 18;
+    this.tops.store = 18;
 
     let partsReady = 0;
-    const partsExpected = 4;
+    const partsExpected = 2; // Only Apple and Google logos
     const checkClone = () => {
       partsReady++;
       if (partsReady === partsExpected && this.leoAgGroup) {
@@ -2649,95 +2678,22 @@ class PushnotOrbit {
       done();
     };
 
-    // 1. Load the San Francisco Cityscape (`models/san_francisco_city.glb`)
-    this.loader.load('models/san_francisco_city.glb', (gltf) => {
-      const city = gltf.scene;
-
-      city.traverse((ch) => {
-        if (!ch.isMesh) return;
-        const nName = (ch.name || '').toLowerCase();
-        const mName = ch.material ? (ch.material.name || '').toLowerCase() : '';
-
-        // Hide the 5km water tile (agia / Object_0) so only the tech city island remains!
-        if (nName.includes('object_0') || mName.includes('agia')) {
-          ch.visible = false;
-          return;
-        }
-
-        // Preserve all authentic original textures, colors, and glowing night emissive maps!
-        if (ch.material) {
-          ch.material.side = THREE.DoubleSide;
-          if (ch.material.map) ch.material.map.colorSpace = THREE.SRGBColorSpace;
-          if (ch.material.emissiveMap) {
-            ch.material.emissiveMap.colorSpace = THREE.SRGBColorSpace;
-            ch.material.emissiveIntensity = 1.35; // Rich glowing night lights & illuminated bridges!
-          }
-          ch.material.roughness = 0.35;
-          ch.material.metalness = 0.25;
-          ch.material.needsUpdate = true;
-        }
-      });
-
-      // Cinematic campus and skyline accent lighting for San Francisco
-      this.sfCityGroup.add(new THREE.PointLight(0xfbbf24, 3.2, 85)); // warm amber city glow at base
-      const coolSkyLight = new THREE.PointLight(0x38bdf8, 2.8, 110);
-      coolSkyLight.position.set(0, 24, 10);
-      this.sfCityGroup.add(coolSkyLight); // cool cyan tech skyline wash
-
-      // Compute bounding box ignoring the hidden water tile
-      const visibleBox = new THREE.Box3();
-      city.traverse((ch) => {
-        if (ch.isMesh && ch.visible) {
-          ch.geometry.computeBoundingBox();
-          const b = ch.geometry.boundingBox.clone().applyMatrix4(ch.matrixWorld);
-          visibleBox.union(b);
-        }
-      });
-
-      const dim = visibleBox.getSize(new THREE.Vector3());
-      const targetH = 30;
-      const s = targetH / (dim.y || 1);
-      city.scale.setScalar(s);
-      city.updateMatrixWorld(true);
-
-      const finalBox = new THREE.Box3();
-      city.traverse((ch) => {
-        if (ch.isMesh && ch.visible) {
-          const b = ch.geometry.boundingBox.clone().applyMatrix4(ch.matrixWorld);
-          finalBox.union(b);
-        }
-      });
-      const c = finalBox.getCenter(new THREE.Vector3());
-      city.position.set(-c.x, -finalBox.min.y, -c.z);
-      this.sfCityGroup.add(city);
-
-      const crownY = finalBox.getSize(new THREE.Vector3()).y;
-      this.tops.post  = crownY + 4;
-      this.tops.store = crownY + 4;
-
-      // Position the Apple & Google logos and SILICON VALLEY 3D text overlooking the skyline facing +Z towards camera
-      this.frontLogosGroup.position.set(0, crownY * 0.72, 16);
-
-      checkClone();
-    }, undefined, checkClone);
-
-    // 2. Mount Apple Logo (left) and Google Logo (right) - Exactly the same size and matching finish
+    // Mount Apple Logo (left) and Google Logo (right) - Identical scale and matching finish
     const mountLogo = (path, xOffset, isApple) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
-        // Harmonize logo materials to identical metallic satin finish
         logo.traverse((ch) => {
           if (ch.isMesh && ch.material) {
             ch.material.metalness = 0.52;
             ch.material.roughness = 0.24;
-            ch.material.envMapIntensity = 1.25;
+            ch.material.envMapIntensity = 1.35;
             ch.castShadow = true;
           }
         });
         let box = new THREE.Box3().setFromObject(logo);
         const raw = box.getSize(new THREE.Vector3());
-        // Same exact target size for both logos
-        const targetSize = 7.2;
+        // Large, prominent, identical scale for both logos
+        const targetSize = 10.5;
         const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
         logo.scale.setScalar(s);
         logo.updateMatrixWorld(true);
@@ -2747,7 +2703,7 @@ class PushnotOrbit {
         const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
         wrap.add(logo);
-        wrap.position.set(xOffset, 2.6, 0);
+        wrap.position.set(xOffset, 0, 0);
 
         if (isApple) this.appleLogoMesh = wrap;
         else this.googleLogoMesh = wrap;
@@ -2758,57 +2714,8 @@ class PushnotOrbit {
       }, undefined, checkClone);
     };
 
-    mountLogo('models/apple_logo.glb', -5.8, true);
-    mountLogo('models/google_logo.glb',  5.8, false);
-
-    // 3. Genuine 3D Block Text for "SILICON VALLEY" at SEA LEVEL in RED
-    const fontLoader = new FontLoader();
-    fontLoader.load('fonts/helvetiker_bold.typeface.json', (font) => {
-      const textGeo = new TextGeometry('SILICON VALLEY', {
-        font: font,
-        size: 1.85,
-        height: 0.75, // 3D block extrusion depth
-        curveSegments: 6,
-        bevelEnabled: true,
-        bevelThickness: 0.14,
-        bevelSize: 0.07,
-        bevelSegments: 3
-      });
-      textGeo.computeBoundingBox();
-      const textDim = textGeo.boundingBox.getSize(new THREE.Vector3());
-      textGeo.translate(-textDim.x * 0.5, -textDim.y * 0.5, -textDim.z * 0.5);
-
-      // Vibrant, bold architectural RED with glowing crimson emissive illumination!
-      const textMat = new THREE.MeshStandardMaterial({
-        color: 0xef4444, // Vibrant bold red
-        emissive: 0xdc2626, // Glowing crimson red
-        emissiveIntensity: 0.85,
-        metalness: 0.35,
-        roughness: 0.22
-      });
-      const textMesh = new THREE.Mesh(textGeo, textMat);
-      const textWrap = new THREE.Group();
-      textWrap.add(textMesh);
-
-      // Sleek architectural dark plinth under 3D block text
-      const plinth = new THREE.Mesh(
-        new THREE.BoxGeometry(textDim.x + 2.5, 0.45, 1.8),
-        new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.3 })
-      );
-      plinth.position.y = -textDim.y * 0.5 - 0.24;
-      textWrap.add(plinth);
-
-      // Vibrant red accent ground glow at sea level
-      const redLight = new THREE.PointLight(0xef4444, 4.0, 32);
-      redLight.position.set(0, 1.0, 2.5);
-      textWrap.add(redLight);
-
-      // Positioned right at SEA LEVEL (y = 1.3) at the shoreline of the San Francisco node facing front!
-      textWrap.position.set(0, 1.3, 21.0);
-      this.storeGroup.add(textWrap);
-
-      checkClone();
-    }, undefined, checkClone);
+    mountLogo('models/apple_logo.glb', -6.8, true);
+    mountLogo('models/google_logo.glb',  6.8, false);
   }
 
   centerAndScale(obj, size) {

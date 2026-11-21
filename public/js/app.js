@@ -525,28 +525,8 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 4. Apple & Google App Store Logos (back-right, stacked vertically)
-    this.storeGroup = new THREE.Group();
-    this.storeGroup.position.set(POS.store.x, 19, POS.store.z);
-    this.storeGroup.rotation.y = -Math.PI * 0.25;
-    this.tops.store = 36;
-    this.scene.add(this.storeGroup);
-
-    this.loader.load('models/apple_logo.glb', (gltf) => {
-      this.appleLogo = gltf.scene;
-      this.centerAndScale(this.appleLogo, 14);
-      this.appleLogo.position.set(0, 8.5, 0);
-      this.storeGroup.add(this.appleLogo);
-      done();
-    }, undefined, done);
-
-    this.loader.load('models/google_logo.glb', (gltf) => {
-      this.googleLogo = gltf.scene;
-      this.centerAndScale(this.googleLogo, 14);
-      this.googleLogo.position.set(0, -8.5, 0);
-      this.storeGroup.add(this.googleLogo);
-      done();
-    }, undefined, done);
+    // 4. App Store Shopping Bag with Apple flat on front (+Z) and Google flat on back (-Z)
+    this.initAppStoreBag(done);
 
     // 5. UFO — External Event Trigger hovering above the App Server!
     this.loader.load('models/ufo.glb', (gltf) => {
@@ -566,6 +546,107 @@ class PushnotOrbit {
       this.scene.add(this.ufoGroup);
       done();
     }, undefined, done);
+  }
+
+  initAppStoreBag(done) {
+    // Sleek luxury retail shopping bag grounded at POS.store,
+    // with Apple logo mounted flat on front (+Z) and Google logo mounted flat on back (-Z).
+    this.storeGroup = new THREE.Group();
+    this.storeGroup.position.set(POS.store.x, 0, POS.store.z);
+    this.storeGroup.rotation.y = -Math.PI * 0.25;
+    this.scene.add(this.storeGroup);
+
+    const bagW = 19;
+    const bagH = 22;
+    const bagD = 9.5;
+
+    const paperMat = new THREE.MeshStandardMaterial({
+      color: 0xe6edf6, roughness: 0.52, metalness: 0.06
+    });
+    const creaseMat = new THREE.MeshStandardMaterial({
+      color: 0xcbd5e1, roughness: 0.65, metalness: 0.05
+    });
+    const innerMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, roughness: 0.9, metalness: 0.0
+    });
+    const trimMat = new THREE.MeshStandardMaterial({
+      color: 0x94a3b8, roughness: 0.3, metalness: 0.8
+    });
+    const cordMat = new THREE.MeshStandardMaterial({
+      color: 0x38bdf8, emissive: 0x0369a1, emissiveIntensity: 0.35, roughness: 0.35, metalness: 0.25
+    });
+
+    // Main bag body (grounded: bottom at y = 0)
+    const body = new THREE.Mesh(new THREE.BoxGeometry(bagW, bagH, bagD), paperMat);
+    body.position.y = bagH / 2;
+    this.storeGroup.add(body);
+
+    // Subtle dark interior opening at top rim
+    const cavity = new THREE.Mesh(new THREE.BoxGeometry(bagW - 1.2, 0.8, bagD - 1.2), innerMat);
+    cavity.position.y = bagH - 0.3;
+    this.storeGroup.add(cavity);
+
+    // Folded side gusset vertical creases (left & right)
+    const creaseGeo = new THREE.BoxGeometry(0.35, bagH - 1.2, 0.35);
+    const leftCrease = new THREE.Mesh(creaseGeo, creaseMat);
+    leftCrease.position.set(-bagW / 2 - 0.05, bagH / 2, 0);
+    const rightCrease = new THREE.Mesh(creaseGeo, creaseMat);
+    rightCrease.position.set(bagW / 2 + 0.05, bagH / 2, 0);
+    this.storeGroup.add(leftCrease, rightCrease);
+
+    // Top folded lip reinforcement strip
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(bagW + 0.25, 1.4, bagD + 0.25), creaseMat);
+    rim.position.y = bagH - 0.7;
+    this.storeGroup.add(rim);
+
+    // Twin curved cord handles + metallic grommet eyelets (front +Z and back -Z)
+    const handleSpan = 4.2;
+    const eyeletGeo = new THREE.TorusGeometry(0.55, 0.16, 8, 20);
+    for (const side of [1, -1]) {
+      const z = side * (bagD / 2 + 0.08);
+      for (const sx of [-1, 1]) {
+        const eyelet = new THREE.Mesh(eyeletGeo, trimMat);
+        eyelet.position.set(sx * handleSpan, bagH - 2.2, z);
+        this.storeGroup.add(eyelet);
+      }
+      const handleCurve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(-handleSpan, bagH - 2.2, z),
+        new THREE.Vector3(-handleSpan * 0.9, bagH + 7.2, z),
+        new THREE.Vector3( handleSpan * 0.9, bagH + 7.2, z),
+        new THREE.Vector3( handleSpan, bagH - 2.2, z)
+      );
+      const handle = new THREE.Mesh(new THREE.TubeGeometry(handleCurve, 28, 0.38, 10, false), cordMat);
+      this.storeGroup.add(handle);
+    }
+
+    this.tops.store = bagH + 9.5;
+
+    // Helper: mount a logo GLB flat & flush onto the front (+1) or back (-1) face of the bag
+    const mountLogoFlat = (path, sideSign, targetSize) => {
+      this.loader.load(path, (gltf) => {
+        const logo = gltf.scene;
+        let box = new THREE.Box3().setFromObject(logo);
+        const raw = box.getSize(new THREE.Vector3());
+        const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
+        logo.scale.set(s, s, Math.min(s, 1.2 / (raw.z || 1))); // keep flat embossed relief
+
+        box = new THREE.Box3().setFromObject(logo);
+        const c = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
+
+        const wrap = new THREE.Group();
+        logo.position.set(-c.x, -c.y, -c.z);
+        wrap.add(logo);
+        if (sideSign < 0) wrap.rotation.y = Math.PI; // face cleanly outward on back side
+        wrap.position.set(0, bagH * 0.48, sideSign * (bagD / 2 + size.z / 2 + 0.12));
+        this.storeGroup.add(wrap);
+        done();
+      }, undefined, (err) => { console.warn('Store logo load failed:', path, err); done(); });
+    };
+
+    // Apple flat on front (+Z), Google flat on back (-Z)
+    mountLogoFlat('models/apple_logo.glb',  1, 10.5);
+    mountLogoFlat('models/google_logo.glb', -1, 10.5);
   }
 
   centerAndScale(obj, size) {
@@ -843,8 +924,10 @@ class PushnotOrbit {
       this.ufoGroup.rotation.y += dt * 0.7;
       this.ufoGroup.position.y = POS.ufo.y + Math.sin(now * 0.0025) * 1.4;
     }
-    if (this.appleLogo) this.appleLogo.rotation.y += dt * 0.6;
-    if (this.googleLogo) this.googleLogo.rotation.y -= dt * 0.6;
+    if (this.storeGroup) {
+      // Gently spin the App Store shopping bag so both Apple & Google sides showcase smoothly
+      this.storeGroup.rotation.y += dt * 0.45;
+    }
 
     this.appOrb.rotation.y += dt * 1.4;
     if (this.installedApp.visible) {

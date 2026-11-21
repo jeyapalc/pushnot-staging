@@ -2550,28 +2550,29 @@ class PushnotOrbit {
         roughness: 0.75,
         metalness: 0.05,
         polygonOffset: true,
-        polygonOffsetFactor: -6,
-        polygonOffsetUnits: -6,
+        polygonOffsetFactor: -8,
+        polygonOffsetUnits: -8,
         side: THREE.DoubleSide
       });
-      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(18, 5.8), chestMat);
-      chestPatch.position.set(0.2, 121, 20.2);
+      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(16.5, 5.4), chestMat);
+      chestPatch.position.set(0.0, 131.5, 23.2);
+      chestPatch.rotation.x = -0.10;
       m.add(chestPatch);
 
-      // Back RCMP POLICE panel
+      // Back RCMP POLICE panel on upper back above equipment pack
       const backTex = this.createRcmpBackPatchTexture();
       const backMat = new THREE.MeshStandardMaterial({
         map: backTex,
         roughness: 0.75,
         metalness: 0.05,
         polygonOffset: true,
-        polygonOffsetFactor: -6,
-        polygonOffsetUnits: -6,
+        polygonOffsetFactor: -8,
+        polygonOffsetUnits: -8,
         side: THREE.DoubleSide
       });
-      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(21, 9.8), backMat);
-      backPatch.position.set(0.2, 123, -19.5);
-      backPatch.rotation.y = Math.PI;
+      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(22, 10.5), backMat);
+      backPatch.position.set(0.0, 137.5, -18.2);
+      backPatch.rotation.set(0.08, Math.PI, 0);
       m.add(backPatch);
 
       // Subdued RCMP shoulder flashes on sleeves
@@ -2581,18 +2582,18 @@ class PushnotOrbit {
         roughness: 0.75,
         metalness: 0.05,
         polygonOffset: true,
-        polygonOffsetFactor: -6,
-        polygonOffsetUnits: -6,
+        polygonOffsetFactor: -8,
+        polygonOffsetUnits: -8,
         side: THREE.DoubleSide
       });
       const leftFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
-      leftFlash.position.set(-29.0, 134, 1.8);
-      leftFlash.rotation.set(0, -Math.PI * 0.48, -0.12);
+      leftFlash.position.set(-27.5, 133.0, 3.5);
+      leftFlash.rotation.set(0, -Math.PI * 0.48, -0.15);
       m.add(leftFlash);
 
       const rightFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
-      rightFlash.position.set(29.0, 134, 3.2);
-      rightFlash.rotation.set(0, Math.PI * 0.48, 0.12);
+      rightFlash.position.set(27.5, 133.0, 3.5);
+      rightFlash.rotation.set(0, Math.PI * 0.48, 0.15);
       m.add(rightFlash);
 
       this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);

@@ -48,6 +48,7 @@ class PushnotOrbit {
     this.loader.setDRACOLoader(draco);
 
     this.mode = 'setup'; // 'setup' | 'push' | 'world' | 'leo'
+    this.currentOS = 'ios'; // 'ios' | 'android'
     this.prevNormalMode = 'setup';
     this.t = 0.0;
     this.targetT = 0.0;
@@ -704,8 +705,8 @@ class PushnotOrbit {
     this.triggerBolt.add(new THREE.PointLight(0x38bdf8, 4, 30));
     this.normalGroup.add(this.triggerBolt);
 
-    // 6. Push Notification Payload: 3D Notification Bell with Unread Red Badge ("1") + Mini Golden Key!
-    this.pushOrb = this.createNotificationBellPayload();
+    // 6. Push Notification Payload: Sleek 3D Glass Payload Card + Docked Token Key (Zero Noise / No Clutter)
+    this.pushOrb = this.createPushNotificationPayload();
     this.normalGroup.add(this.pushOrb);
 
     // 7. 3D Neural Brain popping up above the Apple & Google Skyscraper HQ for routing lookup
@@ -715,6 +716,433 @@ class PushnotOrbit {
     this.phoneEmojiBadge = this.createPhoneEmojiBadge();
     this.phoneEmojiBadge.visible = false;
     this.normalGroup.add(this.phoneEmojiBadge);
+  }
+
+  /* ---- Mobile Operating System Switcher (Interactive iOS vs Android Toggle) ---- */
+  setOS(os) {
+    if (this.currentOS === os) return;
+    this.currentOS = os;
+
+    // Update 2D top buttons
+    const btnIos = document.getElementById('btn-os-ios');
+    const btnAndroid = document.getElementById('btn-os-android');
+    if (btnIos) btnIos.classList.toggle('active', os === 'ios');
+    if (btnAndroid) btnAndroid.classList.toggle('active', os === 'android');
+
+    // Update floating 3D phone badge
+    const badge = document.getElementById('phone-os-badge');
+    const floatPill = document.getElementById('pin-phone-os');
+    if (badge) badge.textContent = os === 'ios' ? ' iOS' : '🤖 Android';
+    if (floatPill) {
+      floatPill.classList.toggle('android', os === 'android');
+    }
+
+    // Update Station labels
+    const pinPhone = document.getElementById('pin-phone');
+    if (pinPhone) pinPhone.textContent = os === 'ios' ? 'IPHONE (iOS)' : 'ANDROID PHONE';
+
+    const pinPost = document.getElementById('pin-post');
+    if (pinPost) pinPost.textContent = os === 'ios' ? 'APPLE APNs (iTUNES / APP STORE)' : 'GOOGLE FCM (GOOGLE PLAY STORE)';
+
+    // Update Apple & Google logo prominence on the San Francisco headquarters
+    this.updateLogoHighlight();
+
+    // Redraw phone screen and push payload
+    this.updatePhoneScreenCanvas(this.lastPhoneScreenState || 'awake', this.lastPhoneNotifProgress || 0);
+    this.updatePayloadCanvas();
+  }
+
+  toggleOS() {
+    this.setOS(this.currentOS === 'ios' ? 'android' : 'ios');
+  }
+
+  updateLogoHighlight() {
+    if (!this.appleLogoMesh || !this.googleLogoMesh) return;
+    const isIos = this.currentOS === 'ios';
+    this.appleLogoMesh.scale.setScalar(isIos ? 1.25 : 0.72);
+    this.googleLogoMesh.scale.setScalar(isIos ? 0.72 : 1.25);
+  }
+
+  /* ---- Dynamic Phone Screen Canvas (Interactive iOS vs Android + Bejeweled Blitz) ---- */
+  updatePhoneScreenCanvas(state = 'awake', notifProgress = 0) {
+    this.lastPhoneScreenState = state;
+    this.lastPhoneNotifProgress = notifProgress;
+    if (!this.phoneCvs) return;
+    const ctx = this.phoneCvs.getContext('2d');
+    const w = 512, h = 1024;
+    ctx.clearRect(0, 0, w, h);
+
+    const isIos = this.currentOS === 'ios';
+
+    if (isIos) {
+      // ---- iOS RENDERING ----
+      // 1. Wallpaper: Rich deep midnight indigo with pastel radial blooms
+      const bg = ctx.createLinearGradient(0, 0, w, h);
+      bg.addColorStop(0, '#090d1e');
+      bg.addColorStop(0.5, '#1e1b4b');
+      bg.addColorStop(1, '#0f172a');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+
+      // Subtle iOS orb blooms
+      const g1 = ctx.createRadialGradient(160, 280, 10, 160, 280, 240);
+      g1.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+      g1.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = g1;
+      ctx.fillRect(0, 0, w, h);
+
+      const g2 = ctx.createRadialGradient(360, 680, 10, 360, 680, 260);
+      g2.addColorStop(0, 'rgba(168, 85, 247, 0.32)');
+      g2.addColorStop(1, 'rgba(168, 85, 247, 0)');
+      ctx.fillStyle = g2;
+      ctx.fillRect(0, 0, w, h);
+
+      // 2. iOS Top Bar & Dynamic Island
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 30px -apple-system, sans-serif';
+      ctx.fillText('9:41', 54, 74);
+
+      // Dynamic Island pill
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.roundRect(196, 42, 120, 36, 18);
+      ctx.fill();
+      // Selfie lens dot
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.arc(292, 60, 8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#38bdf8';
+      ctx.beginPath();
+      ctx.arc(292, 60, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Battery & Signal icons
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText('5G', 386, 72);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2.5;
+      ctx.strokeRect(424, 54, 46, 22);
+      ctx.fillStyle = '#22c55e';
+      ctx.fillRect(427, 57, 40, 16);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(470, 60, 3, 10);
+
+      if (state === 'sleeping') {
+        // iOS Lock Screen Sleeping State
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+        ctx.font = '300 96px -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('9:41', w / 2, 290);
+        ctx.font = '500 24px -apple-system, sans-serif';
+        ctx.fillText('Saturday, November 21', w / 2, 335);
+
+        // Sleep pill
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(w / 2 - 175, 520, 350, 68, 34);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = 'bold 22px -apple-system, sans-serif';
+        ctx.fillText('😴 App Sleeping · APNs Idle', w / 2, 562);
+        ctx.textAlign = 'left';
+      } else {
+        // iOS Home Screen / Active State with Bejeweled App
+        const drawSquircleIcon = (x, y, iconEmoji, title) => {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+          ctx.beginPath();
+          ctx.roundRect(x, y, 76, 76, 20);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+          ctx.stroke();
+          ctx.font = '38px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(iconEmoji, x + 38, y + 52);
+          ctx.font = '500 15px -apple-system, sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(title, x + 38, y + 98);
+        };
+
+        // Bejeweled blitz highlighted app icon
+        const bjX = 86, bjY = 220;
+        const bGrad = ctx.createLinearGradient(bjX, bjY, bjX + 88, bjY + 88);
+        bGrad.addColorStop(0, '#8b5cf6');
+        bGrad.addColorStop(1, '#ec4899');
+        ctx.fillStyle = bGrad;
+        ctx.beginPath();
+        ctx.roundRect(bjX, bjY, 88, 88, 22);
+        ctx.fill();
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.font = '48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('💎', bjX + 44, bjY + 62);
+        ctx.font = 'bold 16px -apple-system, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Bejeweled', bjX + 44, bjY + 114);
+
+        // Other utility icons
+        drawSquircleIcon(212, 226, '💬', 'Messages');
+        drawSquircleIcon(338, 226, '📷', 'Camera');
+        drawSquircleIcon(86, 376, '🎵', 'Music');
+        drawSquircleIcon(212, 376, '🗺️', 'Maps');
+        drawSquircleIcon(338, 376, '⚙️', 'Settings');
+
+        // iOS Frosted Glass Dock at bottom
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.18)';
+        ctx.beginPath();
+        ctx.roundRect(46, 880, 420, 96, 32);
+        ctx.fill();
+        drawSquircleIcon(82, 890, '📞', '');
+        drawSquircleIcon(176, 890, '🧭', '');
+        drawSquircleIcon(268, 890, '✉️', '');
+        drawSquircleIcon(360, 890, '', '');
+
+        // If push notification is triggered / arrived:
+        if (notifProgress > 0) {
+          const bannerY = 110 + (1 - Math.pow(1 - notifProgress, 3)) * 20;
+          ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+          ctx.beginPath();
+          ctx.roundRect(32, bannerY, 448, 126, 24);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#38bdf8';
+          ctx.font = 'bold 17px -apple-system, sans-serif';
+          ctx.fillText('💎 BEJEWELED BLITZ · now', 56, bannerY + 36);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 20px -apple-system, sans-serif';
+          ctx.fillText('Energy Refilled! Play Now 💎', 56, bannerY + 68);
+
+          ctx.fillStyle = '#94a3b8';
+          ctx.font = '16px -apple-system, sans-serif';
+          ctx.fillText('Your lives are full. Tap to beat high scores!', 56, bannerY + 98);
+        }
+        ctx.textAlign = 'left';
+      }
+    } else {
+      // ---- ANDROID RENDERING ----
+      // 1. Wallpaper: Android 14 Material You teal/mint organic aesthetic
+      const bg = ctx.createLinearGradient(0, 0, w, h);
+      bg.addColorStop(0, '#041716');
+      bg.addColorStop(0.5, '#0b2926');
+      bg.addColorStop(1, '#061a18');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, w, h);
+
+      // Material You fluid curved shapes
+      ctx.fillStyle = 'rgba(52, 211, 153, 0.18)';
+      ctx.beginPath();
+      ctx.ellipse(380, 260, 240, 180, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+      ctx.beginPath();
+      ctx.ellipse(140, 720, 220, 200, -Math.PI / 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Android Status Bar with Center Punch-hole Camera
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px Roboto, sans-serif';
+      ctx.fillText('09:41', 54, 72);
+
+      // Center punch-hole camera
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.arc(256, 60, 14, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#0d2825';
+      ctx.beginPath();
+      ctx.arc(256, 60, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Signal & battery
+      ctx.font = 'bold 20px monospace';
+      ctx.fillText('5G 📶 100%', 356, 70);
+
+      if (state === 'sleeping') {
+        // Android AOD Sleeping State
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.fillStyle = '#10b981';
+        ctx.font = '300 110px Roboto, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('09', w / 2, 260);
+        ctx.fillText('41', w / 2, 380);
+
+        ctx.fillStyle = '#6ee7b7';
+        ctx.font = '500 24px Roboto, sans-serif';
+        ctx.fillText('Sat, Nov 21 · 21°C', w / 2, 450);
+
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(w / 2 - 165, 560, 330, 56);
+
+        ctx.fillStyle = '#a7f3d0';
+        ctx.font = 'bold 20px Roboto, sans-serif';
+        ctx.fillText('💤 Android Doze · FCM Socket', w / 2, 596);
+        ctx.textAlign = 'left';
+      } else {
+        // Android Material You Home Screen with Bejeweled Blitz
+        const drawCircleIcon = (x, y, iconEmoji, title) => {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+          ctx.beginPath();
+          ctx.arc(x + 40, y + 40, 40, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = 'rgba(52, 211, 153, 0.4)';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.font = '38px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(iconEmoji, x + 40, y + 53);
+          ctx.font = '500 15px Roboto, sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.fillText(title, x + 40, y + 98);
+        };
+
+        // Bejeweled circular adaptive icon
+        const bjX = 86, bjY = 220;
+        const bGrad = ctx.createLinearGradient(bjX, bjY, bjX + 84, bjY + 84);
+        bGrad.addColorStop(0, '#059669');
+        bGrad.addColorStop(1, '#0284c7');
+        ctx.fillStyle = bGrad;
+        ctx.beginPath();
+        ctx.arc(bjX + 44, bjY + 44, 44, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#34d399';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.font = '48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('💎', bjX + 44, bjY + 60);
+        ctx.font = 'bold 16px Roboto, sans-serif';
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText('Bejeweled', bjX + 44, bjY + 114);
+
+        // Other icons
+        drawCircleIcon(212, 226, '🤖', 'Chrome');
+        drawCircleIcon(338, 226, '📷', 'Photos');
+        drawCircleIcon(86, 376, '▶️', 'YouTube');
+        drawCircleIcon(212, 376, '🗺️', 'Maps');
+        drawCircleIcon(338, 376, '⚙️', 'Settings');
+
+        // Android Search Bar pill at bottom
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+        ctx.beginPath();
+        ctx.roundRect(46, 890, 420, 68, 34);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(52, 211, 153, 0.5)';
+        ctx.stroke();
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#34d399';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.fillText('G', 76, 934);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '18px Roboto, sans-serif';
+        ctx.fillText('Search apps & web…', 116, 933);
+
+        // If push notification is triggered / arrived:
+        if (notifProgress > 0) {
+          const bannerY = 110 + (1 - Math.pow(1 - notifProgress, 3)) * 20;
+          ctx.fillStyle = '#0f2924';
+          ctx.beginPath();
+          ctx.roundRect(32, bannerY, 448, 126, 24);
+          ctx.fill();
+          ctx.strokeStyle = '#34d399';
+          ctx.lineWidth = 2.5;
+          ctx.stroke();
+
+          ctx.textAlign = 'left';
+          ctx.fillStyle = '#34d399';
+          ctx.font = 'bold 17px Roboto, sans-serif';
+          ctx.fillText('💎 Bejeweled Blitz · Firebase FCM', 56, bannerY + 36);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.font = 'bold 20px Roboto, sans-serif';
+          ctx.fillText('Daily Energy Restored! 💎', 56, bannerY + 68);
+
+          ctx.fillStyle = '#6ee7b7';
+          ctx.font = '16px Roboto, sans-serif';
+          ctx.fillText('Spin the Wheel & claim 5,000 Free Coins!', 56, bannerY + 98);
+        }
+        ctx.textAlign = 'left';
+      }
+    }
+
+    if (this.phoneTex) this.phoneTex.needsUpdate = true;
+  }
+
+  /* ---- Interactive Camera Snap & Shallow Depth of Field Focus on Node Click ---- */
+  snapFocusToNode(key) {
+    let target = null;
+    let dist = 42;
+    let lift = 14;
+
+    if (key === 'phone') {
+      target = POS.phone.clone().setY(10);
+      dist = 36; lift = 12;
+    } else if (key === 'server') {
+      target = POS.server.clone().setY(14);
+      dist = 38; lift = 14;
+    } else if (key === 'post' || key === 'store') {
+      target = POS.post.clone().setY(16);
+      dist = 48; lift = 16;
+    } else if (key === 'world' || key === 'ufo') {
+      target = POS.ufo.clone();
+      dist = 42; lift = 10;
+    } else if (key === 'bandit') {
+      target = this.leoPos.bandit.clone().setY(12);
+      dist = 36; lift = 12;
+    } else if (key === 'swat') {
+      target = this.leoPos.swat.clone().setY(12);
+      dist = 36; lift = 12;
+    } else if (key === 'osint') {
+      target = this.leoPos.osint.clone();
+      dist = 28; lift = 8;
+    } else if (key === 'facebook') {
+      target = this.leoPos.bot.clone().setY(14);
+      dist = 36; lift = 12;
+    }
+
+    if (!target) return;
+
+    this.focusedNode = key;
+    this.autoOrbit = false;
+    const btnOrbit = document.getElementById('btn-orbit');
+    if (btnOrbit) btnOrbit.classList.remove('on');
+
+    this.focusTargetPos = target.clone();
+    const camDir = this.camera.position.clone().sub(target).normalize();
+    if (camDir.lengthSq() < 0.01) camDir.set(1, 0.4, 1).normalize();
+    this.focusCamPos = target.clone().add(camDir.multiplyScalar(dist)).add(new THREE.Vector3(0, lift, 0));
+
+    // Shallow depth-of-field focal spotlight
+    if (!this.focusSpot) {
+      this.focusSpot = new THREE.SpotLight(0xffffff, 4.5, 95, Math.PI / 4, 0.4, 1.2);
+      this.scene.add(this.focusSpot);
+      this.scene.add(this.focusSpot.target);
+    }
+    this.focusSpot.visible = true;
+    this.focusSpot.target.position.copy(target);
+    this.focusSpot.position.copy(target).add(new THREE.Vector3(0, 42, 22));
+  }
+
+  resetFocus() {
+    this.focusedNode = null;
+    this.focusTargetPos = null;
+    this.focusCamPos = null;
+    if (this.focusSpot) this.focusSpot.visible = false;
   }
 
   /* ---- 3D Phone App State Emoji Badge (😴 App Sleeping vs. 😃 App Awake!) ---- */
@@ -777,98 +1205,110 @@ class PushnotOrbit {
     this.emojiTex.needsUpdate = true;
   }
 
-  /* ---- 3D Notification Bell with Red Unread Badge ("1") + Stamped Golden Key ---- */
-  createNotificationBellPayload() {
+  /* ---- Sleek Glassmorphic 3D Push Notification Payload Card with Docked Token Key (Zero Noise / No Clutter) ---- */
+  createPushNotificationPayload() {
     const group = new THREE.Group();
 
-    const bellGroup = new THREE.Group();
-    const bellMat = new THREE.MeshStandardMaterial({
-      color: 0xfbbf24,
-      emissive: 0xd97706,
-      emissiveIntensity: 0.45,
-      metalness: 0.88,
-      roughness: 0.18
+    // 1. Sleek glassmorphic payload card (translucent dark chassis with glowing emerald border)
+    const cardW = 6.4, cardH = 3.4, cardD = 0.38;
+    const cardGeo = new THREE.BoxGeometry(cardW, cardH, cardD);
+    const cardMat = new THREE.MeshPhysicalMaterial({
+      color: 0x090d16,
+      metalness: 0.85,
+      roughness: 0.18,
+      transparent: true,
+      opacity: 0.92,
+      clearcoat: 1.0,
+      clearcoatRoughness: 0.05
     });
+    const card = new THREE.Mesh(cardGeo, cardMat);
+    card.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(cardGeo),
+      new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.9 })
+    ));
+    group.add(card);
 
-    // Bell dome (top hemisphere)
-    const dome = new THREE.Mesh(
-      new THREE.SphereGeometry(1.75, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.55),
-      bellMat
-    );
-    dome.position.y = 0.8;
+    // 2. High-res dynamic canvas texture on front face of the payload
+    this.payloadCvs = document.createElement('canvas');
+    this.payloadCvs.width = 512;
+    this.payloadCvs.height = 256;
+    this.payloadTex = new THREE.CanvasTexture(this.payloadCvs);
+    this.payloadTex.colorSpace = THREE.SRGBColorSpace;
+    this.updatePayloadCanvas();
 
-    // Bell skirt (flared cylinder body)
-    const skirt = new THREE.Mesh(
-      new THREE.CylinderGeometry(1.72, 2.35, 1.9, 24),
-      bellMat
-    );
-    skirt.position.y = -0.05;
+    const faceGeo = new THREE.PlaneGeometry(cardW * 0.96, cardH * 0.94);
+    const faceMat = new THREE.MeshBasicMaterial({
+      map: this.payloadTex,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const face = new THREE.Mesh(faceGeo, faceMat);
+    face.position.z = cardD / 2 + 0.03;
+    const faceBack = face.clone();
+    faceBack.position.z = -(cardD / 2 + 0.03);
+    faceBack.rotation.y = Math.PI;
+    group.add(face, faceBack);
 
-    // Flared bottom lip ring
-    const lip = new THREE.Mesh(
-      new THREE.TorusGeometry(2.32, 0.24, 12, 32),
-      bellMat
-    );
-    lip.rotation.x = Math.PI / 2;
-    lip.position.y = -1.0;
-
-    // Top loop handle
-    const topRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.45, 0.14, 10, 20),
-      bellMat
-    );
-    topRing.position.y = 2.6;
-
-    // Clapper sphere at bottom
-    const clapper = new THREE.Mesh(
-      new THREE.SphereGeometry(0.55, 16, 16),
-      new THREE.MeshStandardMaterial({ color: 0xfef08a, metalness: 0.9, roughness: 0.15 })
-    );
-    clapper.position.y = -1.35;
-
-    bellGroup.add(dome, skirt, lip, topRing, clapper);
-    this.bellMeshGroup = bellGroup;
-    group.add(bellGroup);
-
-    // Bright Red Unread Notification Badge ("1") on upper-right of the Bell!
-    const badgeCvs = document.createElement('canvas');
-    badgeCvs.width = 128; badgeCvs.height = 128;
-    const bctx = badgeCvs.getContext('2d');
-    bctx.fillStyle = '#ff1e56';
-    bctx.beginPath(); bctx.arc(64, 64, 60, 0, Math.PI * 2); bctx.fill();
-    bctx.lineWidth = 8; bctx.strokeStyle = '#ffffff'; bctx.stroke();
-    bctx.fillStyle = '#ffffff';
-    bctx.font = '900 76px "Space Grotesk", Arial, sans-serif';
-    bctx.textAlign = 'center';
-    bctx.textBaseline = 'middle';
-    bctx.fillText('1', 64, 68);
-    const badgeTex = new THREE.CanvasTexture(badgeCvs);
-    badgeTex.colorSpace = THREE.SRGBColorSpace;
-
-    const badgeGroup = new THREE.Group();
-    badgeGroup.position.set(1.85, 1.75, 0.95);
-    const redSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(0.95, 20, 20),
-      new THREE.MeshStandardMaterial({ color: 0xff1e56, emissive: 0xe11d48, emissiveIntensity: 0.75, roughness: 0.2, metalness: 0.15 })
-    );
-    const numDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(0.98, 24),
-      new THREE.MeshBasicMaterial({ map: badgeTex, side: THREE.DoubleSide })
-    );
-    numDisc.position.z = 0.97;
-    const numDiscBack = numDisc.clone();
-    numDiscBack.position.z = -0.97;
-    numDiscBack.rotation.y = Math.PI;
-    badgeGroup.add(redSphere, numDisc, numDiscBack);
-    group.add(badgeGroup);
-
-    // Mini Golden Key attached beside the Bell so you see Payload + Key travelling together
-    this.pushOrbKey = this.createTokenKey(0.55);
-    this.pushOrbKey.position.set(-2.6, 2.1, 0);
+    // 3. Single sleek Golden Device Token Key docked cleanly into the payload card
+    this.pushOrbKey = this.createTokenKey(0.72);
+    this.pushOrbKey.position.set(-cardW * 0.44, 0, 0);
+    this.pushOrbKey.rotation.z = Math.PI * 0.5;
     group.add(this.pushOrbKey);
 
-    group.add(new THREE.PointLight(0x34d399, 3.2, 30));
+    group.add(new THREE.PointLight(0x34d399, 3.0, 28));
     return group;
+  }
+
+  updatePayloadCanvas() {
+    if (!this.payloadCvs) return;
+    const ctx = this.payloadCvs.getContext('2d');
+    ctx.clearRect(0, 0, 512, 256);
+
+    const isIos = this.currentOS === 'ios';
+
+    // Background gradient with emerald glow
+    const bg = ctx.createLinearGradient(0, 0, 512, 256);
+    bg.addColorStop(0, '#061715');
+    bg.addColorStop(1, '#0c221d');
+    ctx.fillStyle = bg;
+    ctx.beginPath();
+    ctx.roundRect(8, 8, 496, 240, 18);
+    ctx.fill();
+
+    ctx.strokeStyle = '#34d399';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Top banner
+    ctx.fillStyle = isIos ? '#38bdf8' : '#34d399';
+    ctx.font = 'bold 22px monospace';
+    ctx.fillText(isIos ? ' APNs PUSH PAYLOAD' : '🤖 FCM PUSH PAYLOAD', 28, 44);
+
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText('🔑 TOKEN: #7A9F-2B4C', 28, 82);
+
+    // Separator rule
+    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(28, 98); ctx.lineTo(484, 98);
+    ctx.stroke();
+
+    // Message content
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 26px sans-serif';
+    ctx.fillText('💎 Bejeweled Blitz', 28, 140);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('"Energy Refilled! Play now 💎"', 28, 178);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText('ROUTE: App Server ➔ Apple/Google ➔ Phone', 28, 222);
+
+    if (this.payloadTex) this.payloadTex.needsUpdate = true;
   }
 
   initBrain() {
@@ -948,7 +1388,10 @@ class PushnotOrbit {
       const buildSingleTower = () => {
         const towerGroup = new THREE.Group();
         const obj = rawScene.clone(true);
+        // Rotate server model by -90 deg so front glass door (with handle & blade bays) faces +Z (towards viewer/orbit)!
+        obj.rotation.y = -Math.PI * 0.5;
         obj.updateMatrixWorld(true);
+
         let box = new THREE.Box3().setFromObject(obj);
         const raw = box.getSize(new THREE.Vector3());
         const s = TOWER_H / (raw.y || 1);
@@ -963,7 +1406,7 @@ class PushnotOrbit {
         this.harmonizeAsset(obj, { minRough: 0.24, maxRough: 0.52, maxMetal: 0.78, envIntensity: 1.15 });
         towerGroup.add(obj);
 
-        // Sleek octagonal/square server plinth with glowing cyan trim ring
+        // Sleek server plinth with glowing cyan trim ring
         const padW = Math.max(size.x, size.z) + 4.2;
         const pad = new THREE.Mesh(
           new THREE.BoxGeometry(padW, floorY, padW),
@@ -976,38 +1419,36 @@ class PushnotOrbit {
         ));
         towerGroup.add(pad);
 
-        // Animated vertical laser-telemetry scan bar gliding up and down the front of the server tower
-        const frontFaceZ = size.z / 2 + 0.28;
+        // Animated vertical laser-telemetry scan bar gliding strictly across the front glass door
+        const frontFaceZ = size.z / 2 + 0.18;
         const scanBar = new THREE.Mesh(
-          new THREE.BoxGeometry(size.x * 0.82, 0.35, 0.25),
-          new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
+          new THREE.BoxGeometry(size.x * 0.68, 0.28, 0.12),
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.88 })
         );
         scanBar.position.set(0, floorY + size.y * 0.5, frontFaceZ);
         towerGroup.add(scanBar);
 
-        // Multi-row animated blade server activity LEDs across the front bezel
+        // Clean activity LEDs strictly on the front door bezel frame (zero side wall spill!)
         const leds = [];
-        const ledGeo = new THREE.BoxGeometry(0.45, 0.32, 0.32);
-        const palette = [0x38bdf8, 0x34d399, 0xfbbf24, 0x38bdf8, 0x34d399, 0xff2a55];
-        const cols = [-size.x * 0.28, -size.x * 0.10, size.x * 0.10, size.x * 0.28];
-        for (let ci = 0; ci < cols.length; ci++) {
-          for (let row = 0; row < 8; row++) {
-            const hex = palette[(ci + row) % palette.length];
-            const mat = new THREE.MeshBasicMaterial({ color: hex });
-            const led = new THREE.Mesh(ledGeo, mat);
-            led.position.set(
-              cols[ci],
-              floorY + 2.4 + row * ((size.y - 4.4) / 7),
-              frontFaceZ
-            );
-            towerGroup.add(led);
-            leds.push({
-              mesh: led,
-              mat,
-              speed: 4 + ((ci * 5 + row * 7) % 10),
-              phase: ci * 1.4 + row * 0.9
-            });
-          }
+        const ledGeo = new THREE.BoxGeometry(0.32, 0.22, 0.12);
+        const palette = [0x38bdf8, 0x34d399, 0x38bdf8, 0x34d399, 0xfbbf24];
+        const ledX = size.x * 0.26;
+        for (let row = 0; row < 10; row++) {
+          const hex = palette[row % palette.length];
+          const mat = new THREE.MeshBasicMaterial({ color: hex });
+          const led = new THREE.Mesh(ledGeo, mat);
+          led.position.set(
+            ledX,
+            floorY + 2.0 + row * ((size.y - 4.0) / 9),
+            frontFaceZ
+          );
+          towerGroup.add(led);
+          leds.push({
+            mesh: led,
+            mat,
+            speed: 5 + ((row * 3) % 8),
+            phase: row * 1.1
+          });
         }
 
         towerGroup.userData = { size, padW, frontFaceZ, scanBar, leds };
@@ -1223,130 +1664,175 @@ class PushnotOrbit {
     return g;
   }
 
-  /* ---- 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot Terminal Inside the Screen! ---- */
+  /* ---- 3D RCMP OSINT Laptop (`personal_computer.glb`) with Live Kali Linux Recon Terminal Animation! ---- */
   makeRcmpLaptopScreenTexture() {
     const cvs = document.createElement('canvas');
     cvs.width = 1024;
     cvs.height = 1024;
-    const ctx = cvs.getContext('2d');
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.flipY = false;
 
-    const drawScreen = (bannerImg, crestImg) => {
-      ctx.save();
-      // Cube_Screen_0 UVs have u=1 on left (-X), u=0 on right (+X), v=1 at top (+Y), v=0 at bottom (-Y)
-      // Transform canvas so standard (0..1024, 0..1024) top-left drawing maps upright & left-to-right on the 3D screen!
-      ctx.translate(1024, 1024);
-      ctx.scale(-1, -1);
-
-      // Deep tactical RCMP dark navy screen background
-      const grad = ctx.createLinearGradient(0, 0, 0, 1024);
-      grad.addColorStop(0, '#040914');
-      grad.addColorStop(0.5, '#071124');
-      grad.addColorStop(1, '#030712');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1024, 1024);
-
-      // Top RCMP Scarlet & Gold header bar
-      ctx.fillStyle = '#be123c';
-      ctx.fillRect(0, 0, 1024, 24);
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillRect(0, 24, 1024, 8);
-
-      // Outer screen frame
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 8;
-      ctx.strokeRect(12, 36, 1000, 976);
-
-      // Official RCMP Crest + Bilingual Wordmark Banner at top of laptop screen
-      if (bannerImg && bannerImg.complete && bannerImg.naturalWidth > 0) {
-        ctx.drawImage(bannerImg, 44, 52, 936, 180);
-      }
-
-      // Prominent central RCMP Coat of Arms Badge + OSINT Terminal Header
-      if (crestImg && crestImg.complete && crestImg.naturalWidth > 0) {
-        // Subtle glowing gold shield halo behind the RCMP Crest
-        const halo = ctx.createRadialGradient(210, 425, 20, 210, 425, 175);
-        halo.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
-        halo.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
-        ctx.fillStyle = halo;
-        ctx.fillRect(35, 250, 350, 350);
-
-        ctx.drawImage(crestImg, 80, 252, 260, 330);
-      }
-
-      // Right-hand RCMP Cybercrime OSINT Terminal Panel next to the RCMP Crest
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-      ctx.strokeStyle = '#fbbf24';
-      ctx.lineWidth = 5;
-      ctx.fillRect(374, 258, 608, 318);
-      ctx.strokeRect(374, 258, 608, 318);
-
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 34px "JetBrains Mono", monospace';
-      ctx.fillText('🇨🇦 RCMP · GRC CYBER OSINT', 398, 314);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 28px "JetBrains Mono", monospace';
-      ctx.fillText('SEED: badguy@protonmail.com', 398, 372);
-
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 25px "JetBrains Mono", monospace';
-      ctx.fillText('► SPIDERFOOT ACCOUNT PIVOT', 398, 426);
-
-      ctx.fillStyle = '#34d399';
-      ctx.font = 'bold 25px "JetBrains Mono", monospace';
-      ctx.fillText('✔ 4 SOCIAL ACCOUNTS LINKED', 398, 480);
-
-      ctx.fillStyle = '#fda4af';
-      ctx.font = 'bold 24px "JetBrains Mono", monospace';
-      ctx.fillText('⚖ EXIGENT / s. 487.014 ORDER', 398, 536);
-
-      // Bottom 2x2 Grid of Matched Accounts on the Laptop Screen
-      const cards = [
-        { x: 42,  y: 612, title: 'f  FACEBOOK',  sub: 'fb.com/badguy.yvr',  color: '#3b82f6' },
-        { x: 528, y: 612, title: '📸 INSTAGRAM', sub: '@badguy_604 (META)', color: '#ec4899' },
-        { x: 42,  y: 804, title: '𝕏  X / TWITTER', sub: '@badguy_yvr (YVR)', color: '#38bdf8' },
-        { x: 528, y: 804, title: '🎬 TIKTOK',    sub: '@badguy_604',        color: '#2dd4bf' }
-      ];
-
-      for (const c of cards) {
-        ctx.fillStyle = '#091326';
-        ctx.fillRect(c.x, c.y, 454, 164);
-        ctx.fillStyle = c.color;
-        ctx.fillRect(c.x, c.y, 454, 14);
-        ctx.strokeStyle = c.color;
-        ctx.lineWidth = 4;
-        ctx.strokeRect(c.x, c.y, 454, 164);
-
-        ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 31px "JetBrains Mono", monospace';
-        ctx.fillText(c.title, c.x + 22, c.y + 68);
-
-        ctx.fillStyle = '#bae6fd';
-        ctx.font = 'bold 25px "JetBrains Mono", monospace';
-        ctx.fillText(c.sub, c.x + 22, c.y + 124);
-      }
-
-      ctx.restore();
-      tex.needsUpdate = true;
-    };
+    this.rcmpCvs = cvs;
+    this.rcmpScreenTex = tex;
 
     const bannerImg = new Image();
     const crestImg  = new Image();
+    this.rcmpBannerImg = bannerImg;
+    this.rcmpCrestImg = crestImg;
+
     let loaded = 0;
     const onImg = () => {
       loaded++;
-      drawScreen(bannerImg, crestImg);
+      this.updateRcmpLaptopScreen(0.35);
     };
     bannerImg.onload = onImg;
     crestImg.onload  = onImg;
     bannerImg.src = 'models/leo/rcmp_banner_white.png?v=33';
     crestImg.src  = 'models/leo/rcmp_crest_white.png?v=33';
 
-    drawScreen(null, null);
+    this.updateRcmpLaptopScreen(0);
     return tex;
+  }
+
+  updateRcmpLaptopScreen(t) {
+    if (!this.rcmpCvs) return;
+    const ctx = this.rcmpCvs.getContext('2d');
+    ctx.save();
+    // Invert mapping for Cube_Screen_0 UVs
+    ctx.translate(1024, 1024);
+    ctx.scale(-1, -1);
+
+    // Deep tactical RCMP navy screen background
+    const grad = ctx.createLinearGradient(0, 0, 0, 1024);
+    grad.addColorStop(0, '#040914');
+    grad.addColorStop(0.5, '#071124');
+    grad.addColorStop(1, '#030712');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 1024, 1024);
+
+    // Top RCMP Scarlet & Gold header bar
+    ctx.fillStyle = '#be123c'; ctx.fillRect(0, 0, 1024, 24);
+    ctx.fillStyle = '#fbbf24'; ctx.fillRect(0, 24, 1024, 8);
+
+    // Outer screen frame
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(12, 36, 1000, 976);
+
+    // Official RCMP Crest + Bilingual Wordmark Banner at top of laptop screen
+    if (this.rcmpBannerImg && this.rcmpBannerImg.complete && this.rcmpBannerImg.naturalWidth > 0) {
+      ctx.drawImage(this.rcmpBannerImg, 44, 48, 936, 170);
+    }
+    if (this.rcmpCrestImg && this.rcmpCrestImg.complete && this.rcmpCrestImg.naturalWidth > 0) {
+      // Subtle glowing gold shield halo behind the RCMP Crest
+      const halo = ctx.createRadialGradient(180, 390, 20, 180, 390, 150);
+      halo.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
+      halo.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(40, 230, 280, 320);
+      ctx.drawImage(this.rcmpCrestImg, 65, 235, 230, 290);
+    }
+
+    // Terminal container (Kali Linux OSINT Recon Workflow)
+    ctx.fillStyle = '#081426';
+    ctx.fillRect(320, 236, 660, 310);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(320, 236, 660, 310);
+
+    // Terminal header bar
+    ctx.fillStyle = '#0e2646';
+    ctx.fillRect(320, 236, 660, 42);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillText('⚡ KALI LINUX · RCMP CYBER OSINT RECON', 338, 265);
+
+    // Live reconnaissance progression based on timeline `t`:
+    // Beat 1 (t: 0.20 - 0.32): Google Search & Sherlock reconnaissance on the ProtonMail address
+    // Beat 2 (t: 0.32 - 0.44): Sherlock connects Meta, Instagram, X profiles & detects 3 Push Tokens
+    // Beat 3 (t: 0.44 - 0.60): Police serve emergency data demands (s. 487.014) to demand the 3 Push Tokens!
+    const p1 = clamp01(seg(t, 0.20, 0.32));
+    const p2 = clamp01(seg(t, 0.32, 0.44));
+    const p3 = clamp01(seg(t, 0.44, 0.60));
+
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText('root@rcmp-cyber:~# sherlock badguy@proton.me', 338, 316);
+
+    const scanStr = '🔍 Google Search: "badguy@proton.me" across platforms…';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '18px "JetBrains Mono", monospace';
+    ctx.fillText(scanStr.slice(0, Math.floor(scanStr.length * Math.min(1, p1 * 1.4 + 0.1))), 338, 354);
+
+    if (p1 >= 0.7) {
+      ctx.fillStyle = '#34d399';
+      ctx.fillText('[✓] 3 Connected Social Accounts Found via Proton ID', 338, 392);
+    }
+    if (p2 > 0) {
+      ctx.fillStyle = '#38bdf8';
+      ctx.fillText('► PUSH TOKENS DETECTED: Meta (APNs) · IG (FCM) · X (APNs)', 338, 432);
+    }
+    if (p3 > 0) {
+      ctx.fillStyle = '#fda4af';
+      ctx.font = 'bold 20px "JetBrains Mono", monospace';
+      ctx.fillText('⚖ EMERGENCY DEMAND (s. 487.014): Preserving 3 Push Tokens!', 338, 474);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('➔ Production Orders Dispatched to Apple & Google', 338, 510);
+    }
+
+    // 4 Live Platform Cards below the terminal showing the 3 Keys and the Legal Demand
+    const cards = [
+      {
+        x: 42, y: 566, w: 450, h: 180,
+        title: 'f  FACEBOOK (META)', user: 'fb.com/badguy.yvr',
+        token: '🔑 TOKEN: #META-9182',
+        active: p2 > 0.15, color: '#3b82f6'
+      },
+      {
+        x: 530, y: 566, w: 450, h: 180,
+        title: '📸 INSTAGRAM (META)', user: '@badguy_604',
+        token: '🔑 TOKEN: #INSTA-4401',
+        active: p2 > 0.45, color: '#ec4899'
+      },
+      {
+        x: 42, y: 770, w: 450, h: 180,
+        title: '𝕏  X (TWITTER)', user: '@badguy_van',
+        token: '🔑 TOKEN: #XTWT-8832',
+        active: p2 > 0.75, color: '#38bdf8'
+      },
+      {
+        x: 530, y: 770, w: 450, h: 180,
+        title: '⚖ EXIGENT PRODUCTION', user: '3 PUSH TOKENS MATCHED',
+        token: p3 > 0.4 ? '✓ 3 SUBSCRIBER IDENTITIES UNMASKED' : 'Awaiting Apple/Google Decryption…',
+        active: p3 > 0.15, color: '#10b981'
+      }
+    ];
+
+    for (const c of cards) {
+      ctx.fillStyle = c.active ? '#0a1d35' : '#050c18';
+      ctx.fillRect(c.x, c.y, c.w, c.h);
+      ctx.fillStyle = c.active ? c.color : '#334155';
+      ctx.fillRect(c.x, c.y, c.w, 12);
+      ctx.strokeStyle = c.active ? c.color : '#1e293b';
+      ctx.lineWidth = c.active ? 3 : 1;
+      ctx.strokeRect(c.x, c.y, c.w, c.h);
+
+      ctx.fillStyle = c.active ? '#ffffff' : '#64748b';
+      ctx.font = 'bold 26px "JetBrains Mono", monospace';
+      ctx.fillText(c.title, c.x + 20, c.y + 60);
+
+      ctx.fillStyle = c.active ? '#bae6fd' : '#475569';
+      ctx.font = 'bold 22px "JetBrains Mono", monospace';
+      ctx.fillText(c.user, c.x + 20, c.y + 104);
+
+      ctx.fillStyle = c.active ? '#fbbf24' : '#475569';
+      ctx.font = 'bold 20px "JetBrains Mono", monospace';
+      ctx.fillText(c.token, c.x + 20, c.y + 148);
+    }
+
+    ctx.restore();
+    if (this.rcmpScreenTex) this.rcmpScreenTex.needsUpdate = true;
   }
 
   createRcmpOsintLaptop(done) {
@@ -1754,23 +2240,60 @@ class PushnotOrbit {
     // 1. Datacentre Cluster (front-left)
     this.initDatacentreCluster(done);
 
-    // 2. Smartphone (front-right)
+    // 2. Interactive Smartphone (front-right) with dynamic iOS / Android screen
+    this.phoneCvs = document.createElement('canvas');
+    this.phoneCvs.width = 512;
+    this.phoneCvs.height = 1024;
+    this.phoneTex = new THREE.CanvasTexture(this.phoneCvs);
+    this.phoneTex.colorSpace = THREE.SRGBColorSpace;
+    this.updatePhoneScreenCanvas('awake', 0);
+
     this.loader.load('models/generic_smartphone_game-ready.glb', (gltf) => {
       const phone = gltf.scene;
       phone.rotation.y = -Math.PI * 0.25;
+      this.phoneMesh = phone;
+      phone.userData.stationKey = 'phone';
+
+      phone.traverse((child) => {
+        if (child.isMesh) {
+          child.userData.stationKey = 'phone';
+          const mName = child.material ? (child.material.name || '') : '';
+          if (mName === 'Screen' || child.name.toLowerCase().includes('screen')) {
+            this.phoneScreenMesh = child;
+            // Normalize UV coordinates so 0..1 fills the screen edge to edge
+            const uvAttr = child.geometry.attributes.uv;
+            if (uvAttr) {
+              const minU = 0.5649, maxU = 0.8515, minV = 0.1344, maxV = 0.8602;
+              for (let i = 0; i < uvAttr.count; i++) {
+                const u = (uvAttr.getX(i) - minU) / (maxU - minU);
+                const v = (uvAttr.getY(i) - minV) / (maxV - minV);
+                uvAttr.setXY(i, u, v);
+              }
+              uvAttr.needsUpdate = true;
+            }
+            child.material = new THREE.MeshBasicMaterial({
+              map: this.phoneTex,
+              toneMapped: false
+            });
+          }
+        }
+      });
+
       this.harmonizeAsset(phone, { minRough: 0.22, maxRough: 0.55, maxMetal: 0.72, envIntensity: 0.95 });
       this.tops.phone = this.ground(phone, 28, POS.phone);
       this.normalGroup.add(phone);
       done();
     }, undefined, done);
 
-    // 3. Shiny Black 3D Skyscraper HQ (`models/skyscraper.glb`) topped with 3D Apple & Google Icons (Unified App Store + APNs/FCM Hub)
+    // 3. San Francisco Skyscraper HQ topped with 3D Apple & Google Icons (Unified App Store + APNs/FCM Hub)
     this.initAppleGoogleSkyscraper(done);
 
     // 4. Planet Earth — Global World Stimulus Source hovering above the Datacentre (no tractor beam cone!)
     this.loader.load('models/earth.glb?v=15', (gltf) => {
       this.ufoGroup = new THREE.Group();
+      this.ufoGroup.userData.stationKey = 'world';
       const earth = gltf.scene;
+      earth.userData.stationKey = 'world';
       this.harmonizeAsset(earth, { minRough: 0.34, maxRough: 0.72, maxMetal: 0.25, envIntensity: 0.9, liftDark: false });
       this.centerAndScale(earth, 26);
       this.ufoGroup.add(earth);
@@ -1784,6 +2307,8 @@ class PushnotOrbit {
     this.loader.load('models/leo/hack.glb?v=8', (gltf) => {
       const hacker = gltf.scene;
       hacker.rotation.y = -Math.PI * 0.35;
+      hacker.userData.stationKey = 'bandit';
+      hacker.traverse(c => { if (c.isMesh) c.userData.stationKey = 'bandit'; });
       this.harmonizeAsset(hacker, { minRough: 0.36, maxRough: 0.68, maxMetal: 0.35, envIntensity: 0.85, liftDark: false });
       this.leoTops.bandit = this.ground(hacker, 28, this.leoPos.bandit);
       this.leoGroup.add(hacker);
@@ -1793,15 +2318,19 @@ class PushnotOrbit {
     this.loader.load('models/leo/swat.glb', (gltf) => {
       const m = gltf.scene;
       m.rotation.y = Math.PI * 0.35;
+      m.userData.stationKey = 'swat';
+      m.traverse(c => { if (c.isMesh) c.userData.stationKey = 'swat'; });
       this.harmonizeAsset(m, { minRough: 0.36, maxRough: 0.66, maxMetal: 0.45, envIntensity: 0.85, liftDark: false });
       this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);
       this.leoGroup.add(m);
       done();
     }, undefined, done);
 
-    // 6. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode (icon excluded from shine pass)
+    // 6. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode
     this.loader.load('models/leo/facebook.glb', (gltf) => {
       this.fbLogo = gltf.scene;
+      this.fbLogo.userData.stationKey = 'facebook';
+      this.fbLogo.traverse(c => { if (c.isMesh) c.userData.stationKey = 'facebook'; });
       this.centerAndScale(this.fbLogo, 12);
       this.fbLogo.position.set(this.leoPos.bot.x, 22, this.leoPos.bot.z - 5);
       this.leoGroup.add(this.fbLogo);
@@ -1816,22 +2345,18 @@ class PushnotOrbit {
   }
 
   initAppleGoogleSkyscraper(done) {
-    // Unified Shiny Black 3D Office Building / Skyscraper HQ (`models/office_building.glb`)
-    // preserving its authentic transparent glass & lit rooms, with ONE Apple logo on the front
-    // and ONE Google logo on the outside back of the skyscraper!
+    // San Francisco Headquarters Scene (`models/san_francisco_city.glb`) with genuine reflective glass skyscrapers,
+    // bridges, and tech campus skyline — mounted with 3D Apple and Google Logos facing the orbit camera!
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.post.x, 0, POS.post.z);
     this.normalGroup.add(this.storeGroup);
 
-    // Front-facade logo mount group (Apple on the outside front wall)
-    this.frontIconsGroup = new THREE.Group();
-    this.frontIconsGroup.position.set(0, 20, 9.2);
-    this.storeGroup.add(this.frontIconsGroup);
+    this.sfCityGroup = new THREE.Group();
+    this.storeGroup.add(this.sfCityGroup);
 
-    // Back-facade logo mount group (Google on the outside back wall)
-    this.backIconsGroup = new THREE.Group();
-    this.backIconsGroup.position.set(0, 20, -9.2);
-    this.storeGroup.add(this.backIconsGroup);
+    // Front-facing logo mount group for Apple and Google logos overlooking the skyline
+    this.frontLogosGroup = new THREE.Group();
+    this.storeGroup.add(this.frontLogosGroup);
 
     this.tops.post  = 34;
     this.tops.store = 34;
@@ -1843,107 +2368,98 @@ class PushnotOrbit {
         if (this.leoAgBag) this.leoAgGroup.remove(this.leoAgBag);
         this.leoAgBag = this.storeGroup.clone(true);
         this.leoAgBag.position.set(0, 0, 0);
-        this.leoAgBag.rotation.set(0, -Math.PI * 0.2, 0);
         this.leoAgGroup.add(this.leoAgBag);
       }
       done();
     };
 
-    // 1. Load `models/office_building.glb` with authentic high-contrast Reflective Sky-Blue Architectural Glass,
-    //    Dark Obsidian Mullions, and Lit Interior Rooms (hiding the opaque blue vertical blinds that blocked the windows!)
-    this.loader.load('models/office_building.glb?v=39', (gltf) => {
-      const tower = gltf.scene;
+    // 1. Load the San Francisco Cityscape (`models/san_francisco_city.glb`)
+    this.loader.load('models/san_francisco_city.glb', (gltf) => {
+      const city = gltf.scene;
 
-      tower.traverse((ch) => {
-        if (!ch.isMesh || !ch.material) return;
+      city.traverse((ch) => {
+        if (!ch.isMesh) return;
         const nName = (ch.name || '').toLowerCase();
-        const mName = (ch.material.name || '').toLowerCase();
+        const mName = ch.material ? (ch.material.name || '').toLowerCase() : '';
 
-        if (nName.includes('blinds') || mName.includes('blinds') || nName.includes('08')) {
-          // Hide the opaque vertical blind curtains so the glass windows and interior rooms aren't blocked!
+        // Hide the 5km water tile (agia / Object_0) so only the tech city island remains!
+        if (nName.includes('object_0') || mName.includes('agia')) {
           ch.visible = false;
-        } else if (nName.includes('glass') || mName.includes('glass')) {
-          // Crisp, high-visibility reflective architectural glass panes (sky-cyan tint + specular sheen + semi-transparent)
+          return;
+        }
+
+        if (mName.includes('cristal') || nName.includes('14')) {
+          // Authentic reflective transparent Sky-Blue architectural glass for the SF skyscrapers!
           ch.material = new THREE.MeshPhysicalMaterial({
             color: 0x38bdf8,
             emissive: 0x0284c7,
-            emissiveIntensity: 0.28,
+            emissiveIntensity: 0.35,
             transparent: true,
-            opacity: 0.48,
+            opacity: 0.52,
             metalness: 0.35,
-            roughness: 0.04,
+            roughness: 0.05,
             clearcoat: 1.0,
-            clearcoatRoughness: 0.02,
-            envMapIntensity: 2.8,
+            clearcoatRoughness: 0.03,
+            envMapIntensity: 2.5,
             side: THREE.DoubleSide,
             depthWrite: false
           });
-        } else if (mName.includes('walls_exterior') || mName.includes('rams')) {
-          // Sleek shiny black obsidian structural frame & window mullions
-          ch.material = new THREE.MeshPhysicalMaterial({
-            color: 0x05070c,
-            metalness: 0.90,
-            roughness: 0.12,
-            clearcoat: 1.0,
-            clearcoatRoughness: 0.05,
-            envMapIntensity: 2.0,
-            side: THREE.DoubleSide
-          });
-        } else if (mName.includes('material_17')) {
-          // Warm-white / cyan lit interior office ceilings & window bays visible through the glass!
-          ch.material = new THREE.MeshStandardMaterial({
-            color: 0xf0f9ff,
-            emissive: 0x7dd3fc,
-            emissiveIntensity: 1.25,
-            roughness: 0.2
-          });
-        } else {
-          // Exterior concrete/window-grid facade (`walls_BLD_OFFICE_05`, `material`) in glossy dark obsidian with lit window map
-          ch.material = ch.material.clone();
-          if (ch.material.color) ch.material.color.setHex(0x1e293b);
-          ch.material.metalness = 0.78;
-          ch.material.roughness = 0.14;
-          ch.material.envMapIntensity = 1.9;
-          if (ch.material.emissiveMap) {
-            ch.material.emissive = new THREE.Color(0xbae6fd);
-            ch.material.emissiveIntensity = 1.65;
+        } else if (mName.includes('concreto') || mName.includes('chicos') || mName.includes('base') || mName.includes('tierra')) {
+          // Modern tech-campus architectural finishes
+          if (ch.material) {
+            ch.material = ch.material.clone();
+            ch.material.metalness = 0.55;
+            ch.material.roughness = 0.28;
+            ch.material.envMapIntensity = 1.4;
           }
         }
       });
 
-      // Scale office_building.glb to height 31 and ground it cleanly at (0, 0, 0)
-      let box = new THREE.Box3().setFromObject(tower);
-      const dim = box.getSize(new THREE.Vector3());
-      const s = 31 / (dim.y || 1);
-      tower.scale.setScalar(s);
+      // Compute bounding box ignoring the hidden water tile
+      const visibleBox = new THREE.Box3();
+      city.traverse((ch) => {
+        if (ch.isMesh && ch.visible) {
+          ch.geometry.computeBoundingBox();
+          const b = ch.geometry.boundingBox.clone().applyMatrix4(ch.matrixWorld);
+          visibleBox.union(b);
+        }
+      });
 
-      tower.updateMatrixWorld(true);
-      box = new THREE.Box3().setFromObject(tower);
-      const c = box.getCenter(new THREE.Vector3());
-      const finalSize = box.getSize(new THREE.Vector3());
-      tower.position.set(-c.x, -box.min.y, -c.z);
+      const dim = visibleBox.getSize(new THREE.Vector3());
+      const targetH = 30;
+      const s = targetH / (dim.y || 1);
+      city.scale.setScalar(s);
+      city.updateMatrixWorld(true);
 
-      this.storeGroup.add(tower);
+      const finalBox = new THREE.Box3();
+      city.traverse((ch) => {
+        if (ch.isMesh && ch.visible) {
+          const b = ch.geometry.boundingBox.clone().applyMatrix4(ch.matrixWorld);
+          finalBox.union(b);
+        }
+      });
+      const c = finalBox.getCenter(new THREE.Vector3());
+      city.position.set(-c.x, -finalBox.min.y, -c.z);
+      this.sfCityGroup.add(city);
 
-      const crownY = finalSize.y;
-      const halfDepth = finalSize.z / 2;
-      // Place Apple logo on the outside front wall (+Z) and Google logo on the outside back wall (-Z)
-      this.frontIconsGroup.position.set(0, crownY * 0.62,  halfDepth + 0.75);
-      this.backIconsGroup.position.set(0,  crownY * 0.62, -(halfDepth + 0.75));
-      this.tops.post  = crownY + 3.5;
-      this.tops.store = crownY + 3.5;
+      const crownY = finalBox.getSize(new THREE.Vector3()).y;
+      this.tops.post  = crownY + 4;
+      this.tops.store = crownY + 4;
+
+      // Position the Apple and Google logos overlooking the skyline facing +Z towards camera
+      this.frontLogosGroup.position.set(0, crownY * 0.72, 16);
+
       checkClone();
     }, undefined, checkClone);
 
-    // 2. Mount ONE 3D Apple Logo on the outside front (+Z) and ONE 3D Google Logo on the outside back (-Z) of the skyscraper!
-    const mountExteriorLogo = (path, sideSign, targetSize) => {
+    // 2. Mount Apple Logo (left) and Google Logo (right) facing front (+Z)
+    const mountLogo = (path, xOffset, targetSize, isApple) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
         let box = new THREE.Box3().setFromObject(logo);
         const raw = box.getSize(new THREE.Vector3());
         const s = targetSize / Math.max(raw.x || 1, raw.y || 1);
-        logo.scale.set(s, s, Math.min(s, 1.5 / (raw.z || 1)));
-
+        logo.scale.setScalar(s);
         logo.updateMatrixWorld(true);
         box = new THREE.Box3().setFromObject(logo);
         const c = box.getCenter(new THREE.Vector3());
@@ -1951,20 +2467,19 @@ class PushnotOrbit {
         const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
         wrap.add(logo);
+        wrap.position.set(xOffset, 0, 0);
 
-        if (sideSign > 0) {
-          this.frontIconsGroup.add(wrap);
-        } else {
-          wrap.rotation.y = Math.PI;
-          this.backIconsGroup.add(wrap);
-        }
+        if (isApple) this.appleLogoMesh = wrap;
+        else this.googleLogoMesh = wrap;
 
+        this.frontLogosGroup.add(wrap);
+        this.updateLogoHighlight();
         checkClone();
       }, undefined, checkClone);
     };
 
-    mountExteriorLogo('models/apple_logo.glb',   1, 10.5);
-    mountExteriorLogo('models/google_logo.glb', -1, 10.5);
+    mountLogo('models/apple_logo.glb',  -7.5, 9.5, true);
+    mountLogo('models/google_logo.glb',  7.5, 9.5, false);
   }
 
   centerAndScale(obj, size) {
@@ -2073,6 +2588,14 @@ class PushnotOrbit {
   }
 
   initUI() {
+    const btnIos = document.getElementById('btn-os-ios');
+    const btnAndroid = document.getElementById('btn-os-android');
+    if (btnIos) btnIos.addEventListener('click', () => this.setOS('ios'));
+    if (btnAndroid) btnAndroid.addEventListener('click', () => this.setOS('android'));
+
+    const pinPhoneOs = document.getElementById('pin-phone-os');
+    if (pinPhoneOs) pinPhoneOs.addEventListener('click', () => this.toggleOS());
+
     document.getElementById('mode-setup').addEventListener('click', () => this.setMode('setup'));
     document.getElementById('mode-push').addEventListener('click', () => this.setMode('push'));
     const btnWorld = document.getElementById('mode-world');
@@ -2096,10 +2619,85 @@ class PushnotOrbit {
     });
     document.getElementById('btn-step-prev').addEventListener('click', () => this.stepCycle(-1));
     document.getElementById('btn-step-next').addEventListener('click', () => this.stepCycle(1));
-    document.getElementById('btn-orbit').addEventListener('click', () => this.setAutoOrbit(!this.autoOrbit));
+    document.getElementById('btn-orbit').addEventListener('click', () => {
+      this.resetFocus();
+      this.setAutoOrbit(!this.autoOrbit);
+    });
     document.getElementById('btn-fullscreen').addEventListener('click', () => {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
+    });
+
+    // Raycast click detection on 3D GLB models -> Snap camera into close cinematic focus with shallow DOF lighting!
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let downX = 0, downY = 0;
+
+    this.renderer.domElement.addEventListener('pointerdown', (e) => {
+      downX = e.clientX;
+      downY = e.clientY;
+    });
+
+    this.renderer.domElement.addEventListener('pointerup', (e) => {
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 8) return; // user dragged/orbited
+
+      const rect = this.renderer.domElement.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouse, this.camera);
+
+      const activeGroup = this.mode === 'leo' ? this.leoGroup : this.normalGroup;
+      const hits = raycaster.intersectObjects(activeGroup.children, true);
+
+      if (hits.length > 0) {
+        let nodeKey = null;
+        for (const hit of hits) {
+          let curr = hit.object;
+          while (curr && curr !== activeGroup) {
+            if (curr.userData && curr.userData.stationKey) {
+              nodeKey = curr.userData.stationKey;
+              break;
+            }
+            curr = curr.parent;
+          }
+          if (nodeKey) break;
+        }
+
+        if (!nodeKey) {
+          const hp = hits[0].point;
+          if (this.mode === 'leo') {
+            const d1 = hp.distanceTo(this.leoPos.bandit);
+            const d2 = hp.distanceTo(this.leoPos.swat);
+            const d3 = hp.distanceTo(this.leoPos.osint);
+            const d4 = hp.distanceTo(this.leoPos.bot);
+            const minD = Math.min(d1, d2, d3, d4);
+            if (minD === d1) nodeKey = 'bandit';
+            else if (minD === d2) nodeKey = 'swat';
+            else if (minD === d3) nodeKey = 'osint';
+            else nodeKey = 'facebook';
+          } else {
+            const d1 = hp.distanceTo(POS.phone);
+            const d2 = hp.distanceTo(POS.server);
+            const d3 = hp.distanceTo(POS.post);
+            const d4 = hp.distanceTo(POS.ufo);
+            const minD = Math.min(d1, d2, d3, d4);
+            if (minD === d1) nodeKey = 'phone';
+            else if (minD === d2) nodeKey = 'server';
+            else if (minD === d3) nodeKey = 'post';
+            else nodeKey = 'world';
+          }
+        }
+
+        if (nodeKey === 'phone') {
+          this.toggleOS();
+        }
+
+        if (nodeKey) {
+          this.snapFocusToNode(nodeKey);
+        }
+      } else {
+        this.resetFocus();
+      }
     });
 
     // Smooth mouse wheel / trackpad scroll scrubbing in Manual Scroll / Step Cam mode
@@ -2186,12 +2784,13 @@ class PushnotOrbit {
     let showLeoId     = false;
 
     if (this.mode === 'setup') {
+      this.updatePhoneScreenCanvas(t < 0.76 ? 'awake' : 'sleeping', 0);
       if (t < 0.24) {
         const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.24));
         this.appOrb.visible = true;
         this.appOrb.position.copy(p);
         moverPos = p;
-        moverText = '💎 Install App';
+        moverText = this.currentOS === 'ios' ? ' App Store · Bejeweled Blitz' : '🤖 Google Play · Bejeweled Blitz';
         moverCls = 'cyan';
       } else if (t < 0.30) {
         showInstall = true;
@@ -2201,7 +2800,7 @@ class PushnotOrbit {
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
-        moverText = '📲 Request Key';
+        moverText = this.currentOS === 'ios' ? '📲 Request APNs Token' : '📲 Request FCM Token';
         moverCls = 'cyan';
       } else if (t < 0.50) {
         // 3D Laser-Printing / Holographic Materialization of the brand-new Unique Device Key at Post Office!
@@ -2225,16 +2824,16 @@ class PushnotOrbit {
         this.tokenKey.scale.set(1.2 * easeScale, 1.2 * Math.max(0.08, mp), 1.2 * easeScale);
 
         moverPos = forgePos;
-        moverText = '🔑 Printing Unique Key';
+        moverText = this.currentOS === 'ios' ? '🔑 Apple Generates APNs Token' : '🔑 Google Generates FCM Token';
         moverCls = 'cyan';
       } else if (t < 0.62) {
         const p = this.arcPostToPhone.getPoint(seg(t, 0.50, 0.62));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Unique Key → Phone';
+        moverText = this.currentOS === 'ios' ? '🔑 APNs Token → iPhone' : '🔑 FCM Token → Android';
       } else if (t < 0.76) {
-        // Dedicated beat on Phone showing the Unique Gold Key on the Phone (no Go To Jail card during installation!)
+        // Dedicated beat on Phone showing the Unique Gold Key on the Phone
         this.tokenKey.visible = true;
         this.tokenKey.position.set(POS.phone.x, this.tops.phone + 12.5, POS.phone.z);
         this.tokenKey.scale.setScalar(1.45);
@@ -2244,11 +2843,17 @@ class PushnotOrbit {
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Save Key → Datacentre';
+        moverText = '🔑 Register Token with Server';
       } else {
         showSaved = true;
       }
     } else if (this.mode === 'push') {
+      if (t < 0.70) {
+        this.updatePhoneScreenCanvas('sleeping', 0);
+      } else {
+        this.updatePhoneScreenCanvas('awake', seg(t, 0.70, 0.92));
+      }
+
       if (t < 0.16) {
         const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.16));
         this.triggerBolt.visible = true;
@@ -2257,7 +2862,7 @@ class PushnotOrbit {
         moverText = '⚡ Promo Trigger';
         moverCls = 'cyan';
       } else if (t < 0.30) {
-        // Beat 2 in Push Delivery: App Maker tries to reach Phone directly -> Blocked by OS Firewall! Must go via Post Office
+        // Beat 2 in Push Delivery: App Maker tries to reach Phone directly -> Blocked by OS Firewall! Must go via Apple / Google
         const bp = seg(t, 0.16, 0.30);
         this.directBlockGroup.visible = true;
         const pServer = POS.server.clone().setY(16);
@@ -2272,7 +2877,7 @@ class PushnotOrbit {
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '🔔 Payload + 🔑 Key';
+        moverText = this.currentOS === 'ios' ? ' APNs Payload + 🔑 Key' : '🤖 FCM Payload + 🔑 Key';
         moverCls = 'push';
       } else if (t < 0.70) {
         const bp = seg(t, 0.48, 0.70);
@@ -2284,13 +2889,13 @@ class PushnotOrbit {
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '🔔 Deliver Push';
+        moverText = this.currentOS === 'ios' ? ' Deliver APNs Push → iPhone' : '🤖 Deliver FCM Push → Android';
         moverCls = 'push';
       } else {
         showPush = true;
       }
     } else if (this.mode === 'world') {
-      // MODE 3 · ALL WORLD STIMS (Bejeweled, Facebook, Instagram, X, Uber, Amazon) streaming simultaneously from Planet Earth -> Datacentre -> Post Office -> Phone!
+      this.updatePhoneScreenCanvas('awake', 1.0);
       for (const s of this.worldStimStreams) {
         const u = (s.offset + t) % 1;
         const p = s.curve.getPoint(u);
@@ -2299,8 +2904,12 @@ class PushnotOrbit {
         s.orb.lookAt(this.camera.position);
       }
     } else {
-      // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (7 Beats):
+      // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE:
       moverParent = this.leoGroup;
+      if (t >= 0.18 && t < 0.65) {
+        this.updateRcmpLaptopScreen(t);
+      }
+
       if (t < 0.11) {
         // Beat 1a: Bad guy types ProtonMail email (`TO: 911@POJ.CA / FROM: BADGUY@PROTON.ME / SUBJECT: RISE UP!`)
         // — it materializes on the elevated plane directly above his head alongside the round bomb with sparkling wick!
@@ -2346,7 +2955,7 @@ class PushnotOrbit {
           showLeoDenied = true;
         }
       } else if (t < 0.50) {
-        // Beat 3: Police sends email query UP to the elevated RCMP OSINT Laptop Plane directly above their head!
+        // Beat 3: Police runs Google & Sherlock OSINT Search on the elevated RCMP Laptop directly above their head!
         const p = this.arcLeoOsint.getPoint(seg(t, 0.36, 0.43));
         this.leoPacket.visible = t < 0.44;
         this.leoPacket.position.copy(p);
@@ -2355,12 +2964,13 @@ class PushnotOrbit {
         this.leoPacketLight.color.setHex(0xfbbf24);
         if (t < 0.43) {
           moverPos = p;
-          moverText = '💻 RCMP OSINT Scan';
+          moverText = '💻 Sherlock & Google OSINT Recon';
         } else {
           showLeoOsint = true;
         }
       } else if (t < 0.68) {
-        // Beat 4: OSINT Web pivots down to Meta/X Datacentre (0.50–0.56), and Meta/X return Push Tokens (0.56–0.68)!
+        // Beat 4: OSINT Web pivots to Meta/Instagram/X (0.50–0.56) with Exigent Section 487.014 Production Demand,
+        // and Meta/X return the 3 Push Tokens (0.56–0.68)!
         if (t < 0.56) {
           const p = this.arcLeoOsintToMeta.getPoint(seg(t, 0.50, 0.56));
           this.leoPacket.visible = true;
@@ -2369,7 +2979,7 @@ class PushnotOrbit {
           this.leoPacketMat.emissive.setHex(0x0284c7);
           this.leoPacketLight.color.setHex(0x38bdf8);
           moverPos = p;
-          moverText = '🇨🇦 Exigent Request → Meta / X';
+          moverText = '⚖ Exigent Demand → Meta / IG / X';
           moverCls = 'cyan';
         } else {
           const p = this.arcLeoTokens.getPoint(seg(t, 0.56, 0.64));
@@ -2377,7 +2987,7 @@ class PushnotOrbit {
           this.leoKey.position.copy(p);
           if (t < 0.63) {
             moverPos = p;
-            moverText = '🔑 Push Tokens Returned';
+            moverText = '🔑 3 Push Tokens Acquired';
           } else {
             showLeoTokens = true;
           }
@@ -2410,6 +3020,7 @@ class PushnotOrbit {
     this.place('pin-store',  null, false);
     this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2, POS.post.z), showNorm);
     this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8), showNorm);
+    this.place('pin-phone-os', new THREE.Vector3(POS.phone.x, this.tops.phone + 14.5, POS.phone.z), showNorm);
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), showNorm);
     this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 15, POS.ufo.z), showNorm);
 
@@ -2612,7 +3223,12 @@ class PushnotOrbit {
       if (Math.abs(this.targetT - this.t) < 0.0004) this.t = this.targetT;
     }
 
-    if (!this.playing && this.cinematicFollow) {
+    if (this.focusTargetPos && this.focusCamPos) {
+      // Smooth cinematic camera snap into focus on clicked GLB model with shallow depth of field emphasis!
+      this.controls.target.lerp(this.focusTargetPos, Math.min(1, dt * 5.0));
+      this.camera.position.lerp(this.focusCamPos, Math.min(1, dt * 4.2));
+      this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
+    } else if (!this.playing && this.cinematicFollow) {
       // Video-Game Cinematic Step-by-Step Camera: smoothly dolly & pan onto the active packet / node!
       const camLerp = Math.min(1, dt * 4.2);
       const tgtLerp = Math.min(1, dt * 6.0);
@@ -2653,9 +3269,11 @@ class PushnotOrbit {
       this.ufoGroup.rotation.y += dt * 0.7;
       this.ufoGroup.position.y = POS.ufo.y + Math.sin(now * 0.0025) * 1.4;
     }
-    if (this.storeGroup) {
-      // Gently rotate the skyscraper HQ so both the outside front (Apple) & outside back (Google) walls showcase smoothly
-      this.storeGroup.rotation.y += dt * 0.35;
+    if (this.storeGroup && this.camera) {
+      // Always keep the San Francisco cityscape and logos facing directly towards the camera during orbit!
+      const dx = this.camera.position.x - POS.post.x;
+      const dz = this.camera.position.z - POS.post.z;
+      this.storeGroup.rotation.y = Math.atan2(dx, dz);
     }
 
     this.appOrb.rotation.y += dt * 1.4;
@@ -2667,9 +3285,9 @@ class PushnotOrbit {
     if (this.storedKey.visible) {
       this.storedKey.rotation.y += dt * 1.1;
     }
-    this.pushOrb.rotation.y = Math.sin(now * 0.003) * 0.35;
-    if (this.bellMeshGroup && this.pushOrb.visible) {
-      this.bellMeshGroup.rotation.z = Math.sin(now * 0.016) * 0.22;
+    if (this.pushOrb && this.pushOrb.visible) {
+      // Keep the 3D Push Payload Card facing the camera so it is always crisp and legible
+      this.pushOrb.lookAt(this.camera.position);
     }
     this.stars.rotation.y += dt * 0.015;
 

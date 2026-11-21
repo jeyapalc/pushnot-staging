@@ -28,6 +28,10 @@ const POS = {
 };
 
 const MODE_SECONDS = { setup: 11, push: 9 };
+const MODE_STEPS = {
+  setup: [0.06, 0.33, 0.50, 0.66, 0.82, 0.96],
+  push:  [0.10, 0.32, 0.52, 0.64, 0.78, 0.95]
+};
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
 
@@ -42,6 +46,7 @@ class PushnotOrbit {
 
     this.mode = 'setup';
     this.t = 0.0;
+    this.targetT = 0.0;
     this.playing = true;
     this.autoOrbit = true;
     this.orbitAngle = 0.35;
@@ -285,88 +290,45 @@ class PushnotOrbit {
     this.initBrain();
   }
 
-  createBrainHemisphere(sideSign, mat) {
-    // Displace sphere vertices with smooth multi-frequency folds (gyri/sulci)
-    const geo = new THREE.SphereGeometry(3.2, 32, 24);
-    const pos = geo.attributes.position;
-    const v = new THREE.Vector3();
-    for (let i = 0; i < pos.count; i++) {
-      v.fromBufferAttribute(pos, i);
-      const n = v.clone().normalize();
-      const fold =
-        Math.sin(n.x * 11 + sideSign * 1.2) * Math.cos(n.y * 10) * 0.24 +
-        Math.sin(n.z * 12 + n.y * 7) * 0.18 +
-        Math.cos(n.x * 6 - n.z * 9) * 0.12;
-      const r = 3.2 + fold;
-      v.copy(n).multiplyScalar(r);
-      // Flatten inner medial wall slightly so the two hemispheres nestle cleanly
-      if (sideSign > 0 && v.x < -0.4) v.x = -0.4 + (v.x + 0.4) * 0.25;
-      if (sideSign < 0 && v.x >  0.4) v.x =  0.4 + (v.x - 0.4) * 0.25;
-      pos.setXYZ(i, v.x, v.y, v.z);
-    }
-    geo.computeVertexNormals();
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.scale.set(0.86, 0.94, 1.28);
-    mesh.position.x = sideSign * 2.15;
-    return mesh;
-  }
-
   initBrain() {
+    // Load the real Brain Point Cloud GLB above the Post Office
     this.brainGroup = new THREE.Group();
-    this.brainGroup.position.set(POS.post.x, 38, POS.post.z);
-
-    this.brainMat = new THREE.MeshPhysicalMaterial({
-      color: 0xf472b6,
-      emissive: 0xbe185d,
-      emissiveIntensity: 0.7,
-      roughness: 0.28,
-      metalness: 0.1,
-      clearcoat: 0.9,
-      clearcoatRoughness: 0.15
-    });
-
-    const leftHemi  = this.createBrainHemisphere(-1, this.brainMat);
-    const rightHemi = this.createBrainHemisphere( 1, this.brainMat);
-
-    // Cerebellum + stem at rear-bottom
-    const cerebellum = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 12), this.brainMat);
-    cerebellum.scale.set(1.4, 0.75, 0.9);
-    cerebellum.position.set(0, -2.5, -2.1);
-
-    // Glowing neural sparks orbiting cortex
-    const sparkPts = [];
-    for (let i = 0; i < 36; i++) {
-      const a = Math.random() * Math.PI * 2;
-      const phi = Math.acos(2 * Math.random() - 1);
-      const rad = 4.6 + Math.random() * 1.4;
-      sparkPts.push(
-        Math.sin(phi) * Math.cos(a) * rad,
-        Math.cos(phi) * rad * 0.85,
-        Math.sin(phi) * Math.sin(a) * rad * 1.15
-      );
-    }
-    const sparkGeo = new THREE.BufferGeometry();
-    sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPts, 3));
-    this.brainSparks = new THREE.Points(
-      sparkGeo,
-      new THREE.PointsMaterial({ color: 0xf9a8d4, size: 0.65, transparent: true, opacity: 0.9 })
-    );
-
-    this.brainLight = new THREE.PointLight(0xf472b6, 3.5, 34);
-    this.brainGroup.add(leftHemi, rightHemi, cerebellum, this.brainSparks, this.brainLight);
+    this.brainGroup.position.set(POS.post.x, 38.5, POS.post.z);
+    this.brainMats = [];
+    this.brainLight = new THREE.PointLight(0xf472b6, 3.5, 36);
+    this.brainGroup.add(this.brainLight);
     this.brainGroup.visible = false;
     this.scene.add(this.brainGroup);
+
+    this.loader.load('models/brain_point_cloud.glb', (gltf) => {
+      const brain = gltf.scene;
+      this.centerAndScale(brain, 14);
+      brain.traverse((child) => {
+        if (child.isPoints || child.isMesh) {
+          const mat = child.material;
+          if (mat) {
+            if (child.isPoints) {
+              mat.size = Math.max(mat.size || 0.06, 0.09);
+              mat.transparent = true;
+              mat.opacity = 0.95;
+            }
+            this.brainMats.push({ mat, origColor: mat.color ? mat.color.clone() : new THREE.Color(0xf472b6) });
+          }
+        }
+      });
+      this.brainGroup.add(brain);
+    }, undefined, (err) => {
+      console.warn('brain_point_cloud.glb failed, using fallback:', err);
+    });
   }
 
   updateBrainAndLedger(progress) {
-    // Pop-in scale (0..0.15), scroll-search (0.15..0.72), lock-match (0.72..1.0)
     const pop = Math.min(1, progress / 0.15);
     const ease = 1 - Math.pow(1 - pop, 3);
-    this.brainGroup.scale.setScalar(Math.max(0.01, ease * 1.15));
+    this.brainGroup.scale.setScalar(Math.max(0.01, ease));
 
     const matched = progress >= 0.72;
     const scrollP = seg(progress, 0.08, 0.72);
-    // Smooth ease-out scroll through 6 rows (row height = 42px, final index = 5)
     const easedScroll = 1 - Math.pow(1 - scrollP, 2.2);
     const offsetPx = easedScroll * (5 * 42);
 
@@ -378,16 +340,12 @@ class PushnotOrbit {
     if (pad) pad.classList.toggle('matched', matched);
     if (status) status.textContent = matched ? '✓ MATCHED' : 'MATCHING…';
 
-    if (matched) {
-      this.brainMat.color.setHex(0x34d399);
-      this.brainMat.emissive.setHex(0x059669);
-      this.brainLight.color.setHex(0x34d399);
-      this.brainSparks.material.color.setHex(0x6ee7b7);
-    } else {
-      this.brainMat.color.setHex(0xf472b6);
-      this.brainMat.emissive.setHex(0xbe185d);
-      this.brainLight.color.setHex(0xf472b6);
-      this.brainSparks.material.color.setHex(0xf9a8d4);
+    this.brainLight.color.setHex(matched ? 0x34d399 : 0xf472b6);
+    for (const item of this.brainMats) {
+      if (item.mat.color) {
+        if (matched) item.mat.color.setHex(0x34d399);
+        else item.mat.color.copy(item.origColor);
+      }
     }
   }
 
@@ -719,7 +677,10 @@ class PushnotOrbit {
   /* ---------------- Polarity Mode Switch ---------------- */
   setMode(mode, resetT = true) {
     this.mode = mode;
-    if (resetT) this.t = 0;
+    if (resetT) {
+      this.t = 0;
+      this.targetT = 0;
+    }
 
     const isPush = mode === 'push';
     const color = isPush ? 0x34d399 : 0xfbbf24;
@@ -750,11 +711,26 @@ class PushnotOrbit {
 
   setPlaying(auto) {
     this.playing = auto;
-    // In Manual Scrub mode, mouse wheel / trackpad scroll scrubs the action cycle instead of zooming
+    if (!auto) this.targetT = this.t;
+    // In Manual Scroll mode, mouse wheel / trackpad scroll smoothly scrubs the action cycle
     this.controls.enableZoom = auto;
     const btn = document.getElementById('btn-play');
     btn.textContent = auto ? '▶ Auto' : '🖱 Scroll';
     btn.classList.toggle('manual', !auto);
+  }
+
+  stepCycle(dir) {
+    // Step cleanly to the next or previous narrative beat with smooth gliding
+    if (this.playing) this.setPlaying(false);
+    const stops = MODE_STEPS[this.mode];
+    const eps = 0.015;
+    if (dir > 0) {
+      const next = stops.find((s) => s > this.targetT + eps);
+      this.targetT = next !== undefined ? next : stops[0];
+    } else {
+      const prev = [...stops].reverse().find((s) => s < this.targetT - eps);
+      this.targetT = prev !== undefined ? prev : stops[stops.length - 1];
+    }
   }
 
   initUI() {
@@ -766,23 +742,25 @@ class PushnotOrbit {
 
     document.getElementById('scrub').addEventListener('input', (e) => {
       if (this.playing) this.setPlaying(false);
-      this.t = parseInt(e.target.value, 10) / 1000;
+      this.targetT = parseInt(e.target.value, 10) / 1000;
     });
     document.getElementById('btn-play').addEventListener('click', () => {
       this.setPlaying(!this.playing);
     });
+    document.getElementById('btn-step-prev').addEventListener('click', () => this.stepCycle(-1));
+    document.getElementById('btn-step-next').addEventListener('click', () => this.stepCycle(1));
     document.getElementById('btn-orbit').addEventListener('click', () => this.setAutoOrbit(!this.autoOrbit));
     document.getElementById('btn-fullscreen').addEventListener('click', () => {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
     });
 
-    // Mouse wheel / trackpad scroll scrubs the action cycle when in Manual Scrub mode
+    // Smooth mouse wheel / trackpad scroll scrubbing in Manual Scroll mode
     this.renderer.domElement.addEventListener('wheel', (e) => {
       if (this.playing) return;
       e.preventDefault();
-      const delta = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 120) * 0.0006;
-      this.t = ((this.t + delta) % 1 + 1) % 1;
+      const delta = Math.sign(e.deltaY) * Math.min(Math.abs(e.deltaY), 100) * 0.00055;
+      this.targetT = clamp01(this.targetT + delta);
     }, { passive: false });
 
     addEventListener('keydown', (e) => {
@@ -791,8 +769,8 @@ class PushnotOrbit {
       else if (e.key === 'Tab') { e.preventDefault(); this.setMode(this.mode === 'setup' ? 'push' : 'setup'); }
       else if (e.key === '1') this.setMode('setup');
       else if (e.key === '2') this.setMode('push');
-      else if (e.key === 'ArrowRight') { if (this.playing) this.setPlaying(false); this.t = (this.t + 0.04) % 1; }
-      else if (e.key === 'ArrowLeft')  { if (this.playing) this.setPlaying(false); this.t = (this.t - 0.04 + 1) % 1; }
+      else if (e.key === 'ArrowRight') this.stepCycle(1);
+      else if (e.key === 'ArrowLeft')  this.stepCycle(-1);
     });
 
     this.setPlaying(true);
@@ -924,8 +902,10 @@ class PushnotOrbit {
     if (p.z > 1 || p.z < -1) { el.style.display = 'none'; return; }
     el.style.display = 'flex';
     const w = el.offsetWidth || 120;
+    const h = el.offsetHeight || 40;
+    const minY = id === 'pin-ledger' ? 84 + h : 76;
     const x = Math.max(w / 2 + 16, Math.min(innerWidth - w / 2 - 16, (p.x * 0.5 + 0.5) * innerWidth));
-    const y = Math.max(76, Math.min(innerHeight - 134, (-p.y * 0.5 + 0.5) * innerHeight));
+    const y = Math.max(minY, Math.min(innerHeight - 134, (-p.y * 0.5 + 0.5) * innerHeight));
     el.style.left = `${x}px`;
     el.style.top = `${y}px`;
   }
@@ -938,6 +918,11 @@ class PushnotOrbit {
 
     if (this.playing) {
       this.t = (this.t + dt / MODE_SECONDS[this.mode]) % 1;
+      this.targetT = this.t;
+    } else {
+      // Smooth damped glide toward targetT for silky scroll & step transitions
+      this.t += (this.targetT - this.t) * Math.min(1, dt * 10);
+      if (Math.abs(this.targetT - this.t) < 0.0004) this.t = this.targetT;
     }
 
     if (this.autoOrbit) {

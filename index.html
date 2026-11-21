@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PUSHNOT // 3D Push Notification Orbit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="load-status" class="load-status">Loading 3D models…</div>
+
+  <!-- Minimal top bar -->
+  <div class="top-brand">
+    <span class="dot" id="brand-dot"></span>
+    <span>PUSHNOT</span>
+  </div>
+  <div class="top-right">
+    <button class="btn-leo" id="btn-leo" title="Flip Upside Down · Law Enforcement Trace (L)">⚖ Law Enforcement</button>
+    <button class="btn-fs" id="btn-fullscreen" title="Fullscreen">⛶</button>
+  </div>
+
+  <!-- Crisp polarity direction indicator -->
+  <div class="polarity-banner" id="polarity-banner">
+    <span class="pol-arrow" id="pol-arrow">↺</span>
+    <span class="pol-label" id="pol-label">SETUP FLOW</span>
+    <span class="pol-route" id="pol-route">App Store → Phone → Post Office → Server</span>
+  </div>
+
+  <!-- Minimal 5-station labels (Normal Mode) -->
+  <div class="pin pin-node" id="pin-store">APPLE &amp; GOOGLE STORES</div>
+  <div class="pin pin-node" id="pin-phone">PHONE</div>
+  <div class="pin pin-node" id="pin-post">POST OFFICE · APNs/FCM</div>
+  <div class="pin pin-node" id="pin-server">DATACENTRE</div>
+  <div class="pin pin-node" id="pin-ufo">EVENT TRIGGER</div>
+
+  <!-- Law Enforcement Mode station labels (visible when flipped upside down) -->
+  <div class="pin pin-node leo-pin" id="pin-leo-bandit">SUSPECT · badguy@protonmail.com</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-swat">POLICE · LEO</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-bot">META / X DATACENTRE · OSINT</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-proton">🇨🇭 PROTON (SWITZERLAND)</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-ag">APPLE &amp; GOOGLE · SUBSCRIBER DB</div>
+
+  <!-- Embedded Hacker 13 (Sketchfab transparent 3D embed for Suspect in Upside-Down LEO mode) -->
+  <div class="pin hacker-embed" id="pin-hacker-embed">
+    <iframe
+      id="hacker-iframe"
+      title="hacker 13"
+      frameborder="0"
+      allow="autoplay; fullscreen; xr-spatial-tracking"
+      src=""
+    ></iframe>
+  </div>
+
+  <!-- Single active contextual callout -->
+  <div class="pin pin-event cyan" id="pin-install">
+    <span class="ev-ico">💎</span>
+    <div>
+      <div class="ev-title">Bejeweled Installed</div>
+      <div class="ev-sub">Downloaded from App Store</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-token">
+    <span class="ev-ico">🔑</span>
+    <div>
+      <div class="ev-title">Token Minted</div>
+      <div class="ev-sub">token: 7f4a…e891</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-saved">
+    <span class="ev-ico">✓</span>
+    <div>
+      <div class="ev-title">Address Saved</div>
+      <div class="ev-sub">Datacentre stores player → key</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event green" id="pin-push">
+    <span class="ev-ico">💎</span>
+    <div>
+      <div class="ev-title">Bejeweled · Bonus Ready!</div>
+      <div class="ev-sub">Daily gem chest unlocked</div>
+    </div>
+  </div>
+
+  <!-- Law Enforcement Scenario Callouts (Upside-Down Reverse Trace) -->
+  <div class="pin pin-event red" id="pin-leo-threat">
+    <span class="ev-ico">🚨</span>
+    <div>
+      <div class="ev-title">Bomb Threat Email</div>
+      <div class="ev-sub">badguy@protonmail.com → Police</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event red" id="pin-leo-denied">
+    <span class="ev-ico">🇨🇭</span>
+    <div>
+      <div class="ev-title">Proton · Demand Rejected</div>
+      <div class="ev-sub">Swiss jurisdiction · Zero data returned</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-leo-osint">
+    <span class="ev-ico">🔎</span>
+    <div>
+      <div class="ev-title">OSINT / LEO Portal Pivot</div>
+      <div class="ev-sub">SpiderFoot · Meta &amp; X accounts linked</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-leo-tokens">
+    <span class="ev-ico">🔑</span>
+    <div>
+      <div class="ev-title">Push Tokens Returned</div>
+      <div class="ev-sub">Meta &amp; X return APNs / FCM tokens</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event green" id="pin-leo-id">
+    <span class="ev-ico">🪪</span>
+    <div>
+      <div class="ev-title">Subscriber Identity Unmasked</div>
+      <div class="ev-sub">Apple / Google · Name, Billing, Phone, IPs</div>
+    </div>
+  </div>
+
+  <!-- Notepad Routing Ledger (floats above 3D Brain at Post Office during matching) -->
+  <div class="pin ledger-pad" id="pin-ledger">
+    <div class="pad-rings">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="pad-head">
+      <span>APNs / FCM LEDGER</span>
+      <span class="pad-status" id="pad-status">SEARCHING…</span>
+    </div>
+    <div class="pad-cols">
+      <div class="pad-col">
+        <div class="col-title">PUSH REQUEST</div>
+        <div class="req-box" id="pad-req">
+          <div class="tok">🔑 7f4a…e891</div>
+          <div class="sub">Bejeweled · Bonus</div>
+        </div>
+      </div>
+      <div class="pad-col">
+        <div class="col-title">DESTINATION</div>
+        <div class="scroll-window">
+          <div class="scroll-track" id="pad-track">
+            <div class="addr-row">a19c…02b1 · #104</div>
+            <div class="addr-row">3c88…10f2 · #209</div>
+            <div class="addr-row">9d04…ff12 · #318</div>
+            <div class="addr-row">e21b…440a · #412</div>
+            <div class="addr-row">b912…77d0 · iPad</div>
+            <div class="addr-row match-row" id="pad-match-row">🔑 7f4a…e891 → Phone</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Moving packet pill -->
+  <div class="pin pin-mover" id="pin-mover"></div>
+
+  <!-- Ultra-clean bottom dock with Polarity Switch -->
+  <nav class="orbit-dock">
+    <div class="polarity-switch" role="group" aria-label="Flow Polarity">
+      <button class="pol-btn active setup" id="mode-setup" data-mode="setup">
+        <span class="pol-sym">↺</span> Mode 1 · Install &amp; Token Setup
+      </button>
+      <button class="pol-flip" id="btn-flip" title="Flip Polarity (Tab)">⇄</button>
+      <button class="pol-btn push" id="mode-push" data-mode="push">
+        <span class="pol-sym">↻</span> Mode 2 · Push Delivery
+      </button>
+    </div>
+
+    <div class="controls">
+      <button class="ctl" id="btn-step-prev" title="Previous Step (←)">◀</button>
+      <button class="ctl play" id="btn-play" title="Auto / Manual Scroll (Space)">▶ Auto</button>
+      <input type="range" id="scrub" min="0" max="1000" value="0" />
+      <span class="scrub-pct" id="scrub-pct">0%</span>
+      <button class="ctl" id="btn-step-next" title="Next Step (→)">▶</button>
+      <button class="ctl orbit-toggle on" id="btn-orbit" title="Auto-orbit camera">⟳ Orbit</button>
+    </div>
+  </nav>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -252,10 +252,10 @@ class PushnotOrbit {
     const texLoader = new THREE.TextureLoader();
 
     const specs = [
-      { id: 'pin-stim-0', color: 0x38bdf8, offset: 0.00, img: null,               spread: new THREE.Vector3(-7.5,  3.5, -5.5), mid1: new THREE.Vector3(-4.0,  2.5,  1.5), mid2: new THREE.Vector3( 0.0,  3.5, -3.0) },
-      { id: 'pin-stim-1', color: 0x3b82f6, offset: 0.25, img: 'models/zuck.jpg',  spread: new THREE.Vector3( 7.5,  2.5, -4.5), mid1: new THREE.Vector3( 4.0,  1.5, -1.5), mid2: new THREE.Vector3( 0.0,  1.5,  3.0) },
-      { id: 'pin-stim-2', color: 0xec4899, offset: 0.50, img: null,               spread: new THREE.Vector3(-6.5, -2.5,  6.5), mid1: new THREE.Vector3(-3.0, -1.5,  3.0), mid2: new THREE.Vector3( 0.0, -1.5, -2.0) },
-      { id: 'pin-stim-3', color: 0xfbbf24, offset: 0.75, img: 'models/elon.webp', spread: new THREE.Vector3( 6.5, -3.5,  6.5), mid1: new THREE.Vector3( 3.0, -2.5, -2.5), mid2: new THREE.Vector3( 0.0, -3.0,  2.5) }
+      { id: 'pin-stim-0', color: 0x38bdf8, offset: 0.00, img: null,                    spread: new THREE.Vector3(-7.5,  3.5, -5.5), mid1: new THREE.Vector3(-4.0,  2.5,  1.5), mid2: new THREE.Vector3( 0.0,  3.5, -3.0) },
+      { id: 'pin-stim-1', color: 0x3b82f6, offset: 0.25, img: 'models/zuck.png?v=26',  spread: new THREE.Vector3( 7.5,  2.5, -4.5), mid1: new THREE.Vector3( 4.0,  1.5, -1.5), mid2: new THREE.Vector3( 0.0,  1.5,  3.0) },
+      { id: 'pin-stim-2', color: 0xec4899, offset: 0.50, img: null,                    spread: new THREE.Vector3(-6.5, -2.5,  6.5), mid1: new THREE.Vector3(-3.0, -1.5,  3.0), mid2: new THREE.Vector3( 0.0, -1.5, -2.0) },
+      { id: 'pin-stim-3', color: 0xfbbf24, offset: 0.75, img: 'models/elon.png?v=26',  spread: new THREE.Vector3( 6.5, -3.5,  6.5), mid1: new THREE.Vector3( 3.0, -2.5, -2.5), mid2: new THREE.Vector3( 0.0, -3.0,  2.5) }
     ];
 
     this.worldStimStreams = specs.map((s) => {
@@ -271,23 +271,25 @@ class PushnotOrbit {
       const curve = new THREE.CatmullRomCurve3([pEarth, pEarth2, pServer, pArc1, pPost, pArc2, pPhone]);
       const line = this.addArc(curve, s.color, 0.52, this.worldStimGroup);
 
-      // Glowing 3D stimulus pulse orb (or 3D portrait token for Mark Zuckerberg / Elon Musk!)
+      // Glowing 3D stimulus pulse orb (or 3D transparent cutout standee for Mark Zuckerberg / Elon Musk!)
       const orb = new THREE.Group();
       if (s.img) {
         const tex = texLoader.load(s.img);
         tex.colorSpace = THREE.SRGBColorSpace;
-        const rimMat = new THREE.MeshStandardMaterial({ color: s.color, emissive: s.color, emissiveIntensity: 0.65, metalness: 0.5, roughness: 0.25 });
-        const faceMat = new THREE.MeshBasicMaterial({ map: tex });
-        // CylinderGeometry materials: [side, top, bottom] -> rotateX(PI/2) so top/bottom face +Z/-Z!
-        const coinGeo = new THREE.CylinderGeometry(3.2, 3.2, 0.55, 32);
-        coinGeo.rotateX(Math.PI / 2);
-        coinGeo.rotateZ(Math.PI / 2);
-        const coin = new THREE.Mesh(coinGeo, [rimMat, faceMat, faceMat]);
-        const ring = new THREE.Mesh(
-          new THREE.TorusGeometry(3.35, 0.22, 12, 36),
-          new THREE.MeshBasicMaterial({ color: s.color })
-        );
-        orb.add(coin, ring);
+        const planeGeo = new THREE.PlaneGeometry(8.5, 8.5);
+        for (let i = 0; i < 7; i++) {
+          const isOuter = (i === 0 || i === 6);
+          const mat = new THREE.MeshBasicMaterial({
+            map: tex,
+            transparent: true,
+            alphaTest: 0.15,
+            side: THREE.DoubleSide,
+            color: isOuter ? 0xffffff : s.color
+          });
+          const slice = new THREE.Mesh(planeGeo, mat);
+          slice.position.z = -0.35 + (i / 6) * 0.7;
+          orb.add(slice);
+        }
       } else {
         const sphere = new THREE.Mesh(
           new THREE.SphereGeometry(1.35, 14, 14),

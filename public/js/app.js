@@ -608,6 +608,137 @@ class PushnotOrbit {
     return group;
   }
 
+  create3DPhotoIdCard(scale = 1) {
+    // High-res fictional 3D Government Photo ID Card (Driver's License)
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 320;
+    const ctx = cvs.getContext('2d');
+
+    // Card base gradient
+    const bg = ctx.createLinearGradient(0, 0, 512, 320);
+    bg.addColorStop(0, '#e0f2fe');
+    bg.addColorStop(1, '#bae6fd');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 512, 320);
+
+    // Top header band
+    ctx.fillStyle = '#0369a1';
+    ctx.fillRect(0, 0, 512, 58);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 20px monospace';
+    ctx.fillText('DRIVER LICENSE  ·  SUBSCRIBER ID', 20, 36);
+
+    // Portrait frame + stylized silhouette avatar
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(22, 78, 128, 158);
+    ctx.fillStyle = '#38bdf8';
+    ctx.beginPath(); ctx.arc(86, 130, 28, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(86, 224, 48, Math.PI, 0); ctx.fill();
+    ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 3;
+    ctx.strokeRect(22, 78, 128, 158);
+
+    // Fictional subscriber fields
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 24px sans-serif';
+    ctx.fillText('DOE, JOHN A.', 170, 108);
+    ctx.fillStyle = '#334155';
+    ctx.font = 'bold 15px monospace';
+    ctx.fillText('ID:  D-849-221-904', 170, 140);
+    ctx.fillText('DOB: 04/12/1991', 170, 166);
+    ctx.fillText('TEL: +1 (555) 019-4821', 170, 192);
+    ctx.fillText('742 EVERGREEN TER', 170, 218);
+    ctx.fillText('IP:  198.51.100.42', 170, 244);
+
+    // Bottom barcode strip
+    ctx.fillStyle = '#0f172a';
+    for (let x = 22; x < 488; x += 6) {
+      const w = ((x * 13) % 4) + 1;
+      ctx.fillRect(x, 266, w, 34);
+    }
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.4, roughness: 0.3 });
+    const faceMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.22, metalness: 0.08, clearcoat: 0.9 });
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(9.6, 6.0, 0.3),
+      [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat]
+    );
+    mesh.scale.setScalar(scale);
+    return mesh;
+  }
+
+  create3DCreditCard(scale = 1) {
+    // High-res fictional 3D Platinum Credit Card
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 320;
+    const ctx = cvs.getContext('2d');
+
+    const bg = ctx.createLinearGradient(0, 0, 512, 320);
+    bg.addColorStop(0, '#0f172a');
+    bg.addColorStop(0.55, '#1e3a8a');
+    bg.addColorStop(1, '#020617');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 512, 320);
+
+    // Subtle diagonal metallic sheen band
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+    ctx.beginPath(); ctx.moveTo(260, 0); ctx.lineTo(420, 0); ctx.lineTo(240, 320); ctx.lineTo(80, 320); ctx.closePath(); ctx.fill();
+
+    // Issuer label
+    ctx.fillStyle = '#93c5fd';
+    ctx.font = 'bold 18px monospace';
+    ctx.fillText('BILLING CARD  ·  PLATINUM', 28, 42);
+
+    // Gold EMV chip
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillRect(32, 86, 68, 52);
+    ctx.strokeStyle = '#92400e'; ctx.lineWidth = 2;
+    ctx.strokeRect(32, 86, 68, 52);
+    ctx.beginPath(); ctx.moveTo(32, 112); ctx.lineTo(100, 112); ctx.moveTo(66, 86); ctx.lineTo(66, 138); ctx.stroke();
+
+    // Fictional card number
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 28px monospace';
+    ctx.fillText('4532  8810  ••••  4921', 32, 198);
+
+    // Cardholder & expiry
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = 'bold 17px monospace';
+    ctx.fillText('JOHN A DOE', 32, 266);
+    ctx.fillText('EXP 09/29', 260, 266);
+
+    // Overlapping network circles (red & amber)
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
+    ctx.beginPath(); ctx.arc(432, 256, 24, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.88)';
+    ctx.beginPath(); ctx.arc(460, 256, 24, 0, Math.PI * 2); ctx.fill();
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.25 });
+    const faceMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.20, metalness: 0.35, clearcoat: 1.0 });
+    const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(9.6, 6.0, 0.3),
+      [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat]
+    );
+    mesh.scale.setScalar(scale);
+    return mesh;
+  }
+
+  createSubscriberCardPair(scale = 1) {
+    const g = new THREE.Group();
+    const idCard = this.create3DPhotoIdCard(1.0);
+    idCard.position.set(-2.6, 1.4, 0.8);
+    idCard.rotation.set(0.05, 0.14, 0.08);
+    const ccCard = this.create3DCreditCard(1.0);
+    ccCard.position.set(2.6, -1.4, -0.8);
+    ccCard.rotation.set(-0.05, -0.14, -0.08);
+    g.add(idCard, ccCard, new THREE.PointLight(0x38bdf8, 3.2, 40));
+    g.scale.setScalar(scale);
+    return g;
+  }
+
   initLeoStage() {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
@@ -642,25 +773,11 @@ class PushnotOrbit {
     this.leoAgGroup.position.set(L.ag.x, 0, L.ag.z);
     this.leoGroup.add(this.leoAgGroup);
 
-    // Floating 3D Subscriber ID Card stack above the Apple/Google Shopping Bag
-    this.leoIdStack = new THREE.Group();
-    this.leoIdStack.position.set(0, 34, 0);
-    const cardMat = new THREE.MeshStandardMaterial({
-      color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.75, metalness: 0.5, roughness: 0.25
-    });
-    for (let i = 0; i < 3; i++) {
-      const card = new THREE.Mesh(new THREE.BoxGeometry(8.5, 5.2, 0.45), cardMat);
-      card.position.set((i - 1) * 0.9, (i - 1) * 0.5, (i - 1) * 1.1);
-      card.rotation.y = (i - 1) * 0.14;
-      card.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(card.geometry),
-        new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.85 })
-      ));
-      this.leoIdStack.add(card);
-    }
-    this.leoIdStack.add(new THREE.PointLight(0x38bdf8, 3.5, 42));
+    // Floating 3D Photo ID + 3D Credit Card hovering above the Apple/Google Shopping Bag
+    this.leoIdStack = this.createSubscriberCardPair(1.1);
+    this.leoIdStack.position.set(0, 35, 0);
     this.leoAgGroup.add(this.leoIdStack);
-    this.leoTops.ag = 39;
+    this.leoTops.ag = 42;
 
     // LEO investigative arcs
     const pBandit = L.bandit.clone().setY(16);
@@ -695,6 +812,11 @@ class PushnotOrbit {
     this.leoKey = this.createTokenKey(1.3);
     this.leoKey.visible = false;
     this.leoGroup.add(this.leoKey);
+
+    // 3D Photo ID + 3D Credit Card that fly from Apple/Google -> Police in Beat 6!
+    this.leoDeliveredCards = this.createSubscriberCardPair(1.25);
+    this.leoDeliveredCards.visible = false;
+    this.leoGroup.add(this.leoDeliveredCards);
 
     this.leoGroup.visible = false;
   }
@@ -1068,6 +1190,7 @@ class PushnotOrbit {
     this.brainGroup.visible = false;
     this.leoPacket.visible = false;
     this.leoKey.visible = false;
+    this.leoDeliveredCards.visible = false;
     this.rejectX.visible = false;
 
     const isLeo = this.mode === 'leo';
@@ -1225,17 +1348,16 @@ class PushnotOrbit {
         moverText = '⚖ Emergency Demand + 🔑 Tokens → Apple/Google';
         moverCls = 'cyan';
       } else {
+        // Beat 6: 3D Photo ID + Credit Card fly from Apple/Google -> Police and fan out above Police!
         const p = this.arcLeoFromAg.getPoint(seg(t, 0.86, 0.94));
-        this.leoPacket.visible = t < 0.94;
-        this.leoPacket.position.copy(p);
-        this.leoPacketMat.color.setHex(0x34d399);
-        this.leoPacketMat.emissive.setHex(0x059669);
-        this.leoPacketLight.color.setHex(0x34d399);
-        if (t < 0.93) {
+        this.leoDeliveredCards.visible = true;
+        if (t < 0.94) {
+          this.leoDeliveredCards.position.copy(p);
           moverPos = p;
-          moverText = '🪪 Returning Subscriber Identity';
+          moverText = '🪪 Returning Photo ID + Billing Card';
           moverCls = 'push';
         } else {
+          this.leoDeliveredCards.position.set(this.leoPos.swat.x, this.leoTops.swat + 8, this.leoPos.swat.z);
           showLeoId = true;
         }
       }
@@ -1332,8 +1454,11 @@ class PushnotOrbit {
     if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {
-      this.leoIdStack.rotation.y -= dt * 0.8;
-      this.leoIdStack.position.y = 34 + Math.sin(now * 0.003) * 1.1;
+      this.leoIdStack.rotation.y -= dt * 0.6;
+      this.leoIdStack.position.y = 35 + Math.sin(now * 0.003) * 1.1;
+    }
+    if (this.leoDeliveredCards && this.leoDeliveredCards.visible) {
+      this.leoDeliveredCards.rotation.y += dt * 0.7;
     }
     if (this.osintBot)    this.osintBot.rotation.y += dt * 0.55;
     if (this.leoKey && this.leoKey.visible) this.leoKey.rotation.y += dt * 2.4;

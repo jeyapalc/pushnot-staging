@@ -81,11 +81,15 @@ class PushnotOrbit {
     this.worldGroup.position.set(0, -14, 0);
     this.worldPivot.add(this.worldGroup);
 
-    // Underside Law Enforcement Group (mounted upside-down on the bottom of the disc,
-    // so when worldPivot flips 180°, the LEO world swings right-side-up!)
+    // Top-side Normal Push Notification Group (hidden automatically when flipped to LEO)
+    this.normalGroup = new THREE.Group();
+    this.worldGroup.add(this.normalGroup);
+
+    // Underside Law Enforcement Group (hidden automatically when right-side up)
     this.leoGroup = new THREE.Group();
     this.leoGroup.rotation.z = Math.PI;
     this.leoGroup.position.set(0, -1.0, 0);
+    this.leoGroup.visible = false;
     this.worldGroup.add(this.leoGroup);
 
     this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
@@ -154,13 +158,13 @@ class PushnotOrbit {
     this.pushCurves  = [this.arcUfoToServer,  this.arcServerToPost, this.arcPostToPhone];
 
     this.setupLines = [
-      this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4),
-      this.addArc(this.arcPostToPhone,   0xfbbf24, 0.35),
-      this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.4)
+      this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4,  this.normalGroup),
+      this.addArc(this.arcPostToPhone,   0xfbbf24, 0.35, this.normalGroup),
+      this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.4,  this.normalGroup)
     ];
     this.pushLines = [
-      this.addArc(this.arcServerToPost, 0x34d399, 0.45),
-      this.addArc(this.arcPostToPhone,  0x34d399, 0.45)
+      this.addArc(this.arcServerToPost, 0x34d399, 0.45, this.normalGroup),
+      this.addArc(this.arcPostToPhone,  0x34d399, 0.45, this.normalGroup)
     ];
 
     // Directional flow cones gliding directly along the active mode's arcs (100% accurate polarity!)
@@ -171,7 +175,7 @@ class PushnotOrbit {
     for (let c = 0; c < 3; c++) {
       for (let k = 0; k < 3; k++) {
         const mesh = new THREE.Mesh(coneGeo, this.beadMat);
-        this.worldGroup.add(mesh);
+        this.normalGroup.add(mesh);
         this.flowCones.push({ mesh, curveIdx: c, offset: k / 3 });
       }
     }
@@ -269,21 +273,21 @@ class PushnotOrbit {
   initMovers() {
     // 1. Bejeweled app travelling App Stores -> Phone
     this.appOrb = this.createBejeweledCluster(1.2);
-    this.worldGroup.add(this.appOrb);
+    this.normalGroup.add(this.appOrb);
 
     // 2. Installed Bejeweled hovering above the Phone
     this.installedApp = this.createBejeweledCluster(0.85);
     this.installedApp.position.set(POS.phone.x, 32, POS.phone.z);
-    this.worldGroup.add(this.installedApp);
+    this.normalGroup.add(this.installedApp);
 
     // 3. Moving Device Token (3D Metallic Key)
     this.tokenKey = this.createTokenKey(1.2);
-    this.worldGroup.add(this.tokenKey);
+    this.normalGroup.add(this.tokenKey);
 
     // 4. Persistent Stored Token Key docked on front of the Datacentre!
     this.storedKey = this.createTokenKey(1.0);
     this.storedKey.position.set(POS.server.x + 12, 24, POS.server.z + 12);
-    this.worldGroup.add(this.storedKey);
+    this.normalGroup.add(this.storedKey);
 
     // 5. External Event Trigger Pulse (UFO -> App Server)
     this.triggerBolt = new THREE.Mesh(
@@ -291,7 +295,7 @@ class PushnotOrbit {
       new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
     );
     this.triggerBolt.add(new THREE.PointLight(0x38bdf8, 4, 30));
-    this.worldGroup.add(this.triggerBolt);
+    this.normalGroup.add(this.triggerBolt);
 
     // 6. Push Notification Envelope (carrying a mini golden Key stamped on top!)
     this.pushOrb = new THREE.Group();
@@ -305,7 +309,7 @@ class PushnotOrbit {
     miniKey.position.set(0, 2.2, 0);
     this.pushOrb.add(miniKey);
     this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
-    this.worldGroup.add(this.pushOrb);
+    this.normalGroup.add(this.pushOrb);
 
     // 7. 3D Neural Brain popping up above the Post Office for routing lookup
     this.initBrain();
@@ -319,7 +323,7 @@ class PushnotOrbit {
     this.brainLight = new THREE.PointLight(0xf472b6, 3.5, 36);
     this.brainGroup.add(this.brainLight);
     this.brainGroup.visible = false;
-    this.worldGroup.add(this.brainGroup);
+    this.normalGroup.add(this.brainGroup);
 
     this.loader.load('models/brain_point_cloud.glb', (gltf) => {
       const brain = gltf.scene;
@@ -376,19 +380,19 @@ class PushnotOrbit {
     this.dcGroup = new THREE.Group();
     this.dcGroup.position.copy(POS.server);
     this.dcGroup.rotation.y = Math.PI * 0.25;
-    this.worldGroup.add(this.dcGroup);
+    this.normalGroup.add(this.dcGroup);
 
     const floorY = 0.8;
     const RACK_H = 18;
     const specs = [
-      { key: 'argos',   row: 'back',  path: 'models/dc/cabinet_argos.glb', targetH: RACK_H, uniformH: true },
-      { key: 'main',    row: 'back',  path: 'models/data_center_rack.glb', targetH: RACK_H, uniformH: true },
-      { key: 'net',     row: 'back',  path: 'models/dc/network_rack.glb',  targetH: RACK_H, uniformH: true },
-      { key: 'rack1',   row: 'back',  path: 'models/dc/rack_1.glb',        targetH: RACK_H, uniformH: true },
-      { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: RACK_H, uniformH: true },
-      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: 15.5,   uniformH: true },
-      { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: RACK_H, uniformH: true },
-      { key: 'topbox',  row: 'top',   path: 'models/dc/server_box.glb',    targetH: 6,      uniformH: false }
+      { key: 'argos',   row: 'back',  path: 'models/dc/cabinet_argos.glb', targetH: RACK_H, uniformH: true, ry: 0 },
+      { key: 'main',    row: 'back',  path: 'models/data_center_rack.glb', targetH: RACK_H, uniformH: true, ry: 0 },
+      { key: 'net',     row: 'back',  path: 'models/dc/network_rack.glb',  targetH: RACK_H, uniformH: true, ry: 0 },
+      { key: 'rack1',   row: 'back',  path: 'models/dc/rack_1.glb',        targetH: RACK_H, uniformH: true, ry: 0 },
+      { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: RACK_H, uniformH: true, ry: 0 },
+      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: RACK_H, uniformH: true, ry: -Math.PI / 2 },
+      { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: RACK_H, uniformH: true, ry: 0 },
+      { key: 'topbox',  row: 'top',   path: 'models/dc/server_box.glb',    targetH: 6,      uniformH: false, ry: 0 }
     ];
 
     const loaded = {};
@@ -493,17 +497,27 @@ class PushnotOrbit {
       if (this.storedKey) {
         this.storedKey.position.set(POS.server.x + padW * 0.42, 22, POS.server.z + padD * 0.42);
       }
+
+      // Mirror the completed Datacentre into the Upside-Down Law Enforcement world (Meta / X Datacentre)!
+      if (this.leoGroup && this.leoPos) {
+        if (this.leoDcMirror) this.leoGroup.remove(this.leoDcMirror);
+        this.leoDcMirror = this.dcGroup.clone(true);
+        this.leoDcMirror.position.set(this.leoPos.bot.x, 0, this.leoPos.bot.z - 5);
+        this.leoDcMirror.rotation.y = 0;
+        this.leoDcMirror.scale.set(-0.68, 0.68, 0.68); // mirrored X for the Upside Down!
+        this.leoGroup.add(this.leoDcMirror);
+      }
     };
 
     for (const s of specs) {
       this.loader.load(s.path, (gltf) => {
         const obj = gltf.scene;
+        if (s.ry) obj.rotation.y = s.ry;
         let box = new THREE.Box3().setFromObject(obj);
         const raw = box.getSize(new THREE.Vector3());
         const sy = s.targetH / (raw.y || 1);
         const maxFootprint = s.row === 'top' ? 10 : 11;
         const sxz = Math.min(sy, maxFootprint / Math.max(raw.x || 1, raw.z || 1));
-        // Keep every server rack at the EXACT same roofline height (sy), capping X/Z footprint cleanly
         obj.scale.set(sxz, s.uniformH ? sy : sxz, sxz);
 
         box = new THREE.Box3().setFromObject(obj);
@@ -526,30 +540,63 @@ class PushnotOrbit {
     }
   }
 
+  createWindSwissFlag() {
+    // Wind-animated 3D Swiss Flag (square red banner + crisp white cross, zero background)
+    const group = new THREE.Group();
+
+    // Metallic flagpole
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.35, 0.45, 24, 12),
+      new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.25 })
+    );
+    pole.position.set(-7, 12, 0);
+    const finial = new THREE.Mesh(
+      new THREE.SphereGeometry(0.85, 16, 16),
+      new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.2 })
+    );
+    finial.position.set(-7, 24.4, 0);
+    group.add(pole, finial);
+
+    // High-res Swiss flag CanvasTexture (no background, pure red + white cross)
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 512;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(0, 0, 512, 512);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(208, 96, 96, 320);
+    ctx.fillRect(96, 208, 320, 96);
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    const flagGeo = new THREE.PlaneGeometry(14, 14, 24, 16);
+    const flagMat = new THREE.MeshStandardMaterial({
+      map: tex, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.05
+    });
+    this.swissFlagMesh = new THREE.Mesh(flagGeo, flagMat);
+    this.swissFlagMesh.position.set(0, 16.5, 0);
+    // Cache rest X/Y so we can ripple Z smoothly in wind loop
+    this.swissFlagBase = Float32Array.from(flagGeo.attributes.position.array);
+    group.add(this.swissFlagMesh, new THREE.PointLight(0xf43f5e, 2.5, 34));
+    return group;
+  }
+
   initLeoStage() {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
       bandit: new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@protonmail.com)
       swat:   new THREE.Vector3(-D, 0,  D), // front-left:  Police / SWAT LEO
-      proton: new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (dead end!)
+      proton: new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (wind-animated flag!)
       ag:     new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Subscriber DB
-      bot:    new THREE.Vector3( 0, 0,  4)  // center:      OSINT / SpiderFoot + Meta & X Portals
+      bot:    new THREE.Vector3( 0, 0,  4)  // center:      Mirrored Meta/X Datacentre + Facebook + SpiderFoot
     };
     this.leoPos = L;
-    this.leoTops = { bandit: 26, swat: 26, bot: 18, proton: 22, ag: 26 };
+    this.leoTops = { bandit: 26, swat: 26, bot: 24, proton: 26, ag: 26 };
 
-    // Swiss Proton Shield emblem (crimson octagonal vault + white Swiss cross)
-    this.protonGroup = new THREE.Group();
-    this.protonGroup.position.set(L.proton.x, 12, L.proton.z);
-    const shield = new THREE.Mesh(
-      new THREE.CylinderGeometry(8.5, 8.5, 2.2, 8),
-      new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0x7f1d1d, emissiveIntensity: 0.7, metalness: 0.5, roughness: 0.3 })
-    );
-    shield.rotation.x = Math.PI / 2;
-    const crossMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const barV = new THREE.Mesh(new THREE.BoxGeometry(2.4, 8.5, 2.6), crossMat);
-    const barH = new THREE.Mesh(new THREE.BoxGeometry(8.5, 2.4, 2.6), crossMat);
-    this.protonGroup.add(shield, barV, barH, new THREE.PointLight(0xf43f5e, 3, 36));
+    // Wind-Animated 3D Swiss Flag for Proton node (zero background)
+    this.protonGroup = this.createWindSwissFlag();
+    this.protonGroup.position.set(L.proton.x, 0, L.proton.z);
+    this.protonGroup.rotation.y = Math.PI * 0.2;
     this.leoGroup.add(this.protonGroup);
 
     // Glowing red rejection X flash at Proton when demand bounces
@@ -615,7 +662,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 16; // 8 datacentre + phone + postbox + apple + google + ufo + bandit + swat + osint_bot
+    let left = 17; // 8 datacentre + phone + postbox + apple + google + ufo + bandit + swat + osint_bot + facebook
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -626,7 +673,7 @@ class PushnotOrbit {
       const phone = gltf.scene;
       phone.rotation.y = -Math.PI * 0.25;
       this.tops.phone = this.ground(phone, 28, POS.phone);
-      this.worldGroup.add(phone);
+      this.normalGroup.add(phone);
       done();
     }, undefined, done);
 
@@ -635,7 +682,7 @@ class PushnotOrbit {
       const post = gltf.scene;
       post.rotation.y = Math.PI * 0.25;
       this.tops.post = this.ground(post, 32, POS.post);
-      this.worldGroup.add(post);
+      this.normalGroup.add(post);
       done();
     }, undefined, done);
 
@@ -657,7 +704,7 @@ class PushnotOrbit {
       this.ufoGroup.add(beam);
 
       this.ufoGroup.position.copy(POS.ufo);
-      this.worldGroup.add(this.ufoGroup);
+      this.normalGroup.add(this.ufoGroup);
       done();
     }, undefined, done);
 
@@ -680,8 +727,17 @@ class PushnotOrbit {
 
     this.loader.load('models/leo/osint_bot.glb', (gltf) => {
       this.osintBot = gltf.scene;
-      this.leoTops.bot = this.ground(this.osintBot, 18, this.leoPos.bot);
+      this.leoTops.bot = this.ground(this.osintBot, 16, new THREE.Vector3(this.leoPos.bot.x, 0, this.leoPos.bot.z + 11));
       this.leoGroup.add(this.osintBot);
+      done();
+    }, undefined, done);
+
+    // 7. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode
+    this.loader.load('models/leo/facebook.glb', (gltf) => {
+      this.fbLogo = gltf.scene;
+      this.centerAndScale(this.fbLogo, 12);
+      this.fbLogo.position.set(this.leoPos.bot.x, 22, this.leoPos.bot.z - 5);
+      this.leoGroup.add(this.fbLogo);
       done();
     }, undefined, done);
   }
@@ -692,7 +748,7 @@ class PushnotOrbit {
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.store.x, 0, POS.store.z);
     this.storeGroup.rotation.y = -Math.PI * 0.25;
-    this.worldGroup.add(this.storeGroup);
+    this.normalGroup.add(this.storeGroup);
 
     const bagW = 19;
     const bagH = 22;
@@ -818,7 +874,15 @@ class PushnotOrbit {
     const isPush = mode === 'push';
     const isLeo  = mode === 'leo';
     this.flipTarget = isLeo ? Math.PI : 0;
-    this.leoGroup.visible = true; // keep mounted during flip so you see the upside-down transition!
+
+    // Lazy-load Hacker 13 transparent Sketchfab embed when entering Law Enforcement mode
+    if (isLeo) {
+      const ifr = document.getElementById('hacker-iframe');
+      if (ifr && !ifr.dataset.loaded) {
+        ifr.src = 'https://sketchfab.com/models/6c14849eea654ab79b0483ebdf59de8f/embed?autostart=1&transparent=1&ui_infos=0&ui_controls=0&ui_watermark=0&ui_stop=0&ui_hint=0';
+        ifr.dataset.loaded = '1';
+      }
+    }
 
     const color = isLeo ? 0xf43f5e : (isPush ? 0x34d399 : 0xfbbf24);
     this.ringMat.color.setHex(color);
@@ -1139,7 +1203,8 @@ class PushnotOrbit {
     this.place('pin-push',    phoneTop,  showNorm && showPush);
     this.place('pin-ledger',  new THREE.Vector3(POS.post.x, 46, POS.post.z), showNorm && showLedger);
 
-    // Law Enforcement contextual callouts
+    // Law Enforcement contextual callouts + Hacker 13 embed at Suspect station
+    this.place('pin-hacker-embed', new THREE.Vector3(L.bandit.x, this.leoTops.bandit + 4, L.bandit.z), showLeoPins, this.leoGroup);
     this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
     this.place('pin-leo-denied', new THREE.Vector3(L.proton.x, this.leoTops.proton + 6, L.proton.z), showLeoPins && showLeoDenied, this.leoGroup);
     this.place('pin-leo-osint',  new THREE.Vector3(L.bot.x,    this.leoTops.bot + 5,    L.bot.z),    showLeoPins && showLeoOsint,  this.leoGroup);
@@ -1175,14 +1240,33 @@ class PushnotOrbit {
     const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
 
-    // Smooth 180° upside-down world flip animation!
+    // Smooth 180° upside-down world flip with EXCLUSIVE visibility (never see the other world!)
     this.flipRoll += (this.flipTarget - this.flipRoll) * Math.min(1, dt * 4.5);
     if (Math.abs(this.flipTarget - this.flipRoll) < 0.002) this.flipRoll = this.flipTarget;
     this.worldPivot.rotation.z = this.flipRoll;
-    this.leoGroup.visible = this.flipRoll > 0.05;
+    const leoInFocus = this.flipRoll >= Math.PI * 0.5;
+    this.normalGroup.visible = !leoInFocus;
+    this.leoGroup.visible = leoInFocus;
     this.worldPivot.updateMatrixWorld(true);
 
-    if (this.protonGroup) this.protonGroup.rotation.y += dt * 0.6;
+    // Real-time wind wave animation for the 3D Swiss Flag (zero background)
+    if (this.swissFlagMesh && this.leoGroup.visible) {
+      const pos = this.swissFlagMesh.geometry.attributes.position;
+      const base = this.swissFlagBase;
+      const tW = now * 0.0055;
+      for (let i = 0; i < pos.count; i++) {
+        const bx = base[i * 3];
+        const by = base[i * 3 + 1];
+        // Pin left edge (bx = -7) to flagpole; ripple increases cleanly toward right fly edge
+        const pinFactor = clamp01((bx + 7) / 14);
+        const wave = Math.sin(bx * 0.55 - tW) * 1.15 + Math.cos(by * 0.4 - tW * 0.8) * 0.45;
+        pos.setZ(i, wave * pinFactor);
+      }
+      pos.needsUpdate = true;
+      this.swissFlagMesh.geometry.computeVertexNormals();
+    }
+
+    if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
     if (this.leoAgBeacon) { this.leoAgBeacon.rotation.y += dt * 0.7; this.leoAgBeacon.rotation.x += dt * 0.35; }
     if (this.osintBot)    this.osintBot.rotation.y += dt * 0.55;
     if (this.leoKey && this.leoKey.visible) this.leoKey.rotation.y += dt * 2.4;

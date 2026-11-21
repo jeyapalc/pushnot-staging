@@ -1242,31 +1242,31 @@ class PushnotOrbit {
     return g;
   }
 
-  /* ---- Custom Clean 3D Canadian SpiderFoot OSINT Web (No messy GLB!) ---- */
+  /* ---- Custom Calm, Highly Readable 3D Canadian SpiderFoot OSINT Board (Zero dizzying pulsing/throbbing!) ---- */
   makeSpiderFootLabelTexture(title, sub, borderHex = '#38bdf8', badge = '🇨🇦') {
     const cvs = document.createElement('canvas');
-    cvs.width = 512; cvs.height = 160;
+    cvs.width = 512; cvs.height = 172;
     const ctx = cvs.getContext('2d');
 
-    ctx.fillStyle = '#070d19';
-    ctx.fillRect(0, 0, 512, 160);
+    ctx.fillStyle = '#060c18';
+    ctx.fillRect(0, 0, 512, 172);
 
-    // Top accent bar + border
+    // Top accent bar + crisp border
     ctx.fillStyle = borderHex;
-    ctx.fillRect(0, 0, 512, 12);
+    ctx.fillRect(0, 0, 512, 14);
     ctx.strokeStyle = borderHex;
-    ctx.lineWidth = 6;
-    ctx.strokeRect(3, 3, 506, 154);
+    ctx.lineWidth = 7;
+    ctx.strokeRect(3.5, 3.5, 505, 165);
 
-    // Title row
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 31px "JetBrains Mono", monospace';
-    ctx.fillText(`${badge} ${title}`, 20, 68);
+    // Title row (extra bold, high contrast)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 34px "JetBrains Mono", monospace';
+    ctx.fillText(`${badge} ${title}`, 22, 74);
 
     // Subtitle row
-    ctx.fillStyle = '#93c5fd';
-    ctx.font = 'bold 23px "JetBrains Mono", monospace';
-    ctx.fillText(sub, 22, 120);
+    ctx.fillStyle = '#bae6fd';
+    ctx.font = 'bold 24px "JetBrains Mono", monospace';
+    ctx.fillText(sub, 24, 128);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -1276,97 +1276,190 @@ class PushnotOrbit {
   createCustomSpiderFootWeb() {
     const group = new THREE.Group();
 
-    // 1. Sleek 3D Geometric SpiderWeb Grid (3 concentric octagon rings + 8 radial web threads)
-    const webFrame = new THREE.Group();
-    const ringMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.42 });
-    const radii = [5.5, 10.5, 15.5];
-    const segs = 8;
-
-    for (const r of radii) {
-      const pts = [];
-      for (let i = 0; i <= segs; i++) {
-        const a = (i / segs) * Math.PI * 2;
-        pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r * 0.72, Math.sin(a * 2) * 1.1));
-      }
-      const geo = new THREE.BufferGeometry().setFromPoints(pts);
-      webFrame.add(new THREE.Line(geo, ringMat));
-    }
-
-    // 8 radial web spokes + glowing intersection pearls
-    const nodeGeo = new THREE.SphereGeometry(0.42, 10, 10);
-    const nodeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-    for (let i = 0; i < segs; i++) {
-      const a = (i / segs) * Math.PI * 2;
-      const outerPt = new THREE.Vector3(Math.cos(a) * 15.5, Math.sin(a) * 15.5 * 0.72, Math.sin(a * 2) * 1.1);
-      const spokeGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), outerPt]);
-      webFrame.add(new THREE.Line(spokeGeo, ringMat));
-
-      for (const r of radii) {
-        const dot = new THREE.Mesh(nodeGeo, nodeMat);
-        dot.position.set(Math.cos(a) * r, Math.sin(a) * r * 0.72, Math.sin(a * 2) * 1.1);
-        webFrame.add(dot);
-      }
-    }
-    group.add(webFrame);
-    this.osintWebCloud = webFrame;
-
-    // 2. Central Target Seed Hub (`badguy@protonmail.com`) + 6 Crisp Radial Canadian OSINT Pivot Cards
+    // Clean, calm, stationary 3D correlation tree (zero spinning background web, zero pulsing orbs!)
     const hub = new THREE.Group();
     const coreTex = this.makeSpiderFootLabelTexture(
       'badguy@protonmail.com',
-      'SPIDERFOOT SEED · RCMP / VPD',
+      'SPIDERFOOT EMAIL SEED',
       '#f43f5e',
       '🎯'
     );
     const coreMat = new THREE.MeshBasicMaterial({ map: coreTex });
-    const coreEdge = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.85 });
+    const coreEdge = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.65 });
     const coreBox = new THREE.Mesh(
-      new THREE.BoxGeometry(10.8, 3.3, 0.55),
+      new THREE.BoxGeometry(13.2, 4.1, 0.55),
       [coreEdge, coreEdge, coreEdge, coreEdge, coreMat, coreMat]
     );
     hub.add(coreBox);
 
     const pivots = [
-      { pos: [-11.5,  6.2,  1.8], title: 'IG: @badguy_604',     sub: 'META RECOVERY MATCH',   color: '#ec4899', hex: 0xec4899, badge: '📸' },
-      { pos: [ 11.5,  6.2,  1.8], title: 'X: @badguy_yvr',      sub: 'HANDLE PIVOT · YVR',    color: '#38bdf8', hex: 0x38bdf8, badge: '𝕏' },
-      { pos: [-13.0,  0.0, -1.2], title: 'FB: John Doe (BC)',   sub: 'VANCOUVER SOCIAL GRAPH',color: '#3b82f6', hex: 0x3b82f6, badge: '📘' },
-      { pos: [ 13.0,  0.0, -1.2], title: 'HIBP / USERNAME',     sub: 'REUSE: badguy_604',     color: '#a855f7', hex: 0xa855f7, badge: '🕸️' },
-      { pos: [-11.0, -6.2,  1.5], title: 's. 487.014 / 487.11', sub: 'CRIMINAL CODE (CANADA)',color: '#fbbf24', hex: 0xfbbf24, badge: '🇨🇦' },
-      { pos: [ 11.0, -6.2,  1.5], title: 'R. v. Spencer (SCC)', sub: 'CHARTER s. 8 · PIPEDA', color: '#34d399', hex: 0x34d399, badge: '⚖️' }
+      { pos: [-11.5,  5.6, 0.4], title: 'IG: @badguy_604',     sub: 'META RECOVERY MATCH',    color: '#ec4899', hex: 0xec4899, badge: '📸' },
+      { pos: [ 11.5,  5.6, 0.4], title: 'X: @badguy_yvr',      sub: 'HANDLE PIVOT · YVR',     color: '#38bdf8', hex: 0x38bdf8, badge: '𝕏' },
+      { pos: [-11.5, -5.6, 0.4], title: 's. 487.014 / 487.11', sub: 'CRIMINAL CODE (CANADA)', color: '#fbbf24', hex: 0xfbbf24, badge: '🇨🇦' },
+      { pos: [ 11.5, -5.6, 0.4], title: 'R. v. Spencer (SCC)', sub: 'CHARTER s. 8 · PIPEDA',  color: '#34d399', hex: 0x34d399, badge: '⚖️' }
     ];
 
-    this.osintPulses = [];
-    for (let i = 0; i < pivots.length; i++) {
-      const p = pivots[i];
+    for (const p of pivots) {
       const pTex = this.makeSpiderFootLabelTexture(p.title, p.sub, p.color, p.badge);
       const pFace = new THREE.MeshBasicMaterial({ map: pTex });
-      const pRim  = new THREE.MeshStandardMaterial({ color: p.hex, emissive: p.hex, emissiveIntensity: 0.65 });
+      const pRim  = new THREE.MeshStandardMaterial({ color: p.hex, emissive: p.hex, emissiveIntensity: 0.5 });
       const card = new THREE.Mesh(
-        new THREE.BoxGeometry(8.4, 2.6, 0.4),
+        new THREE.BoxGeometry(10.6, 3.3, 0.42),
         [pRim, pRim, pRim, pRim, pFace, pFace]
       );
       card.position.set(...p.pos);
       hub.add(card);
 
-      // Glowing correlation spoke from center seed to each pivot card + animated data pulse bead
-      const targetVec = new THREE.Vector3(...p.pos);
+      // Clean steady correlation line from center seed to each result card
       const spokeGeo = new THREE.BufferGeometry().setFromPoints([
         new THREE.Vector3(0, 0, 0),
-        targetVec
+        new THREE.Vector3(...p.pos)
       ]);
       hub.add(new THREE.Line(spokeGeo, new THREE.LineBasicMaterial({ color: p.hex })));
-
-      const pulseOrb = new THREE.Mesh(
-        new THREE.SphereGeometry(0.55, 12, 12),
-        new THREE.MeshBasicMaterial({ color: p.hex })
-      );
-      hub.add(pulseOrb);
-      this.osintPulses.push({ mesh: pulseOrb, target: targetVec, offset: i / pivots.length });
     }
 
-    group.add(hub, new THREE.PointLight(0x38bdf8, 3.5, 42));
+    group.add(hub, new THREE.PointLight(0x38bdf8, 3.0, 40));
     this.osintWebHub = hub;
     return group;
+  }
+
+  /* ---- 3D Ticking C4 Bomb (`c4_bomb.glb`) with LED Faceplate ("PROTONMAIL BOMB THREAT" + Sample Email + Flashing LEDs!) ---- */
+  createTickingC4Bomb() {
+    const group = new THREE.Group();
+
+    // 1. High-contrast Digital LED Faceplate Canvas (updated live with ticking countdown!)
+    this.bombCvs = document.createElement('canvas');
+    this.bombCvs.width = 512;
+    this.bombCvs.height = 280;
+    this.bombCtx = this.bombCvs.getContext('2d');
+    this.bombFaceTex = new THREE.CanvasTexture(this.bombCvs);
+    this.bombFaceTex.colorSpace = THREE.SRGBColorSpace;
+    this.lastBombTickKey = '';
+
+    // Mount the LED Faceplate & 4 physical 3D flashing LED bulbs right onto the C4 Bomb
+    const plateRimMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b, metalness: 0.75, roughness: 0.28
+    });
+    const plateFaceMat = new THREE.MeshBasicMaterial({ map: this.bombFaceTex });
+    this.bombFaceplate = new THREE.Mesh(
+      new THREE.BoxGeometry(8.6, 4.7, 0.45),
+      [plateRimMat, plateRimMat, plateRimMat, plateRimMat, plateFaceMat, plateFaceMat]
+    );
+    this.bombFaceplate.position.set(0, 3.4, 1.4);
+    this.bombFaceplate.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(this.bombFaceplate.geometry),
+      new THREE.LineBasicMaterial({ color: 0xff1e56 })
+    ));
+    group.add(this.bombFaceplate);
+
+    // 4 physical 3D flashing LED beacons around the faceplate corners
+    this.bombLedMeshes = [];
+    const ledGeo = new THREE.SphereGeometry(0.42, 14, 14);
+    const ledPositions = [
+      [-3.8, 5.3, 1.65],
+      [ 3.8, 5.3, 1.65],
+      [-3.8, 1.5, 1.65],
+      [ 3.8, 1.5, 1.65]
+    ];
+    for (let i = 0; i < ledPositions.length; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff1e56 : 0xfbbf24 });
+      const led = new THREE.Mesh(ledGeo, mat);
+      led.position.set(...ledPositions[i]);
+      group.add(led);
+      this.bombLedMeshes.push({ mesh: led, mat, idx: i });
+    }
+
+    this.bombStrobeLight = new THREE.PointLight(0xff1e56, 4.0, 32);
+    this.bombStrobeLight.position.set(0, 3.5, 3.0);
+    group.add(this.bombStrobeLight);
+
+    // Load the user's simple_c4-_bomb.glb (`models/leo/c4_bomb.glb`) underneath the LED Faceplate!
+    this.loader.load('models/leo/c4_bomb.glb?v=32', (gltf) => {
+      const c4 = gltf.scene;
+      this.harmonizeAsset(c4, { minRough: 0.32, maxRough: 0.65, maxMetal: 0.45, envIntensity: 0.9 });
+      this.centerAndScale(c4, 10.5);
+      c4.position.set(0, 0, 0);
+      group.add(c4);
+    });
+
+    this.updateBombFaceplate(0);
+    return group;
+  }
+
+  updateBombFaceplate(nowMs) {
+    if (!this.bombCtx || !this.bombFaceTex) return;
+    // Ticking 10-second countdown at 10Hz (tenths of a second) + flashing LED state
+    const tenth = Math.floor(nowMs / 100);
+    if (tenth === this.lastBombTickKey) return;
+    this.lastBombTickKey = tenth;
+
+    const blinkOn = (Math.floor(nowMs / 250) % 2) === 0;
+    const totalTenths = 150 - (tenth % 120); // Counts down from 00:15.0 -> 00:03.0
+    const secs = Math.floor(totalTenths / 10);
+    const msDigit = totalTenths % 10;
+    const timeStr = `00:${String(secs).padStart(2, '0')}.${msDigit}`;
+
+    const ctx = this.bombCtx;
+    ctx.fillStyle = '#070b14';
+    ctx.fillRect(0, 0, 512, 280);
+
+    // Glowing red digital bezel border
+    ctx.strokeStyle = blinkOn ? '#ff1e56' : '#9f1239';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(5, 5, 502, 270);
+
+    // Top red LED header banner: PROTONMAIL BOMB THREAT
+    ctx.fillStyle = blinkOn ? '#e11d48' : '#881337';
+    ctx.fillRect(14, 14, 484, 54);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 30px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('🚨 PROTONMAIL BOMB THREAT', 256, 51);
+
+    // Sample ProtonMail email sender & subject line
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fda4af';
+    ctx.font = 'bold 23px "JetBrains Mono", monospace';
+    ctx.fillText('FROM: badguy@protonmail.com', 24, 106);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillText('MSG:  "C4 device planted at HQ…"', 24, 140);
+
+    // Digital red 7-segment style ticking countdown timer box
+    ctx.fillStyle = '#18040a';
+    ctx.fillRect(24, 162, 310, 96);
+    ctx.strokeStyle = '#ff1e56';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(24, 162, 310, 96);
+
+    ctx.fillStyle = blinkOn ? '#ff2a55' : '#fb7185';
+    ctx.font = '900 56px "JetBrains Mono", monospace';
+    ctx.fillText(timeStr, 42, 229);
+
+    // Status LED indicators on right side of timer
+    const drawLed = (x, y, label, active, colorHex) => {
+      ctx.fillStyle = active ? colorHex : '#334155';
+      ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#cbd5e1';
+      ctx.font = 'bold 19px "JetBrains Mono", monospace';
+      ctx.fillText(label, x + 22, y + 6);
+    };
+    drawLed(362, 188, 'ARMED', blinkOn, '#ff1e56');
+    drawLed(362, 234, 'TIMER', !blinkOn, '#fbbf24');
+
+    this.bombFaceTex.needsUpdate = true;
+
+    // Also flash the 4 3D corner LED bulbs & point light
+    if (this.bombLedMeshes) {
+      for (const l of this.bombLedMeshes) {
+        const active = ((l.idx + Math.floor(nowMs / 200)) % 2) === 0;
+        l.mat.color.setHex(active ? 0xff1e56 : 0x330814);
+        l.mesh.scale.setScalar(active ? 1.25 : 0.85);
+      }
+    }
+    if (this.bombStrobeLight) {
+      this.bombStrobeLight.intensity = blinkOn ? 5.0 : 1.2;
+    }
   }
 
   initLeoStage() {
@@ -1470,6 +1563,11 @@ class PushnotOrbit {
     this.leoKey = this.createTokenKey(1.3);
     this.leoKey.visible = false;
     this.leoGroup.add(this.leoKey);
+
+    // 3D Ticking C4 Bomb with PROTONMAIL BOMB THREAT LED Faceplate & Flashing LEDs (flies from Suspect -> Police in Beat 1!)
+    this.leoBomb = this.createTickingC4Bomb();
+    this.leoBomb.visible = false;
+    this.leoGroup.add(this.leoBomb);
 
     // 3D Photo ID + 3D Credit Card that fly from Apple/Google -> Police in Beat 6!
     this.leoDeliveredCards = this.createSubscriberCardPair(1.25);
@@ -1869,6 +1967,7 @@ class PushnotOrbit {
     this.triggerBolt.visible = false;
     this.brainGroup.visible = false;
     this.leoPacket.visible = false;
+    if (this.leoBomb) this.leoBomb.visible = false;
     this.leoKey.visible = false;
     this.leoDeliveredCards.visible = false;
     this.rejectX.visible = false;
@@ -2015,15 +2114,15 @@ class PushnotOrbit {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (6 Beats):
       moverParent = this.leoGroup;
       if (t < 0.16) {
+        // Beat 1: Ticking 3D C4 Bomb with "PROTONMAIL BOMB THREAT" LED faceplate + flashing red LEDs flies from Suspect (badguy@protonmail.com) -> Police!
         const p = this.arcLeoThreat.getPoint(seg(t, 0, 0.12));
-        this.leoPacket.visible = true;
-        this.leoPacket.position.copy(p);
-        this.leoPacketMat.color.setHex(0xf43f5e);
-        this.leoPacketMat.emissive.setHex(0xbe123c);
-        this.leoPacketLight.color.setHex(0xf43f5e);
+        if (this.leoBomb) {
+          this.leoBomb.visible = true;
+          this.leoBomb.position.copy(p);
+        }
         if (t < 0.12) {
           moverPos = p;
-          moverText = '✉ Bomb Threat';
+          moverText = '💣 ProtonMail Bomb Threat';
           moverCls = 'red';
         } else {
           showLeoThreat = true;
@@ -2268,24 +2367,9 @@ class PushnotOrbit {
     }
 
     if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
-    if (this.osintWebGroup && this.leoGroup.visible) {
-      const osintActive = this.mode === 'leo' && this.t >= 0.34 && this.t < 0.60;
-      if (this.osintWebCloud) {
-        this.osintWebCloud.rotation.z += dt * (osintActive ? 0.45 : 0.16);
-      }
-      if (this.osintWebHub) {
-        this.osintWebHub.rotation.y = Math.sin(now * 0.0022) * 0.22;
-      }
-      if (this.osintPulses) {
-        const pSpeed = (now * 0.0009) % 1;
-        for (const p of this.osintPulses) {
-          const u = (p.offset + pSpeed) % 1;
-          p.mesh.position.copy(p.target).multiplyScalar(u);
-        }
-      }
-      const targetScale = osintActive ? 1.12 + Math.sin(now * 0.008) * 0.03 : 0.95;
-      this.osintWebGroup.scale.setScalar(targetScale);
-      this.osintWebGroup.position.y = this.leoPos.osint.y + Math.sin(now * 0.003) * 0.9;
+    // Live countdown & flashing LEDs on the 3D C4 Bomb LED faceplate ("PROTONMAIL BOMB THREAT")
+    if (this.leoBomb && this.leoBomb.visible) {
+      this.updateBombFaceplate(now);
     }
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {

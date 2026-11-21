@@ -361,13 +361,118 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- 3D Firewall Shield + Blocked Direct Line (Why App Maker cannot push directly to Phone) ---- */
+  /* ---- 3D Monopoly "GO TO JAIL" Redirect Tile (Officer flipped to face LEFT!) ---- */
+  createMonopolyRedirectSign(scale = 1) {
+    const group = new THREE.Group();
+
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 512;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, 512, 512);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    // Load the authentic Monopoly Go To Jail artwork and draw Officer Edgar Mallory mirrored horizontally (facing LEFT!)
+    const img = new Image();
+    img.onload = () => {
+      // Crop inside the outer black border of the source photo (x: 42..470, y: 42..470 of 512)
+      const sx = img.width * 0.085;
+      const sy = img.height * 0.085;
+      const sw = img.width * 0.83;
+      const sh = img.height * 0.83;
+
+      ctx.fillStyle = '#f8f7f2';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Flip horizontally so Officer Edgar Mallory faces & points to the LEFT!
+      ctx.save();
+      ctx.translate(512, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, 512, 512);
+      ctx.restore();
+
+      // Mask out the mirrored "GO TO" (now top-left) and "JAIL" (now bottom-right) text so we can stamp crisp, un-mirrored typography!
+      ctx.fillStyle = '#f8f7f2';
+      // Cover mirrored top-left text area
+      ctx.save();
+      ctx.translate(145, 130);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillRect(-115, -55, 230, 110);
+      ctx.restore();
+      // Cover mirrored bottom-right text area
+      ctx.save();
+      ctx.translate(362, 355);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillRect(-105, -55, 210, 110);
+      ctx.restore();
+
+      // Re-stamp crisp un-mirrored "GO TO" (top-left, angled) and "JAIL" (bottom-right, angled)
+      ctx.fillStyle = '#0f172a';
+      ctx.font = '900 54px "Space Grotesk", Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      ctx.save();
+      ctx.translate(135, 125);
+      ctx.rotate(-Math.PI * 0.23);
+      ctx.fillText('GO TO', 0, 0);
+      ctx.restore();
+
+      ctx.save();
+      ctx.translate(356, 352);
+      ctx.rotate(-Math.PI * 0.23);
+      ctx.fillText('JAIL', 0, 0);
+      ctx.restore();
+
+      // Crisp inner vintage board border
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 14;
+      ctx.strokeRect(7, 7, 498, 498);
+
+      tex.needsUpdate = true;
+    };
+    img.src = 'models/go_to_jail.jpg';
+
+    // 3D bevel-framed Monopoly tile block with glossy front & back faces
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, roughness: 0.3, metalness: 0.5
+    });
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.75, roughness: 0.25, metalness: 0.4
+    });
+    const faceMat = new THREE.MeshPhysicalMaterial({
+      map: tex, roughness: 0.18, metalness: 0.08, clearcoat: 1.0, clearcoatRoughness: 0.1
+    });
+
+    const tile = new THREE.Mesh(
+      new THREE.BoxGeometry(13.5, 13.5, 1.3),
+      [frameMat, frameMat, frameMat, frameMat, faceMat, faceMat]
+    );
+    group.add(tile);
+
+    // Glowing outer 3D rim frame
+    const borderEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(13.9, 13.9, 1.45)),
+      new THREE.LineBasicMaterial({ color: 0xfbbf24 })
+    );
+    const backingRim = new THREE.Mesh(
+      new THREE.BoxGeometry(14.3, 14.3, 0.9),
+      rimMat
+    );
+    group.add(borderEdges, backingRim, new THREE.PointLight(0xf43f5e, 4, 34));
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  /* ---- 3D Redirect Visual (Why App Maker cannot push directly to Phone -> Redirected to Post Office!) ---- */
   createDirectBlockVisual() {
     const group = new THREE.Group();
 
-    // Red dashed direct line from Datacentre -> Phone (stopped at midpoint firewall)
+    // Red dashed direct line from Datacentre -> Phone (intercepted & redirected at midpoint)
     const pServer = POS.server.clone().setY(16);
-    const pMid    = new THREE.Vector3(0, 16, POS.phone.z);
+    const pMid    = new THREE.Vector3(0, 17, POS.phone.z);
     const pPhone  = POS.phone.clone().setY(16);
     const lineGeo = new THREE.BufferGeometry().setFromPoints(
       new THREE.LineCurve3(pServer, pPhone).getPoints(40)
@@ -379,29 +484,9 @@ class PushnotOrbit {
     redLine.computeLineDistances();
     group.add(redLine);
 
-    // 3D Hexagonal OS Firewall Barrier + Red X at midpoint between Datacentre & Phone
-    this.firewallBarrier = new THREE.Group();
+    // 3D Monopoly "GO TO JAIL" Officer pointing LEFT at the midpoint between Datacentre & Phone
+    this.firewallBarrier = this.createMonopolyRedirectSign(1.0);
     this.firewallBarrier.position.copy(pMid);
-
-    const shieldGeo = new THREE.CylinderGeometry(8.5, 8.5, 0.45, 6);
-    shieldGeo.rotateZ(Math.PI / 2);
-    const shieldMat = new THREE.MeshPhysicalMaterial({
-      color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.65,
-      transparent: true, opacity: 0.38, roughness: 0.15, metalness: 0.2
-    });
-    const shield = new THREE.Mesh(shieldGeo, shieldMat);
-    shield.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(shieldGeo),
-      new THREE.LineBasicMaterial({ color: 0xff4d6d })
-    ));
-    this.firewallBarrier.add(shield);
-
-    const xMat = new THREE.MeshBasicMaterial({ color: 0xff1e56 });
-    const x1 = new THREE.Mesh(new THREE.BoxGeometry(8.2, 1.35, 1.35), xMat); x1.rotation.z =  Math.PI / 4;
-    const x2 = new THREE.Mesh(new THREE.BoxGeometry(8.2, 1.35, 1.35), xMat); x2.rotation.z = -Math.PI / 4;
-    x1.position.z = 0.6;
-    x2.position.z = 0.6;
-    this.firewallBarrier.add(x1, x2, new THREE.PointLight(0xf43f5e, 4, 34));
     group.add(this.firewallBarrier);
 
     group.visible = false;

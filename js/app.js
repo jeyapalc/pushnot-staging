@@ -872,7 +872,7 @@ class PushnotOrbit {
   }
 
   create3DPhotoIdCard(scale = 1) {
-    // High-res fictional 3D Government Photo ID Card (Driver's License)
+    // High-res fictional 3D Canadian Provincial Photo ID Card (BC Driver's Licence)
     const cvs = document.createElement('canvas');
     cvs.width = 512; cvs.height = 320;
     const ctx = cvs.getContext('2d');
@@ -884,12 +884,14 @@ class PushnotOrbit {
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, 512, 320);
 
-    // Top header band
+    // Top header band (Canadian BC Driver's Licence)
     ctx.fillStyle = '#0369a1';
     ctx.fillRect(0, 0, 512, 58);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(0, 54, 512, 6);
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 20px monospace';
-    ctx.fillText('DRIVER LICENSE  ·  SUBSCRIBER ID', 20, 36);
+    ctx.font = 'bold 19px monospace';
+    ctx.fillText('BRITISH COLUMBIA · CANADA  DRIVER\'S LICENCE', 16, 36);
 
     // Portrait frame + stylized silhouette avatar
     ctx.fillStyle = '#0f172a';
@@ -900,17 +902,17 @@ class PushnotOrbit {
     ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 3;
     ctx.strokeRect(22, 78, 128, 158);
 
-    // Fictional subscriber fields
+    // Fictional Canadian subscriber fields
     ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 24px sans-serif';
-    ctx.fillText('DOE, JOHN A.', 170, 108);
+    ctx.font = 'bold 23px sans-serif';
+    ctx.fillText('DOE, JOHN A.', 170, 106);
     ctx.fillStyle = '#334155';
-    ctx.font = 'bold 15px monospace';
-    ctx.fillText('ID:  D-849-221-904', 170, 140);
-    ctx.fillText('DOB: 04/12/1991', 170, 166);
-    ctx.fillText('TEL: +1 (555) 019-4821', 170, 192);
-    ctx.fillText('742 EVERGREEN TER', 170, 218);
-    ctx.fillText('IP:  198.51.100.42', 170, 244);
+    ctx.font = 'bold 14.5px monospace';
+    ctx.fillText('DL:  BC-8492-104', 170, 138);
+    ctx.fillText('DOB: 1991-04-12', 170, 164);
+    ctx.fillText('TEL: +1 (604) 555-0194', 170, 190);
+    ctx.fillText('742 ROBSON ST, VANCOUVER BC', 170, 216);
+    ctx.fillText('IP:  24.84.100.42 (TELUS CA)', 170, 242);
 
     // Bottom barcode strip
     ctx.fillStyle = '#0f172a';
@@ -1002,6 +1004,163 @@ class PushnotOrbit {
     return g;
   }
 
+  /* ---- Redesign knowledge_base.glb into a Canadian Police SpiderFoot Email OSINT Web
+          centered on badguy@protonmail.com (Canadian Criminal Code & R. v. Spencer, zero USA!) ---- */
+  makeSpiderFootLabelTexture(title, sub, borderHex = '#38bdf8', badge = '🇨🇦') {
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 160;
+    const ctx = cvs.getContext('2d');
+
+    ctx.fillStyle = '#070d19';
+    ctx.fillRect(0, 0, 512, 160);
+
+    // Top accent bar + border
+    ctx.fillStyle = borderHex;
+    ctx.fillRect(0, 0, 512, 12);
+    ctx.strokeStyle = borderHex;
+    ctx.lineWidth = 6;
+    ctx.strokeRect(3, 3, 506, 154);
+
+    // Title row
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 31px "JetBrains Mono", monospace';
+    ctx.fillText(`${badge} ${title}`, 20, 68);
+
+    // Subtitle row
+    ctx.fillStyle = '#93c5fd';
+    ctx.font = 'bold 23px "JetBrains Mono", monospace';
+    ctx.fillText(sub, 22, 120);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }
+
+  customizeCanadianSpiderFootWeb(kbRoot) {
+    // 1. Cycle through all 70 text-card materials inside knowledge_base.glb and replace their generic
+    //    textures with Canadian Law & SpiderFoot Email OSINT findings for badguy@protonmail.com!
+    const canadianOsintEntries = [
+      { title: 'badguy@protonmail.com', sub: 'TARGET SEED · SPIDERFOOT SCAN', color: '#f43f5e', badge: '🎯' },
+      { title: 'IG: @badguy_604',       sub: 'META RECOVERY EMAIL MATCH',     color: '#ec4899', badge: '📸' },
+      { title: 'X: @badguy_yvr',        sub: 'X / TWITTER HANDLE CORRELATED', color: '#38bdf8', badge: '𝕏' },
+      { title: 'FB: John Doe (YVR)',    sub: 'META GRAPH · VANCOUVER BC',     color: '#3b82f6', badge: '📘' },
+      { title: 'RCMP · NC3 CYBER',      sub: 'NATIONAL CYBERCRIME COORD',     color: '#ef4444', badge: '🇨🇦' },
+      { title: 'VPD · CYBERCRIME',      sub: 'VANCOUVER POLICE DEPT OSINT',   color: '#38bdf8', badge: '🇨🇦' },
+      { title: 'OPP · DIGITAL INTEL',   sub: 'ONTARIO PROVINCIAL POLICE',     color: '#38bdf8', badge: '🇨🇦' },
+      { title: 's. 487.014 Cr. Code',   sub: 'PRODUCTION ORDER · GENERAL',    color: '#fbbf24', badge: '⚖️' },
+      { title: 's. 487.016 Cr. Code',   sub: 'TRANSMISSION DATA ORDER',       color: '#fbbf24', badge: '⚖️' },
+      { title: 's. 487.0195 Cr. Code',  sub: 'PRESERVATION DEMAND (CANADA)',  color: '#fbbf24', badge: '⚖️' },
+      { title: 's. 487.11 Cr. Code',    sub: 'EXIGENT CIRCUMSTANCES · THREAT',color: '#f43f5e', badge: '🚨' },
+      { title: 'R. v. Spencer (SCC)',   sub: '2014 SCC 43 · SUBSCRIBER ID',   color: '#34d399', badge: '🇨🇦' },
+      { title: 'Charter s. 8 (Canada)', sub: 'LAWFUL AUTHORITY & PRIVACY',    color: '#34d399', badge: '🍁' },
+      { title: 'PIPEDA s. 7(3)(c.1)',   sub: 'LAWFUL AUTHORITY DISCLOSURE',   color: '#34d399', badge: '🇨🇦' },
+      { title: 'PGP KEY: 0x9F4A…E891',  sub: 'PROTON KEYSERVER FINGERPRINT',  color: '#a855f7', badge: '🔐' },
+      { title: 'HIBP BREACHPIVOT',      sub: 'USERNAME REUSE: badguy_604',    color: '#f59e0b', badge: '🕸️' },
+      { title: 'GITHUB: badguy-yvr',    sub: 'COMMIT EMAIL: badguy@proton',   color: '#38bdf8', badge: '💻' },
+      { title: 'TELUS / ROGERS ASN',    sub: 'CANADIAN ISP · BC / ONTARIO',   color: '#34d399', badge: '📡' },
+      { title: 'META LEO PORTAL (CA)',  sub: 'EXIGENT PUSH TOKEN REQUEST',    color: '#3b82f6', badge: '🔑' },
+      { title: 'X LEGAL PORTAL (CA)',   sub: 'EMERGENCY DISCLOSURE · TOKENS', color: '#38bdf8', badge: '🔑' }
+    ];
+
+    const texPool = canadianOsintEntries.map((e) =>
+      this.makeSpiderFootLabelTexture(e.title, e.sub, e.color, e.badge)
+    );
+
+    const spherePalette = [0xf43f5e, 0x38bdf8, 0xfbbf24, 0x34d399, 0xec4899, 0x3b82f6];
+    let texIdx = 0;
+    let nodeIdx = 0;
+
+    kbRoot.traverse((child) => {
+      if (!child.isMesh || !child.material) return;
+      const vCount = child.geometry?.attributes?.position?.count || 0;
+      const mat = child.material.clone();
+
+      if (mat.map || vCount <= 12) {
+        // 4-vertex floating label planes inside knowledge_base.glb -> Canadian SpiderFoot OSINT badges!
+        const newTex = texPool[texIdx % texPool.length];
+        texIdx++;
+        mat.map = newTex;
+        mat.color = new THREE.Color(0xffffff);
+        mat.emissive = new THREE.Color(0xffffff);
+        mat.emissiveMap = newTex;
+        mat.emissiveIntensity = 0.55;
+        mat.transparent = false;
+        mat.opacity = 1.0;
+        mat.roughness = 0.25;
+        mat.metalness = 0.1;
+        // Scale up label quads slightly so key Canadian OSINT findings read crisply in 3D
+        child.scale.multiplyScalar(1.35);
+      } else if (vCount > 200) {
+        // 674-vertex graph node spheres -> glowing cyber nodes (red/cyan/amber/green)
+        const hex = spherePalette[nodeIdx % spherePalette.length];
+        nodeIdx++;
+        mat.color = new THREE.Color(hex);
+        mat.emissive = new THREE.Color(hex);
+        mat.emissiveIntensity = 0.75;
+        mat.roughness = 0.2;
+        mat.metalness = 0.4;
+      } else {
+        // 99-vertex SpiderFoot web connector edges -> glowing cyan/red neural links
+        mat.color = new THREE.Color(0x38bdf8);
+        mat.emissive = new THREE.Color(0x0284c7);
+        mat.emissiveIntensity = 0.65;
+        mat.roughness = 0.3;
+        mat.metalness = 0.5;
+      }
+      mat.needsUpdate = true;
+      child.material = mat;
+    });
+
+    // 2. Add a prominent central 3D SpiderFoot Target Hub (`badguy@protonmail.com`) + radial Canadian Pivot Nodes
+    //    so the live audience immediately sees how the email search connects to Meta/X & Canadian law!
+    const hub = new THREE.Group();
+    const coreTex = this.makeSpiderFootLabelTexture(
+      'badguy@protonmail.com',
+      'SPIDERFOOT SEED · RCMP / VPD OSINT',
+      '#f43f5e',
+      '🎯'
+    );
+    const coreMat = new THREE.MeshBasicMaterial({ map: coreTex });
+    const coreEdge = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.8 });
+    const coreBox = new THREE.Mesh(
+      new THREE.BoxGeometry(11.5, 3.6, 0.5),
+      [coreEdge, coreEdge, coreEdge, coreEdge, coreMat, coreMat]
+    );
+    hub.add(coreBox);
+
+    const pivots = [
+      { pos: [-9.5,  5.5,  3.5], title: 'IG: @badguy_604',      sub: 'RECOVERY EMAIL MATCH',    color: '#ec4899', hex: 0xec4899, badge: '📸' },
+      { pos: [ 9.5,  5.5,  3.5], title: 'X: @badguy_yvr',       sub: 'USERNAME PIVOT · YVR',    color: '#38bdf8', hex: 0x38bdf8, badge: '𝕏' },
+      { pos: [-9.5, -5.2, -3.0], title: 's. 487.014 / 487.11',  sub: 'CRIMINAL CODE (CANADA)',  color: '#fbbf24', hex: 0xfbbf24, badge: '🇨🇦' },
+      { pos: [ 9.5, -5.2, -3.0], title: 'R. v. Spencer (SCC)',  sub: 'CHARTER s. 8 · PIPEDA',   color: '#34d399', hex: 0x34d399, badge: '⚖️' }
+    ];
+
+    for (const p of pivots) {
+      const pTex = this.makeSpiderFootLabelTexture(p.title, p.sub, p.color, p.badge);
+      const pFace = new THREE.MeshBasicMaterial({ map: pTex });
+      const pRim  = new THREE.MeshStandardMaterial({ color: p.hex, emissive: p.hex, emissiveIntensity: 0.6 });
+      const card = new THREE.Mesh(
+        new THREE.BoxGeometry(8.6, 2.7, 0.35),
+        [pRim, pRim, pRim, pRim, pFace, pFace]
+      );
+      card.position.set(...p.pos);
+      hub.add(card);
+
+      // Glowing SpiderFoot correlation spoke from center seed (`badguy@protonmail.com`) to each pivot card
+      const spokeGeo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(...p.pos)
+      ]);
+      const spoke = new THREE.Line(
+        spokeGeo,
+        new THREE.LineBasicMaterial({ color: p.hex })
+      );
+      hub.add(spoke);
+    }
+
+    return hub;
+  }
+
   initLeoStage() {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
@@ -1086,7 +1245,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 16; // 8 datacentre + phone + postbox + apple + google + ufo + bandit + swat + facebook
+    let left = 17; // 8 datacentre + phone + postbox + apple + google + earth + bandit + swat + facebook + knowledge_base
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -1157,9 +1316,26 @@ class PushnotOrbit {
     // 7. Facebook / Meta Logo hovering above the Mirrored Datacentre in LEO mode (icon excluded from shine pass)
     this.loader.load('models/leo/facebook.glb', (gltf) => {
       this.fbLogo = gltf.scene;
-      this.centerAndScale(this.fbLogo, 12);
-      this.fbLogo.position.set(this.leoPos.bot.x, 22, this.leoPos.bot.z - 5);
+      this.centerAndScale(this.fbLogo, 10.5);
+      this.fbLogo.position.set(this.leoPos.bot.x - 13, 21, this.leoPos.bot.z - 5);
       this.leoGroup.add(this.fbLogo);
+      done();
+    }, undefined, done);
+
+    // 8. Canadian SpiderFoot Email OSINT Knowledge Web (knowledge_base.glb redesigned for badguy@protonmail.com & Canadian Law)
+    this.loader.load('models/leo/knowledge_base.glb?v=16', (gltf) => {
+      this.osintWebGroup = new THREE.Group();
+      this.osintWebGroup.position.set(this.leoPos.bot.x, 30, this.leoPos.bot.z - 2);
+
+      const kb = gltf.scene;
+      this.centerAndScale(kb, 26);
+      const hub = this.customizeCanadianSpiderFootWeb(kb);
+      this.osintWebCloud = kb;
+      this.osintWebHub = hub;
+
+      this.osintWebGroup.add(kb, hub, new THREE.PointLight(0x38bdf8, 3.5, 42));
+      this.leoGroup.add(this.osintWebGroup);
+      this.leoTops.bot = 43;
       done();
     }, undefined, done);
   }
@@ -1615,7 +1791,7 @@ class PushnotOrbit {
         this.leoPacketMat.emissive.setHex(0xbe123c);
         if (t < 0.26) {
           moverPos = p;
-          moverText = '⚖ Emergency Demand → Proton (CH)';
+          moverText = '🇨🇦 RCMP/VPD Request → Proton (CH)';
           moverCls = 'red';
         } else {
           this.rejectX.visible = true;
@@ -1630,7 +1806,7 @@ class PushnotOrbit {
         this.leoPacketLight.color.setHex(0xfbbf24);
         if (t < 0.43) {
           moverPos = p;
-          moverText = '🔎 Query SpiderFoot / Meta & X Portals';
+          moverText = '🕸️ SpiderFoot Email Scan: badguy@protonmail.com';
         } else {
           showLeoOsint = true;
         }
@@ -1640,7 +1816,7 @@ class PushnotOrbit {
         this.leoKey.position.copy(p);
         if (t < 0.62) {
           moverPos = p;
-          moverText = '🔑 Meta & X Return Push Tokens';
+          moverText = '🔑 s. 487.11 Cr. Code · Meta & X Return Push Tokens';
         } else {
           showLeoTokens = true;
         }
@@ -1649,7 +1825,7 @@ class PushnotOrbit {
         this.leoKey.visible = true;
         this.leoKey.position.copy(p);
         moverPos = p;
-        moverText = '⚖ Emergency Demand + 🔑 Tokens → Apple/Google';
+        moverText = '🇨🇦 Production Order (s. 487.014) + 🔑 Tokens → Apple/Google';
         moverCls = 'cyan';
       } else {
         // Beat 6: 3D Photo ID + Credit Card fly from Apple/Google -> Police and fan out above Police!
@@ -1658,7 +1834,7 @@ class PushnotOrbit {
         if (t < 0.94) {
           this.leoDeliveredCards.position.copy(p);
           moverPos = p;
-          moverText = '🪪 Returning Photo ID + Billing Card';
+          moverText = '🪪 Returning BC Driver\'s Licence + Billing Card';
           moverCls = 'push';
         } else {
           this.leoDeliveredCards.position.set(this.leoPos.swat.x, this.leoTops.swat + 8, this.leoPos.swat.z);
@@ -1769,6 +1945,18 @@ class PushnotOrbit {
     }
 
     if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
+    if (this.osintWebGroup && this.leoGroup.visible) {
+      const osintActive = this.mode === 'leo' && this.t >= 0.34 && this.t < 0.68;
+      if (this.osintWebCloud) {
+        this.osintWebCloud.rotation.y += dt * (osintActive ? 0.55 : 0.22);
+      }
+      if (this.osintWebHub) {
+        this.osintWebHub.rotation.y = Math.sin(now * 0.0022) * 0.28;
+      }
+      const targetScale = osintActive ? 1.18 + Math.sin(now * 0.008) * 0.04 : 0.95;
+      this.osintWebGroup.scale.setScalar(targetScale);
+      this.osintWebGroup.position.y = 30 + Math.sin(now * 0.003) * 0.9;
+    }
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {
       this.leoIdStack.rotation.y -= dt * 0.6;

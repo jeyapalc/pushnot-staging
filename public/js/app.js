@@ -4,28 +4,30 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 /* =====================================================================
-   PUSHNOT // 4-Station 3D Orbit with Polarity Switch
-   Stations around ring (R = 46):
-     App Store (UFO)          : back-right   (+32, 0, -32)
-     Phone (Smartphone)       : front-right  (+32, 0, +32)
-     App Server (Server Rack) : front-left   (-32, 0, +32)
-     Post Office (Post Box)   : back-left    (-32, 0, -32)
+   PUSHNOT // 3D Push Notification Orbit
+   Stations on orbit ring (R = 46):
+     Apple & Google Stores (logos) : back-right   (+32.5, 0, -32.5)
+     Phone (Smartphone + Bejeweled): front-right  (+32.5, 0, +32.5)
+     App Server (Server Rack)      : front-left   (-32.5, 0, +32.5)
+     Post Office (Post Box)        : back-left    (-32.5, 0, -32.5)
+     External Stimulus (UFO)       : hovering above App Server (-32.5, 48, +32.5)
 
-   Two Polarity Modes (reverses orbital flow & purpose):
-     'setup' (↺): App Store -> Phone -> Post Office -> App Server
-     'push'  (↻): App Server -> Post Office -> Phone
+   Two Polarity Modes:
+     'setup' (↺): App Stores -> Phone (Bejeweled) -> Post Office -> Key Token -> App Server (stored)
+     'push'  (↻): UFO Event Trigger -> App Server (uses stored Key) -> Post Office -> Phone
    ===================================================================== */
 
 const R = 46;
-const D = Math.SQRT1_2 * R; // ~32.5
+const D = Math.SQRT1_2 * R;
 const POS = {
-  store:  new THREE.Vector3( D, 0, -D), // UFO (App Store Gateway)
-  phone:  new THREE.Vector3( D, 0,  D), // Smartphone
-  server: new THREE.Vector3(-D, 0,  D), // Server Rack
-  post:   new THREE.Vector3(-D, 0, -D)  // Edward VII Post Box (APNs/FCM)
+  store:  new THREE.Vector3( D, 0, -D),
+  phone:  new THREE.Vector3( D, 0,  D),
+  server: new THREE.Vector3(-D, 0,  D),
+  post:   new THREE.Vector3(-D, 0, -D),
+  ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 11, push: 8 };
+const MODE_SECONDS = { setup: 11, push: 9 };
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
 
@@ -38,13 +40,13 @@ class PushnotOrbit {
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
     this.loader.setDRACOLoader(draco);
 
-    this.mode = 'setup'; // 'setup' | 'push'
+    this.mode = 'setup';
     this.t = 0.0;
     this.playing = true;
     this.autoOrbit = true;
     this.orbitAngle = 0.35;
     this.lastFrame = performance.now();
-    this.tops = { phone: 30, server: 36, post: 32, store: 34 };
+    this.tops = { phone: 28, server: 34, post: 32, store: 28 };
 
     this.initScene();
     this.initLights();
@@ -58,10 +60,10 @@ class PushnotOrbit {
 
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x05080f, 0.0032);
+    this.scene.fog = new THREE.FogExp2(0x05080f, 0.003);
 
     this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
-    this.camera.position.set(42, 56, 128);
+    this.camera.position.set(42, 58, 134);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setSize(innerWidth, innerHeight);
@@ -73,7 +75,7 @@ class PushnotOrbit {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-    this.controls.target.set(0, 14, 0);
+    this.controls.target.set(0, 16, 0);
     this.controls.minDistance = 50;
     this.controls.maxDistance = 260;
     this.controls.maxPolarAngle = Math.PI * 0.48;
@@ -96,14 +98,12 @@ class PushnotOrbit {
   }
 
   initOrbitRing() {
-    // Main luminous orbit ring (color shifts with polarity)
     this.ringMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.32 });
     const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 12, 128), this.ringMat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.15;
     this.scene.add(ring);
 
-    // Subtle outer halo
     const outer = new THREE.Mesh(
       new THREE.TorusGeometry(R + 11, 0.08, 8, 128),
       new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.12 })
@@ -112,7 +112,7 @@ class PushnotOrbit {
     outer.position.y = 0.1;
     this.scene.add(outer);
 
-    // Polarity flow beads orbiting the ring to show flow direction visually
+    // Directional polarity cones orbiting the ring
     this.flowBeads = [];
     this.beadMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
     const beadGeo = new THREE.ConeGeometry(0.9, 2.6, 8);
@@ -124,18 +124,16 @@ class PushnotOrbit {
     }
 
     // Elevated arcs between stations
-    const pStore  = POS.store.clone().setY(22);
+    const pStore  = POS.store.clone().setY(18);
     const pPhone  = POS.phone.clone().setY(16);
     const pPost   = POS.post.clone().setY(18);
     const pServer = POS.server.clone().setY(18);
 
-    // Setup arcs (Mode 1)
     this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pStore,  new THREE.Vector3(R + 10, 28, 0),  pPhone);
     this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(0, 32, 0),       pPhone);
     this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 12, R + 12),  pServer);
-
-    // Push arcs (Mode 2)
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-R - 10, 28, 0), pPost);
+    this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(28));
 
     this.setupLines = [
       this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4),
@@ -172,9 +170,8 @@ class PushnotOrbit {
     return line;
   }
 
+  /* ---- 5 magic neon-glow faceted gemstones representing Bejeweled ---- */
   createBejeweledCluster(scale = 1) {
-    // 5 magic neon-glow faceted gemstones matching the artwork:
-    // Ruby Red, Amber Gold, Emerald Green, Sapphire Blue, Amethyst Purple
     const group = new THREE.Group();
     const specs = [
       { color: 0xff2a55, emissive: 0xd90429, geo: new THREE.CylinderGeometry(0.9, 1.1, 3.0, 5), pos: [-2.8,  0.4,  0.6], rot: [0.2, 0.4,  0.15] },
@@ -186,80 +183,103 @@ class PushnotOrbit {
 
     for (const s of specs) {
       const mat = new THREE.MeshPhysicalMaterial({
-        color: s.color,
-        emissive: s.emissive,
-        emissiveIntensity: 0.75,
-        roughness: 0.12,
-        metalness: 0.15,
-        clearcoat: 1.0,
-        clearcoatRoughness: 0.08,
-        flatShading: true
+        color: s.color, emissive: s.emissive, emissiveIntensity: 0.75,
+        roughness: 0.12, metalness: 0.15, clearcoat: 1.0, clearcoatRoughness: 0.08, flatShading: true
       });
       const mesh = new THREE.Mesh(s.geo, mat);
       mesh.position.set(...s.pos);
       mesh.rotation.set(...s.rot);
-      // Crisp neon facet rim highlight
-      const edges = new THREE.LineSegments(
+      mesh.add(new THREE.LineSegments(
         new THREE.EdgesGeometry(s.geo),
         new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.45 })
-      );
-      mesh.add(edges);
+      ));
       group.add(mesh);
     }
 
-    // Magic neon sparkle motes around the gemstones
     const motePts = [];
-    for (let i = 0; i < 28; i++) {
+    for (let i = 0; i < 24; i++) {
       const a = Math.random() * Math.PI * 2;
-      const r = 2.2 + Math.random() * 2.4;
-      motePts.push(Math.cos(a) * r, (Math.random() - 0.5) * 4.5, Math.sin(a) * r);
+      const r = 2.2 + Math.random() * 2.2;
+      motePts.push(Math.cos(a) * r, (Math.random() - 0.5) * 4.2, Math.sin(a) * r);
     }
     const moteGeo = new THREE.BufferGeometry();
     moteGeo.setAttribute('position', new THREE.Float32BufferAttribute(motePts, 3));
-    group.add(new THREE.Points(
-      moteGeo,
-      new THREE.PointsMaterial({ color: 0xffffff, size: 0.55, transparent: true, opacity: 0.85 })
-    ));
+    group.add(new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, transparent: true, opacity: 0.8 })));
 
-    group.add(new THREE.PointLight(0x22ff88, 3, 28));
+    group.add(new THREE.PointLight(0x22ff88, 2.5, 24));
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  /* ---- Metallic 3D Key representing the Device Token (distinct from gems!) ---- */
+  createTokenKey(scale = 1) {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.85,
+      metalness: 0.9, roughness: 0.18
+    });
+    // Key bow (ring handle)
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.35, 10, 24), mat);
+    bow.position.x = -1.7;
+    // Key blade
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.55, 0.4), mat);
+    shaft.position.x = 0.8;
+    // Key teeth
+    const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.9, 0.4), mat);
+    t1.position.set(1.4, -0.65, 0);
+    const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.2, 0.4), mat);
+    t2.position.set(2.2, -0.8, 0);
+
+    group.add(bow, shaft, t1, t2, new THREE.PointLight(0xfbbf24, 2.5, 24));
     group.scale.setScalar(scale);
     return group;
   }
 
   initMovers() {
-    // Bejeweled App (5 magic neon gemstones travelling App Store -> Phone)
-    this.appOrb = this.createBejeweledCluster(1.25);
+    // 1. Bejeweled app travelling App Stores -> Phone
+    this.appOrb = this.createBejeweledCluster(1.2);
     this.scene.add(this.appOrb);
 
-    // Installed Bejeweled Gems hovering above the Phone once installed
-    this.installedApp = this.createBejeweledCluster(1.0);
-    this.installedApp.position.set(POS.phone.x, 31, POS.phone.z);
+    // 2. Installed Bejeweled hovering above the Phone
+    this.installedApp = this.createBejeweledCluster(0.85);
+    this.installedApp.position.set(POS.phone.x, 32, POS.phone.z);
     this.scene.add(this.installedApp);
 
-    // Token octahedron (amber)
-    this.tokenOrb = new THREE.Group();
-    this.tokenOrb.add(new THREE.Mesh(
-      new THREE.OctahedronGeometry(2.3),
-      new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xd97706, emissiveIntensity: 0.9, metalness: 0.7, roughness: 0.2 })
-    ));
-    this.tokenOrb.add(new THREE.PointLight(0xfbbf24, 3, 28));
-    this.scene.add(this.tokenOrb);
+    // 3. Moving Device Token (3D Metallic Key)
+    this.tokenKey = this.createTokenKey(1.2);
+    this.scene.add(this.tokenKey);
 
-    // Push envelope slab (emerald)
+    // 4. Persistent Stored Token Key docked on front of the App Server!
+    this.storedKey = this.createTokenKey(1.0);
+    this.storedKey.position.set(POS.server.x + 8, 22, POS.server.z + 8);
+    this.scene.add(this.storedKey);
+
+    // 5. External Event Trigger Pulse (UFO -> App Server)
+    this.triggerBolt = new THREE.Mesh(
+      new THREE.SphereGeometry(2.0, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+    );
+    this.triggerBolt.add(new THREE.PointLight(0x38bdf8, 4, 30));
+    this.scene.add(this.triggerBolt);
+
+    // 6. Push Notification Envelope (carrying a mini golden Key stamped on top!)
     this.pushOrb = new THREE.Group();
     const box = new THREE.Mesh(
-      new THREE.BoxGeometry(4.4, 2.8, 0.7),
+      new THREE.BoxGeometry(4.6, 2.9, 0.7),
       new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x059669, emissiveIntensity: 0.85, metalness: 0.5, roughness: 0.25 })
     );
     this.pushOrb.add(box);
     this.pushOrb.add(new THREE.LineSegments(new THREE.EdgesGeometry(box.geometry), new THREE.LineBasicMaterial({ color: 0xffffff })));
+    const miniKey = this.createTokenKey(0.55);
+    miniKey.position.set(0, 2.2, 0);
+    this.pushOrb.add(miniKey);
     this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
     this.scene.add(this.pushOrb);
   }
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 4;
+    let left = 6;
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Server Rack (front-left)
@@ -289,22 +309,43 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 4. UFO — App Store Gateway (back-right)
+    // 4. Apple & Google App Store Logos (back-right, side-by-side)
+    this.storeGroup = new THREE.Group();
+    this.storeGroup.position.set(POS.store.x, 15, POS.store.z);
+    this.storeGroup.rotation.y = -Math.PI * 0.25;
+    this.scene.add(this.storeGroup);
+
+    this.loader.load('models/apple_logo.glb', (gltf) => {
+      this.appleLogo = gltf.scene;
+      this.centerAndScale(this.appleLogo, 14);
+      this.appleLogo.position.set(-9, 0, 0);
+      this.storeGroup.add(this.appleLogo);
+      done();
+    }, undefined, done);
+
+    this.loader.load('models/google_logo.glb', (gltf) => {
+      this.googleLogo = gltf.scene;
+      this.centerAndScale(this.googleLogo, 14);
+      this.googleLogo.position.set(9, 0, 0);
+      this.storeGroup.add(this.googleLogo);
+      done();
+    }, undefined, done);
+
+    // 5. UFO — External Event Trigger hovering above the App Server!
     this.loader.load('models/ufo.glb', (gltf) => {
       this.ufoGroup = new THREE.Group();
       const ufo = gltf.scene;
-      this.centerAndScale(ufo, 32);
+      this.centerAndScale(ufo, 28);
       this.ufoGroup.add(ufo);
 
-      const beam = new THREE.Mesh(
-        new THREE.ConeGeometry(10, 20, 32, 1, true),
-        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.14, side: THREE.DoubleSide })
-      );
-      beam.position.y = -11;
+      this.ufoBeamMat = new THREE.MeshBasicMaterial({
+        color: 0x34d399, transparent: true, opacity: 0.08, side: THREE.DoubleSide
+      });
+      const beam = new THREE.Mesh(new THREE.ConeGeometry(12, 24, 32, 1, true), this.ufoBeamMat);
+      beam.position.y = -13;
       this.ufoGroup.add(beam);
 
-      this.ufoGroup.position.set(POS.store.x, 22, POS.store.z);
-      this.tops.store = 33;
+      this.ufoGroup.position.copy(POS.ufo);
       this.scene.add(this.ufoGroup);
       done();
     }, undefined, done);
@@ -335,15 +376,12 @@ class PushnotOrbit {
     if (resetT) this.t = 0;
 
     const isPush = mode === 'push';
-
-    // Update 3D ring & arcs polarity color/visibility
     const color = isPush ? 0x34d399 : 0xfbbf24;
     this.ringMat.color.setHex(color);
     this.beadMat.color.setHex(color);
     this.setupLines.forEach((l) => (l.visible = !isPush));
     this.pushLines.forEach((l) => (l.visible = isPush));
 
-    // Update HUD polarity chrome
     document.getElementById('mode-setup').classList.toggle('active', !isPush);
     document.getElementById('mode-push').classList.toggle('active', isPush);
     document.getElementById('brand-dot').classList.toggle('push', isPush);
@@ -355,8 +393,8 @@ class PushnotOrbit {
     document.getElementById('pol-arrow').textContent = isPush ? '↻' : '↺';
     document.getElementById('pol-label').textContent = isPush ? 'PUSH DELIVERY' : 'INSTALL & SETUP';
     document.getElementById('pol-route').textContent = isPush
-      ? 'App Server → Post Office → Phone'
-      : 'App Store → Phone → Post Office → App Server';
+      ? 'UFO Event → Server → Post Office → Phone'
+      : 'Apple/Google → Phone → Post Office → Server';
   }
 
   setAutoOrbit(on) {
@@ -400,9 +438,19 @@ class PushnotOrbit {
     document.getElementById('btn-play').textContent = this.playing ? '❚❚' : '▶';
 
     this.appOrb.visible = false;
-    this.tokenOrb.visible = false;
+    this.tokenKey.visible = false;
     this.pushOrb.visible = false;
+    this.triggerBolt.visible = false;
+
+    // Bejeweled stays visibly installed on the phone once downloaded
     this.installedApp.visible = this.mode === 'push' || t >= 0.28;
+    // Key stays persistently stored on the server once registered!
+    this.storedKey.visible = this.mode === 'push' || t >= 0.90;
+
+    // UFO tractor beam brightens when triggering an external event in Mode 2
+    if (this.ufoBeamMat) {
+      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.28) ? 0.34 : 0.07;
+    }
 
     let moverPos = null;
     let moverText = '';
@@ -425,31 +473,39 @@ class PushnotOrbit {
         showInstall = true;
       } else if (t < 0.62) {
         const p = this.arcPostToPhone.getPoint(seg(t, 0.38, 0.62));
-        this.tokenOrb.visible = true;
-        this.tokenOrb.position.copy(p);
+        this.tokenKey.visible = true;
+        this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Mint Device Token';
+        moverText = '🔑 Mint Device Key';
       } else if (t < 0.70) {
         showToken = true;
       } else if (t < 0.92) {
         const p = this.arcPhoneToServer.getPoint(seg(t, 0.70, 0.92));
-        this.tokenOrb.visible = true;
-        this.tokenOrb.position.copy(p);
+        this.tokenKey.visible = true;
+        this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🔑 Register to Server';
+        moverText = '🔑 Store Key on Server';
       } else {
         showSaved = true;
       }
     } else {
-      if (t < 0.42) {
-        const p = this.arcServerToPost.getPoint(seg(t, 0, 0.42));
+      // PUSH DELIVERY MODE: UFO External Event -> Server (uses stored Key) -> Post Office -> Phone
+      if (t < 0.26) {
+        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.26));
+        this.triggerBolt.visible = true;
+        this.triggerBolt.position.copy(p);
+        moverPos = p;
+        moverText = '⚡ External Event Trigger';
+        moverCls = 'cyan';
+      } else if (t < 0.58) {
+        const p = this.arcServerToPost.getPoint(seg(t, 0.26, 0.58));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
-        moverText = '✉ Bejeweled Push → Post Office';
+        moverText = '✉ Payload + 🔑 Key → Post Office';
         moverCls = 'push';
-      } else if (t < 0.84) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.42, 0.84));
+      } else if (t < 0.88) {
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.58, 0.88));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
@@ -461,12 +517,12 @@ class PushnotOrbit {
     }
 
     // Station labels
-    this.place('pin-store',  new THREE.Vector3(POS.store.x,  this.tops.store + 2, POS.store.z), true);
-    this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2,  POS.post.z),  true);
-    this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8),  true);
+    this.place('pin-store',  new THREE.Vector3(POS.store.x,  this.tops.store, POS.store.z), true);
+    this.place('pin-post',   new THREE.Vector3(POS.post.x,   this.tops.post + 2, POS.post.z), true);
+    this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8), true);
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), true);
+    this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 10, POS.ufo.z), true);
 
-    // Contextual callouts (positioned cleanly above the floating Bejeweled gems)
     const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 11, POS.phone.z);
     const serverTop = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
     this.place('pin-install', phoneTop,  showInstall);
@@ -477,7 +533,7 @@ class PushnotOrbit {
     const mv = document.getElementById('pin-mover');
     mv.className = 'pin pin-mover' + (moverCls ? ' ' + moverCls : '');
     mv.textContent = moverText;
-    this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.2, 0)) : null, !!moverPos);
+    this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.5, 0)) : null, !!moverPos);
   }
 
   place(id, worldPos, show) {
@@ -506,38 +562,41 @@ class PushnotOrbit {
 
     if (this.autoOrbit) {
       this.orbitAngle += dt * 0.12;
-      const camR = 132;
+      const camR = 136;
       this.camera.position.set(
         Math.sin(this.orbitAngle) * camR,
-        54 + Math.sin(this.orbitAngle * 0.7) * 6,
+        56 + Math.sin(this.orbitAngle * 0.7) * 6,
         Math.cos(this.orbitAngle) * camR
       );
-      this.controls.target.set(0, 14, 0);
+      this.controls.target.set(0, 16, 0);
     }
 
-    // Animate directional polarity cones around the orbit ring!
-    // setup = clockwise/negative, push = reversed!
+    // Directional polarity cones around ring
     const dir = this.mode === 'setup' ? 1 : -1;
     const phase = now * 0.00055 * dir;
     for (const b of this.flowBeads) {
       const a = b.baseAngle + phase;
       b.mesh.position.set(Math.cos(a) * R, 0.4, Math.sin(a) * R);
-      // Tangent heading along the ring in the flow direction
       const nextA = a + 0.05 * dir;
       b.mesh.lookAt(Math.cos(nextA) * R, 0.4, Math.sin(nextA) * R);
     }
 
     if (this.ufoGroup) {
-      this.ufoGroup.rotation.y += dt * 0.65;
-      this.ufoGroup.position.y = 22 + Math.sin(now * 0.0025) * 1.6;
+      this.ufoGroup.rotation.y += dt * 0.7;
+      this.ufoGroup.position.y = POS.ufo.y + Math.sin(now * 0.0025) * 1.4;
     }
+    if (this.appleLogo) this.appleLogo.rotation.y += dt * 0.6;
+    if (this.googleLogo) this.googleLogo.rotation.y -= dt * 0.6;
 
     this.appOrb.rotation.y += dt * 1.4;
-    if (this.installedApp && this.installedApp.visible) {
+    if (this.installedApp.visible) {
       this.installedApp.rotation.y += dt * 0.9;
-      this.installedApp.position.y = this.tops.phone + 5 + Math.sin(now * 0.003) * 0.9;
+      this.installedApp.position.y = this.tops.phone + 5 + Math.sin(now * 0.003) * 0.8;
     }
-    this.tokenOrb.rotation.y += dt * 2.5;
+    this.tokenKey.rotation.y += dt * 2.4;
+    if (this.storedKey.visible) {
+      this.storedKey.rotation.y += dt * 1.1;
+    }
     this.pushOrb.rotation.y = Math.sin(now * 0.003) * 0.35;
     this.stars.rotation.y += dt * 0.015;
 

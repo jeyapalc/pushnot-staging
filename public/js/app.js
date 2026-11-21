@@ -281,65 +281,113 @@ class PushnotOrbit {
     this.pushOrb.add(new THREE.PointLight(0x34d399, 3, 30));
     this.scene.add(this.pushOrb);
 
-    // 7. 3D Token-Matching Zipper hovering above the Post Office
-    this.initZipper();
+    // 7. 3D Neural Brain popping up above the Post Office for routing lookup
+    this.initBrain();
   }
 
-  initZipper() {
-    this.zipperGroup = new THREE.Group();
-    this.zipperGroup.position.set(POS.post.x, 38, POS.post.z);
-    this.zipperTeeth = [];
-
-    const toothGeo = new THREE.BoxGeometry(2.4, 0.75, 0.75);
-    const count = 8;
-    for (let i = 0; i < count; i++) {
-      const y = (i - (count - 1) / 2) * 1.45;
-      const matL = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.8, metalness: 0.85, roughness: 0.2 });
-      const matR = new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, emissiveIntensity: 0.8, metalness: 0.85, roughness: 0.2 });
-      const left  = new THREE.Mesh(toothGeo, matL);
-      const right = new THREE.Mesh(toothGeo, matR);
-      left.position.set(-3.2, y, 0);
-      right.position.set(3.2, y + 0.55, 0);
-      this.zipperGroup.add(left, right);
-      this.zipperTeeth.push({ left, right, matL, matR, y, idx: i / (count - 1) });
+  createBrainHemisphere(sideSign, mat) {
+    // Displace sphere vertices with smooth multi-frequency folds (gyri/sulci)
+    const geo = new THREE.SphereGeometry(3.2, 32, 24);
+    const pos = geo.attributes.position;
+    const v = new THREE.Vector3();
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i);
+      const n = v.clone().normalize();
+      const fold =
+        Math.sin(n.x * 11 + sideSign * 1.2) * Math.cos(n.y * 10) * 0.24 +
+        Math.sin(n.z * 12 + n.y * 7) * 0.18 +
+        Math.cos(n.x * 6 - n.z * 9) * 0.12;
+      const r = 3.2 + fold;
+      v.copy(n).multiplyScalar(r);
+      // Flatten inner medial wall slightly so the two hemispheres nestle cleanly
+      if (sideSign > 0 && v.x < -0.4) v.x = -0.4 + (v.x + 0.4) * 0.25;
+      if (sideSign < 0 && v.x >  0.4) v.x =  0.4 + (v.x - 0.4) * 0.25;
+      pos.setXYZ(i, v.x, v.y, v.z);
     }
-
-    // Glowing zipper slider pull
-    this.zipSlider = new THREE.Mesh(
-      new THREE.BoxGeometry(2.6, 2.4, 1.5),
-      new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x10b981, emissiveIntensity: 1.0, metalness: 0.7, roughness: 0.2 })
-    );
-    this.zipperGroup.add(this.zipSlider, new THREE.PointLight(0x34d399, 3, 28));
-    this.zipperGroup.visible = false;
-    this.scene.add(this.zipperGroup);
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.scale.set(0.86, 0.94, 1.28);
+    mesh.position.x = sideSign * 2.15;
+    return mesh;
   }
 
-  updateZipper(progress) {
-    // progress 0..1 zips the left (server key) & right (registry key) teeth together!
-    const count = this.zipperTeeth.length;
-    const minY = this.zipperTeeth[0].y;
-    const maxY = this.zipperTeeth[count - 1].y;
-    const sliderY = minY + (maxY - minY) * progress;
-    this.zipSlider.position.set(0, sliderY, 0);
+  initBrain() {
+    this.brainGroup = new THREE.Group();
+    this.brainGroup.position.set(POS.post.x, 38, POS.post.z);
 
-    for (const pair of this.zipperTeeth) {
-      const zipped = progress >= pair.idx;
-      const openSpread = Math.max(0, (pair.idx - progress) * 4.5);
-      const xOffset = zipped ? 0.85 : 1.1 + openSpread;
-      pair.left.position.x = -xOffset;
-      pair.right.position.x = xOffset;
+    this.brainMat = new THREE.MeshPhysicalMaterial({
+      color: 0xf472b6,
+      emissive: 0xbe185d,
+      emissiveIntensity: 0.7,
+      roughness: 0.28,
+      metalness: 0.1,
+      clearcoat: 0.9,
+      clearcoatRoughness: 0.15
+    });
 
-      if (zipped) {
-        pair.matL.color.setHex(0x34d399);
-        pair.matL.emissive.setHex(0x059669);
-        pair.matR.color.setHex(0x34d399);
-        pair.matR.emissive.setHex(0x059669);
-      } else {
-        pair.matL.color.setHex(0xfbbf24);
-        pair.matL.emissive.setHex(0xb45309);
-        pair.matR.color.setHex(0x38bdf8);
-        pair.matR.emissive.setHex(0x0284c7);
-      }
+    const leftHemi  = this.createBrainHemisphere(-1, this.brainMat);
+    const rightHemi = this.createBrainHemisphere( 1, this.brainMat);
+
+    // Cerebellum + stem at rear-bottom
+    const cerebellum = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 12), this.brainMat);
+    cerebellum.scale.set(1.4, 0.75, 0.9);
+    cerebellum.position.set(0, -2.5, -2.1);
+
+    // Glowing neural sparks orbiting cortex
+    const sparkPts = [];
+    for (let i = 0; i < 36; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const rad = 4.6 + Math.random() * 1.4;
+      sparkPts.push(
+        Math.sin(phi) * Math.cos(a) * rad,
+        Math.cos(phi) * rad * 0.85,
+        Math.sin(phi) * Math.sin(a) * rad * 1.15
+      );
+    }
+    const sparkGeo = new THREE.BufferGeometry();
+    sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPts, 3));
+    this.brainSparks = new THREE.Points(
+      sparkGeo,
+      new THREE.PointsMaterial({ color: 0xf9a8d4, size: 0.65, transparent: true, opacity: 0.9 })
+    );
+
+    this.brainLight = new THREE.PointLight(0xf472b6, 3.5, 34);
+    this.brainGroup.add(leftHemi, rightHemi, cerebellum, this.brainSparks, this.brainLight);
+    this.brainGroup.visible = false;
+    this.scene.add(this.brainGroup);
+  }
+
+  updateBrainAndLedger(progress) {
+    // Pop-in scale (0..0.15), scroll-search (0.15..0.72), lock-match (0.72..1.0)
+    const pop = Math.min(1, progress / 0.15);
+    const ease = 1 - Math.pow(1 - pop, 3);
+    this.brainGroup.scale.setScalar(Math.max(0.01, ease * 1.15));
+
+    const matched = progress >= 0.72;
+    const scrollP = seg(progress, 0.08, 0.72);
+    // Smooth ease-out scroll through 6 rows (row height = 42px, final index = 5)
+    const easedScroll = 1 - Math.pow(1 - scrollP, 2.2);
+    const offsetPx = easedScroll * (5 * 42);
+
+    const track = document.getElementById('pad-track');
+    if (track) track.style.transform = `translateY(-${offsetPx.toFixed(1)}px)`;
+
+    const pad = document.getElementById('pin-ledger');
+    const status = document.getElementById('pad-status');
+    if (pad) pad.classList.toggle('matched', matched);
+    if (status) status.textContent = matched ? '✓ MATCHED' : 'MATCHING…';
+
+    if (matched) {
+      this.brainMat.color.setHex(0x34d399);
+      this.brainMat.emissive.setHex(0x059669);
+      this.brainLight.color.setHex(0x34d399);
+      this.brainSparks.material.color.setHex(0x6ee7b7);
+    } else {
+      this.brainMat.color.setHex(0xf472b6);
+      this.brainMat.emissive.setHex(0xbe185d);
+      this.brainLight.color.setHex(0xf472b6);
+      this.brainSparks.material.color.setHex(0xf9a8d4);
     }
   }
 
@@ -760,7 +808,7 @@ class PushnotOrbit {
     this.tokenKey.visible = false;
     this.pushOrb.visible = false;
     this.triggerBolt.visible = false;
-    this.zipperGroup.visible = false;
+    this.brainGroup.visible = false;
 
     // Bejeweled stays visibly installed on the phone once downloaded
     this.installedApp.visible = this.mode === 'push' || t >= 0.28;
@@ -769,7 +817,7 @@ class PushnotOrbit {
 
     // UFO tractor beam brightens when triggering an external event in Mode 2
     if (this.ufoBeamMat) {
-      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.22) ? 0.34 : 0.07;
+      this.ufoBeamMat.opacity = (this.mode === 'push' && t < 0.20) ? 0.34 : 0.07;
     }
 
     let moverPos = null;
@@ -780,6 +828,7 @@ class PushnotOrbit {
     let showToken = false;
     let showSaved = false;
     let showPush = false;
+    let showLedger = false;
 
     if (this.mode === 'setup') {
       if (t < 0.28) {
@@ -810,34 +859,32 @@ class PushnotOrbit {
       }
     } else {
       // PUSH DELIVERY MODE:
-      // 0.00–0.22: UFO External Event -> App Server
-      // 0.22–0.44: App Server -> Post Office
-      // 0.44–0.64: 3D Zipper Token Matching at Post Office!
-      // 0.64–0.88: Post Office -> Phone
-      // 0.88–1.00: Delivered banner on Phone
-      if (t < 0.22) {
-        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.22));
+      // 0.00–0.20: UFO External Event -> Datacentre
+      // 0.20–0.42: Datacentre -> Post Office
+      // 0.42–0.68: 3D Brain pops up + Notepad Ledger scrolls & matches destination!
+      // 0.68–0.90: Push Envelope departs Post Office -> Phone
+      // 0.90–1.00: Delivered banner on Phone
+      if (t < 0.20) {
+        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.20));
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
         moverText = '⚡ External Event Trigger';
         moverCls = 'cyan';
-      } else if (t < 0.44) {
-        const p = this.arcServerToPost.getPoint(seg(t, 0.22, 0.44));
+      } else if (t < 0.42) {
+        const p = this.arcServerToPost.getPoint(seg(t, 0.20, 0.42));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
         moverText = '✉ Payload + 🔑 Key → Post Office';
         moverCls = 'push';
-      } else if (t < 0.64) {
-        const zp = seg(t, 0.44, 0.62);
-        this.zipperGroup.visible = true;
-        this.updateZipper(zp);
-        moverPos = new THREE.Vector3(POS.post.x, 45, POS.post.z);
-        moverText = zp < 0.92 ? '🔑 Matching Token…' : '✓ Token Matched!';
-        moverCls = zp < 0.92 ? '' : 'push';
-      } else if (t < 0.88) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.64, 0.88));
+      } else if (t < 0.68) {
+        const bp = seg(t, 0.42, 0.68);
+        this.brainGroup.visible = true;
+        this.updateBrainAndLedger(bp);
+        showLedger = true;
+      } else if (t < 0.90) {
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.68, 0.90));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
@@ -861,6 +908,7 @@ class PushnotOrbit {
     this.place('pin-token',   phoneTop,  showToken);
     this.place('pin-saved',   serverTop, showSaved);
     this.place('pin-push',    phoneTop,  showPush);
+    this.place('pin-ledger',  new THREE.Vector3(POS.post.x, 46, POS.post.z), showLedger);
 
     const mv = document.getElementById('pin-mover');
     mv.className = 'pin pin-mover' + (moverCls ? ' ' + moverCls : '');
@@ -915,9 +963,11 @@ class PushnotOrbit {
       fc.mesh.lookAt(pNext);
     }
 
-    // Keep zipper facing the camera smoothly
-    if (this.zipperGroup && this.zipperGroup.visible) {
-      this.zipperGroup.lookAt(this.camera.position.x, this.zipperGroup.position.y, this.camera.position.z);
+    // Gently rotate the 3D Brain & neural sparks when active above the Post Office
+    if (this.brainGroup && this.brainGroup.visible) {
+      this.brainGroup.rotation.y += dt * 0.9;
+      this.brainGroup.position.y = 38 + Math.sin(now * 0.004) * 0.8;
+      if (this.brainSparks) this.brainSparks.rotation.y -= dt * 1.4;
     }
 
     if (this.ufoGroup) {

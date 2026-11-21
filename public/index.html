@@ -68,7 +68,7 @@
   <div class="pin pin-event amber" id="pin-token">
     <span class="ev-ico">🔑</span>
     <div>
-      <div class="ev-title">Unique Key · 7f4a…e891</div>
+      <div class="ev-title">Unique Gold Key</div>
     </div>
   </div>
 
@@ -86,10 +86,15 @@
     </div>
   </div>
 
-  <div class="pin pin-event green" id="pin-push">
-    <span class="ev-ico">💎</span>
-    <div>
-      <div class="ev-title">"Don't lose your streak!"</div>
+  <!-- Genuine Mobile OS Push Notification Banner right on top of the Phone model -->
+  <div class="pin push-banner-toast" id="pin-push">
+    <div class="toast-icon">💎</div>
+    <div class="toast-body">
+      <div class="toast-meta">
+        <span class="toast-app">BEJEWELED</span>
+        <span class="toast-time">now</span>
+      </div>
+      <div class="toast-msg">Try Pro For 3 Months!</div>
     </div>
   </div>
 
@@ -137,27 +142,36 @@
       <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
     </div>
     <div class="pad-head">
-      <span>APNs / FCM LEDGER</span>
-      <span class="pad-status" id="pad-status">SEARCHING…</span>
+      <span>KEY &amp; LOCK MATCH</span>
+      <span class="pad-status" id="pad-status">SPINNING…</span>
     </div>
     <div class="pad-cols">
       <div class="pad-col">
-        <div class="col-title">PUSH REQUEST</div>
+        <div class="col-title">KEY COLOR</div>
         <div class="req-box" id="pad-req">
-          <div class="tok">🍇 7f4a…e891</div>
-          <div class="sub">"Don't lose your streak!"</div>
+          <div class="slot-item gold" id="pad-key-item">
+            <span class="swatch"></span>
+            <span class="ico">🔑</span>
+            <span>GOLD KEY</span>
+          </div>
         </div>
       </div>
       <div class="pad-col">
-        <div class="col-title">EMOJI = PERSON FACE ID</div>
+        <div class="col-title">LOCK COLOR</div>
         <div class="scroll-window">
           <div class="scroll-track" id="pad-track">
-            <div class="addr-row">🍎 = 👩🏼‍🦰 · a19c…02b1</div>
-            <div class="addr-row">🍋 = 🧔🏻‍♂️ · 3c88…10f2</div>
-            <div class="addr-row">🍒 = 👵🏽 · 9d04…ff12</div>
-            <div class="addr-row">🥝 = 👨🏾‍🦱 · e21b…440a</div>
-            <div class="addr-row">🍑 = 👱🏻‍♀️ · b912…77d0</div>
-            <div class="addr-row match-row" id="pad-match-row">🍇 = 🧑🏻‍💻 · 7f4a…e891</div>
+            <div class="addr-row"><div class="slot-item red"><span class="swatch"></span><span class="ico">🔒</span><span>RED LOCK</span></div></div>
+            <div class="addr-row"><div class="slot-item blue"><span class="swatch"></span><span class="ico">🔒</span><span>BLUE LOCK</span></div></div>
+            <div class="addr-row"><div class="slot-item purple"><span class="swatch"></span><span class="ico">🔒</span><span>PURPLE LOCK</span></div></div>
+            <div class="addr-row"><div class="slot-item pink"><span class="swatch"></span><span class="ico">🔒</span><span>PINK LOCK</span></div></div>
+            <div class="addr-row"><div class="slot-item cyan"><span class="swatch"></span><span class="ico">🔒</span><span>CYAN LOCK</span></div></div>
+            <div class="addr-row match-row" id="pad-match-row">
+              <div class="slot-item gold" id="pad-lock-match">
+                <span class="swatch"></span>
+                <span class="ico" id="pad-lock-ico">🔒</span>
+                <span id="pad-lock-txt">GOLD LOCK</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -192,6 +206,6 @@
     </div>
   </nav>
 
-  <script type="module" src="js/app.js?v=23"></script>
+  <script type="module" src="js/app.js?v=25"></script>
 </body>
 </html>

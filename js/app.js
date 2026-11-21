@@ -28,12 +28,12 @@ const POS = {
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 13, push: 11, world: 12, leo: 16 };
+const MODE_SECONDS = { setup: 13, push: 11, world: 12, leo: 18 };
 const MODE_STEPS = {
   setup: [0.06, 0.25, 0.34, 0.44, 0.56, 0.68, 0.84, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
   world: [0.10, 0.30, 0.55, 0.80, 0.95],
-  leo:   [0.08, 0.26, 0.45, 0.54, 0.64, 0.78, 0.96]
+  leo:   [0.05, 0.16, 0.28, 0.46, 0.54, 0.64, 0.78, 0.96]
 };
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
@@ -708,8 +708,73 @@ class PushnotOrbit {
     this.pushOrb = this.createNotificationBellPayload();
     this.normalGroup.add(this.pushOrb);
 
-    // 7. 3D Neural Brain popping up above the Post Office for routing lookup
+    // 7. 3D Neural Brain popping up above the Apple & Google Skyscraper HQ for routing lookup
     this.initBrain();
+
+    // 8. 3D Phone App State Emoji Badge (😴 App Sleeping / 😃 App Awake!) hovering above the Phone
+    this.phoneEmojiBadge = this.createPhoneEmojiBadge();
+    this.phoneEmojiBadge.visible = false;
+    this.normalGroup.add(this.phoneEmojiBadge);
+  }
+
+  /* ---- 3D Phone App State Emoji Badge (😴 App Sleeping vs. 😃 App Awake!) ---- */
+  createPhoneEmojiBadge() {
+    this.emojiCvs = document.createElement('canvas');
+    this.emojiCvs.width = 320;
+    this.emojiCvs.height = 128;
+    this.emojiCtx = this.emojiCvs.getContext('2d');
+    this.emojiTex = new THREE.CanvasTexture(this.emojiCvs);
+    this.emojiTex.colorSpace = THREE.SRGBColorSpace;
+    this.currentEmojiState = '';
+
+    const mat = new THREE.SpriteMaterial({ map: this.emojiTex, transparent: true });
+    const sprite = new THREE.Sprite(mat);
+    sprite.scale.set(13.5, 5.4, 1);
+    return sprite;
+  }
+
+  setPhoneEmojiState(state) {
+    if (!this.phoneEmojiBadge) return;
+    if (!state) {
+      this.phoneEmojiBadge.visible = false;
+      return;
+    }
+    this.phoneEmojiBadge.visible = true;
+    this.phoneEmojiBadge.position.set(POS.phone.x, this.tops.phone + 17.5, POS.phone.z);
+    if (this.currentEmojiState === state) return;
+    this.currentEmojiState = state;
+
+    const ctx = this.emojiCtx;
+    ctx.clearRect(0, 0, 320, 128);
+
+    const isAwake = state === 'awake';
+    const borderCol = isAwake ? '#34d399' : '#94a3b8';
+    const bgCol = isAwake ? 'rgba(6, 28, 22, 0.92)' : 'rgba(15, 23, 42, 0.92)';
+
+    // Rounded pill card
+    ctx.fillStyle = bgCol;
+    ctx.strokeStyle = borderCol;
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.roundRect(8, 14, 304, 100, 50);
+    ctx.fill();
+    ctx.stroke();
+
+    // Emoji + state label
+    ctx.font = '54px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(isAwake ? '😃' : '😴', 28, 66);
+
+    ctx.fillStyle = isAwake ? '#6ee7b7' : '#cbd5e1';
+    ctx.font = 'bold 28px "Space Grotesk", sans-serif';
+    ctx.fillText(isAwake ? 'App Awake!' : 'App Sleeping', 102, 54);
+
+    ctx.fillStyle = isAwake ? '#34d399' : '#38bdf8';
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillText(isAwake ? '🔔 PUSH WOKE APP' : '💤 ZzZ · CLOSED', 104, 86);
+
+    this.emojiTex.needsUpdate = true;
   }
 
   /* ---- 3D Notification Bell with Red Unread Badge ("1") + Stamped Golden Key ---- */
@@ -867,204 +932,121 @@ class PushnotOrbit {
   }
 
   initDatacentreCluster(done) {
-    // Collision-free Datacentre cluster: measure exact bounding boxes of all 8 GLBs,
-    // then lay out back row, front row, top unit, plinth, and front-bezel LEDs with zero clipping.
+    // Clean, single animated 3D Server Tower (`models/data_center_rack.glb`) with live blinking blade LEDs
+    // and an animated vertical data-scan pulse bar (replaces the old 8-rack cluster!)
     this.dcGroup = new THREE.Group();
     this.dcGroup.position.copy(POS.server);
     this.dcGroup.rotation.y = Math.PI * 0.25;
     this.normalGroup.add(this.dcGroup);
 
     const floorY = 0.8;
-    const RACK_H = 18;
-    const specs = [
-      { key: 'argos',   row: 'back',  path: 'models/dc/cabinet_argos.glb', targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'main',    row: 'back',  path: 'models/data_center_rack.glb', targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'net',     row: 'back',  path: 'models/dc/network_rack.glb',  targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'rack1',   row: 'back',  path: 'models/dc/rack_1.glb',        targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'rack2',   row: 'front', path: 'models/dc/rack_2.glb',        targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'panel',   row: 'front', path: 'models/dc/control_panel.glb', targetH: RACK_H, uniformH: true, ry: -Math.PI / 2 },
-      { key: 'console', row: 'front', path: 'models/dc/rack_console.glb',  targetH: RACK_H, uniformH: true, ry: 0 },
-      { key: 'topbox',  row: 'front', path: 'models/dc/server_box.glb?v=3',    targetH: RACK_H, uniformH: true, ry: 0 }
-    ];
+    const TOWER_H = 26;
 
-    const loaded = {};
-    let remaining = specs.length;
+    this.loader.load('models/data_center_rack.glb', (gltf) => {
+      const rawScene = gltf.scene;
 
-    const finalizeLayout = () => {
-      const gapX = 0.2;
-      const gapZ = 0.8;
+      const buildSingleTower = () => {
+        const towerGroup = new THREE.Group();
+        const obj = rawScene.clone(true);
+        obj.updateMatrixWorld(true);
+        let box = new THREE.Box3().setFromObject(obj);
+        const raw = box.getSize(new THREE.Vector3());
+        const s = TOWER_H / (raw.y || 1);
+        obj.scale.setScalar(s);
 
-      // 1. Lay out BACK row side-by-side with exact measured widths (zero overlap)
-      const backKeys = ['argos', 'main', 'net', 'rack1'].filter((k) => loaded[k]);
-      const backTotalW = backKeys.reduce((s, k) => s + loaded[k].size.x, 0) + gapX * Math.max(0, backKeys.length - 1);
-      const backMaxD = Math.max(4, ...backKeys.map((k) => loaded[k].size.z));
-      const backZ = -(backMaxD / 2 + gapZ / 2);
+        obj.updateMatrixWorld(true);
+        box = new THREE.Box3().setFromObject(obj);
+        const c = box.getCenter(new THREE.Vector3());
+        const size = box.getSize(new THREE.Vector3());
 
-      let cx = -backTotalW / 2;
-      const backPlaced = [];
-      for (const k of backKeys) {
-        const item = loaded[k];
-        const x = cx + item.size.x / 2;
-        item.wrap.position.set(x, floorY, backZ);
-        this.dcGroup.add(item.wrap);
-        backPlaced.push({ key: k, x, z: backZ, size: item.size });
-        cx += item.size.x + gapX;
-      }
+        obj.position.set(-c.x, floorY - box.min.y, -c.z);
+        this.harmonizeAsset(obj, { minRough: 0.24, maxRough: 0.52, maxMetal: 0.78, envIntensity: 1.15 });
+        towerGroup.add(obj);
 
-      // 2. Lay out FRONT row (4 uniform-height units cleanly in front of back row)
-      const frontKeys = ['rack2', 'panel', 'console', 'topbox'].filter((k) => loaded[k]);
-      const frontTotalW = frontKeys.reduce((s, k) => s + loaded[k].size.x, 0) + gapX * Math.max(0, frontKeys.length - 1);
-      const frontMaxD = Math.max(4, ...frontKeys.map((k) => loaded[k].size.z));
-      const frontZ = (frontMaxD / 2 + gapZ / 2);
+        // Sleek octagonal/square server plinth with glowing cyan trim ring
+        const padW = Math.max(size.x, size.z) + 4.2;
+        const pad = new THREE.Mesh(
+          new THREE.BoxGeometry(padW, floorY, padW),
+          new THREE.MeshStandardMaterial({ color: 0x0b1220, metalness: 0.75, roughness: 0.25 })
+        );
+        pad.position.set(0, floorY / 2, 0);
+        pad.add(new THREE.LineSegments(
+          new THREE.EdgesGeometry(pad.geometry),
+          new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.55 })
+        ));
+        towerGroup.add(pad);
 
-      cx = -frontTotalW / 2;
-      for (const k of frontKeys) {
-        const item = loaded[k];
-        const x = cx + item.size.x / 2;
-        item.wrap.position.set(x, floorY, frontZ);
-        this.dcGroup.add(item.wrap);
-        cx += item.size.x + gapX;
-      }
+        // Animated vertical laser-telemetry scan bar gliding up and down the front of the server tower
+        const frontFaceZ = size.z / 2 + 0.28;
+        const scanBar = new THREE.Mesh(
+          new THREE.BoxGeometry(size.x * 0.82, 0.35, 0.25),
+          new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
+        );
+        scanBar.position.set(0, floorY + size.y * 0.5, frontFaceZ);
+        towerGroup.add(scanBar);
 
-      // 3. Size the raised floor plinth to the exact combined 4x2 footprint + clean margin
-      const dcBox = new THREE.Box3().setFromObject(this.dcGroup);
-      // Compute local bounds before world offset by measuring children
-      const padW = Math.max(backTotalW, frontTotalW) + 5;
-      const padD = backMaxD + frontMaxD + gapZ + 5;
-      const pad = new THREE.Mesh(
-        new THREE.BoxGeometry(padW, floorY, padD),
-        new THREE.MeshStandardMaterial({ color: 0x0b1220, metalness: 0.7, roughness: 0.3 })
-      );
-      pad.position.set(0, floorY / 2, (frontZ + backZ) / 2);
-      pad.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(pad.geometry),
-        new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 })
-      ));
-      this.dcGroup.add(pad);
-
-      // 5. Place flashing LEDs cleanly on the exact front bezel of each back-row rack
-      this.dcLeds = [];
-      const ledGeo = new THREE.BoxGeometry(0.42, 0.42, 0.42);
-      const palette = [0x38bdf8, 0x34d399, 0xfbbf24, 0xff2a55];
-      backPlaced.forEach((b, bi) => {
-        const frontFaceZ = b.z + b.size.z / 2 + 0.3;
-        for (let col = -1; col <= 1; col += 2) {
-          for (let row = 0; row < 5; row++) {
-            const hex = palette[(bi + row + (col > 0 ? 1 : 0)) % palette.length];
+        // Multi-row animated blade server activity LEDs across the front bezel
+        const leds = [];
+        const ledGeo = new THREE.BoxGeometry(0.45, 0.32, 0.32);
+        const palette = [0x38bdf8, 0x34d399, 0xfbbf24, 0x38bdf8, 0x34d399, 0xff2a55];
+        const cols = [-size.x * 0.28, -size.x * 0.10, size.x * 0.10, size.x * 0.28];
+        for (let ci = 0; ci < cols.length; ci++) {
+          for (let row = 0; row < 8; row++) {
+            const hex = palette[(ci + row) % palette.length];
             const mat = new THREE.MeshBasicMaterial({ color: hex });
             const led = new THREE.Mesh(ledGeo, mat);
             led.position.set(
-              b.x + col * Math.min(1.6, b.size.x * 0.25),
-              floorY + 2.5 + row * ((b.size.y - 4.5) / 4),
+              cols[ci],
+              floorY + 2.4 + row * ((size.y - 4.4) / 7),
               frontFaceZ
             );
-            this.dcGroup.add(led);
-            this.dcLeds.push({
+            towerGroup.add(led);
+            leds.push({
               mesh: led,
               mat,
-              speed: 3 + ((bi * 7 + row * 11 + (col > 0 ? 3 : 0)) % 9),
-              phase: bi * 1.7 + row * 2.3 + col
+              speed: 4 + ((ci * 5 + row * 7) % 10),
+              phase: ci * 1.4 + row * 0.9
             });
           }
         }
-      });
 
-      // 6. Pulsing datacentre status light & updated top height
-      this.dcLight = new THREE.PointLight(0x38bdf8, 3.2, 55);
-      this.dcLight.position.set(0, 18, frontZ + 10);
+        towerGroup.userData = { size, padW, frontFaceZ, scanBar, leds };
+        return towerGroup;
+      };
+
+      const mainTower = buildSingleTower();
+      this.dcGroup.add(mainTower);
+      this.dcLeds = mainTower.userData.leds;
+      this.dcScanBar = mainTower.userData.scanBar;
+      this.dcTowerHeight = mainTower.userData.size.y;
+
+      this.dcLight = new THREE.PointLight(0x38bdf8, 3.2, 48);
+      this.dcLight.position.set(0, 18, mainTower.userData.frontFaceZ + 8);
       this.dcGroup.add(this.dcLight);
 
-      const maxBackH = Math.max(18, ...backPlaced.map((b) => b.size.y));
-      this.tops.server = floorY + maxBackH + 3;
+      this.tops.server = floorY + mainTower.userData.size.y + 3;
 
-      // Dock stored golden key cleanly outside the front-right edge (zero clipping)
       if (this.storedKey) {
-        this.storedKey.position.set(POS.server.x + padW * 0.42, 22, POS.server.z + padD * 0.42);
+        const offset = mainTower.userData.padW * 0.55;
+        this.storedKey.position.set(POS.server.x + offset, 20, POS.server.z + offset);
       }
 
-      // Build the Law Enforcement Meta / X Datacentre from freshly normalized clones of each raw gltf.scene!
-      // (Avoids Three.js .clone(true) matrixWorld offset bugs that caused server_box.glb to float on the LEO side!)
+      // Build the single animated Server Tower on the Law Enforcement side (`APP SERVERS`) as well!
       if (this.leoGroup && this.leoPos) {
         if (this.leoDcMirror) this.leoGroup.remove(this.leoDcMirror);
-        this.leoDcMirror = new THREE.Group();
+        this.leoDcMirror = buildSingleTower();
         this.leoDcMirror.position.set(this.leoPos.bot.x, 0, this.leoPos.bot.z - 5);
-        this.leoDcMirror.scale.setScalar(0.68);
-
-        let lx = -backTotalW / 2;
-        for (const k of backKeys) {
-          const item = loaded[k];
-          const x = lx + item.size.x / 2;
-          const wrapClone = item.makeCleanWrap();
-          wrapClone.position.set(x, floorY, backZ);
-          this.leoDcMirror.add(wrapClone);
-          lx += item.size.x + gapX;
-        }
-
-        lx = -frontTotalW / 2;
-        for (const k of frontKeys) {
-          const item = loaded[k];
-          const x = lx + item.size.x / 2;
-          const wrapClone = item.makeCleanWrap();
-          wrapClone.position.set(x, floorY, frontZ);
-          this.leoDcMirror.add(wrapClone);
-          lx += item.size.x + gapX;
-        }
-
-        const leoPad = new THREE.Mesh(
-          new THREE.BoxGeometry(padW, floorY, padD),
-          new THREE.MeshStandardMaterial({ color: 0x0b1220, metalness: 0.7, roughness: 0.3 })
-        );
-        leoPad.position.set(0, floorY / 2, (frontZ + backZ) / 2);
-        leoPad.add(new THREE.LineSegments(
-          new THREE.EdgesGeometry(leoPad.geometry),
-          new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.45 })
-        ));
-        this.leoDcMirror.add(leoPad);
+        this.leoDcMirror.scale.setScalar(0.88);
+        this.leoDcLeds = this.leoDcMirror.userData.leds;
+        this.leoDcScanBar = this.leoDcMirror.userData.scanBar;
         this.leoGroup.add(this.leoDcMirror);
       }
-    };
 
-    for (const s of specs) {
-      this.loader.load(s.path, (gltf) => {
-        const rawScene = gltf.scene;
-
-        // Helper that creates a freshly grounded & centered rack wrapper at y = 0 with zero parent-offset bleed!
-        const makeCleanWrap = () => {
-          const obj = rawScene.clone(true);
-          if (s.ry) obj.rotation.y = s.ry;
-          obj.updateMatrixWorld(true);
-          let box = new THREE.Box3().setFromObject(obj);
-          const raw = box.getSize(new THREE.Vector3());
-          const sy = s.targetH / (raw.y || 1);
-          const maxFootprint = 10.5;
-          const sxz = Math.min(sy, maxFootprint / Math.max(raw.x || 1, raw.z || 1));
-          obj.scale.set(sxz, s.uniformH ? sy : sxz, sxz);
-
-          obj.updateMatrixWorld(true);
-          box = new THREE.Box3().setFromObject(obj);
-          const c = box.getCenter(new THREE.Vector3());
-          const size = box.getSize(new THREE.Vector3());
-
-          const wrap = new THREE.Group();
-          obj.position.set(-c.x, -box.min.y, -c.z);
-          this.harmonizeAsset(obj, { minRough: 0.30, maxRough: 0.58, maxMetal: 0.70, envIntensity: 0.9 });
-          wrap.add(obj);
-          wrap.userData.size = size;
-          return wrap;
-        };
-
-        const wrap = makeCleanWrap();
-        const size = wrap.userData.size;
-
-        loaded[s.key] = { wrap, size, makeCleanWrap };
-        if (--remaining === 0) finalizeLayout();
-        done();
-      }, undefined, (err) => {
-        console.warn('DC model failed:', s.path, err);
-        if (--remaining === 0) finalizeLayout();
-        done();
-      });
-    }
+      done();
+    }, undefined, (err) => {
+      console.warn('Single server tower load failed:', err);
+      done();
+    });
   }
 
   createWindSwissFlag() {
@@ -1397,163 +1379,269 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- 3D Ticking C4 Bomb (`c4_bomb.glb`) with LED Faceplate ("PROTONMAIL BOMB THREAT" + Sample Email + Flashing LEDs!) ---- */
-  createTickingC4Bomb() {
+  /* ---- 3D ProtonMail Threat Email + Round Bomb (`comical_bomb.glb`) with Sparkling Wick Animation! ---- */
+  createProtonThreatAndRoundBomb() {
     const group = new THREE.Group();
 
-    // 1. High-contrast Digital LED Faceplate Canvas (updated live with ticking countdown!)
-    this.bombCvs = document.createElement('canvas');
-    this.bombCvs.width = 512;
-    this.bombCvs.height = 280;
-    this.bombCtx = this.bombCvs.getContext('2d');
-    this.bombFaceTex = new THREE.CanvasTexture(this.bombCvs);
-    this.bombFaceTex.colorSpace = THREE.SRGBColorSpace;
-    this.lastBombTickKey = '';
+    // 1. ProtonMail-styled 3D Email Compose Window (appears on the plane above Suspect's head as he types, then flies with the round bomb to Police!)
+    this.emailCvs = document.createElement('canvas');
+    this.emailCvs.width = 640;
+    this.emailCvs.height = 460;
+    this.emailCtx = this.emailCvs.getContext('2d');
+    this.emailTex = new THREE.CanvasTexture(this.emailCvs);
+    this.emailTex.colorSpace = THREE.SRGBColorSpace;
+    this.lastEmailStep = -1;
 
-    // Mount the LED Faceplate & 4 physical 3D flashing LED bulbs right onto the front face (+Z) of the rotated C4 Bomb!
-    const plateRimMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b, metalness: 0.75, roughness: 0.28
-    });
-    const plateFaceMat = new THREE.MeshBasicMaterial({ map: this.bombFaceTex });
-    this.bombFaceplate = new THREE.Mesh(
-      new THREE.BoxGeometry(8.6, 4.7, 0.45),
-      [plateRimMat, plateRimMat, plateRimMat, plateRimMat, plateFaceMat, plateFaceMat]
+    const rimMat = new THREE.MeshStandardMaterial({ color: 0x6d4aff, emissive: 0x4c1d95, emissiveIntensity: 0.55, metalness: 0.4, roughness: 0.3 });
+    const faceMat = new THREE.MeshBasicMaterial({ map: this.emailTex });
+    this.emailBoard = new THREE.Mesh(
+      new THREE.BoxGeometry(13.8, 9.9, 0.45),
+      [rimMat, rimMat, rimMat, rimMat, faceMat, faceMat]
     );
-    this.bombFaceplate.position.set(0, 2.2, 2.35);
-    this.bombFaceplate.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(this.bombFaceplate.geometry),
-      new THREE.LineBasicMaterial({ color: 0xff1e56 })
+    this.emailBoard.position.set(-4.2, 2.2, 0);
+    this.emailBoard.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(this.emailBoard.geometry),
+      new THREE.LineBasicMaterial({ color: 0x8b5cf6 })
     ));
-    group.add(this.bombFaceplate);
+    group.add(this.emailBoard);
 
-    // 4 physical 3D flashing LED beacons around the faceplate corners
-    this.bombLedMeshes = [];
-    const ledGeo = new THREE.SphereGeometry(0.42, 14, 14);
-    const ledPositions = [
-      [-3.8, 4.1, 2.6],
-      [ 3.8, 4.1, 2.6],
-      [-3.8, 0.3, 2.6],
-      [ 3.8, 0.3, 2.6]
-    ];
-    for (let i = 0; i < ledPositions.length; i++) {
-      const mat = new THREE.MeshBasicMaterial({ color: i % 2 === 0 ? 0xff1e56 : 0xfbbf24 });
-      const led = new THREE.Mesh(ledGeo, mat);
-      led.position.set(...ledPositions[i]);
-      group.add(led);
-      this.bombLedMeshes.push({ mesh: led, mat, idx: i });
+    // 2. Round Bomb GLB (`models/leo/comical_bomb.glb`) + Sparkling Wick Emitter at exact wick tip!
+    this.roundBombHolder = new THREE.Group();
+    this.roundBombHolder.position.set(6.4, 1.2, 0.8);
+    group.add(this.roundBombHolder);
+
+    // Sparkling wick particle cluster + glowing ember core right at the tip of the bomb fuse wick
+    this.wickSparkGroup = new THREE.Group();
+    this.wickSparkGroup.position.set(-1.47, 3.79, 0.50);
+    this.roundBombHolder.add(this.wickSparkGroup);
+
+    const emberCore = new THREE.Mesh(
+      new THREE.SphereGeometry(0.45, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xffffff })
+    );
+    const emberHalo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.85, 12, 12),
+      new THREE.MeshBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.75 })
+    );
+    this.wickLight = new THREE.PointLight(0xffaa00, 4.5, 28);
+    this.wickSparkGroup.add(emberCore, emberHalo, this.wickLight);
+    this.wickEmberHalo = emberHalo;
+
+    // 18 shooting 3D spark rays / particles bursting from the wick tip
+    this.wickSparks = [];
+    const sparkGeo = new THREE.OctahedronGeometry(0.26, 0);
+    const sparkColors = [0xffffff, 0xfef08a, 0xfbbf24, 0xff5500, 0xff1e56];
+    for (let i = 0; i < 18; i++) {
+      const mat = new THREE.MeshBasicMaterial({ color: sparkColors[i % sparkColors.length] });
+      const mesh = new THREE.Mesh(sparkGeo, mat);
+      const dir = new THREE.Vector3(
+        (Math.random() - 0.5) * 2.4,
+        (Math.random() - 0.2) * 2.4,
+        (Math.random() - 0.5) * 2.4
+      ).normalize();
+      this.wickSparkGroup.add(mesh);
+      this.wickSparks.push({
+        mesh,
+        dir,
+        speed: 1.8 + (i % 5) * 0.55,
+        phase: (i / 18)
+      });
     }
 
-    this.bombStrobeLight = new THREE.PointLight(0xff1e56, 4.0, 32);
-    this.bombStrobeLight.position.set(0, 2.2, 4.0);
-    group.add(this.bombStrobeLight);
-
-    // Load the user's simple_c4-_bomb.glb (`models/leo/c4_bomb.glb`), rotated 90° around Y and 90° upright so the wide C4 brick & keypad face forward (+Z) behind the LED faceplate!
-    this.loader.load('models/leo/c4_bomb.glb?v=37', (gltf) => {
-      const c4 = gltf.scene;
-      this.harmonizeAsset(c4, { minRough: 0.32, maxRough: 0.65, maxMetal: 0.45, envIntensity: 0.9 });
-      this.centerAndScale(c4, 11.5);
-      const c4Wrap = new THREE.Group();
-      c4Wrap.add(c4);
-      // Rotate the C4 bomb so its wide 6.6-unit dimension is horizontal (X), its keypad face points forward (+Z), and it sits flush behind the LED faceplate
-      c4Wrap.rotation.set(Math.PI / 2, Math.PI / 2, 0);
-      c4Wrap.position.set(0, 0.4, 0);
-      group.add(c4Wrap);
+    this.loader.load('models/leo/comical_bomb.glb?v=39', (gltf) => {
+      const bomb = gltf.scene;
+      this.harmonizeAsset(bomb, { minRough: 0.25, maxRough: 0.55, maxMetal: 0.65, envIntensity: 1.1 });
+      this.centerAndScale(bomb, 7.8);
+      this.roundBombHolder.add(bomb);
     });
 
-    this.updateBombFaceplate(0);
+    this.updateProtonEmailCanvas(1.0);
     return group;
   }
 
-  updateBombFaceplate(nowMs) {
-    if (!this.bombCtx || !this.bombFaceTex) return;
-    // Ticking 10-second countdown at 10Hz (tenths of a second) + flashing LED state
-    const tenth = Math.floor(nowMs / 100);
-    if (tenth === this.lastBombTickKey) return;
-    this.lastBombTickKey = tenth;
+  updateProtonEmailCanvas(typeProgress = 1.0) {
+    if (!this.emailCtx || !this.emailTex) return;
+    const step = Math.floor(clamp01(typeProgress) * 24);
+    if (step === this.lastEmailStep) return;
+    this.lastEmailStep = step;
 
-    const blinkOn = (Math.floor(nowMs / 250) % 2) === 0;
-    const totalTenths = 150 - (tenth % 120); // Counts down from 00:15.0 -> 00:03.0
-    const secs = Math.floor(totalTenths / 10);
-    const msDigit = totalTenths % 10;
-    const timeStr = `00:${String(secs).padStart(2, '0')}.${msDigit}`;
+    const ctx = this.emailCtx;
+    const W = 640, H = 460;
 
-    const ctx = this.bombCtx;
-    ctx.fillStyle = '#070b14';
-    ctx.fillRect(0, 0, 512, 280);
+    // ProtonMail Dark Theme Window Background
+    ctx.fillStyle = '#161426';
+    ctx.fillRect(0, 0, W, H);
 
-    // Glowing red digital bezel border
-    ctx.strokeStyle = blinkOn ? '#ff1e56' : '#9f1239';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(5, 5, 502, 270);
+    // Proton Purple Header Bar
+    const grad = ctx.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, '#6d4aff');
+    grad.addColorStop(1, '#4c1d95');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, W, 56);
 
-    // Top red LED header banner: PROTONMAIL BOMB THREAT
-    ctx.fillStyle = blinkOn ? '#e11d48' : '#881337';
-    ctx.fillRect(14, 14, 484, 54);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 30px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('🚨 PROTONMAIL BOMB THREAT', 256, 51);
-
-    // Sample ProtonMail email sender & subject line
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#fda4af';
-    ctx.font = 'bold 23px "JetBrains Mono", monospace';
-    ctx.fillText('FROM: badguy@protonmail.com', 24, 106);
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = 'bold 20px "JetBrains Mono", monospace';
-    ctx.fillText('MSG:  "C4 device planted at HQ…"', 24, 140);
-
-    // Digital red 7-segment style ticking countdown timer box
-    ctx.fillStyle = '#18040a';
-    ctx.fillRect(24, 162, 310, 96);
-    ctx.strokeStyle = '#ff1e56';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(24, 162, 310, 96);
-
-    ctx.fillStyle = blinkOn ? '#ff2a55' : '#fb7185';
-    ctx.font = '900 56px "JetBrains Mono", monospace';
-    ctx.fillText(timeStr, 42, 229);
-
-    // Status LED indicators on right side of timer
-    const drawLed = (x, y, label, active, colorHex) => {
-      ctx.fillStyle = active ? colorHex : '#334155';
-      ctx.beginPath(); ctx.arc(x, y, 13, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = 'bold 19px "JetBrains Mono", monospace';
-      ctx.fillText(label, x + 22, y + 6);
-    };
-    drawLed(362, 188, 'ARMED', blinkOn, '#ff1e56');
-    drawLed(362, 234, 'TIMER', !blinkOn, '#fbbf24');
-
-    this.bombFaceTex.needsUpdate = true;
-
-    // Also flash the 4 3D corner LED bulbs & point light
-    if (this.bombLedMeshes) {
-      for (const l of this.bombLedMeshes) {
-        const active = ((l.idx + Math.floor(nowMs / 200)) % 2) === 0;
-        l.mat.color.setHex(active ? 0xff1e56 : 0x330814);
-        l.mesh.scale.setScalar(active ? 1.25 : 0.85);
-      }
+    // Window Dots + ProtonMail Composer Title
+    const dotCols = ['#ff5f56', '#ffbd2e', '#27c93f'];
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = dotCols[i];
+      ctx.beginPath(); ctx.arc(24 + i * 22, 28, 7, 0, Math.PI * 2); ctx.fill();
     }
-    if (this.bombStrobeLight) {
-      this.bombStrobeLight.intensity = blinkOn ? 5.0 : 1.2;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 25px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('🇨🇭 Proton Mail · Encrypted Compose', 102, 36);
+
+    // Progressive typing helper
+    const clipText = (str, startP, endP) => {
+      const p = clamp01((typeProgress - startP) / (endP - startP));
+      return str.slice(0, Math.ceil(str.length * p));
+    };
+
+    // Email Metadata Rows (TO / FROM / SUBJECT)
+    const drawRow = (y, label, val, valCol = '#f8fafc') => {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = 'bold 23px "JetBrains Mono", monospace';
+      ctx.fillText(label, 24, y);
+      ctx.fillStyle = valCol;
+      ctx.font = 'bold 25px "JetBrains Mono", monospace';
+      ctx.fillText(val, 155, y);
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.28)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(20, y + 14); ctx.lineTo(W - 20, y + 14); ctx.stroke();
+    };
+
+    drawRow(96,  'TO:',      clipText('911@POJ.CA', 0.0, 0.22),       '#38bdf8');
+    drawRow(144, 'FROM:',    clipText('BADGUY@PROTON.ME', 0.18, 0.45), '#c4b5fd');
+    drawRow(192, 'SUBJECT:', clipText('RISE UP!', 0.42, 0.65),         '#fb7185');
+
+    // Dark Body Area inside ProtonMail Composer
+    ctx.fillStyle = '#0d0b18';
+    ctx.fillRect(20, 218, W - 40, 222);
+    ctx.strokeStyle = '#6d4aff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(20, 218, W - 40, 222);
+
+    // Draw Pixel-Art Skull & Crossbones + Pixel-Art Round Bomb inside the Email Body once typing reaches body!
+    if (typeProgress >= 0.55) {
+      const bodyAlpha = clamp01((typeProgress - 0.55) / 0.35);
+      ctx.save();
+      ctx.globalAlpha = bodyAlpha;
+
+      // 16x16 Pixel-Art Skull & Crossbones Grid (left-center of body)
+      const skullGrid = [
+        '..XX........XX..',
+        '.XXXX......XXXX.',
+        '..XXXX.XX.XXXX..',
+        '...XXXXXXXXXX...',
+        '....XXXXXXXX....',
+        '...XXXXXXXXXX...',
+        '...XX..XX..XX...',
+        '...XX..XX..XX...',
+        '...XXXXXXXXXX...',
+        '....XXX..XXX....',
+        '.....XXXXXX.....',
+        '...XXXX..XXXX...',
+        '..XXXX.XX.XXXX..',
+        '.XXXX......XXXX.',
+        '..XX........XX..'
+      ];
+      const px = 11;
+      const sx = 68, sy = 246;
+      ctx.fillStyle = '#f8fafc';
+      for (let r = 0; r < skullGrid.length; r++) {
+        const row = skullGrid[r];
+        for (let c = 0; c < row.length; c++) {
+          if (row[c] === 'X') {
+            ctx.fillRect(sx + c * px, sy + r * px, px - 1, px - 1);
+          }
+        }
+      }
+
+      // 12x12 Pixel-Art Round Bomb with Sparkling Wick (right-center of body)
+      const bombGrid = [
+        '.......YY*..',
+        '......Y.....',
+        '.....W......',
+        '....WWWW....',
+        '..BBBBBBBB..',
+        '.BBWWBBBBBB.',
+        '.BBWBBBBBBB.',
+        '.BBBBBBBBBB.',
+        '.BBBBBBBBBB.',
+        '..BBBBBBBB..',
+        '...BBBBBB...'
+      ];
+      const bx = 370, by = 262, bpx = 14;
+      for (let r = 0; r < bombGrid.length; r++) {
+        const row = bombGrid[r];
+        for (let c = 0; c < row.length; c++) {
+          const ch = row[c];
+          if (ch === '.') continue;
+          ctx.fillStyle = ch === 'B' ? '#334155' : (ch === 'W' ? '#cbd5e1' : (ch === 'Y' ? '#fbbf24' : '#ff1e56'));
+          ctx.fillRect(bx + c * bpx, by + r * bpx, bpx - 1, bpx - 1);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    this.emailTex.needsUpdate = true;
+  }
+
+  animateWickSparks(nowMs) {
+    if (!this.wickSparks) return;
+    const t = nowMs * 0.004;
+    for (const s of this.wickSparks) {
+      const u = (t * s.speed + s.phase) % 1.0;
+      const dist = u * 2.2;
+      s.mesh.position.set(
+        s.dir.x * dist,
+        s.dir.y * dist - u * u * 0.65,
+        s.dir.z * dist
+      );
+      s.mesh.scale.setScalar(1.15 * (1.0 - u * 0.75));
+      s.mesh.rotation.x += 0.2;
+      s.mesh.rotation.y += 0.25;
+    }
+    if (this.wickEmberHalo) {
+      this.wickEmberHalo.scale.setScalar(0.85 + Math.sin(nowMs * 0.035) * 0.35);
+    }
+    if (this.wickLight) {
+      this.wickLight.intensity = 4.0 + Math.sin(nowMs * 0.045) * 1.8;
     }
   }
 
   initLeoStage() {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
-      bandit: new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@protonmail.com)
-      swat:   new THREE.Vector3(-D, 0,  D), // front-left:  Canadian Police / RCMP / VPD
-      osint:  new THREE.Vector3(-D, 48, D), // upper plane directly above Police head: Canadian SpiderFoot OSINT Web!
-      proton: new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (wind-animated flag!)
-      ag:     new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Subscriber DB
-      bot:    new THREE.Vector3( 0, 0,  4)  // center:      Mirrored Meta/X Datacentre + Facebook
+      bandit:      new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@proton.me)
+      banditPlane: new THREE.Vector3( D, 44, D), // upper plane directly above Suspect's head: ProtonMail Email Composer + Round Bomb!
+      swat:        new THREE.Vector3(-D, 0,  D), // front-left:  Canadian Police / RCMP / VPD
+      osint:       new THREE.Vector3(-D, 48, D), // upper plane directly above Police head: 3D RCMP OSINT Laptop!
+      proton:      new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (wind-animated flag!)
+      ag:          new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Skyscraper HQ
+      bot:         new THREE.Vector3( 0, 0,  4)  // center:      Single Animated App Server Tower + Facebook
     };
     this.leoPos = L;
     this.leoTops = { bandit: 26, swat: 26, osint: 62, bot: 26, proton: 26, ag: 26 };
 
-    // Elevated Holographic OSINT Plane directly above Canadian Police's head (no tractor beam cone underneath!)
+    // 1. Elevated Plane directly above Suspect's head where the ProtonMail Email (`TO: 911@POJ.CA / FROM: BADGUY@PROTON.ME / SUBJECT: RISE UP!`) & Round Bomb materialize as he types!
+    this.banditPlaneGroup = new THREE.Group();
+    this.banditPlaneGroup.position.copy(L.banditPlane);
+    const bDisc = new THREE.Mesh(
+      new THREE.CylinderGeometry(14, 14, 0.35, 48),
+      new THREE.MeshBasicMaterial({ color: 0x6d4aff, transparent: true, opacity: 0.16 })
+    );
+    bDisc.position.y = -5;
+    const bRing = new THREE.Mesh(
+      new THREE.TorusGeometry(14.2, 0.22, 12, 64),
+      new THREE.MeshBasicMaterial({ color: 0x8b5cf6, transparent: true, opacity: 0.65 })
+    );
+    bRing.rotation.x = Math.PI / 2;
+    bRing.position.y = -5;
+    this.banditPlaneGroup.add(bDisc, bRing);
+    this.leoGroup.add(this.banditPlaneGroup);
+
+    // 2. Elevated Holographic OSINT Plane directly above Canadian Police's head (no tractor beam cone underneath!)
     this.osintPlaneGroup = new THREE.Group();
     this.osintPlaneGroup.position.copy(L.osint);
     const planeDisc = new THREE.Mesh(
@@ -1592,7 +1680,7 @@ class PushnotOrbit {
     this.rejectX.visible = false;
     this.leoGroup.add(this.rejectX);
 
-    // Apple & Google Subscriber Vault (cloned Shopping Bag mounts here once logos finish loading,
+    // Apple & Google Subscriber Vault (cloned Skyscraper HQ mounts here once logos finish loading,
     // topped with a glowing 3D Subscriber ID Card stack!)
     this.leoAgGroup = new THREE.Group();
     this.leoAgGroup.position.set(L.ag.x, 0, L.ag.z);
@@ -1604,24 +1692,27 @@ class PushnotOrbit {
     this.leoAgGroup.add(this.leoIdStack);
     this.leoTops.ag = 52;
 
-    // LEO investigative arcs (OSINT step ascends to the elevated plane above the Police officer's head, then pivots down to Meta/X Datacentre!)
-    const pBandit = L.bandit.clone().setY(16);
-    const pSwat   = L.swat.clone().setY(22);
-    const pOsint  = L.osint.clone().setY(44);
-    const pProton = L.proton.clone().setY(14);
-    const pBot    = L.bot.clone().setY(16);
-    const pAg     = L.ag.clone().setY(15);
+    // LEO investigative arcs (Suspect types email on elevated plane above his head, then sends Round Bomb + Email across to Police!)
+    const pBandit      = L.bandit.clone().setY(18);
+    const pBanditPlane = L.banditPlane.clone();
+    const pSwat        = L.swat.clone().setY(22);
+    const pOsint       = L.osint.clone().setY(44);
+    const pProton      = L.proton.clone().setY(14);
+    const pBot         = L.bot.clone().setY(16);
+    const pAg          = L.ag.clone().setY(15);
 
-    this.arcLeoThreat      = new THREE.QuadraticBezierCurve3(pBandit, new THREE.Vector3(0, 22, R + 8), pSwat);
-    this.arcLeoProton      = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(-R - 8, 26, 0), pProton);
-    this.arcLeoOsint       = new THREE.LineCurve3(pSwat, pOsint); // Straight up from Police to the elevated OSINT plane above their head!
-    this.arcLeoOsintToMeta = new THREE.QuadraticBezierCurve3(pOsint,  new THREE.Vector3(-16, 42, 18),   pBot);
-    this.arcLeoTokens      = new THREE.QuadraticBezierCurve3(pBot,    new THREE.Vector3(-16, 28, 20),   pSwat);
-    this.arcLeoToAg        = new THREE.QuadraticBezierCurve3(pSwat,   new THREE.Vector3(0, 34, 0),      pAg);
-    this.arcLeoFromAg      = new THREE.QuadraticBezierCurve3(pAg,     new THREE.Vector3(0, 26, 12),     pSwat);
+    this.arcLeoTypeUp      = new THREE.LineCurve3(pBandit, pBanditPlane);
+    this.arcLeoThreat      = new THREE.QuadraticBezierCurve3(pBanditPlane, new THREE.Vector3(0, 38, R + 6), pSwat);
+    this.arcLeoProton      = new THREE.QuadraticBezierCurve3(pSwat,        new THREE.Vector3(-R - 8, 26, 0), pProton);
+    this.arcLeoOsint       = new THREE.LineCurve3(pSwat, pOsint);
+    this.arcLeoOsintToMeta = new THREE.QuadraticBezierCurve3(pOsint,       new THREE.Vector3(-16, 42, 18),   pBot);
+    this.arcLeoTokens      = new THREE.QuadraticBezierCurve3(pBot,         new THREE.Vector3(-16, 28, 20),   pSwat);
+    this.arcLeoToAg        = new THREE.QuadraticBezierCurve3(pSwat,        new THREE.Vector3(0, 34, 0),      pAg);
+    this.arcLeoFromAg      = new THREE.QuadraticBezierCurve3(pAg,          new THREE.Vector3(0, 26, 12),     pSwat);
 
     this.leoLines = [
-      this.addArc(this.arcLeoThreat,      0xf43f5e, 0.5,  this.leoGroup),
+      this.addArc(this.arcLeoTypeUp,      0x8b5cf6, 0.5,  this.leoGroup),
+      this.addArc(this.arcLeoThreat,      0xf43f5e, 0.55, this.leoGroup),
       this.addArc(this.arcLeoProton,      0xf43f5e, 0.35, this.leoGroup),
       this.addArc(this.arcLeoOsint,       0xfbbf24, 0.55, this.leoGroup),
       this.addArc(this.arcLeoOsintToMeta, 0xfbbf24, 0.45, this.leoGroup),
@@ -1630,7 +1721,7 @@ class PushnotOrbit {
       this.addArc(this.arcLeoFromAg,      0x34d399, 0.5,  this.leoGroup)
     ];
 
-    // LEO moving packets (threat/demand/token/ID)
+    // LEO moving packets (demand/query/token/ID)
     this.leoPacketMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xbe123c, emissiveIntensity: 0.9, metalness: 0.4, roughness: 0.25 });
     this.leoPacket = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, 0.8), this.leoPacketMat);
     this.leoPacketLight = new THREE.PointLight(0xf43f5e, 3.5, 30);
@@ -1642,12 +1733,12 @@ class PushnotOrbit {
     this.leoKey.visible = false;
     this.leoGroup.add(this.leoKey);
 
-    // 3D Ticking C4 Bomb with PROTONMAIL BOMB THREAT LED Faceplate & Flashing LEDs (flies from Suspect -> Police in Beat 1!)
-    this.leoBomb = this.createTickingC4Bomb();
+    // 3D ProtonMail Threat Email (`TO: 911@POJ.CA / FROM: BADGUY@PROTON.ME / SUBJECT: RISE UP!`) + Round Bomb (`comical_bomb.glb`) with Sparkling Wick!
+    this.leoBomb = this.createProtonThreatAndRoundBomb();
     this.leoBomb.visible = false;
     this.leoGroup.add(this.leoBomb);
 
-    // 3D Photo ID + 3D Credit Card that fly from Apple/Google -> Police in Beat 6!
+    // 3D Photo ID + 3D Credit Card that fly from Apple/Google -> Police in final beat!
     this.leoDeliveredCards = this.createSubscriberCardPair(1.25);
     this.leoDeliveredCards.visible = false;
     this.leoGroup.add(this.leoDeliveredCards);
@@ -1657,7 +1748,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 16; // 8 datacentre + phone + skyscraper + apple + google + earth + bandit + swat + facebook + rcmp laptop
+    let left = 9; // single server tower + phone + skyscraper + apple + google + earth + bandit + swat + facebook + rcmp laptop
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -1758,8 +1849,9 @@ class PushnotOrbit {
       done();
     };
 
-    // 1. Load `models/office_building.glb` (optimized with `--palette false --join false` so all 10 glass/window/interior materials stay 100% intact!)
-    this.loader.load('models/office_building.glb?v=36', (gltf) => {
+    // 1. Load `models/office_building.glb` with authentic high-contrast Reflective Sky-Blue Architectural Glass,
+    //    Dark Obsidian Mullions, and Lit Interior Rooms (hiding the opaque blue vertical blinds that blocked the windows!)
+    this.loader.load('models/office_building.glb?v=39', (gltf) => {
       const tower = gltf.scene;
 
       tower.traverse((ch) => {
@@ -1767,51 +1859,54 @@ class PushnotOrbit {
         const nName = (ch.name || '').toLowerCase();
         const mName = (ch.material.name || '').toLowerCase();
 
-        if (nName.includes('glass') || mName.includes('glass')) {
-          // Authentic reflective dark-tinted architectural glass (transparent so you see the lit interior windows & rooms!)
+        if (nName.includes('blinds') || mName.includes('blinds') || nName.includes('08')) {
+          // Hide the opaque vertical blind curtains so the glass windows and interior rooms aren't blocked!
+          ch.visible = false;
+        } else if (nName.includes('glass') || mName.includes('glass')) {
+          // Crisp, high-visibility reflective architectural glass panes (sky-cyan tint + specular sheen + semi-transparent)
           ch.material = new THREE.MeshPhysicalMaterial({
-            color: 0x0a192f,
+            color: 0x38bdf8,
+            emissive: 0x0284c7,
+            emissiveIntensity: 0.28,
             transparent: true,
-            opacity: 0.36,
-            metalness: 0.15,
+            opacity: 0.48,
+            metalness: 0.35,
             roughness: 0.04,
-            transmission: 0.72,
-            reflectivity: 1.0,
             clearcoat: 1.0,
-            clearcoatRoughness: 0.03,
-            envMapIntensity: 2.4,
+            clearcoatRoughness: 0.02,
+            envMapIntensity: 2.8,
             side: THREE.DoubleSide,
             depthWrite: false
           });
         } else if (mName.includes('walls_exterior') || mName.includes('rams')) {
-          // Sleek shiny black obsidian exterior structural frame & mullions
+          // Sleek shiny black obsidian structural frame & window mullions
           ch.material = new THREE.MeshPhysicalMaterial({
             color: 0x05070c,
-            metalness: 0.88,
+            metalness: 0.90,
             roughness: 0.12,
             clearcoat: 1.0,
-            clearcoatRoughness: 0.06,
-            envMapIntensity: 1.85,
+            clearcoatRoughness: 0.05,
+            envMapIntensity: 2.0,
             side: THREE.DoubleSide
           });
         } else if (mName.includes('material_17')) {
-          // Lit interior ceiling/window strips inside the glass floors
+          // Warm-white / cyan lit interior office ceilings & window bays visible through the glass!
           ch.material = new THREE.MeshStandardMaterial({
-            color: 0xe0f2fe,
+            color: 0xf0f9ff,
             emissive: 0x7dd3fc,
-            emissiveIntensity: 0.85,
-            roughness: 0.25
+            emissiveIntensity: 1.25,
+            roughness: 0.2
           });
         } else {
-          // Preserve the original textured building walls (`walls_BLD_OFFICE_05`, `material`, `Blinds_Roman_Hobbled_Blue`)
-          // while giving the dark facade a sleek glossy finish
+          // Exterior concrete/window-grid facade (`walls_BLD_OFFICE_05`, `material`) in glossy dark obsidian with lit window map
           ch.material = ch.material.clone();
-          ch.material.metalness = 0.55;
-          ch.material.roughness = 0.18;
-          ch.material.envMapIntensity = 1.45;
+          if (ch.material.color) ch.material.color.setHex(0x1e293b);
+          ch.material.metalness = 0.78;
+          ch.material.roughness = 0.14;
+          ch.material.envMapIntensity = 1.9;
           if (ch.material.emissiveMap) {
-            ch.material.emissive = new THREE.Color(0xffffff);
-            ch.material.emissiveIntensity = 1.15;
+            ch.material.emissive = new THREE.Color(0xbae6fd);
+            ch.material.emissiveIntensity = 1.65;
           }
         }
       });
@@ -2054,8 +2149,18 @@ class PushnotOrbit {
     this.leoKey.visible = false;
     this.leoDeliveredCards.visible = false;
     this.rejectX.visible = false;
+    if (this.phoneEmojiBadge) this.phoneEmojiBadge.visible = false;
 
     const isLeo = this.mode === 'leo';
+
+    // Show 3D Emoji State above the Phone (`😴 App Sleeping` vs. `😃 App Awake!`)
+    if (!isLeo) {
+      if (this.mode === 'setup' && t >= 0.24) {
+        this.setPhoneEmojiState(t < 0.76 ? 'awake' : 'sleep');
+      } else if (this.mode === 'push') {
+        this.setPhoneEmojiState(t < 0.90 ? 'sleep' : 'awake');
+      }
+    }
 
     // Bejeweled gemstones stay visibly installed on the phone ONLY in Mode 1 (after install) & Mode 2 (Bejeweled push) — hidden during Mode 3 multi-app push stream!
     this.installedApp.visible = !isLeo && (this.mode === 'push' || (this.mode === 'setup' && t >= 0.24));
@@ -2194,30 +2299,45 @@ class PushnotOrbit {
         s.orb.lookAt(this.camera.position);
       }
     } else {
-      // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (6 Beats):
+      // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE (7 Beats):
       moverParent = this.leoGroup;
-      if (t < 0.16) {
-        // Beat 1: Ticking 3D C4 Bomb with "PROTONMAIL BOMB THREAT" LED faceplate + flashing red LEDs flies from Suspect (badguy@protonmail.com) -> Police!
-        const p = this.arcLeoThreat.getPoint(seg(t, 0, 0.12));
+      if (t < 0.11) {
+        // Beat 1a: Bad guy types ProtonMail email (`TO: 911@POJ.CA / FROM: BADGUY@PROTON.ME / SUBJECT: RISE UP!`)
+        // — it materializes on the elevated plane directly above his head alongside the round bomb with sparkling wick!
+        const tp = seg(t, 0, 0.09);
+        if (this.leoBomb) {
+          this.leoBomb.visible = true;
+          this.leoBomb.position.copy(this.leoPos.banditPlane);
+          this.leoBomb.scale.setScalar(1.0);
+          this.updateProtonEmailCanvas(tp);
+        }
+        moverPos = this.leoPos.banditPlane.clone().add(new THREE.Vector3(0, 6.5, 0));
+        moverText = '⌨️ Typing ProtonMail Threat…';
+        moverCls = 'red';
+      } else if (t < 0.23) {
+        // Beat 1b: Send the Round Bomb GLB (with sparkling wick) + ProtonMail Email from the plane above Suspect's head -> Police!
+        const p = this.arcLeoThreat.getPoint(seg(t, 0.11, 0.20));
         if (this.leoBomb) {
           this.leoBomb.visible = true;
           this.leoBomb.position.copy(p);
+          this.leoBomb.scale.setScalar(0.85);
+          this.updateProtonEmailCanvas(1.0);
         }
-        if (t < 0.12) {
-          moverPos = p;
-          moverText = '💣 ProtonMail Bomb Threat';
+        if (t < 0.20) {
+          moverPos = p.clone().add(new THREE.Vector3(0, 5.5, 0));
+          moverText = '💣 Send Bomb + Proton Email → Police';
           moverCls = 'red';
         } else {
           showLeoThreat = true;
         }
-      } else if (t < 0.34) {
-        const u = seg(t, 0.16, 0.28);
+      } else if (t < 0.36) {
+        const u = seg(t, 0.23, 0.31);
         const p = this.arcLeoProton.getPoint(u);
-        this.leoPacket.visible = t < 0.29;
+        this.leoPacket.visible = t < 0.32;
         this.leoPacket.position.copy(p);
         this.leoPacketMat.color.setHex(0xf43f5e);
         this.leoPacketMat.emissive.setHex(0xbe123c);
-        if (t < 0.26) {
+        if (t < 0.30) {
           moverPos = p;
           moverText = '🇨🇦 Police → Proton';
           moverCls = 'red';
@@ -2226,16 +2346,16 @@ class PushnotOrbit {
           showLeoDenied = true;
         }
       } else if (t < 0.50) {
-        // Beat 3: Police sends email query UP to the elevated SpiderFoot OSINT Plane directly above their head!
-        const p = this.arcLeoOsint.getPoint(seg(t, 0.34, 0.42));
-        this.leoPacket.visible = t < 0.43;
+        // Beat 3: Police sends email query UP to the elevated RCMP OSINT Laptop Plane directly above their head!
+        const p = this.arcLeoOsint.getPoint(seg(t, 0.36, 0.43));
+        this.leoPacket.visible = t < 0.44;
         this.leoPacket.position.copy(p);
         this.leoPacketMat.color.setHex(0xfbbf24);
         this.leoPacketMat.emissive.setHex(0xb45309);
         this.leoPacketLight.color.setHex(0xfbbf24);
-        if (t < 0.42) {
+        if (t < 0.43) {
           moverPos = p;
-          moverText = '🕸️ SpiderFoot Scan';
+          moverText = '💻 RCMP OSINT Scan';
         } else {
           showLeoOsint = true;
         }
@@ -2449,9 +2569,9 @@ class PushnotOrbit {
     }
 
     if (this.fbLogo && this.leoGroup.visible) this.fbLogo.rotation.y += dt * 0.75;
-    // Live countdown & flashing LEDs on the 3D C4 Bomb LED faceplate ("PROTONMAIL BOMB THREAT")
+    // Sparkling fuse wick animation at the tip of the round bomb (`comical_bomb.glb`)
     if (this.leoBomb && this.leoBomb.visible) {
-      this.updateBombFaceplate(now);
+      this.animateWickSparks(now);
     }
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
     if (this.leoIdStack && this.leoGroup.visible) {
@@ -2553,15 +2673,25 @@ class PushnotOrbit {
     }
     this.stars.rotation.y += dt * 0.015;
 
-    // Animate flashing Datacentre LEDs (burst faster when triggered or saving!)
+    // Animate single Server Tower LEDs + vertical data-scan bar (burst faster when triggered or saving!)
     if (this.dcLeds) {
-      const busy = (this.mode === 'push' && this.t < 0.44) || (this.mode === 'setup' && this.t >= 0.85);
+      const busy = (this.mode === 'push' && this.t < 0.44) || (this.mode === 'setup' && this.t >= 0.85) || this.mode === 'world';
       const mult = busy ? 2.6 : 1.0;
       const tSec = now * 0.001;
       for (const l of this.dcLeds) {
         const on = Math.sin(tSec * l.speed * mult + l.phase) > -0.15;
         l.mesh.visible = on;
       }
+      if (this.leoDcLeds && this.leoGroup.visible) {
+        for (const l of this.leoDcLeds) {
+          l.mesh.visible = Math.sin(tSec * l.speed * 1.6 + l.phase) > -0.15;
+        }
+      }
+      const towerH = this.dcTowerHeight || 26;
+      const scanY = 2.5 + ((Math.sin(tSec * (busy ? 4.5 : 2.0)) * 0.5 + 0.5) * (towerH - 4.0));
+      if (this.dcScanBar) this.dcScanBar.position.y = scanY;
+      if (this.leoDcScanBar && this.leoGroup.visible) this.leoDcScanBar.position.y = scanY;
+
       if (this.dcLight) {
         this.dcLight.color.setHex(busy ? 0x34d399 : 0x38bdf8);
         this.dcLight.intensity = busy ? 4.5 + Math.sin(tSec * 14) * 1.5 : 2.8 + Math.sin(tSec * 4) * 0.6;

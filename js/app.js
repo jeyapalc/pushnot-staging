@@ -1242,84 +1242,159 @@ class PushnotOrbit {
     return g;
   }
 
-  /* ---- Custom Calm, Highly Readable 3D Canadian SpiderFoot OSINT Board (Zero dizzying pulsing/throbbing!) ---- */
-  makeSpiderFootLabelTexture(title, sub, borderHex = '#38bdf8', badge = '🇨🇦') {
+  /* ---- 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot Terminal Inside the Screen! ---- */
+  makeRcmpLaptopScreenTexture() {
     const cvs = document.createElement('canvas');
-    cvs.width = 512; cvs.height = 172;
+    cvs.width = 1024;
+    cvs.height = 1024;
     const ctx = cvs.getContext('2d');
-
-    ctx.fillStyle = '#060c18';
-    ctx.fillRect(0, 0, 512, 172);
-
-    // Top accent bar + crisp border
-    ctx.fillStyle = borderHex;
-    ctx.fillRect(0, 0, 512, 14);
-    ctx.strokeStyle = borderHex;
-    ctx.lineWidth = 7;
-    ctx.strokeRect(3.5, 3.5, 505, 165);
-
-    // Title row (extra bold, high contrast)
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 34px "JetBrains Mono", monospace';
-    ctx.fillText(`${badge} ${title}`, 22, 74);
-
-    // Subtitle row
-    ctx.fillStyle = '#bae6fd';
-    ctx.font = 'bold 24px "JetBrains Mono", monospace';
-    ctx.fillText(sub, 24, 128);
-
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
+    tex.flipY = false;
+
+    const drawScreen = (bannerImg, crestImg) => {
+      ctx.save();
+      // Cube_Screen_0 UVs have u=1 on left (-X), u=0 on right (+X), v=1 at top (+Y), v=0 at bottom (-Y)
+      // Transform canvas so standard (0..1024, 0..1024) top-left drawing maps upright & left-to-right on the 3D screen!
+      ctx.translate(1024, 1024);
+      ctx.scale(-1, -1);
+
+      // Deep tactical RCMP dark navy screen background
+      const grad = ctx.createLinearGradient(0, 0, 0, 1024);
+      grad.addColorStop(0, '#040914');
+      grad.addColorStop(0.5, '#071124');
+      grad.addColorStop(1, '#030712');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Top RCMP Scarlet & Gold header bar
+      ctx.fillStyle = '#be123c';
+      ctx.fillRect(0, 0, 1024, 24);
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillRect(0, 24, 1024, 8);
+
+      // Outer screen frame
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(12, 36, 1000, 976);
+
+      // Official RCMP Crest + Bilingual Wordmark Banner at top of laptop screen
+      if (bannerImg && bannerImg.complete && bannerImg.naturalWidth > 0) {
+        ctx.drawImage(bannerImg, 44, 52, 936, 180);
+      }
+
+      // Prominent central RCMP Coat of Arms Badge + OSINT Terminal Header
+      if (crestImg && crestImg.complete && crestImg.naturalWidth > 0) {
+        // Subtle glowing gold shield halo behind the RCMP Crest
+        const halo = ctx.createRadialGradient(210, 425, 20, 210, 425, 175);
+        halo.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
+        halo.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
+        ctx.fillStyle = halo;
+        ctx.fillRect(35, 250, 350, 350);
+
+        ctx.drawImage(crestImg, 80, 252, 260, 330);
+      }
+
+      // Right-hand RCMP Cybercrime OSINT Terminal Panel next to the RCMP Crest
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 5;
+      ctx.fillRect(374, 258, 608, 318);
+      ctx.strokeRect(374, 258, 608, 318);
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 34px "JetBrains Mono", monospace';
+      ctx.fillText('🇨🇦 RCMP · GRC CYBER OSINT', 398, 314);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 28px "JetBrains Mono", monospace';
+      ctx.fillText('SEED: badguy@protonmail.com', 398, 372);
+
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 25px "JetBrains Mono", monospace';
+      ctx.fillText('► SPIDERFOOT ACCOUNT PIVOT', 398, 426);
+
+      ctx.fillStyle = '#34d399';
+      ctx.font = 'bold 25px "JetBrains Mono", monospace';
+      ctx.fillText('✔ 4 SOCIAL ACCOUNTS LINKED', 398, 480);
+
+      ctx.fillStyle = '#fda4af';
+      ctx.font = 'bold 24px "JetBrains Mono", monospace';
+      ctx.fillText('⚖ EXIGENT / s. 487.014 ORDER', 398, 536);
+
+      // Bottom 2x2 Grid of Matched Accounts on the Laptop Screen
+      const cards = [
+        { x: 42,  y: 612, title: 'f  FACEBOOK',  sub: 'fb.com/badguy.yvr',  color: '#3b82f6' },
+        { x: 528, y: 612, title: '📸 INSTAGRAM', sub: '@badguy_604 (META)', color: '#ec4899' },
+        { x: 42,  y: 804, title: '𝕏  X / TWITTER', sub: '@badguy_yvr (YVR)', color: '#38bdf8' },
+        { x: 528, y: 804, title: '🎬 TIKTOK',    sub: '@badguy_604',        color: '#2dd4bf' }
+      ];
+
+      for (const c of cards) {
+        ctx.fillStyle = '#091326';
+        ctx.fillRect(c.x, c.y, 454, 164);
+        ctx.fillStyle = c.color;
+        ctx.fillRect(c.x, c.y, 454, 14);
+        ctx.strokeStyle = c.color;
+        ctx.lineWidth = 4;
+        ctx.strokeRect(c.x, c.y, 454, 164);
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 31px "JetBrains Mono", monospace';
+        ctx.fillText(c.title, c.x + 22, c.y + 68);
+
+        ctx.fillStyle = '#bae6fd';
+        ctx.font = 'bold 25px "JetBrains Mono", monospace';
+        ctx.fillText(c.sub, c.x + 22, c.y + 124);
+      }
+
+      ctx.restore();
+      tex.needsUpdate = true;
+    };
+
+    const bannerImg = new Image();
+    const crestImg  = new Image();
+    let loaded = 0;
+    const onImg = () => {
+      loaded++;
+      drawScreen(bannerImg, crestImg);
+    };
+    bannerImg.onload = onImg;
+    crestImg.onload  = onImg;
+    bannerImg.src = 'models/leo/rcmp_banner_white.png?v=33';
+    crestImg.src  = 'models/leo/rcmp_crest_white.png?v=33';
+
+    drawScreen(null, null);
     return tex;
   }
 
-  createCustomSpiderFootWeb() {
+  createRcmpOsintLaptop(done) {
     const group = new THREE.Group();
+    const screenTex = this.makeRcmpLaptopScreenTexture();
 
-    // Clean, calm, stationary 3D correlation tree (zero spinning background web, zero pulsing orbs!)
-    const hub = new THREE.Group();
-    const coreTex = this.makeSpiderFootLabelTexture(
-      'badguy@protonmail.com',
-      'SPIDERFOOT EMAIL SEED',
-      '#f43f5e',
-      '🎯'
-    );
-    const coreMat = new THREE.MeshBasicMaterial({ map: coreTex });
-    const coreEdge = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.65 });
-    const coreBox = new THREE.Mesh(
-      new THREE.BoxGeometry(13.2, 4.1, 0.55),
-      [coreEdge, coreEdge, coreEdge, coreEdge, coreMat, coreMat]
-    );
-    hub.add(coreBox);
+    this.loader.load('models/leo/personal_computer.glb?v=33', (gltf) => {
+      const laptop = gltf.scene;
+      this.harmonizeAsset(laptop, { minRough: 0.24, maxRough: 0.58, maxMetal: 0.65, envIntensity: 0.95, liftDark: true });
 
-    const pivots = [
-      { pos: [-11.5,  5.6, 0.4], title: 'IG: @badguy_604',     sub: 'META RECOVERY MATCH',    color: '#ec4899', hex: 0xec4899, badge: '📸' },
-      { pos: [ 11.5,  5.6, 0.4], title: 'X: @badguy_yvr',      sub: 'HANDLE PIVOT · YVR',     color: '#38bdf8', hex: 0x38bdf8, badge: '𝕏' },
-      { pos: [-11.5, -5.6, 0.4], title: 's. 487.014 / 487.11', sub: 'CRIMINAL CODE (CANADA)', color: '#fbbf24', hex: 0xfbbf24, badge: '🇨🇦' },
-      { pos: [ 11.5, -5.6, 0.4], title: 'R. v. Spencer (SCC)', sub: 'CHARTER s. 8 · PIPEDA',  color: '#34d399', hex: 0x34d399, badge: '⚖️' }
-    ];
+      // Replace the laptop's internal screen mesh (`Cube_Screen_0` / material `Screen`) with our RCMP Logo & SpiderFoot display
+      const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
+      laptop.traverse((ch) => {
+        if (ch.isMesh && (ch.name.includes('Screen') || ch.material?.name === 'Screen')) {
+          ch.material = screenMat;
+        }
+      });
 
-    for (const p of pivots) {
-      const pTex = this.makeSpiderFootLabelTexture(p.title, p.sub, p.color, p.badge);
-      const pFace = new THREE.MeshBasicMaterial({ map: pTex });
-      const pRim  = new THREE.MeshStandardMaterial({ color: p.hex, emissive: p.hex, emissiveIntensity: 0.5 });
-      const card = new THREE.Mesh(
-        new THREE.BoxGeometry(10.6, 3.3, 0.42),
-        [pRim, pRim, pRim, pRim, pFace, pFace]
-      );
-      card.position.set(...p.pos);
-      hub.add(card);
+      // Center and scale the laptop so it sits cleanly on the elevated disc above the Police officer's head
+      this.centerAndScale(laptop, 25);
+      // Align bottom of laptop with the elevated platform disc (y = -10.8) and angle the screen toward the front-right camera
+      const box = new THREE.Box3().setFromObject(laptop);
+      laptop.position.y -= (box.min.y + 10.6);
+      laptop.rotation.y = Math.PI * 0.22;
 
-      // Clean steady correlation line from center seed to each result card
-      const spokeGeo = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(...p.pos)
-      ]);
-      hub.add(new THREE.Line(spokeGeo, new THREE.LineBasicMaterial({ color: p.hex })));
-    }
+      group.add(laptop, new THREE.PointLight(0x38bdf8, 3.2, 42));
+      if (done) done();
+    }, undefined, () => { if (done) done(); });
 
-    group.add(hub, new THREE.PointLight(0x38bdf8, 3.0, 40));
-    this.osintWebHub = hub;
     return group;
   }
 
@@ -1579,7 +1654,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 16; // 8 datacentre + phone + postbox + apple + google + earth + bandit + swat + facebook
+    let left = 17; // 8 datacentre + phone + postbox + apple + google + earth + bandit + swat + facebook + rcmp laptop
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -1649,11 +1724,11 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 8. Custom 3D Canadian SpiderFoot Email OSINT Web mounted on its own elevated plane directly above the Police officer's head (no messy GLB!)
-    this.osintWebGroup = this.createCustomSpiderFootWeb();
+    // 8. 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot screen mounted on the elevated plane above the Police officer's head!
+    this.osintWebGroup = this.createRcmpOsintLaptop(done);
     this.osintWebGroup.position.copy(this.leoPos.osint);
     this.leoGroup.add(this.osintWebGroup);
-    this.leoTops.osint = this.leoPos.osint.y + 11;
+    this.leoTops.osint = this.leoPos.osint.y + 10;
   }
 
   initAppStoreBag(done) {

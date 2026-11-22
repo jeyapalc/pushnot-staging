@@ -1422,9 +1422,9 @@ class PushnotOrbit {
       target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
       camPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y + 2, POS.ufo.z + 42);
     } else if (key === 'bandit') {
-      // Tight over-the-shoulder view looking past hacker's right shoulder directly at monitor screen:
-      target = new THREE.Vector3(30.0, 15.5, 28.7);
-      camPos = new THREE.Vector3(39.5, 18.2, 33.5);
+      // Natural cinematic over-the-shoulder view with comfortable breathing room (not tight):
+      target = new THREE.Vector3(30.5, 14.8, 29.5);
+      camPos = new THREE.Vector3(47.5, 20.0, 39.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
       // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward. Eye-level lateral portrait snap!
       target = new THREE.Vector3(this.leoPos.swat.x, 14.0, this.leoPos.swat.z);
@@ -3840,12 +3840,12 @@ class PushnotOrbit {
       moverParent = this.leoGroup;
 
       if (t < 0.20) {
-        // Bad guy types ProtonMail threat email directly on his laptop screen
+        // Bad guy types ProtonMail threat email directly on his laptop screen (no floating HUD clutter, just the screen!)
         const tp = seg(t, 0, 0.16);
         this.updateHackerEmailScreen(tp);
-        moverPos = this.leoPos.bandit.clone().add(new THREE.Vector3(0, 16, 0));
-        moverText = t < 0.15 ? '💻 badguy@proton.me composing encrypted threat…' : '✉ Threat Sent: badguy@proton.me → 911@poj.ca';
-        moverCls = 'red';
+        moverPos = null;
+        moverText = '';
+        moverCls = '';
       } else if (t < 0.36) {
         showLeoThreat = true;
         const u = seg(t, 0.25, 0.32);
@@ -3964,7 +3964,8 @@ class PushnotOrbit {
     // Law Enforcement station labels (visible when flipped upside down!)
     const showLeoPins = isLeo && this.flipRoll > Math.PI * 0.55;
     const L = this.leoPos;
-    this.place('pin-leo-bandit',      new THREE.Vector3(L.bandit.x, -1.5, L.bandit.z + 8), showLeoPins, this.leoGroup);
+    // Hacker node has zero floating HUD labels (sole focus is the 3D computer screen)
+    this.place('pin-leo-bandit',      null, false);
     this.place('pin-leo-swat',        new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 8),   showLeoPins, this.leoGroup);
     this.place('pin-leo-bot',         new THREE.Vector3(L.bot.x,    -1.5, L.bot.z + 8),    showLeoPins, this.leoGroup);
     this.place('pin-leo-proton',      new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
@@ -4041,10 +4042,9 @@ class PushnotOrbit {
       focusGroup = this.leoGroup;
       if (t < 0.20) {
         // Suspect composing threat email on laptop screen
-        // TIGHT OVER-THE-SHOULDER VIEW: Camera positioned past the hacker's right shoulder,
-        // framing the monitor screen large and 100% unobstructed!
-        focusLocal = new THREE.Vector3(30.0, 15.5, 28.7);
-        customCineCam = new THREE.Vector3(39.5, 18.2, 33.5);
+        // Natural cinematic over-the-shoulder view with comfortable breathing room (not tight):
+        focusLocal = new THREE.Vector3(30.5, 14.8, 29.5);
+        customCineCam = new THREE.Vector3(47.5, 20.0, 39.0);
       } else if (t < 0.36) {
         if (t >= 0.25 || showLeoDenied) {
           // Switzerland illuminated server rack + waving Swiss flag on top!
@@ -4068,11 +4068,11 @@ class PushnotOrbit {
       } else if (t < 0.86) {
         // Production orders served to Apple & Google Skyscraper
         focusLocal = new THREE.Vector3(L.ag.x, 22.0, L.ag.z);
-        focusDist = 62;
+        focusDist = 68;
       } else {
         // Suspect unmasked & arrested with BC Photo ID!
         focusLocal = new THREE.Vector3(L.bandit.x, 14.0, L.bandit.z);
-        focusDist = 48;
+        focusDist = 58;
       }
     }
 

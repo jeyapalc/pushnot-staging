@@ -3627,6 +3627,7 @@ class PushnotOrbit {
     if (this.phoneEmojiBadge) this.phoneEmojiBadge.visible = false;
 
     const isLeo = this.mode === 'leo';
+    const L = this.leoPos;
 
     // Show 3D Emoji State above the Phone (`😴 App Sleeping` vs. `😃 App Awake!`)
     // NO push or wake-up in Setup/Install step — strictly in later steps (Push & World)!
@@ -3946,7 +3947,7 @@ class PushnotOrbit {
         this.leoPacket.visible = false;
 
         if (t < 0.30) {
-          moverPos = p.clone().add(new THREE.Vector3(0, 5.0, 0));
+          moverPos = p.clone().add(new THREE.Vector3(0, 9.5, 0));
           moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Proton AG';
           moverCls = 'red';
         } else {
@@ -3968,7 +3969,7 @@ class PushnotOrbit {
             this.exigentDemand.scale.setScalar(0.95);
           }
           this.leoPacket.visible = false;
-          moverPos = p.clone().add(new THREE.Vector3(0, 5.0, 0));
+          moverPos = p.clone().add(new THREE.Vector3(0, 9.5, 0));
           moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Meta / IG / X';
           moverCls = 'cyan';
         } else {
@@ -4060,7 +4061,6 @@ class PushnotOrbit {
 
     // Law Enforcement station labels (visible when flipped upside down!)
     const showLeoPins = isLeo && this.flipRoll > Math.PI * 0.55;
-    const L = this.leoPos;
     // Hacker node has zero floating HUD labels (sole focus is the 3D computer screen)
     this.place('pin-leo-bandit',      null, false);
     this.place('pin-leo-swat',        new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 8),   showLeoPins, this.leoGroup);

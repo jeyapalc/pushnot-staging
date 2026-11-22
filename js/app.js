@@ -209,40 +209,29 @@ class PushnotOrbit {
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
     this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(26));
     this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
-      POS.ufo.clone().setY(69.5),
-      new THREE.Vector3(-D * 0.5, 42, -D * 0.3),
-      pPost.clone().setY(18)
+      POS.ufo.clone().setY(72.5),
+      new THREE.Vector3(-D * 0.5, 46, -D * 0.3),
+      pPost.clone().setY(20)
     );
 
     this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
     this.pushCurves  = [this.arcPushWorldToPost, this.arcPostToPhone];
 
     this.setupLines = [
-      this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4,  this.normalGroup),
-      this.addArc(this.arcPhoneToPost,   0xfbbf24, 0.38, this.normalGroup),
-      this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.4,  this.normalGroup)
+      this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.5,  this.normalGroup),
+      this.addArc(this.arcPhoneToPost,   0xfbbf24, 0.45, this.normalGroup),
+      this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.45, this.normalGroup)
     ];
     this.pushLines = [
-      this.addArc(this.arcPushWorldToPost, 0x34d399, 0.45, this.normalGroup),
-      this.addArc(this.arcPostToPhone,     0x34d399, 0.45, this.normalGroup)
+      this.addArc(this.arcPushWorldToPost, 0x34d399, 0.55, this.normalGroup),
+      this.addArc(this.arcPostToPhone,     0x34d399, 0.55, this.normalGroup)
     ];
 
-    // 4 Multi-Stream World Outbound Stimulus Lines from Planet Earth -> Datacentre -> Post Office -> Phone
-    // (Bejeweled Notification, Facebook Message, Instagram Notification, X Message)
+    // Multi-Stream World Outbound Stimulus Lines from Planet Earth -> Datacentre -> Post Office -> Phone
     this.initWorldStimStreams();
 
-    // Directional flow cones gliding directly along the active mode's arcs (100% accurate polarity!)
+    // Setup lines use clean moving dotted lines (zero arrows/cones!)
     this.flowCones = [];
-    this.beadMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
-    const coneGeo = new THREE.ConeGeometry(0.85, 2.4, 8);
-    coneGeo.rotateX(Math.PI / 2);
-    for (let c = 0; c < 3; c++) {
-      for (let k = 0; k < 3; k++) {
-        const mesh = new THREE.Mesh(coneGeo, this.beadMat);
-        this.normalGroup.add(mesh);
-        this.flowCones.push({ mesh, curveIdx: c, offset: k / 3 });
-      }
-    }
 
     // Starfield
     const pts = [];
@@ -262,7 +251,7 @@ class PushnotOrbit {
 
   addArc(curve, color, opacity, parent = this.worldGroup) {
     const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(64));
-    const mat = new THREE.LineDashedMaterial({ color, dashSize: 2.2, gapSize: 1.4, transparent: true, opacity });
+    const mat = new THREE.LineDashedMaterial({ color, dashSize: 1.5, gapSize: 1.5, transparent: true, opacity });
     const line = new THREE.Line(geo, mat);
     line.computeLineDistances();
     parent.add(line);
@@ -426,16 +415,7 @@ class PushnotOrbit {
       const pulses = new THREE.Points(pGeo, pMat);
       this.worldStimGroup.add(pulses);
 
-      // 3 Directional Flow Chevrons / Cones gliding continuously along the curve
-      const cones = [];
-      const cMat = new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.85 });
-      for (let k = 0; k < 3; k++) {
-        const cMesh = new THREE.Mesh(coneGeo, cMat);
-        this.worldStimGroup.add(cMesh);
-        cones.push({ mesh: cMesh, offset: k / 3 });
-      }
-
-      return { ...s, curve, line, orb, pulses, pulseCount, cones, currentPos: pEarth.clone() };
+      return { ...s, curve, line, orb, pulses, pulseCount, currentPos: pEarth.clone() };
     });
   }
 
@@ -1404,43 +1384,41 @@ class PushnotOrbit {
     let camPos = null;
 
     if (key === 'phone') {
-      // Phone is at POS.phone (-46, 0, 0), rotated -45 deg. Screen faces (+X, +Z) into room.
-      target = new THREE.Vector3(POS.phone.x, 13.5, POS.phone.z);
-      camPos = new THREE.Vector3(POS.phone.x + 22, 15.0, POS.phone.z + 22);
+      // Phone is at POS.phone (D, 0, D), rotated -45 deg. Screen faces into room.
+      target = new THREE.Vector3(POS.phone.x, 12.0, POS.phone.z);
+      camPos = new THREE.Vector3(POS.phone.x + 20, 13.5, POS.phone.z + 20);
     } else if (key === 'server') {
-      // Datacentre server rack is at POS.server (46, 0, 0), rotated +45 deg.
-      // Front glass door & pulsing scanbar face (+X, +Z) into room. Camera placed at (+X, +Z) facing directly into glass door & LEDs!
-      target = new THREE.Vector3(POS.server.x, 13.0, POS.server.z);
-      camPos = new THREE.Vector3(POS.server.x + 20, 15.0, POS.server.z + 20);
+      // Datacentre server rack is at POS.server (-D, 0, D), rotated +45 deg.
+      target = new THREE.Vector3(POS.server.x, 12.5, POS.server.z);
+      camPos = new THREE.Vector3(POS.server.x + 22, 14.5, POS.server.z + 22);
     } else if (key === 'post' || key === 'store') {
-      // Apple and Google platform is at POS.post (0, 0, -46).
-      // Glowing signs face +Z directly into the room.
-      target = new THREE.Vector3(POS.post.x, 11.0, POS.post.z);
-      camPos = new THREE.Vector3(POS.post.x, 14.5, POS.post.z + 28);
+      // Apple and Google platform is at POS.post (0, 0, -R).
+      target = new THREE.Vector3(POS.post.x, 12.0, POS.post.z);
+      camPos = new THREE.Vector3(POS.post.x, 15.0, POS.post.z + 32);
     } else if (key === 'world' || key === 'ufo') {
-      // Planet Earth hovering above at POS.ufo (0, 72, 0).
+      // Planet Earth hovering above at POS.ufo (-D, 50, D).
       target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
-      camPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y + 2, POS.ufo.z + 42);
+      camPos = new THREE.Vector3(POS.ufo.x + 22, POS.ufo.y + 4, POS.ufo.z + 36);
     } else if (key === 'bandit') {
       // Natural cinematic over-the-shoulder view with comfortable breathing room (not tight):
       target = new THREE.Vector3(30.5, 14.8, 29.5);
       camPos = new THREE.Vector3(47.5, 20.0, 39.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
       // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward. Eye-level lateral portrait snap!
-      target = new THREE.Vector3(this.leoPos.swat.x, 14.0, this.leoPos.swat.z);
-      camPos = new THREE.Vector3(this.leoPos.swat.x + 26, 14.5, this.leoPos.swat.z + 26);
+      target = new THREE.Vector3(this.leoPos.swat.x, 13.5, this.leoPos.swat.z);
+      camPos = new THREE.Vector3(this.leoPos.swat.x + 22, 14.5, this.leoPos.swat.z + 22);
     } else if (key === 'proton') {
-      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Front-angled view capturing illuminated front & full waving flag with comfortable headroom!
-      target = new THREE.Vector3(this.leoPos.proton.x, 20.0, this.leoPos.proton.z);
-      camPos = new THREE.Vector3(this.leoPos.proton.x + 22.5, 23.0, this.leoPos.proton.z + 65.0);
+      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Front-angled view capturing illuminated front & full waving flag!
+      target = new THREE.Vector3(this.leoPos.proton.x, 18.0, this.leoPos.proton.z);
+      camPos = new THREE.Vector3(this.leoPos.proton.x + 20.0, 20.0, this.leoPos.proton.z + 46.0);
     } else if (key === 'facebook' || key === 'bot') {
       // App Servers at (0, 0, 4) in LEO mode.
       target = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
       camPos = new THREE.Vector3(this.leoPos.bot.x - 22, 15.0, this.leoPos.bot.z + 22);
     } else if (key === 'ag') {
       // Apple & Google HQ in LEO mode.
-      target = new THREE.Vector3(this.leoPos.ag.x, 22.0, this.leoPos.ag.z);
-      camPos = new THREE.Vector3(this.leoPos.ag.x + 22, 22.0, this.leoPos.ag.z + 26);
+      target = new THREE.Vector3(this.leoPos.ag.x, 20.0, this.leoPos.ag.z);
+      camPos = new THREE.Vector3(this.leoPos.ag.x + 22, 22.0, this.leoPos.ag.z + 28);
     }
 
     if (!target || !camPos) return;
@@ -2752,6 +2730,151 @@ class PushnotOrbit {
     }
   }
 
+  /* ---- 3D Official EXIGENT DEMAND Warrant Paper with Rotating Emergency Siren Beacon ---- */
+  createExigentDemandWithSiren() {
+    const group = new THREE.Group();
+
+    // 1. High-resolution canvas texture for official legal paper (512x720)
+    const cvs = document.createElement('canvas');
+    cvs.width = 512;
+    cvs.height = 720;
+    const ctx = cvs.getContext('2d');
+
+    // Clean legal parchment
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, 512, 720);
+
+    // Official navy and gold double border
+    ctx.strokeStyle = '#1e3a8a';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(16, 16, 480, 688);
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(26, 26, 460, 668);
+
+    // Header: Canadian Justice / Police Crest header
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 20px "Space Grotesk", sans-serif';
+    ctx.fillText('🇨🇦 ROYAL CANADIAN MOUNTED POLICE', 256, 68);
+
+    ctx.fillStyle = '#475569';
+    ctx.font = '700 13px "JetBrains Mono", monospace';
+    ctx.fillText('CRIMINAL CODE OF CANADA · S. 487.014(1)', 256, 92);
+
+    // Bold Urgent Header Box
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.roundRect(40, 115, 432, 60, 8);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 28px "Space Grotesk", sans-serif';
+    ctx.fillText('EXIGENT DEMAND', 256, 155);
+
+    // Official legal document metadata
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 15px "JetBrains Mono", monospace';
+    ctx.fillText('CASE REF: #RCMP-2026-X99', 52, 215);
+    ctx.fillText('TARGET:   PROTON AG (SWITZERLAND)', 52, 245);
+    ctx.fillText('OFFENCE:  IMMINENT LIFE SAFETY THREAT', 52, 275);
+    ctx.fillText('MANDATE:  IMMEDIATE LOG PRESERVATION', 52, 305);
+
+    // Horizontal divider
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(52, 330); ctx.lineTo(460, 330);
+    ctx.stroke();
+
+    // Body lines of legal demand
+    ctx.fillStyle = '#334155';
+    ctx.font = '13px "Space Grotesk", sans-serif';
+    ctx.fillText('PURSUANT TO SECTION 487.014(1) OF THE CRIMINAL CODE,', 52, 365);
+    ctx.fillText('YOU ARE HEREBY COMMANDED TO DISCLOSE IDENTIFYING', 52, 390);
+    ctx.fillText('IP ACCESS RECORDS, ROUTING DATA, AND SUBSCRIBER', 52, 415);
+    ctx.fillText('CREDENTIALS ASSOCIATED WITH THE ATTACHED THREAT.', 52, 440);
+
+    // Official Red Stamp in bottom-right corner: EXIGENT / IMMEDIATE
+    ctx.save();
+    ctx.translate(360, 560);
+    ctx.rotate(-0.16);
+    ctx.strokeStyle = 'rgba(220, 38, 38, 0.85)';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(-80, -35, 160, 70);
+    ctx.fillStyle = 'rgba(220, 38, 38, 0.85)';
+    ctx.font = '900 20px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('EXIGENT', 0, -6);
+    ctx.font = 'bold 13px "JetBrains Mono", monospace';
+    ctx.fillText('IMMEDIATE ACTION', 0, 18);
+    ctx.restore();
+
+    // Barcode / verification hash at bottom
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '11px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('SHA256: 8F7E41C09A52... [LEO VERIFIED]', 256, 672);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+
+    // 2. Paper Mesh (5.2 width x 7.2 height)
+    const paperGeo = new THREE.PlaneGeometry(5.2, 7.2);
+    const paperMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
+    const paperMesh = new THREE.Mesh(paperGeo, paperMat);
+    group.add(paperMesh);
+
+    // Thin dark backing card to give paper physical thickness & edge
+    const backingGeo = new THREE.BoxGeometry(5.24, 7.24, 0.1);
+    const backingMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.3, roughness: 0.6 });
+    const backing = new THREE.Mesh(backingGeo, backingMat);
+    backing.position.z = -0.06;
+    group.add(backing);
+
+    // 3. Emergency Siren Beacon mounted on top of the paper
+    const sirenGroup = new THREE.Group();
+    sirenGroup.position.set(0, 4.4, 0);
+
+    const baseGeo = new THREE.CylinderGeometry(0.9, 1.1, 0.5, 16);
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.2 });
+    sirenGroup.add(new THREE.Mesh(baseGeo, baseMat));
+
+    const rotor = new THREE.Group();
+    rotor.position.y = 0.5;
+
+    const redMat = new THREE.MeshPhysicalMaterial({
+      color: 0xef4444, emissive: 0xdc2626, emissiveIntensity: 0.9,
+      transparent: true, opacity: 0.85, roughness: 0.1, metalness: 0.1
+    });
+    const blueMat = new THREE.MeshPhysicalMaterial({
+      color: 0x3b82f6, emissive: 0x2563eb, emissiveIntensity: 0.9,
+      transparent: true, opacity: 0.85, roughness: 0.1, metalness: 0.1
+    });
+
+    const redDome = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.85, 16, 1, false, 0, Math.PI), redMat);
+    const blueDome = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.85, 16, 1, false, Math.PI, Math.PI), blueMat);
+    rotor.add(redDome, blueDome);
+
+    const redLight = new THREE.PointLight(0xef4444, 4.0, 24);
+    redLight.position.set(0, 0, 0.6);
+    const blueLight = new THREE.PointLight(0x3b82f6, 4.0, 24);
+    blueLight.position.set(0, 0, -0.6);
+    rotor.add(redLight, blueLight);
+
+    sirenGroup.add(rotor);
+    group.add(sirenGroup);
+
+    group.userData.rotor = rotor;
+    group.userData.redLight = redLight;
+    group.userData.blueLight = blueLight;
+
+    return group;
+  }
+
   initLeoStage() {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
@@ -2793,6 +2916,11 @@ class PushnotOrbit {
     this.leoIdStack = this.createSubscriberCardPair(1.1);
     this.leoIdStack.position.set(0, 46, 0);
     this.leoAgGroup.add(this.leoIdStack);
+
+    // Official EXIGENT DEMAND Legal Warrant Document with Rotating Emergency Siren
+    this.exigentDemand = this.createExigentDemandWithSiren();
+    this.exigentDemand.visible = false;
+    this.leoGroup.add(this.exigentDemand);
     this.leoTops.ag = 52;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
@@ -3244,7 +3372,7 @@ class PushnotOrbit {
     this.beadMat.color.setHex(color);
     this.setupLines.forEach((l) => (l.visible = mode === 'setup'));
     this.pushLines.forEach((l) => (l.visible = isPush));
-    this.flowCones.forEach((fc) => (fc.mesh.visible = !isLeo && !isWorld));
+    if (this.flowCones) this.flowCones.forEach((fc) => (fc.mesh.visible = false));
     this.leoLines.forEach((l) => (l.visible = isLeo));
     if (this.worldStimGroup) this.worldStimGroup.visible = isWorld;
 
@@ -3491,6 +3619,7 @@ class PushnotOrbit {
     this.triggerBolt.visible = false;
     this.brainGroup.visible = false;
     this.leoPacket.visible = false;
+    if (this.exigentDemand) this.exigentDemand.visible = false;
     if (this.leoBomb) this.leoBomb.visible = false;
     this.leoKey.visible = false;
     this.leoDeliveredCards.visible = false;
@@ -3698,8 +3827,8 @@ class PushnotOrbit {
       }
 
       if (t < 0.28) {
-        // Step 1: Clean Push Notification with Bell Icon resting directly above North Pole of Earth GLB
-        const cardPos = POS.ufo.clone().setY(69.5);
+        // Step 1: Clean Push Notification with Bell Icon resting cleanly above Earth GLB
+        const cardPos = POS.ufo.clone().setY(72.5);
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(cardPos);
         this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
@@ -3740,101 +3869,57 @@ class PushnotOrbit {
         showPush = true;
       }
     } else if (this.mode === 'world') {
-      const stepIdx = Math.min(5, Math.floor(t * 6));
-      const segStart = stepIdx / 6;
-      const segEnd = (stepIdx + 1) / 6;
-      const segT = seg(t, segStart, segEnd);
-
-      // Smooth flight progress:
-      // When playing or scrubbing, directly track timeline segment progress;
-      // When manually stepped / paused, allow a smooth 1.25s flight from when the step was triggered!
-      const timeSinceTrigger = (performance.now() - (this.worldStepTime || 0)) * 0.001;
-      let flightProgress;
-      if (this.playing) {
-        flightProgress = segT;
-      } else {
-        flightProgress = Math.min(1.0, Math.max(segT, timeSinceTrigger / 1.25));
-      }
-
-      const activeApp = WORLD_APPS[stepIdx];
-
-      // Update phone screen with current app notification as it arrives at phone (flightProgress >= 0.75)!
-      if (flightProgress >= 0.75) {
-        this.updatePhoneScreenCanvas('home', flightProgress, activeApp);
-      } else {
-        this.updatePhoneScreenCanvas('sleeping', 0);
-      }
-
       moverParent = this.normalGroup;
       moverCls = 'push';
+
+      // SIMPLE REPEAT FLOW:
+      // All 6 global notification streams flow simultaneously and continuously
+      const globalCycle = (t * 2.5);
 
       if (this.worldStimStreams) {
         for (let i = 0; i < this.worldStimStreams.length; i++) {
           const s = this.worldStimStreams[i];
-          if (i < stepIdx) {
-            // Previously triggered lines remain visible as soft lines (demonstrating cumulative connections)
-            s.line.material.opacity = 0.28;
-            s.line.visible = true;
-            s.orb.visible = false;
-            s.pulses.visible = false;
-            if (s.cones) s.cones.forEach(c => (c.mesh.visible = false));
-          } else if (i === stepIdx) {
-            // The currently triggered active app line!
-            s.line.material.opacity = 0.85;
-            s.line.visible = true;
-            s.orb.visible = true;
-            s.pulses.visible = true;
+          const streamProgress = (globalCycle + s.offset) % 1.0;
 
-            // Position 3D App Brand Logo Tile
-            const pt = s.curve.getPoint(flightProgress);
-            s.currentPos.copy(pt);
-            s.orb.position.copy(pt);
-            s.orb.lookAt(this.camera.position);
+          s.line.material.opacity = 0.75;
+          s.line.visible = true;
+          s.orb.visible = true;
+          s.pulses.visible = true;
 
-            // 14 glowing additive pulses streaming along the curve leading to current position
-            if (s.pulses) {
-              const posAttr = s.pulses.geometry.attributes.position;
-              const arr = posAttr.array;
-              for (let k = 0; k < s.pulseCount; k++) {
-                const pulseU = Math.max(0, Math.min(1, flightProgress - (k * 0.035)));
-                const pPulse = s.curve.getPoint(pulseU);
-                arr[k * 3]     = pPulse.x;
-                arr[k * 3 + 1] = pPulse.y;
-                arr[k * 3 + 2] = pPulse.z;
-              }
-              posAttr.needsUpdate = true;
+          // Position 3D App Brand Logo Tile
+          const pt = s.curve.getPoint(streamProgress);
+          s.currentPos.copy(pt);
+          s.orb.position.copy(pt);
+          s.orb.lookAt(this.camera.position);
+
+          // 14 glowing additive pulses streaming along curve behind tile
+          if (s.pulses) {
+            const posAttr = s.pulses.geometry.attributes.position;
+            const arr = posAttr.array;
+            for (let k = 0; k < s.pulseCount; k++) {
+              const pulseU = (streamProgress - (k * 0.024) + 1.0) % 1.0;
+              const pPulse = s.curve.getPoint(pulseU);
+              arr[k * 3]     = pPulse.x;
+              arr[k * 3 + 1] = pPulse.y;
+              arr[k * 3 + 2] = pPulse.z;
             }
-
-            // Directional flow cones gliding along active curve
-            if (s.cones) {
-              for (const cone of s.cones) {
-                cone.mesh.visible = true;
-                const coneU = (flightProgress + cone.offset * 0.15) % 1.0;
-                const pCone = s.curve.getPoint(coneU);
-                const pNext = s.curve.getPoint(Math.min(1, coneU + 0.02));
-                cone.mesh.position.copy(pCone);
-                cone.mesh.lookAt(pNext);
-              }
-            }
-
-            moverPos = pt.clone().add(new THREE.Vector3(0, 4.5, 0));
-            if (flightProgress < 0.35) {
-              moverText = `${activeApp.emoji} ${stepIdx + 1}/6 ${activeApp.name}: Outbound Push from Earth`;
-            } else if (flightProgress < 0.70) {
-              moverText = `${activeApp.emoji} ${stepIdx + 1}/6 ${activeApp.name} → Apple/Google Shared Gateway`;
-            } else {
-              moverText = `${activeApp.emoji} Delivered via Single Push Tunnel → Phone!`;
-            }
-          } else {
-            // Future lines that haven't triggered yet: dormant
-            s.line.material.opacity = 0.08;
-            s.line.visible = true;
-            s.orb.visible = false;
-            s.pulses.visible = false;
-            if (s.cones) s.cones.forEach(c => (c.mesh.visible = false));
+            posAttr.needsUpdate = true;
           }
         }
       }
+
+      // Smoothly display arriving notifications on phone screen
+      const activeIdx = Math.floor((globalCycle * WORLD_APPS.length) % WORLD_APPS.length);
+      const activeApp = WORLD_APPS[activeIdx];
+      const leadU = (globalCycle + (activeApp.offset || 0)) % 1.0;
+      if (leadU >= 0.70) {
+        this.updatePhoneScreenCanvas('home', (leadU - 0.70) / 0.30, activeApp);
+      } else {
+        this.updatePhoneScreenCanvas('sleeping', 0);
+      }
+
+      moverPos = null;
+      moverText = '';
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE:
       moverParent = this.leoGroup;
@@ -3850,38 +3935,54 @@ class PushnotOrbit {
         showLeoThreat = true;
         const u = seg(t, 0.25, 0.32);
         const p = this.arcLeoProton.getPoint(u);
-        this.leoPacket.visible = t >= 0.25 && t < 0.32;
-        this.leoPacket.position.copy(p);
-        this.leoPacketMat.color.setHex(0xf43f5e);
-        this.leoPacketMat.emissive.setHex(0xbe123c);
+        const showDemand = t >= 0.25 && t < 0.32;
+
+        if (this.exigentDemand) {
+          this.exigentDemand.visible = showDemand;
+          this.exigentDemand.position.copy(p);
+          this.exigentDemand.lookAt(this.camera.position);
+          this.exigentDemand.scale.setScalar(0.95);
+        }
+        this.leoPacket.visible = false;
+
         if (t < 0.30) {
-          moverPos = p;
-          moverText = '🇨🇦 Police → Proton';
+          moverPos = p.clone().add(new THREE.Vector3(0, 5.0, 0));
+          moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Proton AG';
           moverCls = 'red';
         } else {
           this.rejectX.visible = true;
           showLeoDenied = true;
+          moverPos = new THREE.Vector3(L.proton.x, 14.0, L.proton.z);
+          moverText = '⛔ Proton Rejects Demand (Swiss Privacy & Zero Access)';
+          moverCls = 'red';
         }
       } else if (t < 0.68) {
-        // Beat 3 & 4: Exigent Demand to Meta/Instagram/X (0.36–0.52),
+        // Beat 3 & 4: Exigent Demand served to Meta/Instagram/X (0.36–0.52),
         // and Meta/X return the 3 Golden Keys directly to Police officer (0.52–0.68)!
         if (t < 0.52) {
           const p = this.arcLeoToMeta.getPoint(seg(t, 0.36, 0.52));
-          this.leoPacket.visible = true;
-          this.leoPacket.position.copy(p);
-          this.leoPacketMat.color.setHex(0x38bdf8);
-          this.leoPacketMat.emissive.setHex(0x0284c7);
-          this.leoPacketLight.color.setHex(0x38bdf8);
-          moverPos = p;
-          moverText = '⚖ Exigent Demand (s. 487.014) → Meta / IG / X';
+          if (this.exigentDemand) {
+            this.exigentDemand.visible = true;
+            this.exigentDemand.position.copy(p);
+            this.exigentDemand.lookAt(this.camera.position);
+            this.exigentDemand.scale.setScalar(0.95);
+          }
+          this.leoPacket.visible = false;
+          moverPos = p.clone().add(new THREE.Vector3(0, 5.0, 0));
+          moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Meta / IG / X';
           moverCls = 'cyan';
         } else {
+          if (this.exigentDemand) this.exigentDemand.visible = false;
           const p = this.arcLeoTokens.getPoint(seg(t, 0.52, 0.64));
           this.leoKey.visible = true;
           this.leoKey.position.copy(p);
           if (t < 0.63) {
             moverPos = p;
             moverText = '🔑 3 Push Tokens Acquired';
+          } else {
+            showLeoTokens = true;
+          }
+        }
           } else {
             showLeoTokens = true;
           }
@@ -4003,40 +4104,40 @@ class PushnotOrbit {
     if (this.mode === 'setup') {
       if (t >= 0.38 && t < 0.52) {
         // Isometric close-up of CNC Laser Key Fabrication at Apple/Google HQ
-        focusLocal = new THREE.Vector3(POS.post.x, 26, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x + 14, 38, POS.post.z + 24);
+        focusLocal = new THREE.Vector3(POS.post.x, 24, POS.post.z);
+        customCineCam = new THREE.Vector3(POS.post.x + 16, 36, POS.post.z + 26);
       } else if (moverPos) {
         focusLocal = moverPos.clone();
-        focusDist = 76;
+        focusDist = 74;
       } else if (showInstall || showToken) {
-        focusLocal = new THREE.Vector3(POS.phone.x, 16, POS.phone.z);
-        focusDist = 72;
+        focusLocal = new THREE.Vector3(POS.phone.x, 12.0, POS.phone.z);
+        customCineCam = new THREE.Vector3(POS.phone.x + 20, 13.5, POS.phone.z + 20);
       } else if (showSaved) {
-        focusLocal = new THREE.Vector3(POS.server.x, 16, POS.server.z);
-        focusDist = 78;
+        focusLocal = new THREE.Vector3(POS.server.x, 12.5, POS.server.z);
+        customCineCam = new THREE.Vector3(POS.server.x + 22, 14.5, POS.server.z + 22);
       }
     } else if (this.mode === 'push') {
       if (t < 0.28) {
-        // Zoom into Push Notification message banner resting cleanly above Earth North Pole!
-        focusLocal = new THREE.Vector3(POS.ufo.x, 67, POS.ufo.z);
-        focusDist = 42;
+        // Elevated cinematic overview of Push Notification banner resting cleanly above Earth GLB
+        focusLocal = new THREE.Vector3(POS.ufo.x, 72.5, POS.ufo.z);
+        customCineCam = new THREE.Vector3(POS.ufo.x + 18, 74.0, POS.ufo.z + 24);
       } else if (t < 0.56) {
         // Following payload gliding to Google/Apple
         focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 30, 0);
-        focusDist = 74;
+        focusDist = 72;
       } else if (t < 0.78) {
         // Google extracts Token Key & matches registered End-User socket
-        focusLocal = new THREE.Vector3(POS.post.x, 26, POS.post.z);
-        focusDist = 58;
+        focusLocal = new THREE.Vector3(POS.post.x, 24, POS.post.z);
+        customCineCam = new THREE.Vector3(POS.post.x, 28, POS.post.z + 36);
       } else {
         // Delivered to Phone
-        focusLocal = new THREE.Vector3(POS.phone.x, 16, POS.phone.z);
-        focusDist = 65;
+        focusLocal = new THREE.Vector3(POS.phone.x, 12.0, POS.phone.z);
+        customCineCam = new THREE.Vector3(POS.phone.x + 20, 13.5, POS.phone.z + 20);
       }
     } else if (this.mode === 'world') {
       // Cinematic overview of all 6 live multi-stream global notification lines
-      focusLocal = new THREE.Vector3(-10, 26, 6);
-      focusDist = 120;
+      focusLocal = new THREE.Vector3(-4, 22, 0);
+      customCineCam = new THREE.Vector3(68, 52, 68);
     } else {
       // LAW ENFORCEMENT STAGE (LEO):
       focusGroup = this.leoGroup;
@@ -4046,33 +4147,37 @@ class PushnotOrbit {
         focusLocal = new THREE.Vector3(30.5, 14.8, 29.5);
         customCineCam = new THREE.Vector3(47.5, 20.0, 39.0);
       } else if (t < 0.36) {
-        if (t >= 0.25 || showLeoDenied) {
-          // Switzerland illuminated server rack + waving Swiss flag on top!
-          focusLocal = new THREE.Vector3(L.proton.x, 20.0, L.proton.z);
-          customCineCam = new THREE.Vector3(L.proton.x + 22.5, 23.0, L.proton.z + 65.0);
+        if (t >= 0.25 && t < 0.31) {
+          // Exigent Demand + Siren flying across from Police to Swiss server
+          focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 14, 20.0, L.swat.z + 30.0);
+        } else if (t >= 0.31 || showLeoDenied) {
+          // Switzerland illuminated server rack + waving Swiss flag on top + red rejection X!
+          focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
+          customCineCam = new THREE.Vector3(L.proton.x + 20.0, 20.0, L.proton.z + 46.0);
         } else {
           // Police receive threat / send demand -> Facing the armed cop at eye level!
-          focusLocal = new THREE.Vector3(L.swat.x, 14.0, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 26, 14.5, L.swat.z + 26);
+          focusLocal = new THREE.Vector3(L.swat.x, 13.5, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 22, 14.5, L.swat.z + 22);
         }
       } else if (t < 0.68) {
         if (t < 0.52) {
           // Exigent Demand sent from Police to App Server Tower (Meta/X)
-          focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 16, L.bot.z);
-          focusDist = 65;
+          focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 13.0, L.bot.z);
+          customCineCam = new THREE.Vector3(L.bot.x - 22, 15.0, L.bot.z + 22);
         } else {
           // 3 Push Token Keys acquired by Police officer -> Facing the armed cop at eye level!
-          focusLocal = new THREE.Vector3(L.swat.x, 14.0, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 26, 14.5, L.swat.z + 26);
+          focusLocal = new THREE.Vector3(L.swat.x, 13.5, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 22, 14.5, L.swat.z + 22);
         }
       } else if (t < 0.86) {
         // Production orders served to Apple & Google Skyscraper
-        focusLocal = new THREE.Vector3(L.ag.x, 22.0, L.ag.z);
-        focusDist = 68;
+        focusLocal = new THREE.Vector3(L.ag.x, 20.0, L.ag.z);
+        customCineCam = new THREE.Vector3(L.ag.x + 22, 22.0, L.ag.z + 28);
       } else {
         // Suspect unmasked & arrested with BC Photo ID!
         focusLocal = new THREE.Vector3(L.bandit.x, 14.0, L.bandit.z);
-        focusDist = 58;
+        customCineCam = new THREE.Vector3(L.bandit.x + 22, 15.5, L.bandit.z + 22);
       }
     }
 
@@ -4235,21 +4340,32 @@ class PushnotOrbit {
       this.controls.target.lerp(new THREE.Vector3(0, 16, 0), Math.min(1, dt * 4.0));
     }
 
-    // Directional flow cones glide directly along the active mode's arcs
-    const activeCurves = this.mode === 'setup' ? this.setupCurves : (this.mode === 'push' ? this.pushCurves : null);
-    const speed = (now * 0.00028) % 1;
-    for (const fc of this.flowCones) {
-      const curve = activeCurves ? activeCurves[fc.curveIdx] : null;
-      if (!curve || this.mode === 'leo') {
-        fc.mesh.visible = false;
-        continue;
+    // Animated moving dotted lines streaming smoothly along curves (zero arrows/cones!)
+    const dashDelta = dt * 18.0;
+    if (this.mode === 'setup' && this.setupLines) {
+      for (const line of this.setupLines) {
+        if (line && line.material) line.material.dashOffset -= dashDelta;
       }
-      fc.mesh.visible = true;
-      const u = (fc.offset + speed) % 1;
-      const p = curve.getPoint(u);
-      const pNext = curve.getPoint(Math.min(1, u + 0.02));
-      fc.mesh.position.copy(p);
-      fc.mesh.lookAt(pNext);
+    } else if (this.mode === 'push' && this.pushLines) {
+      for (const line of this.pushLines) {
+        if (line && line.material) line.material.dashOffset -= dashDelta;
+      }
+    } else if (this.mode === 'world' && this.worldStimStreams) {
+      for (const s of this.worldStimStreams) {
+        if (s.line && s.line.material) s.line.material.dashOffset -= dashDelta;
+      }
+    } else if (this.mode === 'leo' && this.leoLines) {
+      for (const line of this.leoLines) {
+        if (line && line.material) line.material.dashOffset -= dashDelta;
+      }
+    }
+
+    // Emergency siren beacon: high-speed rotation and dual red/blue emergency strobe flashing
+    if (this.exigentDemand && this.exigentDemand.visible && this.exigentDemand.userData) {
+      const uData = this.exigentDemand.userData;
+      if (uData.rotor) uData.rotor.rotation.y += dt * 16.0;
+      if (uData.redLight) uData.redLight.intensity = 3.5 + Math.sin(now * 0.022) * 2.5;
+      if (uData.blueLight) uData.blueLight.intensity = 3.5 + Math.cos(now * 0.022) * 2.5;
     }
 
     // Gently rotate ONLY the 3D Brain mesh when active above the Apple & Google Skyscraper HQ

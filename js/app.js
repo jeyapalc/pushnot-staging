@@ -3666,7 +3666,7 @@ class PushnotOrbit {
           }
         }
 
-        moverPos = forgePos.clone().add(new THREE.Vector3(0, 8.5, 0));
+        moverPos = forgePos.clone().add(new THREE.Vector3(0, 6.2, 0));
         moverText = 'NEW TOKEN CREATED';
         moverCls = 'cyan';
       } else if (t < 0.62) {
@@ -3989,9 +3989,9 @@ class PushnotOrbit {
     this.place('pin-leo-id',     new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoId,     this.leoGroup);
 
     const mv = document.getElementById('pin-mover');
-    mv.className = 'pin pin-mover' + (moverCls ? ' ' + moverCls : '');
+    mv.className = 'pin-mover' + (moverCls ? ' ' + moverCls : '');
     mv.textContent = moverText;
-    this.place('pin-mover', moverPos ? moverPos.clone().add(new THREE.Vector3(0, 4.5, 0)) : null, !!moverPos, moverParent);
+    this.place('pin-mover', moverPos ? moverPos.clone() : null, !!moverPos, moverParent);
 
     // Compute exact 3D world-space focus point for Cinematic Step-by-Step Camera!
     let focusLocal = null;

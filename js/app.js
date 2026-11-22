@@ -1325,68 +1325,68 @@ class PushnotOrbit {
   /* ---- Interactive Camera Snap & Shallow Depth of Field Focus on Node Click ---- */
   snapFocusToNode(key) {
     let target = null;
-    let dist = 42;
-    let lift = 14;
-    let customCamPos = null;
+    let camPos = null;
 
     if (key === 'phone') {
-      target = POS.phone.clone().setY(16);
-      dist = 78;
+      // Phone is at POS.phone (-46, 0, 0), rotated -45 deg. Screen faces (+X, +Z) into room.
+      target = new THREE.Vector3(POS.phone.x, 13.5, POS.phone.z);
+      camPos = new THREE.Vector3(POS.phone.x + 22, 15.0, POS.phone.z + 22);
     } else if (key === 'server') {
-      target = POS.server.clone().setY(16);
-      dist = 82;
+      // Datacentre server rack is at POS.server (46, 0, 0), rotated +45 deg.
+      // Front glass door & pulsing scanbar face (-X, +Z) inward towards orbit center.
+      target = new THREE.Vector3(POS.server.x, 13.0, POS.server.z);
+      camPos = new THREE.Vector3(POS.server.x - 24, 15.0, POS.server.z + 24);
     } else if (key === 'post' || key === 'store') {
-      target = POS.post.clone().setY(22);
-      dist = 94;
+      // Apple and Google platform is at POS.post (0, 0, -46).
+      // Glowing signs face +Z directly into the room.
+      target = new THREE.Vector3(POS.post.x, 11.0, POS.post.z);
+      camPos = new THREE.Vector3(POS.post.x, 14.5, POS.post.z + 28);
     } else if (key === 'world' || key === 'ufo') {
-      target = POS.ufo.clone().setY(22);
-      dist = 74;
+      // Planet Earth hovering above at POS.ufo (0, 72, 0).
+      target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
+      camPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y + 2, POS.ufo.z + 42);
     } else if (key === 'bandit') {
-      target = this.leoPos.bandit.clone().setY(11.5);
-      customCamPos = target.clone().add(new THREE.Vector3(22, 1.2, -10));
-    } else if (key === 'swat' || key === 'osint') {
-      // Facing the armed cop directly at eye level (NO bird's-eye or bug's-eye view!)
-      target = this.leoPos.swat.clone().setY(14.0);
-      customCamPos = target.clone().add(new THREE.Vector3(26, 0.5, 26));
+      // Hacker at desk with laptop at (32.5, 0, 32.5).
+      target = new THREE.Vector3(this.leoPos.bandit.x, 10.5, this.leoPos.bandit.z);
+      camPos = new THREE.Vector3(this.leoPos.bandit.x + 18, 13.0, this.leoPos.bandit.z - 8);
+    } else if (key === 'swat' || key === 'police' || key === 'osint') {
+      // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward.
+      target = new THREE.Vector3(this.leoPos.swat.x, 14.0, this.leoPos.swat.z);
+      camPos = new THREE.Vector3(this.leoPos.swat.x + 24, 15.0, this.leoPos.swat.z + 24);
     } else if (key === 'proton') {
-      // Facing Swiss illuminated server station & waving Swiss flag at eye level
-      target = this.leoPos.proton.clone().setY(15.0);
-      customCamPos = new THREE.Vector3(this.leoPos.proton.x + 22, 16.5, this.leoPos.proton.z + 26);
-    } else if (key === 'facebook') {
-      target = this.leoPos.bot.clone().setY(16);
-      dist = 78;
+      // Swiss Server & waving Swiss flag at (0, 0, -46).
+      target = new THREE.Vector3(this.leoPos.proton.x, 14.0, this.leoPos.proton.z);
+      camPos = new THREE.Vector3(this.leoPos.proton.x + 20, 16.0, this.leoPos.proton.z + 22);
+    } else if (key === 'facebook' || key === 'bot') {
+      // App Servers at (46, 0, 0) in LEO mode.
+      target = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
+      camPos = new THREE.Vector3(this.leoPos.bot.x - 24, 15.0, this.leoPos.bot.z + 24);
     }
 
-    if (!target) return;
+    if (!target || !camPos) return;
 
     this.focusedNode = key;
-    this.autoOrbit = false;
-    const btnOrbit = document.getElementById('btn-orbit');
-    if (btnOrbit) btnOrbit.classList.remove('on');
+    this.setPlaying(false); // Pause auto-playback so camera stays cleanly locked on clicked station!
+    this.cinematicFollow = false;
+    this.setAutoOrbit(false);
 
     this.focusTargetPos = target.clone();
+    this.focusCamPos = camPos.clone();
 
-    if (customCamPos) {
-      this.focusCamPos = customCamPos;
-    } else {
-      // Snap strictly to the OUTSIDE of the orbit ring, facing IN LATERALLY at eye level (no bird's eye view!)
-      const radial = new THREE.Vector3(target.x, 0, target.z);
-      if (radial.lengthSq() < 1) radial.set(0, 0, 1);
-      radial.normalize();
-
-      this.focusCamPos = target.clone().addScaledVector(radial, dist);
-      this.focusCamPos.y = target.y + 1.5; // Lateral eye-level!
-    }
-
-    // Shallow depth-of-field focal spotlight
+    // Shallow depth-of-field focal spotlight (keep hacker dark until ID'ed at t >= 0.94!)
+    const isBanditDark = (key === 'bandit' && (!this.t || this.t < 0.94));
     if (!this.focusSpot) {
       this.focusSpot = new THREE.SpotLight(0xffffff, 4.5, 95, Math.PI / 4, 0.4, 1.2);
       this.scene.add(this.focusSpot);
       this.scene.add(this.focusSpot.target);
     }
-    this.focusSpot.visible = true;
-    this.focusSpot.target.position.copy(target);
-    this.focusSpot.position.copy(target).add(new THREE.Vector3(0, 32, 18));
+    if (isBanditDark) {
+      this.focusSpot.visible = false;
+    } else {
+      this.focusSpot.visible = true;
+      this.focusSpot.target.position.copy(target);
+      this.focusSpot.position.copy(target).add(new THREE.Vector3(0, 32, 18));
+    }
   }
 
   resetFocus() {
@@ -1650,6 +1650,7 @@ class PushnotOrbit {
     this.dcGroup = new THREE.Group();
     this.dcGroup.position.copy(POS.server);
     this.dcGroup.rotation.y = Math.PI * 0.25;
+    this.dcGroup.userData.stationKey = 'server';
     this.normalGroup.add(this.dcGroup);
 
     const floorY = 0.8;
@@ -1729,6 +1730,8 @@ class PushnotOrbit {
       };
 
       const mainTower = buildSingleTower();
+      mainTower.userData.stationKey = 'server';
+      mainTower.traverse(c => { if (c.isMesh) c.userData.stationKey = 'server'; });
       this.dcGroup.add(mainTower);
       this.dcLeds = mainTower.userData.leds;
       this.dcScanBar = mainTower.userData.scanBar;
@@ -1749,6 +1752,8 @@ class PushnotOrbit {
       if (this.leoGroup && this.leoPos) {
         if (this.leoDcMirror) this.leoGroup.remove(this.leoDcMirror);
         this.leoDcMirror = buildSingleTower();
+        this.leoDcMirror.userData.stationKey = 'facebook';
+        this.leoDcMirror.traverse(c => { if (c.isMesh) c.userData.stationKey = 'facebook'; });
         this.leoDcMirror.position.set(this.leoPos.bot.x, 0, this.leoPos.bot.z - 5);
         this.leoDcMirror.scale.setScalar(0.88);
         this.leoDcLeds = this.leoDcMirror.userData.leds;
@@ -1906,6 +1911,9 @@ class PushnotOrbit {
     this.swissServerLight = new THREE.PointLight(0xa855f7, 2.8, 38);
     this.swissServerLight.position.set(0, floorY + TOWER_H * 0.5, frontFaceZ + 6);
     group.add(this.swissServerLight);
+
+    group.userData.stationKey = 'proton';
+    group.traverse(c => { if (c.isMesh) c.userData.stationKey = 'proton'; });
 
     return group;
   }
@@ -2821,20 +2829,62 @@ class PushnotOrbit {
         side: THREE.DoubleSide
       });
 
+      this.hackerBodyMeshes = [];
+      this.hackerGlassesMesh = null;
+
       hacker.traverse(c => {
         if (!c.isMesh) return;
         c.userData.stationKey = 'bandit';
         const mName = c.material ? (c.material.name || '') : '';
-        if (mName.includes('blinn4') || c.name.includes('blinn4')) {
+        const cName = c.name || '';
+        if (mName.includes('blinn4') || cName.includes('blinn4')) {
           c.material = screenMat;
           this.hackerScreenMesh = c;
+        } else if (mName.includes('Eyewear') || cName.includes('Eyewear')) {
+          // Glasses shine! Menacing digital cyan specular glint through the hoodie shadow
+          if (c.material) {
+            c.material = c.material.clone();
+            c.material.emissive = new THREE.Color(0x38bdf8);
+            c.material.emissiveIntensity = 1.6;
+            c.material.roughness = 0.1;
+            c.material.metalness = 0.9;
+          }
+          this.hackerGlassesMesh = c;
+        } else if (mName.includes('Topmat') || mName.includes('Hairmat') || mName.includes('Bodymat') || mName.includes('Bottommat')) {
+          // Cloaked in menacing deep dark shadow until ID'ed
+          if (c.material) {
+            c.material = c.material.clone();
+            c.material.roughness = 0.85;
+            c.material.metalness = 0.1;
+            c.userData.origColor = c.material.color.clone();
+            c.material.color.setHex(0x1a1a1f);
+          }
+          this.hackerBodyMeshes.push(c);
+        } else {
+          // Hands and keyboard: keep responsive to screen glow & keyboard light!
+          if (c.material) {
+            c.material = c.material.clone();
+            c.material.roughness = 0.35;
+          }
         }
       });
 
-      // Cool purple/blue screen glow illuminating the hacker's face and hands
-      const screenGlow = new THREE.PointLight(0x8b5cf6, 2.5, 20);
-      screenGlow.position.set(0, 16, 4);
-      hacker.add(screenGlow);
+      // Focused keyboard and hands light (showing only hands & keyboard in the dark!)
+      this.hackerKeyboardLight = new THREE.PointLight(0x6366f1, 3.2, 12);
+      this.hackerKeyboardLight.position.set(0, 8.5, 3.2);
+      hacker.add(this.hackerKeyboardLight);
+
+      // Screen glow illuminating hands and reflection
+      this.hackerScreenGlow = new THREE.PointLight(0x8b5cf6, 2.0, 14);
+      this.hackerScreenGlow.position.set(0, 11, 4.0);
+      hacker.add(this.hackerScreenGlow);
+
+      // Bright Police interrogation spotlight overhead (OFF until suspect is ID'ed!)
+      this.hackerSpotlight = new THREE.SpotLight(0xfff5ea, 0, 85, Math.PI / 4.2, 0.3, 1.2);
+      this.hackerSpotlight.position.set(this.leoPos.bandit.x, 36, this.leoPos.bandit.z);
+      this.hackerSpotlight.target.position.set(this.leoPos.bandit.x, 10, this.leoPos.bandit.z);
+      this.leoGroup.add(this.hackerSpotlight);
+      this.leoGroup.add(this.hackerSpotlight.target);
 
       this.leoTops.bandit = this.ground(hacker, 28, this.leoPos.bandit);
       this.leoGroup.add(hacker);
@@ -2957,6 +3007,7 @@ class PushnotOrbit {
     // Push Service / App Stores Station — Apple & Google Signs ONLY
     this.storeGroup = new THREE.Group();
     this.storeGroup.position.set(POS.post.x, 0, POS.post.z);
+    this.storeGroup.userData.stationKey = 'post';
     this.normalGroup.add(this.storeGroup);
 
     // Sleek dark architectural cyber-plinth at ground level
@@ -2967,6 +3018,7 @@ class PushnotOrbit {
       metalness: 0.8
     });
     const plinth = new THREE.Mesh(plinthGeo, plinthMat);
+    plinth.userData.stationKey = 'post';
     plinth.position.y = 0.6;
     this.storeGroup.add(plinth);
 
@@ -2974,12 +3026,14 @@ class PushnotOrbit {
     const ringGeo = new THREE.TorusGeometry(14.8, 0.18, 16, 64);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
     const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.userData.stationKey = 'post';
     ring.rotation.x = Math.PI * 0.5;
     ring.position.y = 1.22;
     this.storeGroup.add(ring);
 
     // Front-facing logo mount group for Apple and Google signs
     this.frontLogosGroup = new THREE.Group();
+    this.frontLogosGroup.userData.stationKey = 'post';
     this.frontLogosGroup.position.set(0, 10.5, 0);
     this.storeGroup.add(this.frontLogosGroup);
 
@@ -3017,11 +3071,14 @@ class PushnotOrbit {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
         logo.traverse((ch) => {
-          if (ch.isMesh && ch.material) {
-            ch.material.metalness = 0.52;
-            ch.material.roughness = 0.24;
-            ch.material.envMapIntensity = 1.35;
-            ch.castShadow = true;
+          if (ch.isMesh) {
+            ch.userData.stationKey = 'post';
+            if (ch.material) {
+              ch.material.metalness = 0.52;
+              ch.material.roughness = 0.24;
+              ch.material.envMapIntensity = 1.35;
+              ch.castShadow = true;
+            }
           }
         });
         let box = new THREE.Box3().setFromObject(logo);
@@ -3237,32 +3294,34 @@ class PushnotOrbit {
           if (this.mode === 'leo') {
             const d1 = hp.distanceTo(this.leoPos.bandit);
             const d2 = hp.distanceTo(this.leoPos.swat);
-            const d3 = hp.distanceTo(this.leoPos.osint);
+            const d3 = hp.distanceTo(this.leoPos.proton);
             const d4 = hp.distanceTo(this.leoPos.bot);
             const minD = Math.min(d1, d2, d3, d4);
-            if (minD === d1) nodeKey = 'bandit';
-            else if (minD === d2) nodeKey = 'swat';
-            else if (minD === d3) nodeKey = 'osint';
-            else nodeKey = 'facebook';
+            if (minD < 18) {
+              if (minD === d1) nodeKey = 'bandit';
+              else if (minD === d2) nodeKey = 'swat';
+              else if (minD === d3) nodeKey = 'proton';
+              else nodeKey = 'facebook';
+            }
           } else {
             const d1 = hp.distanceTo(POS.phone);
             const d2 = hp.distanceTo(POS.server);
             const d3 = hp.distanceTo(POS.post);
             const d4 = hp.distanceTo(POS.ufo);
             const minD = Math.min(d1, d2, d3, d4);
-            if (minD === d1) nodeKey = 'phone';
-            else if (minD === d2) nodeKey = 'server';
-            else if (minD === d3) nodeKey = 'post';
-            else nodeKey = 'world';
+            if (minD < 18) {
+              if (minD === d1) nodeKey = 'phone';
+              else if (minD === d2) nodeKey = 'server';
+              else if (minD === d3) nodeKey = 'post';
+              else nodeKey = 'world';
+            }
           }
-        }
-
-        if (nodeKey === 'phone') {
-          this.toggleOS();
         }
 
         if (nodeKey) {
           this.snapFocusToNode(nodeKey);
+        } else {
+          this.resetFocus();
         }
       } else {
         this.resetFocus();
@@ -3579,6 +3638,38 @@ class PushnotOrbit {
           showLeoId = true;
         }
       }
+
+      // Suspect illumination:
+      // Until ID'ed (t < 0.94): Menacing dark lighting, only hands, keyboard, and glasses shine!
+      // Once ID'ed (t >= 0.94): Overhead interrogation spotlight turns ON brightly!
+      if (this.hackerSpotlight) {
+        if (t >= 0.94) {
+          const idProg = clamp01((t - 0.94) / 0.04);
+          this.hackerSpotlight.intensity = 6.5 * idProg;
+          if (this.hackerGlassesMesh && this.hackerGlassesMesh.material) {
+            this.hackerGlassesMesh.material.emissiveIntensity = 1.6 - 1.0 * idProg;
+          }
+          if (this.hackerBodyMeshes) {
+            for (const bm of this.hackerBodyMeshes) {
+              if (bm.userData && bm.userData.origColor) {
+                bm.material.color.lerpColors(new THREE.Color(0x1a1a1f), bm.userData.origColor, idProg);
+              }
+            }
+          }
+        } else {
+          this.hackerSpotlight.intensity = 0;
+          if (this.hackerGlassesMesh && this.hackerGlassesMesh.material) {
+            this.hackerGlassesMesh.material.emissiveIntensity = 1.6;
+          }
+          if (this.hackerBodyMeshes) {
+            for (const bm of this.hackerBodyMeshes) {
+              bm.material.color.setHex(0x1a1a1f);
+            }
+          }
+        }
+      }
+    } else {
+      if (this.hackerSpotlight) this.hackerSpotlight.intensity = 0;
     }
 
     // Normal mode station labels (3 Unified Ground Nodes + World above Datacentre; hidden when flipped to Law Enforcement)
@@ -3842,7 +3933,9 @@ class PushnotOrbit {
       this.controls.target.lerp(this.focusTargetPos, Math.min(1, dt * 5.0));
       this.camera.position.lerp(this.focusCamPos, Math.min(1, dt * 4.2));
       this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-      if (this.camera.position.distanceTo(this.focusCamPos) < 1.0) {
+      if (this.camera.position.distanceTo(this.focusCamPos) < 0.3) {
+        this.camera.position.copy(this.focusCamPos);
+        this.controls.target.copy(this.focusTargetPos);
         this.focusTargetPos = null;
         this.focusCamPos = null;
       }

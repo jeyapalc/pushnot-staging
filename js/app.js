@@ -604,223 +604,230 @@ class PushnotOrbit {
     return this.createTokenKey(scale);
   }
 
-  /* ---- Arcane Cyber-Magic & Tri-Laser Key Summoning Nexus ---- */
-  createKeySummoningForge() {
+    /* ---- Industrial CNC Fiber Laser Key Fabrication Rig ---- */
+  createLaserCutterForge() {
     const group = new THREE.Group();
 
-    // 1. Horizontal Concentric Magic Summoning Circles in XZ plane
-    const runesGroup = new THREE.Group();
-    runesGroup.position.y = 0.2;
-    group.add(runesGroup);
-
-    // Outer Glowing Magic Ring
-    const outerGeo = new THREE.RingGeometry(6.2, 6.7, 64);
-    const outerMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.85
+    // 1. Heavy cast industrial CNC bed frame
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0x111622, roughness: 0.65, metalness: 0.8
     });
-    const outerRing = new THREE.Mesh(outerGeo, outerMat);
-    outerRing.rotation.x = -Math.PI / 2;
-    runesGroup.add(outerRing);
+    const frame = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 11), frameMat);
+    frame.position.y = -0.6;
+    group.add(frame);
 
-    // Middle Toothed Magic Ring
-    const midGeo = new THREE.RingGeometry(4.2, 4.6, 48);
-    const midMat = new THREE.MeshBasicMaterial({
-      color: 0xfbbf24, side: THREE.DoubleSide, transparent: true, opacity: 0.85
+    // Aluminum slat grid (underneath plate where sparks fall)
+    const slatMat = new THREE.MeshStandardMaterial({
+      color: 0x334155, roughness: 0.4, metalness: 0.9
     });
-    const midRing = new THREE.Mesh(midGeo, midMat);
-    midRing.rotation.x = -Math.PI / 2;
-    runesGroup.add(midRing);
+    const slatGeo = new THREE.BoxGeometry(14.8, 0.35, 0.12);
+    for (let z = -4.5; z <= 4.5; z += 0.65) {
+      const slat = new THREE.Mesh(slatGeo, slatMat);
+      slat.position.set(0, -0.1, z);
+      group.add(slat);
+    }
 
-    // Inner Magic Ring
-    const innerGeo = new THREE.RingGeometry(2.2, 2.5, 36);
-    const innerMat = new THREE.MeshBasicMaterial({
-      color: 0xf43f5e, side: THREE.DoubleSide, transparent: true, opacity: 0.85
+    // Precision fixture clamps holding down sheet corners
+    const clampMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7, roughness: 0.35, metalness: 0.85
     });
-    const innerRing = new THREE.Mesh(innerGeo, innerMat);
-    innerRing.rotation.x = -Math.PI / 2;
-    runesGroup.add(innerRing);
+    const clampGeo = new THREE.BoxGeometry(1.0, 0.3, 0.6);
+    [[-6.2, 0.12, -3.8], [6.2, 0.12, -3.8], [-6.2, 0.12, 3.8], [6.2, 0.12, 3.8]].forEach(([x, y, z]) => {
+      const cl = new THREE.Mesh(clampGeo, clampMat);
+      cl.position.set(x, y, z);
+      group.add(cl);
+    });
 
-    // Sacred Geometry: Hexagram & Crossbars inside Summoning Circle
-    const geomMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 });
+    // The Raw Gold Sheet Blank sitting on the slats (0.22 unit thick)
+    const sheetMat = new THREE.MeshStandardMaterial({
+      color: 0xd97706, roughness: 0.32, metalness: 0.88, envMapIntensity: 1.2
+    });
+    const rawSheet = new THREE.Mesh(new THREE.BoxGeometry(12.8, 0.22, 7.8), sheetMat);
+    rawSheet.position.y = 0.0;
+    group.add(rawSheet);
+
+    // 2. High Bridge Rails across X and Z
+    const railMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b, roughness: 0.5, metalness: 0.85
+    });
+    const bridgeBeam = new THREE.Mesh(new THREE.BoxGeometry(17.5, 0.45, 0.6), railMat);
+    bridgeBeam.position.set(0, 5.2, 0);
+    group.add(bridgeBeam);
+
+    // Optical Cutting Head Assembly
+    const headAssembly = new THREE.Group();
+    group.add(headAssembly);
+
+    // Optical Head housing (machined gunmetal cylinder + cyan status ring)
+    const headMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, roughness: 0.3, metalness: 0.95
+    });
+    const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.45, 1.6, 24), headMat);
+    housing.position.y = 1.8;
+    headAssembly.add(housing);
+
+    const statusRing = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.57, 0.57, 0.18, 24),
+      new THREE.MeshBasicMaterial({ color: 0x00f0ff })
+    );
+    statusRing.position.y = 1.95;
+    headAssembly.add(statusRing);
+
+    // Precision copper conical cutting nozzle
+    const nozzleMat = new THREE.MeshStandardMaterial({
+      color: 0xb45309, roughness: 0.2, metalness: 0.95
+    });
+    const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 24), nozzleMat);
+    nozzle.rotation.x = Math.PI; // point down
+    nozzle.position.y = 0.75;
+    headAssembly.add(nozzle);
+
+    // Cutting Laser Beam (Vertical needle of intense cyan-white light from nozzle to plate)
+    const beamGeo = new THREE.CylinderGeometry(0.03, 0.06, 0.75, 12);
+    beamGeo.translate(0, -0.375, 0);
+    const laserBeamMat = new THREE.MeshBasicMaterial({
+      color: 0xffffff, transparent: true, opacity: 0.95
+    });
+    const laserBeam = new THREE.Mesh(beamGeo, laserBeamMat);
+    laserBeam.position.y = 0.75;
+    headAssembly.add(laserBeam);
+
+    // Beam Outer Glow Shroud
+    const haloGeo = new THREE.CylinderGeometry(0.1, 0.28, 0.75, 12);
+    haloGeo.translate(0, -0.375, 0);
+    const beamHaloMat = new THREE.MeshBasicMaterial({
+      color: 0x00f0ff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending
+    });
+    const beamHalo = new THREE.Mesh(haloGeo, beamHaloMat);
+    beamHalo.position.y = 0.75;
+    headAssembly.add(beamHalo);
+
+    // Blinding focal cutting spot light
+    const focalSpotLight = new THREE.PointLight(0x00f0ff, 8.0, 14);
+    focalSpotLight.position.set(0, 0.1, 0);
+    headAssembly.add(focalSpotLight);
+
+    // Amber melt under-glow light
+    const meltLight = new THREE.PointLight(0xff6600, 6.0, 8);
+    meltLight.position.set(0, 0.08, 0);
+    headAssembly.add(meltLight);
+
+    // Molten puddle disc on sheet surface
+    const puddleGeo = new THREE.CircleGeometry(0.35, 16);
+    puddleGeo.rotateX(-Math.PI / 2);
+    const moltenPuddle = new THREE.Mesh(
+      puddleGeo,
+      new THREE.MeshBasicMaterial({ color: 0xffedd5, transparent: true, opacity: 0.92 })
+    );
+    moltenPuddle.position.y = 0.14;
+    group.add(moltenPuddle);
+
+    // 3. Mathematical Key Contour Path (closed Catmull-Rom loop)
     const pts = [];
-    // Hexagram triangles
-    for (let k = 0; k < 2; k++) {
-      const offset = (k * Math.PI) / 3;
-      for (let i = 0; i <= 3; i++) {
-        const a = offset + (i * Math.PI * 2) / 3;
-        pts.push(new THREE.Vector3(Math.cos(a) * 4.2, 0.05, Math.sin(a) * 4.2));
-      }
-    }
-    // 8 Radial energy spokes
-    for (let i = 0; i < 8; i++) {
-      const a = (i * Math.PI) / 4;
-      pts.push(new THREE.Vector3(0, 0.05, 0));
-      pts.push(new THREE.Vector3(Math.cos(a) * 6.2, 0.05, Math.sin(a) * 6.2));
-    }
-    const geomLines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), geomMat);
-    runesGroup.add(geomLines);
-
-    // Glowing ethereal translucent energy disc
-    const discMat = new THREE.MeshBasicMaterial({
-      color: 0x0369a1, side: THREE.DoubleSide, transparent: true, opacity: 0.28
-    });
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(6.2, 48), discMat);
-    disc.rotation.x = -Math.PI / 2;
-    runesGroup.add(disc);
-
-    // 2. Tri-Laser Emitter Crystals (3 hovering quantum pylons / crystals orbiting in 3D)
-    const crystalsGroup = new THREE.Group();
-    group.add(crystalsGroup);
-
-    const laserEmitters = [];
-    const beamColors = [0x38bdf8, 0xfbbf24, 0xf43f5e];
-    const focalCenter = new THREE.Vector3(0, 2.6, 0);
-
-    for (let i = 0; i < 3; i++) {
-      const angle = (i * Math.PI * 2) / 3;
-      const r = 7.2;
-      const emitterNode = new THREE.Group();
-      emitterNode.position.set(Math.cos(angle) * r, 5.2, Math.sin(angle) * r);
-
-      // Levitating crystal
-      const cryGeo = new THREE.OctahedronGeometry(0.75, 0);
-      const cryMat = new THREE.MeshStandardMaterial({
-        color: beamColors[i],
-        emissive: beamColors[i],
-        emissiveIntensity: 0.9,
-        metalness: 0.3,
-        roughness: 0.15
-      });
-      const crystal = new THREE.Mesh(cryGeo, cryMat);
-      crystal.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(cryGeo),
-        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+    const bowCenter = { x: -3.2, z: 0.0 };
+    const bowRadius = 1.8;
+    const bowArcStart = 0.42;
+    const bowArcEnd = Math.PI * 2 - 0.42;
+    for (let i = 0; i <= 30; i++) {
+      const a = bowArcStart + (i / 30) * (bowArcEnd - bowArcStart);
+      pts.push(new THREE.Vector3(
+        bowCenter.x + Math.cos(a) * bowRadius,
+        0.14,
+        bowCenter.z + Math.sin(a) * bowRadius
       ));
-      emitterNode.add(crystal);
+    }
+    pts.push(new THREE.Vector3(-1.4, 0.14, -0.5));
+    pts.push(new THREE.Vector3(-0.9, 0.14, -0.5));
+    pts.push(new THREE.Vector3(-0.3, 0.14, -0.5));
+    pts.push(new THREE.Vector3(-0.15, 0.14, -1.05));
+    pts.push(new THREE.Vector3( 0.35, 0.14, -1.05));
+    pts.push(new THREE.Vector3( 0.5,  0.14, -0.5));
+    pts.push(new THREE.Vector3( 0.9,  0.14, -0.5));
+    pts.push(new THREE.Vector3( 1.05, 0.14, -1.35));
+    pts.push(new THREE.Vector3( 1.55, 0.14, -1.35));
+    pts.push(new THREE.Vector3( 1.7,  0.14, -0.5));
+    pts.push(new THREE.Vector3( 2.1,  0.14, -0.5));
+    pts.push(new THREE.Vector3( 2.25, 0.14, -0.95));
+    pts.push(new THREE.Vector3( 2.75, 0.14, -0.95));
+    pts.push(new THREE.Vector3( 2.9,  0.14, -0.5));
+    pts.push(new THREE.Vector3( 3.4,  0.14, -0.5));
+    pts.push(new THREE.Vector3( 3.8,  0.14, -0.25));
+    pts.push(new THREE.Vector3( 3.95, 0.14,  0.0));
+    pts.push(new THREE.Vector3( 3.8,  0.14,  0.42));
+    pts.push(new THREE.Vector3(-0.9,  0.14,  0.42));
+    pts.push(new THREE.Vector3(-1.4,  0.14,  0.5));
+    pts.push(new THREE.Vector3(
+      bowCenter.x + Math.cos(bowArcStart) * bowRadius,
+      0.14,
+      bowCenter.z + Math.sin(bowArcStart) * bowRadius
+    ));
 
-      // Orbiting energy ring around crystal
-      const cRing = new THREE.Mesh(
-        new THREE.TorusGeometry(1.1, 0.06, 8, 24),
-        new THREE.MeshBasicMaterial({ color: beamColors[i], transparent: true, opacity: 0.75 })
-      );
-      cRing.rotation.x = Math.PI / 2;
-      emitterNode.add(cRing);
+    const cutCurve = new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.15);
 
-      // Laser Beam shooting from emitter directly into central focal point
-      const beamGeo = new THREE.CylinderGeometry(0.12, 0.28, 1.0, 12, 1, true);
-      const beamMat = new THREE.MeshBasicMaterial({
-        color: beamColors[i],
-        transparent: true,
-        opacity: 0.85,
-        blending: THREE.AdditiveBlending,
-        side: THREE.DoubleSide
+    // 4. Dynamic Kerf Seam Line with vertex coloring
+    const maxKerfPts = 300;
+    const kerfPositions = new Float32Array(maxKerfPts * 3);
+    const kerfColors = new Float32Array(maxKerfPts * 3);
+    const kerfGeo = new THREE.BufferGeometry();
+    kerfGeo.setAttribute('position', new THREE.BufferAttribute(kerfPositions, 3));
+    kerfGeo.setAttribute('color', new THREE.BufferAttribute(kerfColors, 3));
+    const kerfLine = new THREE.Line(
+      kerfGeo,
+      new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 2 })
+    );
+    group.add(kerfLine);
+
+    // 5. Physics Sparks Particle System
+    const sparkCount = 60;
+    const sparkGeo = new THREE.BufferGeometry();
+    const sparkPos = new Float32Array(sparkCount * 3);
+    const sparkCol = new Float32Array(sparkCount * 3);
+    const sparksData = [];
+    for (let i = 0; i < sparkCount; i++) {
+      sparkPos[i * 3 + 1] = -100;
+      sparkCol[i * 3]     = 1.0;
+      sparkCol[i * 3 + 1] = 0.85;
+      sparkCol[i * 3 + 2] = 0.3;
+      sparksData.push({
+        pos: new THREE.Vector3(0, -100, 0),
+        vel: new THREE.Vector3(),
+        life: 1.0,
+        maxLife: 0.25
       });
-      const beam = new THREE.Mesh(beamGeo, beamMat);
-      group.add(beam);
-
-      crystalsGroup.add(emitterNode);
-      laserEmitters.push({ node: emitterNode, crystal, ring: cRing, beam, baseAngle: angle, color: beamColors[i] });
     }
+    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
+    sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkCol, 3));
+    const sparkPoints = new THREE.Points(
+      sparkGeo,
+      new THREE.PointsMaterial({
+        size: 0.35, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending
+      })
+    );
+    group.add(sparkPoints);
 
-    // 3. Central Convergence Core (Pulsing Energy Orb + Sintering Nexus)
-    const coreGeo = new THREE.SphereGeometry(0.9, 24, 24);
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0xfef08a,
-      transparent: true,
-      opacity: 0.85,
-      blending: THREE.AdditiveBlending
-    });
-    const coreSphere = new THREE.Mesh(coreGeo, coreMat);
-    coreSphere.position.copy(focalCenter);
-    group.add(coreSphere);
-
-    // Ethereal Outer Halo around core
-    const haloGeo = new THREE.SphereGeometry(1.6, 24, 24);
-    const haloMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.35,
-      blending: THREE.AdditiveBlending,
-      side: THREE.BackSide
-    });
-    const haloSphere = new THREE.Mesh(haloGeo, haloMat);
-    haloSphere.position.copy(focalCenter);
-    group.add(haloSphere);
-
-    // 4. Expanding Summoning Shockwave Ring
-    const waveGeo = new THREE.RingGeometry(0.2, 0.45, 48);
-    const waveMat = new THREE.MeshBasicMaterial({
-      color: 0xfef08a,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0,
-      blending: THREE.AdditiveBlending
-    });
-    const summonWave = new THREE.Mesh(waveGeo, waveMat);
-    summonWave.position.copy(focalCenter);
-    summonWave.rotation.x = -Math.PI / 2;
-    group.add(summonWave);
-
-    // 5. Magical Inward Particle Vortex (96 energy sparks)
-    const partCount = 96;
-    const partGeo = new THREE.BufferGeometry();
-    const partPos = new Float32Array(partCount * 3);
-    const partAngles = new Float32Array(partCount);
-    const partRadii = new Float32Array(partCount);
-    const partSpeeds = new Float32Array(partCount);
-    const partHeights = new Float32Array(partCount);
-
-    for (let i = 0; i < partCount; i++) {
-      partAngles[i] = (i / partCount) * Math.PI * 2;
-      partRadii[i] = 2.0 + Math.random() * 5.5;
-      partSpeeds[i] = 1.5 + Math.random() * 2.5;
-      partHeights[i] = (Math.random() - 0.5) * 4.0;
-      partPos[i * 3]     = Math.cos(partAngles[i]) * partRadii[i];
-      partPos[i * 3 + 1] = focalCenter.y + partHeights[i];
-      partPos[i * 3 + 2] = Math.sin(partAngles[i]) * partRadii[i];
-    }
-    partGeo.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
-    const partMat = new THREE.PointsMaterial({
-      color: 0xfef08a,
-      size: 0.65,
-      transparent: true,
-      opacity: 0.8,
-      blending: THREE.AdditiveBlending
-    });
-    const partSystem = new THREE.Points(partGeo, partMat);
-    group.add(partSystem);
-
-    // 6. Dynamic PointLight for intense magic / laser flare
-    const summonLight = new THREE.PointLight(0xfbbf24, 2.5, 45);
-    summonLight.position.copy(focalCenter);
-    group.add(summonLight);
-
-    // Save all dynamic handles
-    this.summonArray = {
-      runesGroup,
-      outerRing,
-      midRing,
-      innerRing,
-      laserEmitters,
-      focalCenter,
-      coreSphere,
-      haloSphere,
-      summonWave,
-      partSystem,
-      partPos,
-      partAngles,
-      partRadii,
-      partSpeeds,
-      partHeights,
-      partCount,
-      summonLight
+    // Dynamic Handles
+    this.laserCutterData = {
+      bridgeBeam,
+      headAssembly,
+      laserBeam,
+      beamHalo,
+      focalSpotLight,
+      meltLight,
+      moltenPuddle,
+      cutCurve,
+      maxKerfPts,
+      kerfLine,
+      sparkCount,
+      sparkPoints,
+      sparksData,
+      lastTime: performance.now()
     };
 
     return group;
   }
 
   createKeyMaterializer() {
-    return this.createKeySummoningForge();
+    return this.createLaserCutterForge();
   }
 
   /* ---- 3D Diamond-Angled Monopoly "GO TO JAIL" Tile (Using original picture, facing LEFT, rotated 45° as a diamond!) ---- */
@@ -3546,97 +3553,121 @@ class PushnotOrbit {
         moverText = this.currentOS === 'ios' ? '📲 Request APNs Token' : '📲 Request FCM Token';
         moverCls = 'cyan';
       } else if (t < 0.52) {
-        // Arcane Cyber-Magic & Tri-Laser Key Summoning Nexus
+        // High-Precision CNC Fiber Laser Key Fabrication (No HUD clutter, pure laser cut!)
         const mp = seg(t, 0.38, 0.52);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
         this.keyForge.position.copy(forgePos);
 
-        const nowMs = performance.now();
-        const S = this.summonArray;
+        const LC = this.laserCutterData;
+        if (LC) {
+          const isCutting = mp < 0.78;
+          const cutProgress = Math.min(1.0, mp / 0.75);
+          const headTargetPos = LC.cutCurve.getPoint(cutProgress);
 
-        if (S) {
-          // 1. Concentric magic summoning circles spin dynamically in opposite directions
-          S.outerRing.rotation.z = nowMs * 0.0012;
-          S.midRing.rotation.z   = -nowMs * 0.0024;
-          S.innerRing.rotation.z = nowMs * 0.0040;
-
-          // 2. Floating crystal laser emitters orbit and fire concentrated beams into center
-          S.laserEmitters.forEach((em, idx) => {
-            const orbitAngle = em.baseAngle + nowMs * 0.0015;
-            const r = 7.2;
-            const y = 5.2 + Math.sin(nowMs * 0.003 + idx * 2.1) * 0.45;
-            em.node.position.set(Math.cos(orbitAngle) * r, y, Math.sin(orbitAngle) * r);
-            em.crystal.rotation.y = nowMs * 0.003;
-            em.crystal.rotation.x = nowMs * 0.002;
-            em.ring.rotation.z = nowMs * 0.004;
-
-            // Mathematically exact laser beam alignment from moving crystal emitter down into central focal key core!
-            const posA = em.node.position;
-            const posB = S.focalCenter;
-            const len = posA.distanceTo(posB);
-            const mid = new THREE.Vector3().addVectors(posA, posB).multiplyScalar(0.5);
-            const dir = new THREE.Vector3().subVectors(posB, posA).normalize();
-            em.beam.position.copy(mid);
-            em.beam.scale.set(1, len, 1);
-            em.beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
-
-            // Laser beam pulses in brightness as summoning progresses
-            const beamPulse = 0.55 + Math.sin(nowMs * 0.012 + idx) * 0.25;
-            em.beam.material.opacity = (mp < 0.75) ? (0.6 + mp * 0.4) * beamPulse : 0.45;
-          });
-
-          // 3. Magical inward particle vortex spirals toward center
-          const pos = S.partPos;
-          for (let i = 0; i < S.partCount; i++) {
-            S.partAngles[i] += S.partSpeeds[i] * 0.025;
-            // Particles spiral inward as mp progresses
-            const currentR = Math.max(0.3, S.partRadii[i] * (1.0 - mp * 0.65));
-            pos[i * 3]     = Math.cos(S.partAngles[i]) * currentR;
-            pos[i * 3 + 1] = S.focalCenter.y + S.partHeights[i] * (1.0 - mp * 0.6);
-            pos[i * 3 + 2] = Math.sin(S.partAngles[i]) * currentR;
+          let headY = 0.0;
+          if (mp >= 0.78) {
+            const liftZ = Math.min(1.0, (mp - 0.78) / 0.22);
+            headY = liftZ * 2.8; // Z-axis nozzle retracts
           }
-          S.partSystem.geometry.attributes.position.needsUpdate = true;
 
-          // 4. Central energy core & plasma orb pulsation
-          const coreScale = (mp < 0.75)
-            ? (0.6 + Math.sin(nowMs * 0.015) * 0.25 + mp * 0.5)
-            : Math.max(0.1, 1.4 * (1.0 - (mp - 0.75) / 0.25));
-          S.coreSphere.scale.setScalar(coreScale);
-          S.haloSphere.scale.setScalar(coreScale * 1.5);
+          LC.headAssembly.position.set(headTargetPos.x, headY, headTargetPos.z);
+          LC.bridgeBeam.position.z = headTargetPos.z;
 
-          // 5. Summoning shockwave & Key crystallization
-          if (mp >= 0.75) {
-            const winP = (mp - 0.75) / 0.25;
-            // Shockwave expands outwards
-            const waveScale = 1.0 + winP * 24.0;
-            S.summonWave.scale.set(waveScale, waveScale, 1.0);
-            S.summonWave.material.opacity = Math.sin((1.0 - winP) * Math.PI * 0.5) * 0.95;
-
-            // Summoning flash
-            S.summonLight.intensity = 5.5 * (1.0 - winP * 0.35);
-
-            // Solid 3D Golden Key emerges from the laser/magic nexus!
-            this.tokenKey.visible = true;
-            this.tokenKey.position.set(forgePos.x, forgePos.y + S.focalCenter.y + winP * 2.8, forgePos.z);
-            this.tokenKey.scale.setScalar(1.2 * (0.8 + winP * 0.4));
-            this.tokenKey.rotation.y = nowMs * 0.003;
+          // Vertical laser beam & intense focal spot lights
+          if (isCutting) {
+            LC.laserBeam.visible = true;
+            LC.beamHalo.visible = true;
+            LC.focalSpotLight.intensity = 7.0 + Math.random() * 2.0;
+            LC.meltLight.intensity = 5.0 + Math.random() * 2.0;
+            LC.moltenPuddle.visible = true;
+            LC.moltenPuddle.position.set(headTargetPos.x, 0.14, headTargetPos.z);
           } else {
-            // Sintering preview: key materializes in core
-            S.summonWave.material.opacity = 0;
-            S.summonLight.intensity = 2.0 + mp * 2.5;
+            LC.laserBeam.visible = false;
+            LC.beamHalo.visible = false;
+            LC.focalSpotLight.intensity = 0;
+            LC.meltLight.intensity = 0;
+            LC.moltenPuddle.visible = false;
+          }
 
+          // Dynamic Kerf Line (white-hot tip cooling to dark cut seam)
+          const kerfCount = Math.floor(cutProgress * LC.maxKerfPts);
+          const posAttr = LC.kerfLine.geometry.attributes.position;
+          const colAttr = LC.kerfLine.geometry.attributes.color;
+
+          for (let i = 0; i < LC.maxKerfPts; i++) {
+            if (i <= kerfCount) {
+              const u = i / LC.maxKerfPts;
+              const pt = LC.cutCurve.getPoint(u);
+              posAttr.setXYZ(i, pt.x, 0.14, pt.z);
+
+              const distFromTip = (kerfCount - i) / 20;
+              if (distFromTip < 1.0) {
+                colAttr.setXYZ(i, 1.0, 0.95 - distFromTip * 0.3, 0.2);
+              } else if (distFromTip < 3.0) {
+                colAttr.setXYZ(i, 0.95, 0.25, 0.05);
+              } else {
+                colAttr.setXYZ(i, 0.22, 0.15, 0.05);
+              }
+            } else {
+              posAttr.setXYZ(i, headTargetPos.x, -50, headTargetPos.z);
+              colAttr.setXYZ(i, 0, 0, 0);
+            }
+          }
+          posAttr.needsUpdate = true;
+          colAttr.needsUpdate = true;
+
+          // Physics sparks cascade downward
+          const now = performance.now();
+          const dt = Math.min(0.05, (now - LC.lastTime) * 0.001);
+          LC.lastTime = now;
+
+          const pArr = LC.sparkPoints.geometry.attributes.position.array;
+          for (let i = 0; i < LC.sparkCount; i++) {
+            const s = LC.sparksData[i];
+            s.life += dt;
+            if (s.life >= s.maxLife) {
+              if (isCutting) {
+                s.life = 0;
+                s.maxLife = 0.12 + Math.random() * 0.18;
+                s.pos.copy(headTargetPos).add(new THREE.Vector3(
+                  (Math.random() - 0.5) * 0.1, 0.14, (Math.random() - 0.5) * 0.1
+                ));
+                const ang = Math.random() * Math.PI * 2;
+                const spd = 3.5 + Math.random() * 6.5;
+                s.vel.set(Math.cos(ang) * spd, (Math.random() * 2.5) - 2.0, Math.sin(ang) * spd);
+              } else {
+                pArr[i * 3 + 1] = -100;
+                continue;
+              }
+            }
+            s.vel.y -= 14.0 * dt;
+            s.pos.addScaledVector(s.vel, dt);
+            if (s.pos.y < -0.8) {
+              s.pos.y = -0.8;
+              s.vel.y *= -0.25;
+            }
+            pArr[i * 3]     = s.pos.x;
+            pArr[i * 3 + 1] = s.pos.y;
+            pArr[i * 3 + 2] = s.pos.z;
+          }
+          LC.sparkPoints.geometry.attributes.position.needsUpdate = true;
+
+          // Finished 3D Golden Token Key Lift & Presentation Rotation
+          if (mp >= 0.78) {
             this.tokenKey.visible = true;
-            this.tokenKey.position.set(forgePos.x, forgePos.y + S.focalCenter.y, forgePos.z);
-            this.tokenKey.scale.setScalar(1.2 * Math.max(0.15, mp));
-            this.tokenKey.rotation.y = nowMs * 0.006;
+            const keyLiftProg = THREE.MathUtils.smoothstep(mp, 0.78, 0.98);
+            this.tokenKey.position.set(forgePos.x - 0.5, forgePos.y + 0.15 + keyLiftProg * 3.2, forgePos.z);
+            this.tokenKey.scale.setScalar(1.2);
+            this.tokenKey.rotation.y = now * 0.0025;
+            this.tokenKey.rotation.x = Math.sin(now * 0.002) * 0.1;
+          } else {
+            this.tokenKey.visible = false;
           }
         }
 
         moverPos = forgePos;
-        moverText = mp < 0.75
-          ? (this.currentOS === 'ios' ? '⚡ Laser & Magic: Summoning APNs Key…' : '⚡ Laser & Magic: Summoning FCM Key…')
-          : (this.currentOS === 'ios' ? '✨ Unique APNs Token Key Summoned!' : '✨ Unique FCM Token Key Summoned!');
+        moverText = 'NEW TOKEN CREATED';
         moverCls = 'cyan';
       } else if (t < 0.62) {
         const p = this.arcPostToPhone.getPoint(seg(t, 0.52, 0.62));
@@ -3970,9 +4001,9 @@ class PushnotOrbit {
 
     if (this.mode === 'setup') {
       if (t >= 0.38 && t < 0.52) {
-        // Zoom into Arcane Cyber-Magic & Tri-Laser Key Summoning at Apple/Google HQ
+        // Isometric close-up of CNC Laser Key Fabrication at Apple/Google HQ
         focusLocal = new THREE.Vector3(POS.post.x, 26, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x, 34, POS.post.z + 40);
+        customCineCam = new THREE.Vector3(POS.post.x + 14, 38, POS.post.z + 24);
       } else if (moverPos) {
         focusLocal = moverPos.clone();
         focusDist = 76;

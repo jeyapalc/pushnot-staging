@@ -564,194 +564,229 @@ class PushnotOrbit {
     return this.createTokenKey(scale);
   }
 
-  /* ---- 3-Ring Slot Machine Key Generator with Different Shapes Landing on the Final Key ---- */
-  createKeySlotMachine() {
+  /* ---- Arcane Cyber-Magic & Tri-Laser Key Summoning Nexus ---- */
+  createKeySummoningForge() {
     const group = new THREE.Group();
-    this.slotReels = [];
 
-    // Outer cyber casing - Open-Frame Bracket (Zero Occlusion!)
-    const caseMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a, metalness: 0.85, roughness: 0.25
+    // 1. Horizontal Concentric Magic Summoning Circles in XZ plane
+    const runesGroup = new THREE.Group();
+    runesGroup.position.y = 0.2;
+    group.add(runesGroup);
+
+    // Outer Glowing Magic Ring
+    const outerGeo = new THREE.RingGeometry(6.2, 6.7, 64);
+    const outerMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, side: THREE.DoubleSide, transparent: true, opacity: 0.85
     });
-    const borderMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const outerRing = new THREE.Mesh(outerGeo, outerMat);
+    outerRing.rotation.x = -Math.PI / 2;
+    runesGroup.add(outerRing);
 
-    // Base pedestal
-    const basePedestal = new THREE.Mesh(new THREE.BoxGeometry(15.2, 1.4, 6.0), caseMat);
-    basePedestal.position.y = -3.5;
-    basePedestal.add(new THREE.LineSegments(new THREE.EdgesGeometry(basePedestal.geometry), borderMat));
-    group.add(basePedestal);
-
-    // Top marquee housing
-    const topHousing = new THREE.Mesh(new THREE.BoxGeometry(15.2, 1.8, 6.0), caseMat);
-    topHousing.position.y = 3.6;
-    topHousing.add(new THREE.LineSegments(new THREE.EdgesGeometry(topHousing.geometry), borderMat));
-    group.add(topHousing);
-
-    // Side columns (left & right)
-    const leftCol = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.8, 6.0), caseMat);
-    leftCol.position.set(-7.0, 0, 0);
-    leftCol.add(new THREE.LineSegments(new THREE.EdgesGeometry(leftCol.geometry), borderMat));
-    group.add(leftCol);
-
-    const rightCol = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.8, 6.0), caseMat);
-    rightCol.position.set(7.0, 0, 0);
-    rightCol.add(new THREE.LineSegments(new THREE.EdgesGeometry(rightCol.geometry), borderMat));
-    group.add(rightCol);
-
-    // Reel separator pillars
-    [-2.3, 2.3].forEach(x => {
-      const sep = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.14, 0.14, 5.8, 12),
-        new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.9, roughness: 0.2 })
-      );
-      sep.position.set(x, 0, 0);
-      group.add(sep);
+    // Middle Toothed Magic Ring
+    const midGeo = new THREE.RingGeometry(4.2, 4.6, 48);
+    const midMat = new THREE.MeshBasicMaterial({
+      color: 0xfbbf24, side: THREE.DoubleSide, transparent: true, opacity: 0.85
     });
+    const midRing = new THREE.Mesh(midGeo, midMat);
+    midRing.rotation.x = -Math.PI / 2;
+    runesGroup.add(midRing);
 
-    // Dark translucent backdrop panel
-    const backMat = new THREE.MeshBasicMaterial({
-      color: 0x030712, transparent: true, opacity: 0.75, side: THREE.DoubleSide
+    // Inner Magic Ring
+    const innerGeo = new THREE.RingGeometry(2.2, 2.5, 36);
+    const innerMat = new THREE.MeshBasicMaterial({
+      color: 0xf43f5e, side: THREE.DoubleSide, transparent: true, opacity: 0.85
     });
-    const backMesh = new THREE.Mesh(new THREE.PlaneGeometry(12.8, 5.8), backMat);
-    backMesh.position.set(0, 0, -2.8);
-    group.add(backMesh);
+    const innerRing = new THREE.Mesh(innerGeo, innerMat);
+    innerRing.rotation.x = -Math.PI / 2;
+    runesGroup.add(innerRing);
 
-    // Payline indicator (horizontal glowing gold laser bar across the center row)
-    const paylineGeo = new THREE.BoxGeometry(13.6, 0.22, 0.22);
-    const paylineMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.95 });
-    const payline = new THREE.Mesh(paylineGeo, paylineMat);
-    payline.position.set(0, 0, 2.7);
-    group.add(payline);
-    this.slotPayline = payline;
-
-    // Header Marquee: "🎰 TOKEN KEY GENERATOR 🔑"
-    const headerCvs = document.createElement('canvas');
-    headerCvs.width = 1024; headerCvs.height = 256;
-    const hCtx = headerCvs.getContext('2d');
-    hCtx.fillStyle = '#0369a1'; hCtx.fillRect(0, 0, 1024, 256);
-    hCtx.fillStyle = '#facc15'; hCtx.font = '900 68px monospace';
-    hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
-    hCtx.fillText('🎰 TOKEN KEY GENERATOR 🔑', 512, 128);
-    const headerTex = new THREE.CanvasTexture(headerCvs);
-    headerTex.minFilter = THREE.LinearFilter;
-    headerTex.magFilter = THREE.LinearFilter;
-    headerTex.generateMipmaps = false;
-
-    // Front Marquee
-    const headerMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(13.6, 1.6),
-      new THREE.MeshBasicMaterial({ map: headerTex })
-    );
-    headerMesh.position.set(0, 3.6, 3.02);
-    group.add(headerMesh);
-
-    // Back Marquee
-    const headerMeshBack = new THREE.Mesh(
-      new THREE.PlaneGeometry(13.6, 1.6),
-      new THREE.MeshBasicMaterial({ map: headerTex })
-    );
-    headerMeshBack.position.set(0, 3.6, -3.02);
-    headerMeshBack.rotation.y = Math.PI;
-    group.add(headerMeshBack);
-
-    // 3 Cylindrical Reels side-by-side
-    const reelX = [-4.6, 0, 4.6];
-    const R_REEL = 2.2;
-
-    for (let r = 0; r < 3; r++) {
-      const reelGroup = new THREE.Group();
-      reelGroup.position.x = reelX[r];
-
-      // Glowing cyber reel ring frame
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(R_REEL, 0.14, 12, 36),
-        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 })
-      );
-      ring.rotation.y = Math.PI / 2;
-      reelGroup.add(ring);
-
-      const shapes = [];
-      for (let s = 0; s < 6; s++) {
-        const angle = (s / 6) * Math.PI * 2;
-        const itemGroup = new THREE.Group();
-        itemGroup.position.set(0, Math.sin(angle) * R_REEL, Math.cos(angle) * R_REEL);
-        itemGroup.rotation.x = angle;
-
-        if (s === 0) {
-          // Shape 0: Golden Key (The Winning Match / Jackpot!)
-          const key = this.createTokenKey(0.48);
-          key.rotation.z = Math.PI * 0.5;
-          itemGroup.add(key);
-        } else if (s === 1) {
-          // Shape 1: Cyan Diamond
-          const gem = new THREE.Mesh(
-            new THREE.OctahedronGeometry(0.55),
-            new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.5, roughness: 0.15 })
-          );
-          itemGroup.add(gem);
-        } else if (s === 2) {
-          // Shape 2: Gold Star
-          const star = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.55, 0.55, 0.22, 5),
-            new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.85, roughness: 0.2 })
-          );
-          star.rotation.x = Math.PI / 2;
-          itemGroup.add(star);
-        } else if (s === 3) {
-          // Shape 3: Purple Cyber Orb
-          const orb = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 16, 16),
-            new THREE.MeshStandardMaterial({ color: 0xa855f7, metalness: 0.6, roughness: 0.25 })
-          );
-          itemGroup.add(orb);
-        } else if (s === 4) {
-          // Shape 4: Emerald Pyramid
-          const pyr = new THREE.Mesh(
-            new THREE.ConeGeometry(0.55, 0.9, 4),
-            new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.4, roughness: 0.2 })
-          );
-          itemGroup.add(pyr);
-        } else {
-          // Shape 5: Ruby Cyber Cube
-          const cube = new THREE.Mesh(
-            new THREE.BoxGeometry(0.65, 0.65, 0.65),
-            new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.5, roughness: 0.3 })
-          );
-          itemGroup.add(cube);
-        }
-
-        reelGroup.add(itemGroup);
-        shapes.push(itemGroup);
+    // Sacred Geometry: Hexagram & Crossbars inside Summoning Circle
+    const geomMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 });
+    const pts = [];
+    // Hexagram triangles
+    for (let k = 0; k < 2; k++) {
+      const offset = (k * Math.PI) / 3;
+      for (let i = 0; i <= 3; i++) {
+        const a = offset + (i * Math.PI * 2) / 3;
+        pts.push(new THREE.Vector3(Math.cos(a) * 4.2, 0.05, Math.sin(a) * 4.2));
       }
+    }
+    // 8 Radial energy spokes
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      pts.push(new THREE.Vector3(0, 0.05, 0));
+      pts.push(new THREE.Vector3(Math.cos(a) * 6.2, 0.05, Math.sin(a) * 6.2));
+    }
+    const geomLines = new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(pts), geomMat);
+    runesGroup.add(geomLines);
 
-      group.add(reelGroup);
-      this.slotReels.push({ group: reelGroup, locked: false, angle: 0 });
+    // Glowing ethereal translucent energy disc
+    const discMat = new THREE.MeshBasicMaterial({
+      color: 0x0369a1, side: THREE.DoubleSide, transparent: true, opacity: 0.28
+    });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(6.2, 48), discMat);
+    disc.rotation.x = -Math.PI / 2;
+    runesGroup.add(disc);
+
+    // 2. Tri-Laser Emitter Crystals (3 hovering quantum pylons / crystals orbiting in 3D)
+    const crystalsGroup = new THREE.Group();
+    group.add(crystalsGroup);
+
+    const laserEmitters = [];
+    const beamColors = [0x38bdf8, 0xfbbf24, 0xf43f5e];
+    const focalCenter = new THREE.Vector3(0, 2.6, 0);
+
+    for (let i = 0; i < 3; i++) {
+      const angle = (i * Math.PI * 2) / 3;
+      const r = 7.2;
+      const emitterNode = new THREE.Group();
+      emitterNode.position.set(Math.cos(angle) * r, 5.2, Math.sin(angle) * r);
+
+      // Levitating crystal
+      const cryGeo = new THREE.OctahedronGeometry(0.75, 0);
+      const cryMat = new THREE.MeshStandardMaterial({
+        color: beamColors[i],
+        emissive: beamColors[i],
+        emissiveIntensity: 0.9,
+        metalness: 0.3,
+        roughness: 0.15
+      });
+      const crystal = new THREE.Mesh(cryGeo, cryMat);
+      crystal.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(cryGeo),
+        new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 })
+      ));
+      emitterNode.add(crystal);
+
+      // Orbiting energy ring around crystal
+      const cRing = new THREE.Mesh(
+        new THREE.TorusGeometry(1.1, 0.06, 8, 24),
+        new THREE.MeshBasicMaterial({ color: beamColors[i], transparent: true, opacity: 0.75 })
+      );
+      cRing.rotation.x = Math.PI / 2;
+      emitterNode.add(cRing);
+
+      // Laser Beam shooting from emitter to central focal point
+      const beamVec = focalCenter.clone().sub(emitterNode.position);
+      const beamLen = beamVec.length();
+      const beamGeo = new THREE.CylinderGeometry(0.12, 0.24, beamLen, 12, 1, true);
+      beamGeo.translate(0, beamLen / 2, 0);
+      beamGeo.rotateX(Math.PI / 2);
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: beamColors[i],
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        side: THREE.DoubleSide
+      });
+      const beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.copy(emitterNode.position);
+      beam.lookAt(focalCenter);
+      group.add(beam);
+
+      crystalsGroup.add(emitterNode);
+      laserEmitters.push({ node: emitterNode, crystal, ring: cRing, beam, baseAngle: angle, color: beamColors[i] });
     }
 
-    // Celebratory jackpot particles
-    const sparkGeo = new THREE.BufferGeometry();
-    const sparkPts = [];
-    for (let i = 0; i < 48; i++) {
-      const a = (i / 48) * Math.PI * 2;
-      const r = 1.2 + (i % 6) * 0.7;
-      sparkPts.push(Math.cos(a) * r, Math.sin(a) * r, 3.2 + ((i % 5) - 2) * 0.3);
-    }
-    sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPts, 3));
-    this.slotSparks = new THREE.Points(
-      sparkGeo,
-      new THREE.PointsMaterial({ color: 0xfef08a, size: 0.85, transparent: true, opacity: 0 })
-    );
-    group.add(this.slotSparks);
+    // 3. Central Convergence Core (Pulsing Energy Orb + Sintering Nexus)
+    const coreGeo = new THREE.SphereGeometry(0.9, 24, 24);
+    const coreMat = new THREE.MeshBasicMaterial({
+      color: 0xfef08a,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending
+    });
+    const coreSphere = new THREE.Mesh(coreGeo, coreMat);
+    coreSphere.position.copy(focalCenter);
+    group.add(coreSphere);
 
-    this.slotLight = new THREE.PointLight(0xfbbf24, 0, 42);
-    this.slotLight.position.set(0, 0, 4.5);
-    group.add(this.slotLight);
+    // Ethereal Outer Halo around core
+    const haloGeo = new THREE.SphereGeometry(1.6, 24, 24);
+    const haloMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8,
+      transparent: true,
+      opacity: 0.35,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide
+    });
+    const haloSphere = new THREE.Mesh(haloGeo, haloMat);
+    haloSphere.position.copy(focalCenter);
+    group.add(haloSphere);
+
+    // 4. Expanding Summoning Shockwave Ring
+    const waveGeo = new THREE.RingGeometry(0.2, 0.45, 48);
+    const waveMat = new THREE.MeshBasicMaterial({
+      color: 0xfef08a,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0,
+      blending: THREE.AdditiveBlending
+    });
+    const summonWave = new THREE.Mesh(waveGeo, waveMat);
+    summonWave.position.copy(focalCenter);
+    summonWave.rotation.x = -Math.PI / 2;
+    group.add(summonWave);
+
+    // 5. Magical Inward Particle Vortex (96 energy sparks)
+    const partCount = 96;
+    const partGeo = new THREE.BufferGeometry();
+    const partPos = new Float32Array(partCount * 3);
+    const partAngles = new Float32Array(partCount);
+    const partRadii = new Float32Array(partCount);
+    const partSpeeds = new Float32Array(partCount);
+    const partHeights = new Float32Array(partCount);
+
+    for (let i = 0; i < partCount; i++) {
+      partAngles[i] = (i / partCount) * Math.PI * 2;
+      partRadii[i] = 2.0 + Math.random() * 5.5;
+      partSpeeds[i] = 1.5 + Math.random() * 2.5;
+      partHeights[i] = (Math.random() - 0.5) * 4.0;
+      partPos[i * 3]     = Math.cos(partAngles[i]) * partRadii[i];
+      partPos[i * 3 + 1] = focalCenter.y + partHeights[i];
+      partPos[i * 3 + 2] = Math.sin(partAngles[i]) * partRadii[i];
+    }
+    partGeo.setAttribute('position', new THREE.BufferAttribute(partPos, 3));
+    const partMat = new THREE.PointsMaterial({
+      color: 0xfef08a,
+      size: 0.65,
+      transparent: true,
+      opacity: 0.8,
+      blending: THREE.AdditiveBlending
+    });
+    const partSystem = new THREE.Points(partGeo, partMat);
+    group.add(partSystem);
+
+    // 6. Dynamic PointLight for intense magic / laser flare
+    const summonLight = new THREE.PointLight(0xfbbf24, 2.5, 45);
+    summonLight.position.copy(focalCenter);
+    group.add(summonLight);
+
+    // Save all dynamic handles
+    this.summonArray = {
+      runesGroup,
+      outerRing,
+      midRing,
+      innerRing,
+      laserEmitters,
+      focalCenter,
+      coreSphere,
+      haloSphere,
+      summonWave,
+      partSystem,
+      partPos,
+      partAngles,
+      partRadii,
+      partSpeeds,
+      partHeights,
+      partCount,
+      summonLight
+    };
 
     return group;
   }
 
   createKeyMaterializer() {
-    return this.createKeySlotMachine();
+    return this.createKeySummoningForge();
   }
 
   /* ---- 3D Diamond-Angled Monopoly "GO TO JAIL" Tile (Using original picture, facing LEFT, rotated 45° as a diamond!) ---- */
@@ -3449,60 +3484,91 @@ class PushnotOrbit {
         moverText = this.currentOS === 'ios' ? '📲 Request APNs Token' : '📲 Request FCM Token';
         moverCls = 'cyan';
       } else if (t < 0.52) {
-        // 3-Ring Slot Machine Key Gen: rapid multi-shape spin sequentially landing on the final Golden Key!
+        // Arcane Cyber-Magic & Tri-Laser Key Summoning Nexus
         const mp = seg(t, 0.38, 0.52);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
         this.keyForge.position.copy(forgePos);
 
         const nowMs = performance.now();
-        const spinSpeed = 32.0;
+        const S = this.summonArray;
 
-        // Reel 0 (left) locks on Key at mp = 0.45
-        if (mp < 0.45) {
-          if (this.slotReels?.[0]) this.slotReels[0].group.rotation.x = (nowMs * 0.001 * spinSpeed) % (Math.PI * 2);
-        } else {
-          if (this.slotReels?.[0]) this.slotReels[0].group.rotation.x = 0; // Locked on Key!
-        }
+        if (S) {
+          // 1. Concentric magic summoning circles spin dynamically in opposite directions
+          S.outerRing.rotation.z = nowMs * 0.0012;
+          S.midRing.rotation.z   = -nowMs * 0.0024;
+          S.innerRing.rotation.z = nowMs * 0.0040;
 
-        // Reel 1 (center) locks on Key at mp = 0.60
-        if (mp < 0.60) {
-          if (this.slotReels?.[1]) this.slotReels[1].group.rotation.x = (nowMs * 0.001 * (spinSpeed + 4.5)) % (Math.PI * 2);
-        } else {
-          if (this.slotReels?.[1]) this.slotReels[1].group.rotation.x = 0; // Locked on Key!
-        }
+          // 2. Floating crystal laser emitters orbit and fire concentrated beams into center
+          S.laserEmitters.forEach((em, idx) => {
+            const orbitAngle = em.baseAngle + nowMs * 0.0015;
+            const r = 7.2;
+            const y = 5.2 + Math.sin(nowMs * 0.003 + idx * 2.1) * 0.45;
+            em.node.position.set(Math.cos(orbitAngle) * r, y, Math.sin(orbitAngle) * r);
+            em.crystal.rotation.y = nowMs * 0.003;
+            em.crystal.rotation.x = nowMs * 0.002;
+            em.ring.rotation.z = nowMs * 0.004;
 
-        // Reel 2 (right) locks on Key at mp = 0.75
-        if (mp < 0.75) {
-          if (this.slotReels?.[2]) this.slotReels[2].group.rotation.x = (nowMs * 0.001 * (spinSpeed + 9.0)) % (Math.PI * 2);
-        } else {
-          if (this.slotReels?.[2]) this.slotReels[2].group.rotation.x = 0; // Locked on Key!
-        }
+            // Re-aim laser beam from moving emitter to central focal point
+            em.beam.position.copy(em.node.position);
+            em.beam.lookAt(S.focalCenter);
 
-        // Celebratory Win / Jackpot Burst when all 3 keys line up (mp >= 0.75):
-        if (mp >= 0.75) {
-          const winP = (mp - 0.75) / 0.25;
-          if (this.slotSparks) {
-            this.slotSparks.material.opacity = Math.sin(winP * Math.PI) * 0.95;
-            this.slotSparks.rotation.z += 0.15;
+            // Laser beam pulses in brightness as summoning progresses
+            const beamPulse = 0.55 + Math.sin(nowMs * 0.012 + idx) * 0.25;
+            em.beam.material.opacity = (mp < 0.75) ? (0.6 + mp * 0.4) * beamPulse : 0.45;
+          });
+
+          // 3. Magical inward particle vortex spirals toward center
+          const pos = S.partPos;
+          for (let i = 0; i < S.partCount; i++) {
+            S.partAngles[i] += S.partSpeeds[i] * 0.025;
+            // Particles spiral inward as mp progresses
+            const currentR = Math.max(0.3, S.partRadii[i] * (1.0 - mp * 0.65));
+            pos[i * 3]     = Math.cos(S.partAngles[i]) * currentR;
+            pos[i * 3 + 1] = S.focalCenter.y + S.partHeights[i] * (1.0 - mp * 0.6);
+            pos[i * 3 + 2] = Math.sin(S.partAngles[i]) * currentR;
           }
-          if (this.slotLight) this.slotLight.intensity = 4.5 * (1 - winP * 0.3);
-          if (this.slotPayline) this.slotPayline.material.color.setHex((winP * 10) % 1 < 0.5 ? 0xfacc15 : 0x38bdf8);
+          S.partSystem.geometry.attributes.position.needsUpdate = true;
 
-          // Solid unified golden key emerges and scales up out of the slot machine!
-          this.tokenKey.visible = true;
-          this.tokenKey.position.set(forgePos.x, forgePos.y + winP * 2.5, forgePos.z + 2.0);
-          this.tokenKey.scale.setScalar(1.2 * (0.6 + winP * 0.6));
-        } else {
-          this.tokenKey.visible = false;
-          if (this.slotSparks) this.slotSparks.material.opacity = 0;
-          if (this.slotLight) this.slotLight.intensity = 1.2;
+          // 4. Central energy core & plasma orb pulsation
+          const coreScale = (mp < 0.75)
+            ? (0.6 + Math.sin(nowMs * 0.015) * 0.25 + mp * 0.5)
+            : Math.max(0.1, 1.4 * (1.0 - (mp - 0.75) / 0.25));
+          S.coreSphere.scale.setScalar(coreScale);
+          S.haloSphere.scale.setScalar(coreScale * 1.5);
+
+          // 5. Summoning shockwave & Key crystallization
+          if (mp >= 0.75) {
+            const winP = (mp - 0.75) / 0.25;
+            // Shockwave expands outwards
+            const waveScale = 1.0 + winP * 24.0;
+            S.summonWave.scale.set(waveScale, waveScale, 1.0);
+            S.summonWave.material.opacity = Math.sin((1.0 - winP) * Math.PI * 0.5) * 0.95;
+
+            // Summoning flash
+            S.summonLight.intensity = 5.5 * (1.0 - winP * 0.35);
+
+            // Solid 3D Golden Key emerges from the laser/magic nexus!
+            this.tokenKey.visible = true;
+            this.tokenKey.position.set(forgePos.x, forgePos.y + S.focalCenter.y + winP * 2.8, forgePos.z);
+            this.tokenKey.scale.setScalar(1.2 * (0.8 + winP * 0.4));
+            this.tokenKey.rotation.y = nowMs * 0.003;
+          } else {
+            // Sintering preview: key materializes in core
+            S.summonWave.material.opacity = 0;
+            S.summonLight.intensity = 2.0 + mp * 2.5;
+
+            this.tokenKey.visible = true;
+            this.tokenKey.position.set(forgePos.x, forgePos.y + S.focalCenter.y, forgePos.z);
+            this.tokenKey.scale.setScalar(1.2 * Math.max(0.15, mp));
+            this.tokenKey.rotation.y = nowMs * 0.006;
+          }
         }
 
         moverPos = forgePos;
         moverText = mp < 0.75
-          ? (this.currentOS === 'ios' ? '🎰 Slot Machine: APNs Token Key Gen…' : '🎰 Slot Machine: FCM Token Key Gen…')
-          : (this.currentOS === 'ios' ? '🎉 JACKPOT 🔑 🔑 🔑 APNs Token Generated!' : '🎉 JACKPOT 🔑 🔑 🔑 FCM Token Generated!');
+          ? (this.currentOS === 'ios' ? '⚡ Laser & Magic: Summoning APNs Key…' : '⚡ Laser & Magic: Summoning FCM Key…')
+          : (this.currentOS === 'ios' ? '✨ Unique APNs Token Key Summoned!' : '✨ Unique FCM Token Key Summoned!');
         moverCls = 'cyan';
       } else if (t < 0.62) {
         const p = this.arcPostToPhone.getPoint(seg(t, 0.52, 0.62));
@@ -3751,9 +3817,9 @@ class PushnotOrbit {
 
     if (this.mode === 'setup') {
       if (t >= 0.38 && t < 0.52) {
-        // Zoom into 3-Ring Slot Machine Key Gen at Apple/Google HQ
-        focusLocal = new THREE.Vector3(POS.post.x, 24, POS.post.z);
-        focusDist = 52;
+        // Zoom into Arcane Cyber-Magic & Tri-Laser Key Summoning at Apple/Google HQ
+        focusLocal = new THREE.Vector3(POS.post.x, 26, POS.post.z);
+        customCineCam = new THREE.Vector3(POS.post.x, 34, POS.post.z + 40);
       } else if (moverPos) {
         focusLocal = moverPos.clone();
         focusDist = 76;
@@ -4013,12 +4079,6 @@ class PushnotOrbit {
       const dx = this.camera.position.x - POS.post.x;
       const dz = this.camera.position.z - POS.post.z;
       this.storeGroup.rotation.y = Math.atan2(dx, dz);
-    }
-    if (this.keyForge && this.keyForge.visible && this.camera) {
-      // Always keep the 3-Ring Slot Machine facing directly towards the camera!
-      const dx = this.camera.position.x - this.keyForge.position.x;
-      const dz = this.camera.position.z - this.keyForge.position.z;
-      this.keyForge.rotation.y = Math.atan2(dx, dz);
     }
 
     this.appOrb.rotation.y += dt * 1.4;

@@ -3668,8 +3668,10 @@ class PushnotOrbit {
           }
         }
       }
-    } else {
-      if (this.hackerSpotlight) this.hackerSpotlight.intensity = 0;
+    }
+
+    if (!isLeo && this.hackerSpotlight) {
+      this.hackerSpotlight.intensity = 0;
     }
 
     // Normal mode station labels (3 Unified Ground Nodes + World above Datacentre; hidden when flipped to Law Enforcement)

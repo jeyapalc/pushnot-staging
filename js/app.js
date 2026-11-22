@@ -196,9 +196,9 @@ class PushnotOrbit {
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
     this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(26));
     this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
-      POS.ufo.clone().setY(78),
-      new THREE.Vector3(-D * 0.5, 56, -D * 0.3),
-      pPost.clone().setY(22)
+      POS.ufo.clone().setY(63.8),
+      new THREE.Vector3(-D * 0.5, 42, -D * 0.3),
+      pPost.clone().setY(18)
     );
 
     this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
@@ -378,6 +378,9 @@ class PushnotOrbit {
       { id: 'pin-stim-5', brand: 'amazon',    color: 0xff9900, offset: 0.833, spread: new THREE.Vector3( 6.0, -4.5,  3.5), mid1: new THREE.Vector3( 2.5, -3.5,  2.8), mid2: new THREE.Vector3( 0.0, -4.0,  1.8) }
     ];
 
+    const coneGeo = new THREE.ConeGeometry(0.75, 2.2, 8);
+    coneGeo.rotateX(Math.PI / 2);
+
     this.worldStimStreams = specs.map((s) => {
       // Smooth continuous Catmull-Rom 3D path from Planet Earth -> Datacentre -> Apple/Google Skyscraper HQ -> Phone!
       const pEarth  = POS.ufo.clone().add(s.spread);
@@ -395,7 +398,31 @@ class PushnotOrbit {
       const orb = this.create3DBrandLogoOrb(s.brand, s.color);
       this.worldStimGroup.add(orb);
 
-      return { ...s, curve, line, orb, currentPos: pEarth.clone() };
+      // Train of 14 glowing data pulse particles flowing continuously along this curve
+      const pulseCount = 14;
+      const pGeo = new THREE.BufferGeometry();
+      const pPos = new Float32Array(pulseCount * 3);
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+      const pMat = new THREE.PointsMaterial({
+        color: s.color,
+        size: 1.4,
+        transparent: true,
+        opacity: 0.95,
+        blending: THREE.AdditiveBlending
+      });
+      const pulses = new THREE.Points(pGeo, pMat);
+      this.worldStimGroup.add(pulses);
+
+      // 3 Directional Flow Chevrons / Cones gliding continuously along the curve
+      const cones = [];
+      const cMat = new THREE.MeshBasicMaterial({ color: s.color, transparent: true, opacity: 0.85 });
+      for (let k = 0; k < 3; k++) {
+        const cMesh = new THREE.Mesh(coneGeo, cMat);
+        this.worldStimGroup.add(cMesh);
+        cones.push({ mesh: cMesh, offset: k / 3 });
+      }
+
+      return { ...s, curve, line, orb, pulses, pulseCount, cones, currentPos: pEarth.clone() };
     });
   }
 
@@ -3191,6 +3218,7 @@ class PushnotOrbit {
     this.pushLines.forEach((l) => (l.visible = isPush));
     this.flowCones.forEach((fc) => (fc.mesh.visible = !isLeo && !isWorld));
     this.leoLines.forEach((l) => (l.visible = isLeo));
+    if (this.worldStimGroup) this.worldStimGroup.visible = isWorld;
 
     document.body.classList.toggle('leo-mode', isLeo);
     document.getElementById('btn-leo').classList.toggle('active', isLeo);
@@ -3599,9 +3627,9 @@ class PushnotOrbit {
       }
 
       if (t < 0.28) {
-        // Step 1: Push Notification generated & animated directly ABOVE THE WORLD!
+        // Step 1: Push Notification generated & animated directly ON TOP OF THE EARTH GLB!
         // Presenter stops to explain Bejeweled wants to send this end user a free 3-month pro trial!
-        const cardPos = POS.ufo.clone().setY(72);
+        const cardPos = POS.ufo.clone().setY(63.8);
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(cardPos);
         this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
@@ -3643,13 +3671,10 @@ class PushnotOrbit {
       }
     } else if (this.mode === 'world') {
       this.updatePhoneScreenCanvas('awake', 1.0);
-      for (const s of this.worldStimStreams) {
-        const u = (s.offset + t) % 1;
-        const p = s.curve.getPoint(u);
-        s.currentPos.copy(p);
-        s.orb.position.copy(p);
-        s.orb.lookAt(this.camera.position);
-      }
+      moverParent = this.normalGroup;
+      moverPos = new THREE.Vector3(POS.ufo.x, 65, POS.ufo.z);
+      moverText = '🌐 Live Global Push Traffic → Phones';
+      moverCls = 'push';
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE:
       moverParent = this.leoGroup;
@@ -3832,9 +3857,9 @@ class PushnotOrbit {
       }
     } else if (this.mode === 'push') {
       if (t < 0.28) {
-        // Zoom into Push Notification message banner animated directly above the World!
-        focusLocal = new THREE.Vector3(POS.ufo.x, 72, POS.ufo.z);
-        focusDist = 36;
+        // Zoom into Push Notification message banner resting directly on the Earth GLB!
+        focusLocal = new THREE.Vector3(POS.ufo.x, 58, POS.ufo.z);
+        focusDist = 42;
       } else if (t < 0.56) {
         // Following payload gliding to Google/Apple
         focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 30, 0);
@@ -3849,13 +3874,9 @@ class PushnotOrbit {
         focusDist = 65;
       }
     } else if (this.mode === 'world') {
-      if (this.worldStimStreams?.length) {
-        focusLocal = this.worldStimStreams[0].currentPos.clone();
-        focusDist = 80;
-      } else {
-        focusLocal = new THREE.Vector3(0, 16, 0);
-        focusDist = 110;
-      }
+      // Cinematic overview of all 6 live multi-stream global notification lines
+      focusLocal = new THREE.Vector3(-10, 26, 6);
+      focusDist = 120;
     } else {
       // LAW ENFORCEMENT STAGE (LEO):
       focusGroup = this.leoGroup;
@@ -4062,6 +4083,44 @@ class PushnotOrbit {
       const pNext = curve.getPoint(Math.min(1, u + 0.02));
       fc.mesh.position.copy(p);
       fc.mesh.lookAt(pNext);
+    }
+
+    // Animate 6 Multi-Stream Outbound Lines in Mode 3 (World) continuously!
+    if (this.mode === 'world' && this.worldStimStreams) {
+      const liveStreamSpeed = (now * 0.00018) % 1.0;
+      for (const s of this.worldStimStreams) {
+        // 1. Advance the 3D App Brand Logo Tile
+        const uOrb = (s.offset + liveStreamSpeed + this.t * 0.35) % 1.0;
+        const pOrb = s.curve.getPoint(uOrb);
+        s.currentPos.copy(pOrb);
+        s.orb.position.copy(pOrb);
+        s.orb.lookAt(this.camera.position);
+
+        // 2. Advance the 14 glowing additive data pulses along the curve
+        if (s.pulses) {
+          const posAttr = s.pulses.geometry.attributes.position;
+          const arr = posAttr.array;
+          for (let k = 0; k < s.pulseCount; k++) {
+            const uPulse = (s.offset + liveStreamSpeed + (k / s.pulseCount)) % 1.0;
+            const pt = s.curve.getPoint(uPulse);
+            arr[k * 3]     = pt.x;
+            arr[k * 3 + 1] = pt.y;
+            arr[k * 3 + 2] = pt.z;
+          }
+          posAttr.needsUpdate = true;
+        }
+
+        // 3. Advance the 3 directional flow chevrons / cones pointing in flow direction
+        if (s.cones) {
+          for (const cone of s.cones) {
+            const uCone = (s.offset + liveStreamSpeed + cone.offset) % 1.0;
+            const pt = s.curve.getPoint(uCone);
+            const ptNext = s.curve.getPoint((uCone + 0.02) % 1.0);
+            cone.mesh.position.copy(pt);
+            cone.mesh.lookAt(ptNext);
+          }
+        }
+      }
     }
 
     // Gently rotate ONLY the 3D Brain mesh when active above the Apple & Google Skyscraper HQ

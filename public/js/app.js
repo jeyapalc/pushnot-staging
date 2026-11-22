@@ -1513,9 +1513,9 @@ class PushnotOrbit {
       target = new THREE.Vector3(30.5, 14.8, 29.5);
       camPos = new THREE.Vector3(47.5, 20.0, 39.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
-      // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward. Eye-level lateral portrait snap!
-      target = new THREE.Vector3(this.leoPos.swat.x, 13.5, this.leoPos.swat.z);
-      camPos = new THREE.Vector3(this.leoPos.swat.x + 22, 14.5, this.leoPos.swat.z + 22);
+      // RCMP "E" Division Headquarters at Green Timbers Entrance (-32.5, 0, 32.5)
+      target = new THREE.Vector3(this.leoPos.swat.x, 3.5, this.leoPos.swat.z);
+      camPos = new THREE.Vector3(this.leoPos.swat.x + 18, 11.5, this.leoPos.swat.z + 18);
     } else if (key === 'proton') {
       // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Front-angled view capturing illuminated front & full waving flag!
       target = new THREE.Vector3(this.leoPos.proton.x, 18.0, this.leoPos.proton.z);
@@ -3353,7 +3353,7 @@ class PushnotOrbit {
     this.leoTops.ag = 52;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(-4, 14, -2));
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 6, 2));
     const pProton      = L.proton.clone().setY(15.0);
     const pBot         = L.bot.clone().setY(16);
     const pAg          = L.ag.clone().setY(15);
@@ -3545,113 +3545,37 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    this.loader.load('models/leo/swat.glb', (gltf) => {
+    this.loader.load('models/leo/RCMP_Green_Timbers_Entrance_Revision.glb', (gltf) => {
       const m = gltf.scene;
-      m.rotation.y = Math.PI * 0.35;
       m.userData.stationKey = 'swat';
 
       m.traverse(c => {
         if (!c.isMesh) return;
         c.userData.stationKey = 'swat';
-
-        const matName = c.material ? (c.material.name || '') : '';
-        const normMap = c.material?.normalMap || null;
-
-        if (matName.includes('rifle')) {
-          // Tactical matte black carbine / rifle
-          c.material = new THREE.MeshStandardMaterial({
-            color: 0x141414,
-            metalness: 0.65,
-            roughness: 0.35,
-            normalMap: normMap
-          });
-        } else if (matName.includes('Surface5SG')) {
-          // Tactical assault boots - solid matte black
-          c.material = new THREE.MeshStandardMaterial({
-            color: 0x121212,
-            metalness: 0.2,
-            roughness: 0.8,
-            normalMap: normMap
-          });
-        } else if (matName.includes('Surface8SG')) {
-          // Goggles lens - dark smoke polarized glass
-          c.material = new THREE.MeshStandardMaterial({
-            color: 0x0f172a,
-            metalness: 0.9,
-            roughness: 0.08
-          });
-        } else if (matName.includes('Surface6SG') || matName.includes('Surface14SG')) {
-          // Comms headset & radio mic wire - solid matte black
-          c.material = new THREE.MeshStandardMaterial({
-            color: 0x181818,
-            metalness: 0.3,
-            roughness: 0.7
-          });
-        } else {
-          // Solid Canadian RCMP ERT Ranger Green uniform, plate carrier vest, helmet, pouches, and BDU
-          c.material = new THREE.MeshStandardMaterial({
-            color: 0x48563f, // Solid authentic Ranger Green (#48563f)
-            metalness: 0.12,
-            roughness: 0.68,
-            normalMap: normMap
-          });
-        }
+        c.castShadow = true;
+        c.receiveShadow = true;
       });
 
-      // Front chest POLICE patch (Velcro plate on tactical vest)
-      const chestTex = this.createPoliceChestPatchTexture();
-      const chestMat = new THREE.MeshStandardMaterial({
-        map: chestTex,
-        roughness: 0.75,
-        metalness: 0.05,
-        polygonOffset: true,
-        polygonOffsetFactor: -8,
-        polygonOffsetUnits: -8,
-        side: THREE.DoubleSide
-      });
-      const chestPatch = new THREE.Mesh(new THREE.PlaneGeometry(16.5, 5.8), chestMat);
-      chestPatch.position.set(0.0, 142.5, 21.0);
-      chestPatch.rotation.x = -0.14;
-      m.add(chestPatch);
+      this.harmonizeAsset(m, { minRough: 0.28, maxRough: 0.72, maxMetal: 0.7, envIntensity: 1.0, liftDark: false });
 
-      // Back RCMP POLICE panel on upper back plate
-      const backTex = this.createRcmpBackPatchTexture();
-      const backMat = new THREE.MeshStandardMaterial({
-        map: backTex,
-        roughness: 0.75,
-        metalness: 0.05,
-        polygonOffset: true,
-        polygonOffsetFactor: -8,
-        polygonOffsetUnits: -8,
-        side: THREE.DoubleSide
-      });
-      const backPatch = new THREE.Mesh(new THREE.PlaneGeometry(21.0, 9.5), backMat);
-      backPatch.position.set(0.0, 150.0, -18.0);
-      backPatch.rotation.set(0.12, Math.PI, 0);
-      m.add(backPatch);
+      // Ground and angle the RCMP Green Timbers Headquarters model
+      // Angle the entrance towards the viewer / cinematic camera angle (facing south-east)
+      m.rotation.y = Math.PI * 0.22;
+      this.leoTops.swat = this.ground(m, 38, this.leoPos.swat);
 
-      // Subdued RCMP shoulder flashes on sleeves
-      const shoulderTex = this.createRcmpSubduedShoulderFlashTexture();
-      const shoulderMat = new THREE.MeshStandardMaterial({
-        map: shoulderTex,
-        roughness: 0.75,
-        metalness: 0.05,
-        polygonOffset: true,
-        polygonOffsetFactor: -8,
-        polygonOffsetUnits: -8,
-        side: THREE.DoubleSide
-      });
-      const leftFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
-      leftFlash.position.set(-27.0, 137.0, 2.0);
-      leftFlash.rotation.set(0, -Math.PI * 0.48, -0.08);
-      m.add(leftFlash);
+      // Fine-tune offset so the HQ entrance building sits centered at swat station
+      const rotY = Math.PI * 0.22;
+      const cosR = Math.cos(rotY);
+      const sinR = Math.sin(rotY);
+      const dx = 4.075 - 59.935;
+      const dz = -0.943 - (-42.395);
+      const rotDx = dx * cosR + dz * sinR;
+      const rotDz = -dx * sinR + dz * cosR;
+      const scaleFactor = 38 / 540.8;
+      m.position.x += rotDx * scaleFactor;
+      m.position.z += rotDz * scaleFactor;
 
-      const rightFlash = new THREE.Mesh(new THREE.PlaneGeometry(7.2, 9.0), shoulderMat);
-      rightFlash.position.set(27.0, 137.0, 2.0);
-      rightFlash.rotation.set(0, Math.PI * 0.48, 0.08);
-      m.add(rightFlash);
-
-      this.leoTops.swat = this.ground(m, 26, this.leoPos.swat);
+      this.leoTops.swat = new THREE.Box3().setFromObject(m).max.y;
       this.leoGroup.add(m);
       done();
     }, undefined, done);
@@ -4739,9 +4663,9 @@ class PushnotOrbit {
           focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
           customCineCam = new THREE.Vector3(L.proton.x + 20.0, 20.0, L.proton.z + 46.0);
         } else {
-          // Police receive threat / send demand -> Facing the armed cop at eye level!
-          focusLocal = new THREE.Vector3(L.swat.x, 13.5, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 22, 14.5, L.swat.z + 22);
+          // Police receive threat / send demand -> Facing the RCMP Green Timbers entrance!
+          focusLocal = new THREE.Vector3(L.swat.x, 3.5, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 18, 11.5, L.swat.z + 18);
         }
       } else if (t < 0.68) {
         if (t < 0.52) {
@@ -4749,9 +4673,9 @@ class PushnotOrbit {
           focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 13.0, L.bot.z);
           customCineCam = new THREE.Vector3(L.bot.x - 22, 15.0, L.bot.z + 22);
         } else {
-          // 3 Push Token Keys acquired by Police officer -> Facing the armed cop at eye level!
-          focusLocal = new THREE.Vector3(L.swat.x, 13.5, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 22, 14.5, L.swat.z + 22);
+          // 3 Push Token Keys acquired by RCMP -> Facing the RCMP Green Timbers entrance!
+          focusLocal = new THREE.Vector3(L.swat.x, 3.5, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 18, 11.5, L.swat.z + 18);
         }
       } else if (t < 0.88) {
         // Production orders served to Apple & Google Skyscraper

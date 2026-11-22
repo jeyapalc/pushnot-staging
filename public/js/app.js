@@ -536,40 +536,32 @@ class PushnotOrbit {
     return tex;
   }
 
-  createFingerprintToken(scale = 1.0, colorHex = '#38bdf8') {
+  /* ---- Metallic 3D Key representing the Device Token (distinct from gems!) ---- */
+  createTokenKey(scale = 1) {
     const group = new THREE.Group();
-    const tex = this.createFingerprintTexture(colorHex);
-
-    // 3D Glass Badge substrate
-    const W = 5.2, H = 5.8, D = 0.55;
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x07111e, metalness: 0.85, roughness: 0.2, transparent: true, opacity: 0.92
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.85,
+      metalness: 0.9, roughness: 0.18
     });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(W, H, D), bodyMat);
-    body.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(body.geometry),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
-    ));
-    group.add(body);
+    // Key bow (ring handle)
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.35, 10, 24), mat);
+    bow.position.x = -1.7;
+    // Key blade
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.55, 0.4), mat);
+    shaft.position.x = 0.8;
+    // Key teeth
+    const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.9, 0.4), mat);
+    t1.position.set(1.4, -0.65, 0);
+    const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.2, 0.4), mat);
+    t2.position.set(2.2, -0.8, 0);
 
-    // Front & Back Fingerprint Faces
-    const faceGeo = new THREE.PlaneGeometry(W * 0.94, H * 0.94);
-    const faceMat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide });
-    const faceFront = new THREE.Mesh(faceGeo, faceMat);
-    faceFront.position.z = D / 2 + 0.02;
-    const faceBack = faceFront.clone();
-    faceBack.position.z = -(D / 2 + 0.02);
-    faceBack.rotation.y = Math.PI;
-    group.add(faceFront, faceBack);
-
-    // Subtle biometric point light
-    group.add(new THREE.PointLight(0x38bdf8, 2.5, 22));
+    group.add(bow, shaft, t1, t2, new THREE.PointLight(0xfbbf24, 2.5, 24));
     group.scale.setScalar(scale);
     return group;
   }
 
-  createTokenKey(scale = 1) {
-    return this.createFingerprintToken(scale);
+  createFingerprintToken(scale = 1) {
+    return this.createTokenKey(scale);
   }
 
   /* ---- 3-Ring Slot Machine Key Generator with Different Shapes Landing on the Final Key ---- */
@@ -632,14 +624,14 @@ class PushnotOrbit {
     group.add(payline);
     this.slotPayline = payline;
 
-    // Header Marquee: "🎰 DEVICE FINGERPRINT GENERATOR 🪪"
+    // Header Marquee: "🎰 TOKEN KEY GENERATOR 🔑"
     const headerCvs = document.createElement('canvas');
     headerCvs.width = 1024; headerCvs.height = 256;
     const hCtx = headerCvs.getContext('2d');
     hCtx.fillStyle = '#0369a1'; hCtx.fillRect(0, 0, 1024, 256);
-    hCtx.fillStyle = '#facc15'; hCtx.font = '900 62px monospace';
+    hCtx.fillStyle = '#facc15'; hCtx.font = '900 68px monospace';
     hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
-    hCtx.fillText('🎰 DEVICE FINGERPRINT GENERATOR 🪪', 512, 128);
+    hCtx.fillText('🎰 TOKEN KEY GENERATOR 🔑', 512, 128);
     const headerTex = new THREE.CanvasTexture(headerCvs);
     headerTex.minFilter = THREE.LinearFilter;
     headerTex.magFilter = THREE.LinearFilter;
@@ -686,9 +678,10 @@ class PushnotOrbit {
         itemGroup.rotation.x = angle;
 
         if (s === 0) {
-          // Shape 0: Biometric Device Fingerprint (The Winning Match / Jackpot!)
-          const fp = this.createFingerprintToken(0.38);
-          itemGroup.add(fp);
+          // Shape 0: Golden Key (The Winning Match / Jackpot!)
+          const key = this.createTokenKey(0.48);
+          key.rotation.z = Math.PI * 0.5;
+          itemGroup.add(key);
         } else if (s === 1) {
           // Shape 1: Cyan Diamond
           const gem = new THREE.Mesh(
@@ -1351,14 +1344,10 @@ class PushnotOrbit {
     } else if (key === 'bandit') {
       target = this.leoPos.bandit.clone().setY(11.5);
       customCamPos = target.clone().add(new THREE.Vector3(22, 1.2, -10));
-    } else if (key === 'swat') {
+    } else if (key === 'swat' || key === 'osint') {
       // Facing the armed cop directly at eye level (NO bird's-eye or bug's-eye view!)
       target = this.leoPos.swat.clone().setY(14.0);
       customCamPos = target.clone().add(new THREE.Vector3(26, 0.5, 26));
-    } else if (key === 'osint') {
-      // Zoomed directly into the police computer screen facing back of cop!
-      target = this.leoPos.osint.clone().setY(13.6);
-      customCamPos = new THREE.Vector3(this.leoPos.osint.x + 9.6, 14.1, this.leoPos.osint.z - 0.5);
     } else if (key === 'proton') {
       // Facing Swiss illuminated server station & waving Swiss flag at eye level
       target = this.leoPos.proton.clone().setY(15.0);
@@ -1550,9 +1539,9 @@ class PushnotOrbit {
     ctx.font = 'bold 32px monospace';
     ctx.fillText(isIos ? ' APNs PUSH NOTIFICATION' : '🤖 GOOGLE FCM PUSH NOTIFICATION', 48, 72);
 
-    ctx.fillStyle = '#38bdf8';
+    ctx.fillStyle = '#fbbf24';
     ctx.font = 'bold 26px monospace';
-    ctx.fillText('🪪 DEVICE FINGERPRINT HASH: #7A9F-2B4C', 48, 124);
+    ctx.fillText('🔑 ATTACHED DEVICE TOKEN: #7A9F-2B4C', 48, 124);
 
     // Separator rule
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
@@ -2651,13 +2640,12 @@ class PushnotOrbit {
     const L = {
       bandit:      new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@proton.me)
       swat:        new THREE.Vector3(-D, 0,  D), // front-left:  Canadian Police / RCMP / VPD
-      osint:       new THREE.Vector3(-D - 8.5, 0, D - 6.5), // grounded tactical workstation BEHIND armed Cop!
       proton:      new THREE.Vector3(-D, 0, -D), // back-left:   Switzerland Illuminated Server Station (waving flag on top!)
       ag:          new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Skyscraper HQ
       bot:         new THREE.Vector3( 0, 0,  4)  // center:      Single Animated App Server Tower
     };
     this.leoPos = L;
-    this.leoTops = { bandit: 26, swat: 26, osint: 16, bot: 26, proton: 26, ag: 26 };
+    this.leoTops = { bandit: 26, swat: 26, bot: 26, proton: 26, ag: 26 };
 
     // Dedicated Illuminated Switzerland Server Station with blinking blade LEDs and waving Swiss flag ON TOP
     this.protonGroup = this.createSwissServerStation();
@@ -2687,27 +2675,24 @@ class PushnotOrbit {
     this.leoAgGroup.add(this.leoIdStack);
     this.leoTops.ag = 52;
 
-    // LEO investigative arcs (Police queries Proton -> OSINT investigation -> Meta/X Push Tokens -> Apple/Google HQ)
+    // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
     const pSwat        = L.swat.clone().add(new THREE.Vector3(-4, 14, -2));
-    const pOsint       = L.osint.clone().setY(14.0);
     const pProton      = L.proton.clone().setY(15.0);
     const pBot         = L.bot.clone().setY(16);
     const pAg          = L.ag.clone().setY(15);
 
-    this.arcLeoProton      = new THREE.QuadraticBezierCurve3(pSwat,        new THREE.Vector3(-R - 8, 22, 0), pProton);
-    this.arcLeoOsint       = new THREE.LineCurve3(pSwat, pOsint);
-    this.arcLeoOsintToMeta = new THREE.QuadraticBezierCurve3(pOsint,       new THREE.Vector3(-16, 26, 18),   pBot);
-    this.arcLeoTokens      = new THREE.QuadraticBezierCurve3(pBot,         new THREE.Vector3(-16, 22, 20),   pSwat);
-    this.arcLeoToAg        = new THREE.QuadraticBezierCurve3(pSwat,        new THREE.Vector3(0, 34, 0),      pAg);
-    this.arcLeoFromAg      = new THREE.QuadraticBezierCurve3(pAg,          new THREE.Vector3(0, 26, 12),     pSwat);
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-R - 8, 22, 0), pProton);
+    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-14, 24, 16),   pBot);
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBot,  new THREE.Vector3(-14, 20, 22),   pSwat);
+    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 34, 0),      pAg);
+    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 26, 12),     pSwat);
 
     this.leoLines = [
-      this.addArc(this.arcLeoProton,      0xf43f5e, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoOsint,       0xfbbf24, 0.55, this.leoGroup),
-      this.addArc(this.arcLeoOsintToMeta, 0xfbbf24, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoTokens,      0xfbbf24, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoToAg,        0x38bdf8, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoFromAg,      0x34d399, 0.5,  this.leoGroup)
+      this.addArc(this.arcLeoProton, 0xf43f5e, 0.45, this.leoGroup),
+      this.addArc(this.arcLeoToMeta, 0xfbbf24, 0.50, this.leoGroup),
+      this.addArc(this.arcLeoTokens, 0xfbbf24, 0.50, this.leoGroup),
+      this.addArc(this.arcLeoToAg,   0x38bdf8, 0.45, this.leoGroup),
+      this.addArc(this.arcLeoFromAg, 0x34d399, 0.50, this.leoGroup)
     ];
 
     // LEO moving packets (demand/query/token/ID)
@@ -2734,7 +2719,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 8; // single server tower + phone + apple + google + earth + bandit + swat + rcmp laptop
+    let left = 7; // single server tower + phone + apple + google + earth + bandit + swat
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -2950,12 +2935,6 @@ class PushnotOrbit {
       this.leoGroup.add(m);
       done();
     }, undefined, done);
-
-    // 6. Grounded RCMP OSINT Tactical Workstation with Laptop behind Armed Cop!
-    this.osintWebGroup = this.createRcmpOsintLaptop(done);
-    this.osintWebGroup.position.copy(this.leoPos.osint);
-    this.leoGroup.add(this.osintWebGroup);
-    this.leoTops.osint = 16;
   }
 
   initAppleGoogleSkyscraper(done) {
@@ -3369,15 +3348,15 @@ class PushnotOrbit {
       } else if (t < 0.30) {
         showInstall = true;
       } else if (t < 0.38) {
-        // Explicit registration request from Phone -> Post Office before the Post Office prints the new Device Fingerprint!
+        // Explicit registration request from Phone -> Post Office before the Post Office prints the new Unique Key!
         const p = this.arcPhoneToPost.getPoint(seg(t, 0.30, 0.38));
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
-        moverText = this.currentOS === 'ios' ? '📲 Request APNs Device Fingerprint' : '📲 Request FCM Device Fingerprint';
+        moverText = this.currentOS === 'ios' ? '📲 Request APNs Token' : '📲 Request FCM Token';
         moverCls = 'cyan';
       } else if (t < 0.52) {
-        // 3-Ring Slot Machine Fingerprint Gen: rapid multi-shape spin sequentially landing on the final Biometric Device Fingerprint!
+        // 3-Ring Slot Machine Key Gen: rapid multi-shape spin sequentially landing on the final Golden Key!
         const mp = seg(t, 0.38, 0.52);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
@@ -3386,28 +3365,28 @@ class PushnotOrbit {
         const nowMs = performance.now();
         const spinSpeed = 32.0;
 
-        // Reel 0 (left) locks on Fingerprint at mp = 0.45
+        // Reel 0 (left) locks on Key at mp = 0.45
         if (mp < 0.45) {
           if (this.slotReels?.[0]) this.slotReels[0].group.rotation.x = (nowMs * 0.001 * spinSpeed) % (Math.PI * 2);
         } else {
-          if (this.slotReels?.[0]) this.slotReels[0].group.rotation.x = 0; // Locked on Fingerprint!
+          if (this.slotReels?.[0]) this.slotReels[0].group.rotation.x = 0; // Locked on Key!
         }
 
-        // Reel 1 (center) locks on Fingerprint at mp = 0.60
+        // Reel 1 (center) locks on Key at mp = 0.60
         if (mp < 0.60) {
           if (this.slotReels?.[1]) this.slotReels[1].group.rotation.x = (nowMs * 0.001 * (spinSpeed + 4.5)) % (Math.PI * 2);
         } else {
-          if (this.slotReels?.[1]) this.slotReels[1].group.rotation.x = 0; // Locked on Fingerprint!
+          if (this.slotReels?.[1]) this.slotReels[1].group.rotation.x = 0; // Locked on Key!
         }
 
-        // Reel 2 (right) locks on Fingerprint at mp = 0.75
+        // Reel 2 (right) locks on Key at mp = 0.75
         if (mp < 0.75) {
           if (this.slotReels?.[2]) this.slotReels[2].group.rotation.x = (nowMs * 0.001 * (spinSpeed + 9.0)) % (Math.PI * 2);
         } else {
-          if (this.slotReels?.[2]) this.slotReels[2].group.rotation.x = 0; // Locked on Fingerprint!
+          if (this.slotReels?.[2]) this.slotReels[2].group.rotation.x = 0; // Locked on Key!
         }
 
-        // Celebratory Win / Jackpot Burst when all 3 fingerprints line up (mp >= 0.75):
+        // Celebratory Win / Jackpot Burst when all 3 keys line up (mp >= 0.75):
         if (mp >= 0.75) {
           const winP = (mp - 0.75) / 0.25;
           if (this.slotSparks) {
@@ -3415,9 +3394,9 @@ class PushnotOrbit {
             this.slotSparks.rotation.z += 0.15;
           }
           if (this.slotLight) this.slotLight.intensity = 4.5 * (1 - winP * 0.3);
-          if (this.slotPayline) this.slotPayline.material.color.setHex((winP * 10) % 1 < 0.5 ? 0x38bdf8 : 0xfacc15);
+          if (this.slotPayline) this.slotPayline.material.color.setHex((winP * 10) % 1 < 0.5 ? 0xfacc15 : 0x38bdf8);
 
-          // Solid biometric device fingerprint badge emerges and scales up out of the slot machine!
+          // Solid unified golden key emerges and scales up out of the slot machine!
           this.tokenKey.visible = true;
           this.tokenKey.position.set(forgePos.x, forgePos.y + winP * 2.5, forgePos.z + 2.0);
           this.tokenKey.scale.setScalar(1.2 * (0.6 + winP * 0.6));
@@ -3429,17 +3408,17 @@ class PushnotOrbit {
 
         moverPos = forgePos;
         moverText = mp < 0.75
-          ? (this.currentOS === 'ios' ? '🎰 Slot Machine: APNs Fingerprint Gen…' : '🎰 Slot Machine: FCM Fingerprint Gen…')
-          : (this.currentOS === 'ios' ? '🎉 MATCH 🪪 🪪 🪪 APNs Fingerprint Generated!' : '🎉 MATCH 🪪 🪪 🪪 FCM Fingerprint Generated!');
+          ? (this.currentOS === 'ios' ? '🎰 Slot Machine: APNs Token Key Gen…' : '🎰 Slot Machine: FCM Token Key Gen…')
+          : (this.currentOS === 'ios' ? '🎉 JACKPOT 🔑 🔑 🔑 APNs Token Generated!' : '🎉 JACKPOT 🔑 🔑 🔑 FCM Token Generated!');
         moverCls = 'cyan';
       } else if (t < 0.62) {
         const p = this.arcPostToPhone.getPoint(seg(t, 0.52, 0.62));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = this.currentOS === 'ios' ? '🪪 APNs Fingerprint → iPhone' : '🪪 FCM Fingerprint → Android';
+        moverText = this.currentOS === 'ios' ? '🔑 APNs Token → iPhone' : '🔑 FCM Token → Android';
       } else if (t < 0.76) {
-        // Dedicated beat on Phone showing the Unique Device Fingerprint on the Phone
+        // Dedicated beat on Phone showing the Unique Gold Key on the Phone
         this.tokenKey.visible = true;
         this.tokenKey.position.set(POS.phone.x, this.tops.phone + 12.5, POS.phone.z);
         this.tokenKey.scale.setScalar(1.45);
@@ -3449,7 +3428,7 @@ class PushnotOrbit {
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
-        moverText = '🪪 Register Fingerprint with App Server';
+        moverText = '🔑 Register Token with Server';
       } else {
         showSaved = true;
       }
@@ -3468,19 +3447,19 @@ class PushnotOrbit {
         this.pushOrb.position.copy(cardPos);
         this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
         moverPos = cardPos;
-        moverText = '💎 Bejeweled: 3 Months Free Pro Trial (+ 🪪 Fingerprint)';
+        moverText = '💎 Bejeweled: 3 Months Free Pro Trial (+ Token Key)';
         moverCls = 'push';
       } else if (t < 0.56) {
-        // Step 2: Push Notification + Fingerprint travels across sky to Google / Apple HQ
+        // Step 2: Push Notification + Token Key travels across sky to Google / Apple HQ
         const p = this.arcPushWorldToPost.getPoint(seg(t, 0.28, 0.56));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         this.pushOrb.scale.setScalar(1.0);
         moverPos = p;
-        moverText = this.currentOS === 'ios' ? ' Bejeweled → Apple APNs (Payload + 🪪 Fingerprint)' : '🤖 Bejeweled → Google FCM (Payload + 🪪 Fingerprint)';
+        moverText = this.currentOS === 'ios' ? ' Bejeweled → Apple APNs (Payload + 🔑 Token)' : '🤖 Bejeweled → Google FCM (Payload + 🔑 Token)';
         moverCls = 'push';
       } else if (t < 0.78) {
-        // Step 3: Google takes the Fingerprint and matches it with the end user!
+        // Step 3: Google takes the Key and matches it with the end user!
         const bp = seg(t, 0.56, 0.78);
         this.pushOrb.visible = true;
         this.pushOrb.position.set(POS.post.x, 26, POS.post.z);
@@ -3489,8 +3468,8 @@ class PushnotOrbit {
         showLedger = true;
         moverPos = new THREE.Vector3(POS.post.x, 26, POS.post.z);
         moverText = this.currentOS === 'ios'
-          ? '🔍 Apple extracts Fingerprint & matches End-User iPhone Socket'
-          : '🔍 Google extracts Fingerprint & matches End-User Android Socket';
+          ? '🔍 Apple extracts Token Key & matches End-User iPhone Socket'
+          : '🔍 Google extracts Token Key & matches End-User Android Socket';
         moverCls = 'push';
       } else if (t < 0.94) {
         // Step 4: Deliver from Google across persistent OS socket to End User Phone
@@ -3515,9 +3494,6 @@ class PushnotOrbit {
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE:
       moverParent = this.leoGroup;
-      if (t >= 0.18 && t < 0.65) {
-        this.updateRcmpLaptopScreen(t);
-      }
 
       if (t < 0.20) {
         // Bad guy types ProtonMail threat email directly on his laptop screen
@@ -3542,40 +3518,26 @@ class PushnotOrbit {
           this.rejectX.visible = true;
           showLeoDenied = true;
         }
-      } else if (t < 0.50) {
-        // Beat 3: Police runs Google & Sherlock OSINT Search on the grounded RCMP workstation behind them!
-        const p = this.arcLeoOsint.getPoint(seg(t, 0.36, 0.43));
-        this.leoPacket.visible = t >= 0.36 && t < 0.44;
-        this.leoPacket.position.copy(p);
-        this.leoPacketMat.color.setHex(0xfbbf24);
-        this.leoPacketMat.emissive.setHex(0xb45309);
-        this.leoPacketLight.color.setHex(0xfbbf24);
-        if (t < 0.43) {
-          moverPos = p;
-          moverText = '💻 Sherlock & Google OSINT Recon';
-        } else {
-          showLeoOsint = true;
-        }
       } else if (t < 0.68) {
-        // Beat 4: OSINT Web pivots to Meta/Instagram/X (0.50–0.56) with Exigent Section 487.014 Production Demand,
-        // and Meta/X return the 3 Push Fingerprints (0.56–0.68)!
-        if (t < 0.56) {
-          const p = this.arcLeoOsintToMeta.getPoint(seg(t, 0.50, 0.56));
+        // Beat 3 & 4: Exigent Demand to Meta/Instagram/X (0.36–0.52),
+        // and Meta/X return the 3 Golden Keys directly to Police officer (0.52–0.68)!
+        if (t < 0.52) {
+          const p = this.arcLeoToMeta.getPoint(seg(t, 0.36, 0.52));
           this.leoPacket.visible = true;
           this.leoPacket.position.copy(p);
           this.leoPacketMat.color.setHex(0x38bdf8);
           this.leoPacketMat.emissive.setHex(0x0284c7);
           this.leoPacketLight.color.setHex(0x38bdf8);
           moverPos = p;
-          moverText = '⚖ Exigent Demand → Meta / IG / X';
+          moverText = '⚖ Exigent Demand (s. 487.014) → Meta / IG / X';
           moverCls = 'cyan';
         } else {
-          const p = this.arcLeoTokens.getPoint(seg(t, 0.56, 0.64));
+          const p = this.arcLeoTokens.getPoint(seg(t, 0.52, 0.64));
           this.leoKey.visible = true;
           this.leoKey.position.copy(p);
           if (t < 0.63) {
             moverPos = p;
-            moverText = '🪪 3 Push Fingerprints Acquired';
+            moverText = '🔑 3 Push Tokens Acquired';
           } else {
             showLeoTokens = true;
           }
@@ -3585,7 +3547,7 @@ class PushnotOrbit {
         this.leoKey.visible = true;
         this.leoKey.position.copy(p);
         moverPos = p;
-        moverText = '🇨🇦 Order + 🪪 Fingerprints → Apple / Google';
+        moverText = '🇨🇦 Order + 🔑 Tokens → Apple / Google';
         moverCls = 'cyan';
       } else {
         // Beat 6: 3D Photo ID + Credit Card fly from Apple/Google -> Police and fan out above Police!
@@ -3628,7 +3590,6 @@ class PushnotOrbit {
     this.place('pin-leo-bandit',      new THREE.Vector3(L.bandit.x, -1.5, L.bandit.z + 8), showLeoPins, this.leoGroup);
     this.place('pin-leo-swat',        new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 8),   showLeoPins, this.leoGroup);
     this.place('pin-leo-bot',         new THREE.Vector3(L.bot.x,    -1.5, L.bot.z + 8),    showLeoPins, this.leoGroup);
-    this.place('pin-leo-osint-plane', new THREE.Vector3(L.osint.x,  this.leoTops.osint + 2, L.osint.z), showLeoPins, this.leoGroup);
     this.place('pin-leo-proton',      new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
     this.place('pin-leo-ag',          new THREE.Vector3(L.ag.x,     this.leoTops.ag + 2, L.ag.z), showLeoPins, this.leoGroup);
 
@@ -3644,10 +3605,9 @@ class PushnotOrbit {
     this.place('pin-push',      phoneFace, showNorm && showPush);
     this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 54, POS.post.z), showNorm && showLedger);
 
-    // Law Enforcement contextual callouts (OSINT callout sits on the elevated OSINT plane above Police's head!)
+    // Law Enforcement contextual callouts
     this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
     this.place('pin-leo-denied', new THREE.Vector3(L.proton.x, this.leoTops.proton + 6, L.proton.z), showLeoPins && showLeoDenied, this.leoGroup);
-    this.place('pin-leo-osint',  new THREE.Vector3(L.osint.x,  this.leoTops.osint + 4,  L.osint.z),  showLeoPins && showLeoOsint,  this.leoGroup);
     this.place('pin-leo-tokens', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoTokens, this.leoGroup);
     this.place('pin-leo-id',     new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoId,     this.leoGroup);
 
@@ -3687,7 +3647,7 @@ class PushnotOrbit {
         focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 30, 0);
         focusDist = 74;
       } else if (t < 0.78) {
-        // Google extracts Fingerprint & matches registered End-User socket
+        // Google extracts Token Key & matches registered End-User socket
         focusLocal = new THREE.Vector3(POS.post.x, 26, POS.post.z);
         focusDist = 58;
       } else {
@@ -3721,9 +3681,15 @@ class PushnotOrbit {
           customCineCam = new THREE.Vector3(L.swat.x + 26, 14.5, L.swat.z + 26);
         }
       } else if (t < 0.68) {
-        // Running Cyber OSINT -> Zoomed directly into the computer screen facing back of cop!
-        focusLocal = new THREE.Vector3(L.osint.x, 13.6, L.osint.z);
-        customCineCam = new THREE.Vector3(L.osint.x + 9.6, 14.1, L.osint.z - 0.5);
+        if (t < 0.52) {
+          // Exigent Demand sent from Police to App Server Tower (Meta/X)
+          focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 16, L.bot.z);
+          focusDist = 65;
+        } else {
+          // 3 Push Token Keys acquired by Police officer -> Facing the armed cop at eye level!
+          focusLocal = new THREE.Vector3(L.swat.x, 14.0, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 26, 14.5, L.swat.z + 26);
+        }
       } else if (t < 0.86) {
         // Production orders served to Apple & Google Skyscraper
         focusLocal = new THREE.Vector3(L.ag.x, 22.0, L.ag.z);

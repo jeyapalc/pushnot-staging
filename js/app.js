@@ -2467,6 +2467,49 @@ class PushnotOrbit {
     return group;
   }
 
+  /* ---- Procedural Manicured Pacific Northwest Grass Turf Texture ---- */
+  createGrassTexture() {
+    const cvs = document.createElement('canvas');
+    cvs.width = 512;
+    cvs.height = 512;
+    const ctx = cvs.getContext('2d');
+
+    // Base rich turf green
+    ctx.fillStyle = '#26511e';
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Multilayer tonal variance patches
+    for (let i = 0; i < 48; i++) {
+      const px = Math.random() * 512;
+      const py = Math.random() * 512;
+      const r = 20 + Math.random() * 55;
+      const g = ctx.createRadialGradient(px, py, 0, px, py, r);
+      g.addColorStop(0, Math.random() > 0.45 ? 'rgba(58, 110, 46, 0.45)' : 'rgba(30, 68, 24, 0.45)');
+      g.addColorStop(1, 'rgba(38, 81, 30, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(px, py, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Micro blade & lawn stippling
+    const imgData = ctx.getImageData(0, 0, 512, 512);
+    const d = imgData.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const noise = (Math.random() - 0.5) * 28;
+      d[i]     = Math.max(0, Math.min(255, d[i] + noise * 0.6));
+      d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + noise * 1.3));
+      d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + noise * 0.4));
+    }
+    ctx.putImageData(imgData, 0, 0);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(4, 2);
+    return tex;
+  }
+
   /* ---- Authentic RCMP ERT Tactical Uniform Patches (Solid Ranger Green & Subdued Insignia) ---- */
   createPoliceChestPatchTexture() {
     const cvs = document.createElement('canvas');
@@ -3341,16 +3384,17 @@ class PushnotOrbit {
     this.leoAgGroup.position.set(L.ag.x, 0, L.ag.z);
     this.leoGroup.add(this.leoAgGroup);
 
-    // Floating 3D Photo ID + Tiny 3D Home hovering above the Apple & Google Skyscraper HQ
-    this.leoAgSubscriberMesh = this.createSubscriberBundle(1.0);
-    this.leoAgSubscriberMesh.position.set(0, 46, 0);
+    // 3D Photo ID + Tiny 3D Home resting right above Apple & Google logos (only revealed when queried in Step 6!)
+    this.leoAgSubscriberMesh = this.createSubscriberBundle(0.85);
+    this.leoAgSubscriberMesh.position.set(0, 16.0, 0);
+    this.leoAgSubscriberMesh.visible = false;
     this.leoAgGroup.add(this.leoAgSubscriberMesh);
 
     // Official EXIGENT DEMAND Legal Warrant Document with Rotating Emergency Siren
     this.exigentDemand = this.createExigentDemandWithSiren();
     this.exigentDemand.visible = false;
     this.leoGroup.add(this.exigentDemand);
-    this.leoTops.ag = 52;
+    this.leoTops.ag = 20;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
     const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 6, 2));
@@ -3593,7 +3637,7 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      this.harmonizeAsset(m, { minRough: 0.28, maxRough: 0.72, maxMetal: 0.7, envIntensity: 1.15, liftDark: false });
+      this.harmonizeAsset(m, { minRough: 0.45, maxRough: 0.85, maxMetal: 0.35, envIntensity: 0.65, liftDark: false });
 
       // Ground and angle the RCMP Green Timbers Headquarters building footprint
       // Angle the entrance towards the viewer / cinematic camera angle (facing south-east)
@@ -3601,48 +3645,62 @@ class PushnotOrbit {
       this.leoTops.swat = this.ground(m, 32, this.leoPos.swat);
       this.leoGroup.add(m);
 
-      // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node
+      // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node (Soft, authentic natural light)
       this.rcmpDaylightGroup = new THREE.Group();
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
-      // 1. Warm afternoon directional sunlight (~5400K natural sunlight)
-      const sunLight = new THREE.DirectionalLight(0xfff5e6, 3.4);
-      sunLight.position.set(this.leoPos.swat.x + 18, 28, this.leoPos.swat.z + 22);
+      // 1. Soft natural warm sunlight (authentic sun angle and balanced intensity)
+      const sunLight = new THREE.DirectionalLight(0xfff3df, 1.15);
+      sunLight.position.set(this.leoPos.swat.x + 16, 26, this.leoPos.swat.z + 20);
       sunLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
       sunLight.castShadow = true;
       this.rcmpDaylightGroup.add(sunLight);
       this.rcmpDaylightGroup.add(sunLight.target);
 
-      // 2. Soft sky ambient fill (diffuse natural daylight atmosphere from above)
-      const skyLight = new THREE.DirectionalLight(0xbde0fe, 1.8);
-      skyLight.position.set(this.leoPos.swat.x - 14, 24, this.leoPos.swat.z - 16);
+      // 2. Diffuse natural sky ambient fill from opposite sky quadrant
+      const skyLight = new THREE.DirectionalLight(0xbfdbfe, 0.55);
+      skyLight.position.set(this.leoPos.swat.x - 14, 22, this.leoPos.swat.z - 14);
       skyLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
       this.rcmpDaylightGroup.add(skyLight);
       this.rcmpDaylightGroup.add(skyLight.target);
 
-      // 3. Crisp daylight entrance accent on the glass atrium, cedar awning & etched bison crest
-      const entranceDaylight = new THREE.PointLight(0xfffaed, 2.8, 36, 1.4);
-      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 6.0, this.leoPos.swat.z + 5.0);
+      // 3. Subtle soft daylight entrance fill (gentle reading of cedar awning & bison decal without washout)
+      const entranceDaylight = new THREE.PointLight(0xfff7ed, 0.45, 24, 1.8);
+      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 4.5, this.leoPos.swat.z + 4.0);
       this.rcmpDaylightGroup.add(entranceDaylight);
 
-      // 4. Ground bounce daylight fill (subtle warm reflection off ground plane)
-      const bounceLight = new THREE.PointLight(0xfef3c7, 1.2, 28, 1.8);
-      bounceLight.position.set(this.leoPos.swat.x - 4, 1.0, this.leoPos.swat.z - 2);
-      this.rcmpDaylightGroup.add(bounceLight);
-
-      // 5. Sleek architectural foundation slab under the building footprint
-      const plinthGeo = new THREE.BoxGeometry(34.0, 0.45, 16.5);
-      const plinthMat = new THREE.MeshStandardMaterial({
-        color: 0x111827,
-        roughness: 0.65,
-        metalness: 0.25
+      // 4. Landscaped Grass Lawn Ground Bed (Lush Pacific Northwest turf)
+      const grassTex = this.createGrassTexture();
+      const lawnW = 34.5;
+      const lawnD = 17.0;
+      const lawnH = 0.5;
+      const grassGeo = new THREE.BoxGeometry(lawnW, lawnH, lawnD);
+      const grassMat = new THREE.MeshStandardMaterial({
+        map: grassTex,
+        color: 0x3d702d, // Lush Pacific Northwest turf green
+        roughness: 0.92, // Matte grass
+        metalness: 0.02
       });
-      const plinth = new THREE.Mesh(plinthGeo, plinthMat);
-      plinth.position.set(this.leoPos.swat.x, -0.22, this.leoPos.swat.z);
-      plinth.rotation.y = Math.PI * 0.22;
-      plinth.receiveShadow = true;
-      plinth.userData.stationKey = 'swat';
-      this.rcmpDaylightGroup.add(plinth);
+      const lawnMesh = new THREE.Mesh(grassGeo, grassMat);
+      lawnMesh.position.set(this.leoPos.swat.x, -lawnH * 0.5, this.leoPos.swat.z);
+      lawnMesh.rotation.y = Math.PI * 0.22;
+      lawnMesh.receiveShadow = true;
+      lawnMesh.userData.stationKey = 'swat';
+      this.rcmpDaylightGroup.add(lawnMesh);
+
+      // Concrete landscape edging curb around the perimeter of the grass lawn
+      const curbGeo = new THREE.BoxGeometry(lawnW + 0.6, 0.18, lawnD + 0.6);
+      const curbMat = new THREE.MeshStandardMaterial({
+        color: 0x334155, // Architectural slate / brushed concrete curb
+        roughness: 0.75,
+        metalness: 0.15
+      });
+      const curbMesh = new THREE.Mesh(curbGeo, curbMat);
+      curbMesh.position.set(this.leoPos.swat.x, -lawnH - 0.05, this.leoPos.swat.z);
+      curbMesh.rotation.y = Math.PI * 0.22;
+      curbMesh.receiveShadow = true;
+      curbMesh.userData.stationKey = 'swat';
+      this.rcmpDaylightGroup.add(curbMesh);
 
       this.leoGroup.add(this.rcmpDaylightGroup);
       done();
@@ -4488,6 +4546,7 @@ class PushnotOrbit {
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE:
       moverParent = this.leoGroup;
+      if (this.leoAgSubscriberMesh) this.leoAgSubscriberMesh.visible = (t >= 0.70 && t < 0.76);
 
       if (t < 0.18) {
         // Step 1: Bad guy types ProtonMail threat email directly on his laptop screen
@@ -4838,9 +4897,9 @@ class PushnotOrbit {
     }
 
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
-    if (this.leoAgSubscriberMesh && this.leoGroup.visible) {
+    if (this.leoAgSubscriberMesh && this.leoGroup.visible && this.leoAgSubscriberMesh.visible) {
       this.leoAgSubscriberMesh.rotation.y -= dt * 0.6;
-      this.leoAgSubscriberMesh.position.y = 46 + Math.sin(now * 0.003) * 1.1;
+      this.leoAgSubscriberMesh.position.y = 16.0 + Math.sin(now * 0.003) * 0.4;
     }
     if (this.leoSubscriberBundle && this.leoSubscriberBundle.visible) {
       this.leoSubscriberBundle.rotation.y += dt * 0.7;

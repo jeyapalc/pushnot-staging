@@ -2242,65 +2242,65 @@ class PushnotOrbit {
   createTiny3DHome(scale = 1) {
     const group = new THREE.Group();
 
-    // 1. Landscaped lawn plinth
-    const lawnGeo = new THREE.CylinderGeometry(5.4, 5.8, 0.7, 32);
+    // 1. Landscaped lawn plinth (compact & elegant)
+    const lawnGeo = new THREE.CylinderGeometry(3.2, 3.5, 0.45, 24);
     const lawnMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85, metalness: 0.05 });
     const lawn = new THREE.Mesh(lawnGeo, lawnMat);
-    lawn.position.y = -0.35;
+    lawn.position.y = -0.22;
     group.add(lawn);
 
     // 2. Main house walls (crisp modern white/slate siding)
-    const houseGeo = new THREE.BoxGeometry(5.2, 4.0, 4.6);
+    const houseGeo = new THREE.BoxGeometry(3.6, 2.8, 3.2);
     const houseMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5, metalness: 0.1 });
     const house = new THREE.Mesh(houseGeo, houseMat);
-    house.position.y = 2.0;
+    house.position.y = 1.4;
     group.add(house);
 
     // 3. Dark architectural pitched roof
     const roofShape = new THREE.Shape();
-    roofShape.moveTo(-3.0, 0);
-    roofShape.lineTo(0, 2.4);
-    roofShape.lineTo(3.0, 0);
+    roofShape.moveTo(-2.1, 0);
+    roofShape.lineTo(0, 1.6);
+    roofShape.lineTo(2.1, 0);
     roofShape.closePath();
-    const roofGeo = new THREE.ExtrudeGeometry(roofShape, { depth: 5.2, bevelEnabled: false });
+    const roofGeo = new THREE.ExtrudeGeometry(roofShape, { depth: 3.6, bevelEnabled: false });
     roofGeo.center();
     const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.3 });
     const roof = new THREE.Mesh(roofGeo, roofMat);
-    roof.position.set(0, 4.9, 0);
+    roof.position.set(0, 3.5, 0);
     group.add(roof);
 
     // 4. Red brick chimney
-    const chimGeo = new THREE.BoxGeometry(0.85, 2.2, 0.85);
+    const chimGeo = new THREE.BoxGeometry(0.6, 1.5, 0.6);
     const chimMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.9, metalness: 0.05 });
     const chim = new THREE.Mesh(chimGeo, chimMat);
-    chim.position.set(1.4, 5.4, -0.6);
+    chim.position.set(1.0, 3.9, -0.4);
     group.add(chim);
 
     // 5. Front door (warm mahogany wood)
-    const doorGeo = new THREE.BoxGeometry(1.2, 2.2, 0.15);
+    const doorGeo = new THREE.BoxGeometry(0.9, 1.6, 0.1);
     const doorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.4, metalness: 0.2 });
     const door = new THREE.Mesh(doorGeo, doorMat);
-    door.position.set(0, 1.1, 2.38);
+    door.position.set(0, 0.8, 1.66);
     // Golden brass doorknob
     const knob = new THREE.Mesh(
-      new THREE.SphereGeometry(0.1, 8, 8),
+      new THREE.SphereGeometry(0.08, 8, 8),
       new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.1 })
     );
-    knob.position.set(0.42, 1.1, 2.48);
+    knob.position.set(0.32, 0.8, 1.72);
     group.add(door, knob);
 
     // 6. Two glowing warm amber windows
-    const winGeo = new THREE.PlaneGeometry(1.0, 1.2);
+    const winGeo = new THREE.PlaneGeometry(0.75, 0.85);
     const winMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide });
     const winL = new THREE.Mesh(winGeo, winMat);
-    winL.position.set(-1.6, 2.4, 2.32);
+    winL.position.set(-1.15, 1.7, 1.62);
     const winR = new THREE.Mesh(winGeo, winMat);
-    winR.position.set(1.6, 2.4, 2.32);
+    winR.position.set(1.15, 1.7, 1.62);
     group.add(winL, winR);
 
     // Warm ambient glow cast from windows
-    const homeLight = new THREE.PointLight(0xf59e0b, 2.5, 14);
-    homeLight.position.set(0, 2.0, 3.2);
+    const homeLight = new THREE.PointLight(0xf59e0b, 2.0, 12);
+    homeLight.position.set(0, 1.4, 2.2);
     group.add(homeLight);
 
     // 7. Street address post & sign plaque in front yard
@@ -2321,15 +2321,15 @@ class PushnotOrbit {
 
     const signTex = new THREE.CanvasTexture(signCvs);
     const signBoard = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.4, 0.8),
+      new THREE.PlaneGeometry(1.8, 0.6),
       new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide })
     );
-    signBoard.position.set(1.8, 1.1, 3.4);
+    signBoard.position.set(1.3, 0.8, 2.3);
     const signPost = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8),
+      new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8),
       new THREE.MeshStandardMaterial({ color: 0x475569 })
     );
-    signPost.position.set(1.8, 0.6, 3.4);
+    signPost.position.set(1.3, 0.45, 2.3);
     group.add(signBoard, signPost);
 
     group.scale.setScalar(scale);
@@ -2339,15 +2339,15 @@ class PushnotOrbit {
   /* ---- Combined Subscriber Identity Bundle (3D Photo ID + Tiny 3D Home, ZERO subscription/credit cards!) ---- */
   createSubscriberBundle(scale = 1) {
     const group = new THREE.Group();
-    const idCard = this.create3DPhotoIdCard(1.0);
-    idCard.position.set(-5.2, 3.2, 0);
-    idCard.rotation.set(0.05, 0.22, 0.04);
+    const idCard = this.create3DPhotoIdCard(0.85);
+    idCard.position.set(-4.0, 1.8, 0);
+    idCard.rotation.set(0.05, 0.18, 0.04);
 
-    const home = this.createTiny3DHome(1.1);
-    home.position.set(4.6, 0, 0);
-    home.rotation.y = -0.25;
+    const home = this.createTiny3DHome(0.85);
+    home.position.set(3.4, 0, 0);
+    home.rotation.y = -0.22;
 
-    group.add(idCard, home, new THREE.PointLight(0x38bdf8, 3.5, 40));
+    group.add(idCard, home, new THREE.PointLight(0x38bdf8, 3.2, 36));
     group.scale.setScalar(scale);
     return group;
   }
@@ -4582,11 +4582,12 @@ class PushnotOrbit {
         this.updateHackerSeizedScreen();
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
-          this.leoSubscriberBundle.position.set(L.bandit.x - 3.5, 17.5, L.bandit.z + 5.0);
-          this.leoSubscriberBundle.lookAt(new THREE.Vector3(L.bandit.x + 22, 17.5, L.bandit.z + 22));
-          this.leoSubscriberBundle.rotation.y += Math.sin(performance.now() * 0.0015) * 0.15;
+          // Positioned to the right of the desk from camera's POV (cleanly separated from suspect & monitor!)
+          this.leoSubscriberBundle.position.set(L.bandit.x + 7.5, 14.5, L.bandit.z - 7.5);
+          this.leoSubscriberBundle.lookAt(new THREE.Vector3(L.bandit.x + 26, 16.5, L.bandit.z + 18));
+          this.leoSubscriberBundle.rotation.y += Math.sin(performance.now() * 0.0015) * 0.12;
         }
-        moverPos = new THREE.Vector3(L.bandit.x - 1.0, 26.5, L.bandit.z + 2.0);
+        moverPos = new THREE.Vector3(L.bandit.x + 1.0, 24.0, L.bandit.z - 1.0);
         moverText = '🚨 SUSPECT UNMASKED: CONNOR J. MALONE · 1042 ROBSON ST';
         moverCls = 'red';
         showLeoId = true;
@@ -4758,8 +4759,8 @@ class PushnotOrbit {
         customCineCam = new THREE.Vector3(L.ag.x + 22, 22.0, L.ag.z + 28);
       } else {
         // Suspect unmasked & seized with Photo ID Card & Tiny 3D Home!
-        focusLocal = new THREE.Vector3(L.bandit.x - 1.0, 15.0, L.bandit.z + 2.0);
-        customCineCam = new THREE.Vector3(L.bandit.x + 24, 18.0, L.bandit.z + 24);
+        focusLocal = new THREE.Vector3(L.bandit.x + 2.0, 13.5, L.bandit.z - 2.5);
+        customCineCam = new THREE.Vector3(L.bandit.x + 26.0, 16.5, L.bandit.z + 18.0);
       }
     }
 

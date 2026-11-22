@@ -3368,8 +3368,8 @@ class PushnotOrbit {
     this.flipTarget = isLeo ? Math.PI : 0;
 
     const color = isLeo ? 0xf43f5e : (isWorld ? 0x38bdf8 : (isPush ? 0x34d399 : 0xfbbf24));
-    this.ringMat.color.setHex(color);
-    this.beadMat.color.setHex(color);
+    if (this.ringMat) this.ringMat.color.setHex(color);
+    if (this.beadMat) this.beadMat.color.setHex(color);
     this.setupLines.forEach((l) => (l.visible = mode === 'setup'));
     this.pushLines.forEach((l) => (l.visible = isPush));
     if (this.flowCones) this.flowCones.forEach((fc) => (fc.mesh.visible = false));

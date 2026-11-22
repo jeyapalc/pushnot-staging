@@ -1354,9 +1354,9 @@ class PushnotOrbit {
       target = new THREE.Vector3(this.leoPos.swat.x, 14.0, this.leoPos.swat.z);
       camPos = new THREE.Vector3(this.leoPos.swat.x + 26, 14.5, this.leoPos.swat.z + 26);
     } else if (key === 'proton') {
-      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Unobstructed front-diagonal view capturing both server & full flag!
+      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Front-angled view capturing illuminated front & full waving flag with headroom!
       target = new THREE.Vector3(this.leoPos.proton.x, 19.0, this.leoPos.proton.z);
-      camPos = new THREE.Vector3(this.leoPos.proton.x - 12, 19.0, this.leoPos.proton.z + 46);
+      camPos = new THREE.Vector3(this.leoPos.proton.x + 18, 22.0, this.leoPos.proton.z + 52);
     } else if (key === 'facebook' || key === 'bot') {
       // App Servers at (0, 0, 4) in LEO mode.
       target = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
@@ -3801,7 +3801,7 @@ class PushnotOrbit {
         if (t >= 0.25 || showLeoDenied) {
           // Switzerland illuminated server rack + waving Swiss flag on top!
           focusLocal = new THREE.Vector3(L.proton.x, 19.0, L.proton.z);
-          customCineCam = new THREE.Vector3(L.proton.x - 12, 19.0, L.proton.z + 46);
+          customCineCam = new THREE.Vector3(L.proton.x + 18, 22.0, L.proton.z + 52);
         } else {
           // Police receive threat / send demand -> Facing the armed cop at eye level!
           focusLocal = new THREE.Vector3(L.swat.x, 14.0, L.swat.z);

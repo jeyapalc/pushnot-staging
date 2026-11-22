@@ -1356,9 +1356,9 @@ class PushnotOrbit {
       target = this.leoPos.swat.clone().setY(14.0);
       customCamPos = target.clone().add(new THREE.Vector3(26, 0.5, 26));
     } else if (key === 'osint') {
-      // Over the shoulder / zoomed into the police computer screen facing back of cop!
-      target = this.leoPos.osint.clone().setY(14.0);
-      customCamPos = new THREE.Vector3(this.leoPos.osint.x + 11.5, 14.6, this.leoPos.osint.z + 9.5);
+      // Zoomed directly into the police computer screen facing back of cop!
+      target = this.leoPos.osint.clone().setY(13.8);
+      customCamPos = new THREE.Vector3(this.leoPos.osint.x + 5.5, 14.2, this.leoPos.osint.z + 2.8);
     } else if (key === 'proton') {
       // Facing Swiss illuminated server station & waving Swiss flag at eye level
       target = this.leoPos.proton.clone().setY(15.0);
@@ -2441,7 +2441,7 @@ class PushnotOrbit {
 
       // Center and scale the PC so it sits naturally on top of the workstation desk at cop eye level with zero air gap
       // Screen turns to face the back of the cop (back-to-back cop & PC setup)
-      const rotAngle = Math.atan2(8.5, 6.5); // 0.920 rad, points directly towards L.swat
+      const rotAngle = Math.atan2(5.5, 2.8); // 1.10 rad, points directly at the OSINT camera
       laptop.rotation.set(0, rotAngle, 0);
       let box = new THREE.Box3().setFromObject(laptop);
       const dim = box.getSize(new THREE.Vector3());
@@ -3721,9 +3721,9 @@ class PushnotOrbit {
           customCineCam = new THREE.Vector3(L.swat.x + 26, 14.5, L.swat.z + 26);
         }
       } else if (t < 0.68) {
-        // Running Cyber OSINT -> Zoomed OVER THE SHOULDER / eye level into the computer screen facing back of cop!
-        focusLocal = new THREE.Vector3(L.osint.x, 14.0, L.osint.z);
-        customCineCam = new THREE.Vector3(L.osint.x + 11.5, 14.6, L.osint.z + 9.5);
+        // Running Cyber OSINT -> Zoomed directly into the computer screen facing back of cop!
+        focusLocal = new THREE.Vector3(L.osint.x, 13.8, L.osint.z);
+        customCineCam = new THREE.Vector3(L.osint.x + 5.5, 14.2, L.osint.z + 2.8);
       } else if (t < 0.86) {
         // Production orders served to Apple & Google Skyscraper
         focusLocal = new THREE.Vector3(L.ag.x, 22.0, L.ag.z);
@@ -3864,14 +3864,14 @@ class PushnotOrbit {
         this.focusTargetPos = null;
         this.focusCamPos = null;
       }
-    } else if (!this.playing && this.cinematicFollow) {
+    } else if (this.playing || this.cinematicFollow) {
       // Video-Game Cinematic Step-by-Step Camera: smoothly dolly & pan onto the active packet / node!
       const camLerp = Math.min(1, dt * 3.8);
       const tgtLerp = Math.min(1, dt * 5.0);
       this.camera.position.lerp(this.cineCamPos, camLerp);
       this.controls.target.lerp(this.cineLookAt, tgtLerp);
       this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-      if (this.camera.position.distanceTo(this.cineCamPos) < 1.2) {
+      if (!this.playing && this.camera.position.distanceTo(this.cineCamPos) < 0.6) {
         this.cinematicFollow = false;
       }
     } else if (this.autoOrbit) {

@@ -460,63 +460,156 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- 3D Laser-Printing / Holographic Materialization Rig for Unique Key ---- */
-  createKeyMaterializer() {
+  /* ---- 3-Ring Slot Machine Key Generator with Different Shapes Landing on the Final Key ---- */
+  createKeySlotMachine() {
     const group = new THREE.Group();
+    this.slotReels = [];
 
-    // Glowing cyan wireframe blueprint key shell (shows key geometry before solid metal prints)
-    const wireMat = new THREE.MeshBasicMaterial({
-      color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.75
+    // Outer cyber casing
+    const caseMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, metalness: 0.85, roughness: 0.25
     });
-    const wireKey = new THREE.Group();
-    const wBow = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.35, 10, 24), wireMat); wBow.position.x = -1.7;
-    const wShaft = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.55, 0.4), wireMat);    wShaft.position.x = 0.8;
-    const wT1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.9, 0.4), wireMat);       wT1.position.set(1.4, -0.65, 0);
-    const wT2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.2, 0.4), wireMat);       wT2.position.set(2.2, -0.8, 0);
-    wireKey.add(wBow, wShaft, wT1, wT2);
-    wireKey.scale.setScalar(1.28);
-    group.add(wireKey);
-    this.forgeWireKey = wireKey;
-    this.forgeWireMat = wireMat;
+    const borderMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
 
-    // Sweeping horizontal laser print ring + flat laser scan sheet
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.95 });
-    const laserRing = new THREE.Mesh(new THREE.TorusGeometry(4.8, 0.16, 10, 48), ringMat);
-    laserRing.rotation.x = Math.PI / 2;
-    const laserDisc = new THREE.Mesh(
-      new THREE.CircleGeometry(4.8, 36),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.24, side: THREE.DoubleSide })
+    // Main housing box
+    const caseBox = new THREE.Mesh(new THREE.BoxGeometry(14.2, 8.4, 6.4), caseMat);
+    caseBox.add(new THREE.LineSegments(new THREE.EdgesGeometry(caseBox.geometry), borderMat));
+    group.add(caseBox);
+
+    // Front viewing window opening / recess
+    const windowFrame = new THREE.Mesh(
+      new THREE.BoxGeometry(12.4, 5.8, 0.4),
+      new THREE.MeshBasicMaterial({ color: 0x0284c7, transparent: true, opacity: 0.32 })
     );
-    laserRing.add(laserDisc);
-    group.add(laserRing);
-    this.forgeLaserRing = laserRing;
+    windowFrame.position.z = 3.22;
+    group.add(windowFrame);
 
-    // Vertical holographic printer containment beam
-    const cylMat = new THREE.MeshBasicMaterial({
-      color: 0xfbbf24, transparent: true, opacity: 0.14, side: THREE.DoubleSide
-    });
-    const cyl = new THREE.Mesh(new THREE.CylinderGeometry(4.6, 4.6, 8.5, 32, 1, true), cylMat);
-    group.add(cyl);
-    this.forgeCylMat = cylMat;
+    // Payline indicator (horizontal glowing laser bar across the center row)
+    const paylineGeo = new THREE.BoxGeometry(12.8, 0.18, 0.18);
+    const paylineMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.95 });
+    const payline = new THREE.Mesh(paylineGeo, paylineMat);
+    payline.position.set(0, 0, 3.32);
+    group.add(payline);
+    this.slotPayline = payline;
 
-    // Swirling fabrication spark particles
-    const pts = [];
-    for (let i = 0; i < 36; i++) {
-      const a = (i / 36) * Math.PI * 2;
-      const r = 2.0 + (i % 5) * 0.65;
-      pts.push(Math.cos(a) * r, ((i % 9) - 4) * 0.85, Math.sin(a) * r);
+    // Header Marquee: "🎰 TOKEN KEY GENERATOR 🔑"
+    const headerCvs = document.createElement('canvas');
+    headerCvs.width = 1024; headerCvs.height = 256;
+    const hCtx = headerCvs.getContext('2d');
+    hCtx.fillStyle = '#0369a1'; hCtx.fillRect(0, 0, 1024, 256);
+    hCtx.fillStyle = '#facc15'; hCtx.font = '900 68px monospace';
+    hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
+    hCtx.fillText('🎰 TOKEN KEY GENERATOR 🔑', 512, 128);
+    const headerTex = new THREE.CanvasTexture(headerCvs);
+    headerTex.minFilter = THREE.LinearFilter;
+    headerTex.magFilter = THREE.LinearFilter;
+    headerTex.generateMipmaps = false;
+    const headerMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(11.2, 2.5),
+      new THREE.MeshBasicMaterial({ map: headerTex })
+    );
+    headerMesh.position.set(0, 4.8, 1.4);
+    headerMesh.rotation.x = -0.22;
+    group.add(headerMesh);
+
+    // 3 Cylindrical Reels side-by-side
+    const reelX = [-3.6, 0, 3.6];
+    const R_REEL = 2.2;
+
+    for (let r = 0; r < 3; r++) {
+      const reelGroup = new THREE.Group();
+      reelGroup.position.x = reelX[r];
+
+      // Glowing cyber reel ring frame
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(R_REEL, 0.14, 12, 36),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 })
+      );
+      ring.rotation.y = Math.PI / 2;
+      reelGroup.add(ring);
+
+      const shapes = [];
+      for (let s = 0; s < 6; s++) {
+        const angle = (s / 6) * Math.PI * 2;
+        const itemGroup = new THREE.Group();
+        itemGroup.position.set(0, Math.sin(angle) * R_REEL, Math.cos(angle) * R_REEL);
+        itemGroup.rotation.x = angle;
+
+        if (s === 0) {
+          // Shape 0: Golden Key (The Winning Match / Jackpot!)
+          const key = this.createTokenKey(0.48);
+          key.rotation.z = Math.PI * 0.5;
+          itemGroup.add(key);
+        } else if (s === 1) {
+          // Shape 1: Cyan Diamond
+          const gem = new THREE.Mesh(
+            new THREE.OctahedronGeometry(0.55),
+            new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.5, roughness: 0.15 })
+          );
+          itemGroup.add(gem);
+        } else if (s === 2) {
+          // Shape 2: Gold Star
+          const star = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.55, 0.55, 0.22, 5),
+            new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.85, roughness: 0.2 })
+          );
+          star.rotation.x = Math.PI / 2;
+          itemGroup.add(star);
+        } else if (s === 3) {
+          // Shape 3: Purple Cyber Orb
+          const orb = new THREE.Mesh(
+            new THREE.SphereGeometry(0.5, 16, 16),
+            new THREE.MeshStandardMaterial({ color: 0xa855f7, metalness: 0.6, roughness: 0.25 })
+          );
+          itemGroup.add(orb);
+        } else if (s === 4) {
+          // Shape 4: Emerald Pyramid
+          const pyr = new THREE.Mesh(
+            new THREE.ConeGeometry(0.55, 0.9, 4),
+            new THREE.MeshStandardMaterial({ color: 0x10b981, metalness: 0.4, roughness: 0.2 })
+          );
+          itemGroup.add(pyr);
+        } else {
+          // Shape 5: Ruby Cyber Cube
+          const cube = new THREE.Mesh(
+            new THREE.BoxGeometry(0.65, 0.65, 0.65),
+            new THREE.MeshStandardMaterial({ color: 0xef4444, metalness: 0.5, roughness: 0.3 })
+          );
+          itemGroup.add(cube);
+        }
+
+        reelGroup.add(itemGroup);
+        shapes.push(itemGroup);
+      }
+
+      group.add(reelGroup);
+      this.slotReels.push({ group: reelGroup, locked: false, angle: 0 });
     }
-    const sparkGeo = new THREE.BufferGeometry();
-    sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    this.forgeSparks = new THREE.Points(
-      sparkGeo,
-      new THREE.PointsMaterial({ color: 0xfef08a, size: 0.65, transparent: true, opacity: 0.95 })
-    );
-    group.add(this.forgeSparks);
 
-    this.forgeLight = new THREE.PointLight(0x38bdf8, 5, 36);
-    group.add(this.forgeLight);
+    // Celebratory jackpot particles
+    const sparkGeo = new THREE.BufferGeometry();
+    const sparkPts = [];
+    for (let i = 0; i < 48; i++) {
+      const a = (i / 48) * Math.PI * 2;
+      const r = 1.2 + (i % 6) * 0.7;
+      sparkPts.push(Math.cos(a) * r, Math.sin(a) * r, 3.2 + ((i % 5) - 2) * 0.3);
+    }
+    sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPts, 3));
+    this.slotSparks = new THREE.Points(
+      sparkGeo,
+      new THREE.PointsMaterial({ color: 0xfef08a, size: 0.85, transparent: true, opacity: 0 })
+    );
+    group.add(this.slotSparks);
+
+    this.slotLight = new THREE.PointLight(0xfbbf24, 0, 42);
+    this.slotLight.position.set(0, 0, 4.5);
+    group.add(this.slotLight);
+
     return group;
+  }
+
+  createKeyMaterializer() {
+    return this.createKeySlotMachine();
   }
 
   /* ---- 3D Diamond-Angled Monopoly "GO TO JAIL" Tile (Using original picture, facing LEFT, rotated 45° as a diamond!) ---- */
@@ -1092,6 +1185,7 @@ class PushnotOrbit {
     let target = null;
     let dist = 42;
     let lift = 14;
+    let customCamPos = null;
 
     if (key === 'phone') {
       target = POS.phone.clone().setY(16);
@@ -1106,14 +1200,20 @@ class PushnotOrbit {
       target = POS.ufo.clone().setY(22);
       dist = 74;
     } else if (key === 'bandit') {
-      target = this.leoPos.bandit.clone().setY(14);
-      dist = 82; // Comfortable framing, not zoomed into face!
+      target = this.leoPos.bandit.clone().setY(11.5);
+      customCamPos = target.clone().add(new THREE.Vector3(22, 1.2, -10));
     } else if (key === 'swat') {
-      target = this.leoPos.swat.clone().setY(14);
-      dist = 82; // Clear view of Ranger Green RCMP officer & patches!
+      // Facing the armed cop directly at eye level (NO bird's-eye or bug's-eye view!)
+      target = this.leoPos.swat.clone().setY(14.0);
+      customCamPos = target.clone().add(new THREE.Vector3(26, 0.5, 26));
     } else if (key === 'osint') {
-      target = this.leoPos.osint.clone().setY(22);
-      dist = 56;
+      // Over the shoulder / zoomed into the police computer screen at eye level!
+      target = this.leoPos.osint.clone().setY(12.8);
+      customCamPos = target.clone().add(new THREE.Vector3(18, 1.8, 18));
+    } else if (key === 'proton') {
+      // Facing Swiss illuminated server station & waving Swiss flag at eye level
+      target = this.leoPos.proton.clone().setY(18.0);
+      customCamPos = target.clone().add(new THREE.Vector3(36, 1.5, -36));
     } else if (key === 'facebook') {
       target = this.leoPos.bot.clone().setY(16);
       dist = 78;
@@ -1128,13 +1228,17 @@ class PushnotOrbit {
 
     this.focusTargetPos = target.clone();
 
-    // Snap strictly to the OUTSIDE of the orbit ring, facing IN LATERALLY at eye level (no bird's eye view!)
-    const radial = new THREE.Vector3(target.x, 0, target.z);
-    if (radial.lengthSq() < 1) radial.set(0, 0, 1);
-    radial.normalize();
+    if (customCamPos) {
+      this.focusCamPos = customCamPos;
+    } else {
+      // Snap strictly to the OUTSIDE of the orbit ring, facing IN LATERALLY at eye level (no bird's eye view!)
+      const radial = new THREE.Vector3(target.x, 0, target.z);
+      if (radial.lengthSq() < 1) radial.set(0, 0, 1);
+      radial.normalize();
 
-    this.focusCamPos = target.clone().addScaledVector(radial, dist);
-    this.focusCamPos.y = target.y + 1.5; // Lateral eye-level!
+      this.focusCamPos = target.clone().addScaledVector(radial, dist);
+      this.focusCamPos.y = target.y + 1.5; // Lateral eye-level!
+    }
 
     // Shallow depth-of-field focal spotlight
     if (!this.focusSpot) {
@@ -1237,12 +1341,15 @@ class PushnotOrbit {
     ));
     group.add(card);
 
-    // 2. High-res dynamic canvas texture on front face of the payload
+    // 2. High-res dynamic canvas texture on front face of the payload (1024x512, zero mipmap blur)
     this.payloadCvs = document.createElement('canvas');
-    this.payloadCvs.width = 512;
-    this.payloadCvs.height = 256;
+    this.payloadCvs.width = 1024;
+    this.payloadCvs.height = 512;
     this.payloadTex = new THREE.CanvasTexture(this.payloadCvs);
     this.payloadTex.colorSpace = THREE.SRGBColorSpace;
+    this.payloadTex.minFilter = THREE.LinearFilter;
+    this.payloadTex.magFilter = THREE.LinearFilter;
+    this.payloadTex.generateMipmaps = false;
     this.updatePayloadCanvas();
 
     const faceGeo = new THREE.PlaneGeometry(cardW * 0.96, cardH * 0.94);
@@ -1271,51 +1378,70 @@ class PushnotOrbit {
   updatePayloadCanvas() {
     if (!this.payloadCvs) return;
     const ctx = this.payloadCvs.getContext('2d');
-    ctx.clearRect(0, 0, 512, 256);
+    ctx.clearRect(0, 0, 1024, 512);
 
     const isIos = this.currentOS === 'ios';
 
-    // Background gradient with emerald glow
-    const bg = ctx.createLinearGradient(0, 0, 512, 256);
+    // Background gradient with emerald / cyan glow
+    const bg = ctx.createLinearGradient(0, 0, 1024, 512);
     bg.addColorStop(0, '#061715');
-    bg.addColorStop(1, '#0c221d');
+    bg.addColorStop(0.5, '#0b2621');
+    bg.addColorStop(1, '#051311');
     ctx.fillStyle = bg;
     ctx.beginPath();
-    ctx.roundRect(8, 8, 496, 240, 18);
+    ctx.roundRect(16, 16, 992, 480, 32);
     ctx.fill();
 
     ctx.strokeStyle = '#34d399';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 6;
     ctx.stroke();
 
-    // Top banner
+    // Top Header Badge
     ctx.fillStyle = isIos ? '#38bdf8' : '#34d399';
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText(isIos ? ' APNs PUSH PAYLOAD' : '🤖 FCM PUSH PAYLOAD', 28, 44);
+    ctx.font = 'bold 36px monospace';
+    ctx.fillText(isIos ? ' APNs PUSH NOTIFICATION' : '🤖 GOOGLE FCM PUSH NOTIFICATION', 48, 76);
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText('🔑 TOKEN: #7A9F-2B4C', 28, 82);
+    ctx.font = 'bold 30px monospace';
+    ctx.fillText('🔑 ATTACHED DEVICE TOKEN: #7A9F-2B4C', 48, 132);
 
     // Separator rule
-    ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(28, 98); ctx.lineTo(484, 98);
+    ctx.moveTo(48, 160); ctx.lineTo(976, 160);
     ctx.stroke();
 
-    // Message content
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.fillText('💎 Bejeweled Blitz', 28, 140);
+    // App Title
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '900 48px sans-serif';
+    ctx.fillText('💎 BEJEWELED BLITZ  •  SPECIAL GIFT', 48, 226);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '20px sans-serif';
-    ctx.fillText('"Energy Refilled! Play now 💎"', 28, 178);
+    // Headline Offer
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 52px sans-serif';
+    ctx.fillText('🎉 3 Months Free Pro Trial!', 48, 296);
+
+    // Offer description
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '500 34px sans-serif';
+    ctx.fillText('Unlimited lives, zero ads, and 500 bonus gems unlocked for 90 days.', 48, 360);
+
+    // Action button & Route
+    ctx.fillStyle = '#10b981';
+    ctx.beginPath();
+    ctx.roundRect(48, 410, 380, 68, 16);
+    ctx.fill();
+
+    ctx.fillStyle = '#06281e';
+    ctx.font = '900 32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('CLAIM FREE 3 MONTHS', 238, 455);
+    ctx.textAlign = 'left';
 
     ctx.fillStyle = '#34d399';
-    ctx.font = 'bold 15px monospace';
-    ctx.fillText('ROUTE: App Server ➔ Apple/Google ➔ Phone', 28, 222);
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText('ROUTE: Bejeweled ➔ Google FCM ➔ Phone', 460, 455);
 
     if (this.payloadTex) this.payloadTex.needsUpdate = true;
   }
@@ -1499,45 +1625,155 @@ class PushnotOrbit {
     });
   }
 
-  createWindSwissFlag() {
-    // Wind-animated 3D Swiss Flag (square red banner + crisp white cross, zero background)
+  /* ---- Dedicated Illuminated Switzerland Server Station with Blinking LEDs and Waving Swiss Flag ON TOP ---- */
+  createSwissServerStation() {
     const group = new THREE.Group();
 
-    // Metallic flagpole
+    // 1. Plinth base
+    const floorY = 0.8;
+    const padW = 12.0;
+    const pad = new THREE.Mesh(
+      new THREE.BoxGeometry(padW, floorY, padW),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.25 })
+    );
+    pad.position.set(0, floorY / 2, 0);
+    pad.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(pad.geometry),
+      new THREE.LineBasicMaterial({ color: 0xdc2626, transparent: true, opacity: 0.75 })
+    ));
+    group.add(pad);
+
+    // 2. Server Tower Chassis
+    const TOWER_H = 22.0;
+    const TOWER_W = 8.6;
+    const TOWER_D = 8.6;
+    const bodyGeo = new THREE.BoxGeometry(TOWER_W, TOWER_H, TOWER_D);
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: 0x111827, metalness: 0.82, roughness: 0.32
+    });
+    const towerBody = new THREE.Mesh(bodyGeo, bodyMat);
+    towerBody.position.set(0, floorY + TOWER_H / 2, 0);
+    towerBody.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(bodyGeo),
+      new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.55 })
+    ));
+    group.add(towerBody);
+
+    // Front Glass Door
+    const frontFaceZ = TOWER_D / 2 + 0.16;
+    const doorGeo = new THREE.BoxGeometry(TOWER_W * 0.88, TOWER_H * 0.92, 0.14);
+    const doorMat = new THREE.MeshStandardMaterial({
+      color: 0x180f24, transparent: true, opacity: 0.82, roughness: 0.12, metalness: 0.85
+    });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(0, floorY + TOWER_H / 2, frontFaceZ);
+    group.add(door);
+
+    // Illuminated Header Banner: "🇨🇭 PROTON · SWITZERLAND"
+    const headCvs = document.createElement('canvas');
+    headCvs.width = 1024; headCvs.height = 256;
+    const hCtx = headCvs.getContext('2d');
+    hCtx.fillStyle = '#4c1d95'; hCtx.fillRect(0, 0, 1024, 256);
+    hCtx.fillStyle = '#ffffff'; hCtx.font = '900 64px sans-serif';
+    hCtx.textAlign = 'center'; hCtx.textBaseline = 'middle';
+    hCtx.fillText('🇨🇭 PROTON · SWITZERLAND', 512, 128);
+    const headTex = new THREE.CanvasTexture(headCvs);
+    headTex.minFilter = THREE.LinearFilter;
+    headTex.generateMipmaps = false;
+    const headPlaque = new THREE.Mesh(
+      new THREE.PlaneGeometry(TOWER_W * 0.84, 2.2),
+      new THREE.MeshBasicMaterial({ map: headTex })
+    );
+    headPlaque.position.set(0, floorY + TOWER_H - 1.5, frontFaceZ + 0.1);
+    group.add(headPlaque);
+
+    // Animated vertical laser-telemetry scan bar
+    const scanBar = new THREE.Mesh(
+      new THREE.BoxGeometry(TOWER_W * 0.72, 0.28, 0.12),
+      new THREE.MeshBasicMaterial({ color: 0xf43f5e, transparent: true, opacity: 0.92 })
+    );
+    scanBar.position.set(0, floorY + TOWER_H * 0.5, frontFaceZ + 0.08);
+    group.add(scanBar);
+    this.swissScanBar = scanBar;
+
+    // Blinking Server Blade LEDs on front bezel
+    this.swissLeds = [];
+    const ledGeo = new THREE.BoxGeometry(0.32, 0.22, 0.12);
+    const palette = [0x8b5cf6, 0xd946ef, 0xef4444, 0x06b6d4, 0xf43f5e];
+    const ledX = TOWER_W * 0.32;
+    for (let row = 0; row < 10; row++) {
+      const hex = palette[row % palette.length];
+      const mat = new THREE.MeshBasicMaterial({ color: hex });
+      const led = new THREE.Mesh(ledGeo, mat);
+      led.position.set(
+        ledX,
+        floorY + 2.5 + row * ((TOWER_H - 5.5) / 9),
+        frontFaceZ + 0.08
+      );
+      group.add(led);
+      this.swissLeds.push({
+        mesh: led,
+        mat,
+        speed: 4 + ((row * 2) % 7),
+        phase: row * 1.3
+      });
+    }
+
+    // 3. Waving 3D Swiss Flag Mounted Firmly ON TOP of the Server Rack!
+    const roofY = floorY + TOWER_H;
+    const poleBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.7, 0.9, 0.8, 16),
+      new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.2 })
+    );
+    poleBase.position.set(-2.8, roofY + 0.4, 0);
+    group.add(poleBase);
+
     const pole = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.35, 0.45, 24, 12),
-      new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.85, roughness: 0.25 })
+      new THREE.CylinderGeometry(0.28, 0.36, 18, 16),
+      new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.18 })
     );
-    pole.position.set(-7, 12, 0);
+    pole.position.set(-2.8, roofY + 9.0, 0);
     const finial = new THREE.Mesh(
-      new THREE.SphereGeometry(0.85, 16, 16),
-      new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.2 })
+      new THREE.SphereGeometry(0.65, 16, 16),
+      new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.95, roughness: 0.15 })
     );
-    finial.position.set(-7, 24.4, 0);
+    finial.position.set(-2.8, roofY + 18.2, 0);
     group.add(pole, finial);
 
-    // High-res Swiss flag CanvasTexture (no background, pure red + white cross)
-    const cvs = document.createElement('canvas');
-    cvs.width = 512; cvs.height = 512;
-    const ctx = cvs.getContext('2d');
-    ctx.fillStyle = '#dc2626';
-    ctx.fillRect(0, 0, 512, 512);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(208, 96, 96, 320);
-    ctx.fillRect(96, 208, 320, 96);
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
+    // High-res Swiss Flag (crisp red square + white cross)
+    const fCvs = document.createElement('canvas');
+    fCvs.width = 1024; fCvs.height = 1024;
+    const fCtx = fCvs.getContext('2d');
+    fCtx.fillStyle = '#dc2626';
+    fCtx.fillRect(0, 0, 1024, 1024);
+    fCtx.fillStyle = '#ffffff';
+    fCtx.fillRect(416, 192, 192, 640);
+    fCtx.fillRect(192, 416, 640, 192);
+    const fTex = new THREE.CanvasTexture(fCvs);
+    fTex.colorSpace = THREE.SRGBColorSpace;
+    fTex.minFilter = THREE.LinearFilter;
+    fTex.magFilter = THREE.LinearFilter;
+    fTex.generateMipmaps = false;
 
-    const flagGeo = new THREE.PlaneGeometry(14, 14, 24, 16);
+    const flagGeo = new THREE.PlaneGeometry(12, 12, 24, 16);
     const flagMat = new THREE.MeshStandardMaterial({
-      map: tex, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.05
+      map: fTex, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.05
     });
     this.swissFlagMesh = new THREE.Mesh(flagGeo, flagMat);
-    this.swissFlagMesh.position.set(0, 16.5, 0);
-    // Cache rest X/Y so we can ripple Z smoothly in wind loop
+    this.swissFlagMesh.position.set(3.2, roofY + 11.5, 0);
     this.swissFlagBase = Float32Array.from(flagGeo.attributes.position.array);
-    group.add(this.swissFlagMesh, new THREE.PointLight(0xf43f5e, 2.5, 34));
+    group.add(this.swissFlagMesh);
+
+    // Glowing illumination
+    this.swissServerLight = new THREE.PointLight(0xa855f7, 2.8, 38);
+    this.swissServerLight.position.set(0, floorY + TOWER_H * 0.5, frontFaceZ + 6);
+    group.add(this.swissServerLight);
+
     return group;
+  }
+
+  createWindSwissFlag() {
+    return this.createSwissServerStation();
   }
 
   create3DPhotoIdCard(scale = 1) {
@@ -1842,11 +2078,14 @@ class PushnotOrbit {
   /* ---- 3D RCMP OSINT Laptop (`personal_computer.glb`) with Live Kali Linux Recon Terminal Animation! ---- */
   makeRcmpLaptopScreenTexture() {
     const cvs = document.createElement('canvas');
-    cvs.width = 1024;
-    cvs.height = 1024;
+    cvs.width = 2048;
+    cvs.height = 2048;
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.flipY = false;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
 
     this.rcmpCvs = cvs;
     this.rcmpScreenTex = tex;
@@ -1874,9 +2113,9 @@ class PushnotOrbit {
     if (!this.rcmpCvs) return;
     const ctx = this.rcmpCvs.getContext('2d');
     ctx.save();
-    // Correct mapping for monitor screen UVs (upright Y, normal left-to-right X)
-    ctx.translate(0, 1024);
-    ctx.scale(1, -1);
+    // Correct mapping for monitor screen UVs (upright Y, normal left-to-right X) rendered at native 2048x2048
+    ctx.translate(0, 2048);
+    ctx.scale(2, -2);
 
     // Deep tactical RCMP navy screen background
     const grad = ctx.createLinearGradient(0, 0, 0, 1024);
@@ -2014,11 +2253,36 @@ class PushnotOrbit {
     const group = new THREE.Group();
     const screenTex = this.makeRcmpLaptopScreenTexture();
 
+    // Grounded tactical workstation desk (sits at ground level y = 0, behind the armed Cop)
+    const floorY = 0.5;
+    const deskH = 9.2;
+    const deskW = 12.0;
+    const deskD = 8.5;
+
+    const deskMat = new THREE.MeshStandardMaterial({
+      color: 0x161e2e, metalness: 0.75, roughness: 0.35
+    });
+    const desk = new THREE.Mesh(new THREE.BoxGeometry(deskW, deskH, deskD), deskMat);
+    desk.position.set(0, floorY + deskH / 2, 0);
+    desk.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(desk.geometry),
+      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 })
+    ));
+    group.add(desk);
+
+    // Desktop plinth trim
+    const topTrim = new THREE.Mesh(
+      new THREE.BoxGeometry(deskW + 0.8, 0.45, deskD + 0.8),
+      new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.2 })
+    );
+    topTrim.position.set(0, floorY + deskH + 0.22, 0);
+    group.add(topTrim);
+
     this.loader.load('models/leo/personal_computer.glb?v=33', (gltf) => {
       const laptop = gltf.scene;
       this.harmonizeAsset(laptop, { minRough: 0.24, maxRough: 0.58, maxMetal: 0.65, envIntensity: 0.95, liftDark: true });
 
-      // Replace the laptop's internal screen mesh (`Cube_Screen_0` / material `Screen`) with our RCMP Logo & SpiderFoot display
+      // Replace the laptop's internal screen mesh with our crisp RCMP Logo & SpiderFoot display
       const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
       laptop.traverse((ch) => {
         if (ch.isMesh && (ch.name.includes('Screen') || ch.material?.name === 'Screen')) {
@@ -2026,14 +2290,13 @@ class PushnotOrbit {
         }
       });
 
-      // Center and scale the laptop so it sits cleanly on the elevated disc above the Police officer's head
-      this.centerAndScale(laptop, 25);
-      // Align bottom of laptop with the elevated platform disc (y = -10.8) and angle the screen toward the front-right camera
+      // Center and scale the laptop so it sits naturally on top of the workstation desk at cop eye level
+      this.centerAndScale(laptop, 15.5);
       const box = new THREE.Box3().setFromObject(laptop);
-      laptop.position.y -= (box.min.y + 10.6);
-      laptop.rotation.y = Math.PI * 0.22;
+      laptop.position.set(0, floorY + deskH + 0.45 - box.min.y, 0);
+      laptop.rotation.y = Math.PI * 0.25;
 
-      group.add(laptop, new THREE.PointLight(0x38bdf8, 3.2, 42));
+      group.add(laptop, new THREE.PointLight(0x38bdf8, 3.2, 36));
       if (done) done();
     }, undefined, () => { if (done) done(); });
 
@@ -2043,10 +2306,13 @@ class PushnotOrbit {
   /* ---- 3D Hacker Laptop Screen: ProtonMail Encrypted Threat Email ---- */
   createHackerEmailScreenTexture() {
     const cvs = document.createElement('canvas');
-    cvs.width = 1024;
-    cvs.height = 1024;
+    cvs.width = 2048;
+    cvs.height = 2048;
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
     tex.center.set(0.5, 0.5);
     tex.rotation = Math.PI; // Invert because model UVs are upside-down
 
@@ -2059,6 +2325,8 @@ class PushnotOrbit {
   updateHackerEmailScreen(progress = 1.0) {
     if (!this.hackerScreenCvs) return;
     const ctx = this.hackerScreenCvs.getContext('2d');
+    ctx.save();
+    ctx.scale(2, 2);
     const W = 1024, H = 1024;
 
     // Dark sleek cyberpunk desktop background
@@ -2194,6 +2462,7 @@ class PushnotOrbit {
     ctx.textAlign = 'center';
     ctx.fillText('SENT ✉', winX + winW - 125, statusY + 34);
 
+    ctx.restore();
     this.hackerScreenTex.needsUpdate = true;
   }
 
@@ -2225,50 +2494,27 @@ class PushnotOrbit {
     const L = {
       bandit:      new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@proton.me)
       swat:        new THREE.Vector3(-D, 0,  D), // front-left:  Canadian Police / RCMP / VPD
-      osint:       new THREE.Vector3(-D, 48, D), // upper plane directly above Police head: 3D RCMP OSINT Laptop!
-      proton:      new THREE.Vector3(-D, 0, -D), // back-left:   Proton Switzerland (wind-animated flag!)
+      osint:       new THREE.Vector3(-D - 8.5, 0, D - 6.5), // grounded tactical workstation BEHIND armed Cop!
+      proton:      new THREE.Vector3(-D, 0, -D), // back-left:   Switzerland Illuminated Server Station (waving flag on top!)
       ag:          new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Skyscraper HQ
-      bot:         new THREE.Vector3( 0, 0,  4)  // center:      Single Animated App Server Tower + Facebook
+      bot:         new THREE.Vector3( 0, 0,  4)  // center:      Single Animated App Server Tower
     };
     this.leoPos = L;
-    this.leoTops = { bandit: 26, swat: 26, osint: 62, bot: 26, proton: 26, ag: 26 };
+    this.leoTops = { bandit: 26, swat: 26, osint: 16, bot: 26, proton: 26, ag: 26 };
 
-    // 1. Elevated Holographic OSINT Plane directly above Canadian Police's head
-    this.osintPlaneGroup = new THREE.Group();
-    this.osintPlaneGroup.position.copy(L.osint);
-    const planeDisc = new THREE.Mesh(
-      new THREE.CylinderGeometry(16, 16, 0.35, 48),
-      new THREE.MeshBasicMaterial({ color: 0x0ea5e9, transparent: true, opacity: 0.14 })
-    );
-    planeDisc.position.y = -11;
-    const planeRing = new THREE.Mesh(
-      new THREE.TorusGeometry(16.2, 0.22, 12, 64),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 })
-    );
-    planeRing.rotation.x = Math.PI / 2;
-    planeRing.position.y = -11;
-    const innerRing = new THREE.Mesh(
-      new THREE.TorusGeometry(11.0, 0.12, 10, 48),
-      new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.45 })
-    );
-    innerRing.rotation.x = Math.PI / 2;
-    innerRing.position.y = -10.8;
-    this.osintPlaneGroup.add(planeDisc, planeRing, innerRing);
-    this.leoGroup.add(this.osintPlaneGroup);
-
-    // Wind-Animated 3D Swiss Flag for Proton node (zero background)
-    this.protonGroup = this.createWindSwissFlag();
+    // Dedicated Illuminated Switzerland Server Station with blinking blade LEDs and waving Swiss flag ON TOP
+    this.protonGroup = this.createSwissServerStation();
     this.protonGroup.position.set(L.proton.x, 0, L.proton.z);
     this.protonGroup.rotation.y = Math.PI * 0.2;
     this.leoGroup.add(this.protonGroup);
 
-    // Glowing red rejection X flash at Proton when demand bounces
+    // Glowing red rejection X flash at Proton front door when demand bounces
     this.rejectX = new THREE.Group();
     const xMat = new THREE.MeshBasicMaterial({ color: 0xff1e56 });
-    const x1 = new THREE.Mesh(new THREE.BoxGeometry(10, 1.5, 1.5), xMat); x1.rotation.z =  Math.PI / 4;
-    const x2 = new THREE.Mesh(new THREE.BoxGeometry(10, 1.5, 1.5), xMat); x2.rotation.z = -Math.PI / 4;
+    const x1 = new THREE.Mesh(new THREE.BoxGeometry(9, 1.4, 1.4), xMat); x1.rotation.z =  Math.PI / 4;
+    const x2 = new THREE.Mesh(new THREE.BoxGeometry(9, 1.4, 1.4), xMat); x2.rotation.z = -Math.PI / 4;
     this.rejectX.add(x1, x2);
-    this.rejectX.position.set(L.proton.x, 22, L.proton.z + 4);
+    this.rejectX.position.set(L.proton.x, 12, L.proton.z + 4.8);
     this.rejectX.visible = false;
     this.leoGroup.add(this.rejectX);
 
@@ -2343,6 +2589,9 @@ class PushnotOrbit {
     this.phoneCvs.height = 1024;
     this.phoneTex = new THREE.CanvasTexture(this.phoneCvs);
     this.phoneTex.colorSpace = THREE.SRGBColorSpace;
+    this.phoneTex.minFilter = THREE.LinearFilter;
+    this.phoneTex.magFilter = THREE.LinearFilter;
+    this.phoneTex.generateMipmaps = false;
     this.updatePhoneScreenCanvas('awake', 0);
 
     this.loader.load('models/generic_smartphone_game-ready.glb', (gltf) => {
@@ -2545,11 +2794,11 @@ class PushnotOrbit {
       done();
     }, undefined, done);
 
-    // 6. 3D RCMP OSINT Laptop (`personal_computer.glb`) with Official RCMP Logo & SpiderFoot screen mounted on the elevated plane above the Police officer's head!
+    // 6. Grounded RCMP OSINT Tactical Workstation with Laptop behind Armed Cop!
     this.osintWebGroup = this.createRcmpOsintLaptop(done);
     this.osintWebGroup.position.copy(this.leoPos.osint);
     this.leoGroup.add(this.osintWebGroup);
-    this.leoTops.osint = this.leoPos.osint.y + 10;
+    this.leoTops.osint = 16;
   }
 
   initAppleGoogleSkyscraper(done) {
@@ -2968,32 +3217,64 @@ class PushnotOrbit {
         moverPos = p;
         moverText = this.currentOS === 'ios' ? '📲 Request APNs Token' : '📲 Request FCM Token';
         moverCls = 'cyan';
-      } else if (t < 0.50) {
-        // 3D Laser-Printing / Holographic Materialization of the brand-new Unique Device Key at Post Office!
-        const mp = seg(t, 0.38, 0.50);
+      } else if (t < 0.52) {
+        // 3-Ring Slot Machine Key Gen: rapid multi-shape spin sequentially landing on the final Golden Key!
+        const mp = seg(t, 0.38, 0.52);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
         this.keyForge.position.copy(forgePos);
 
-        // Sweeping laser ring prints bottom-to-top (-3.8 -> +3.8) twice while key solidifies
-        const scanY = -3.8 + ((mp * 2.0) % 1.0) * 7.6;
-        this.forgeLaserRing.position.y = scanY;
-        this.forgeWireKey.rotation.y = this.tokenKey.rotation.y;
-        this.forgeWireMat.opacity = 0.85 * (1 - mp * 0.65);
-        this.forgeCylMat.opacity = 0.22 * Math.sin(mp * Math.PI);
-        this.forgeSparks.rotation.y += 0.14;
+        const nowMs = performance.now();
+        const spinSpeed = 32.0;
 
-        // Solid golden key materializes inside the wireframe blueprint shell
-        this.tokenKey.visible = true;
-        this.tokenKey.position.copy(forgePos);
-        const easeScale = 0.15 + 1.05 * (1 - Math.pow(1 - mp, 2.5));
-        this.tokenKey.scale.set(1.2 * easeScale, 1.2 * Math.max(0.08, mp), 1.2 * easeScale);
+        // Reel 0 (left) locks on Key at mp = 0.45
+        if (mp < 0.45) {
+          if (this.slotReels?.[0]) this.slotReels[0].group.rotation.x = (nowMs * 0.001 * spinSpeed) % (Math.PI * 2);
+        } else {
+          if (this.slotReels?.[0]) this.slotReels[0].group.rotation.x = 0; // Locked on Key!
+        }
+
+        // Reel 1 (center) locks on Key at mp = 0.60
+        if (mp < 0.60) {
+          if (this.slotReels?.[1]) this.slotReels[1].group.rotation.x = (nowMs * 0.001 * (spinSpeed + 4.5)) % (Math.PI * 2);
+        } else {
+          if (this.slotReels?.[1]) this.slotReels[1].group.rotation.x = 0; // Locked on Key!
+        }
+
+        // Reel 2 (right) locks on Key at mp = 0.75
+        if (mp < 0.75) {
+          if (this.slotReels?.[2]) this.slotReels[2].group.rotation.x = (nowMs * 0.001 * (spinSpeed + 9.0)) % (Math.PI * 2);
+        } else {
+          if (this.slotReels?.[2]) this.slotReels[2].group.rotation.x = 0; // Locked on Key!
+        }
+
+        // Celebratory Win / Jackpot Burst when all 3 keys line up (mp >= 0.75):
+        if (mp >= 0.75) {
+          const winP = (mp - 0.75) / 0.25;
+          if (this.slotSparks) {
+            this.slotSparks.material.opacity = Math.sin(winP * Math.PI) * 0.95;
+            this.slotSparks.rotation.z += 0.15;
+          }
+          if (this.slotLight) this.slotLight.intensity = 4.5 * (1 - winP * 0.3);
+          if (this.slotPayline) this.slotPayline.material.color.setHex((winP * 10) % 1 < 0.5 ? 0xfacc15 : 0x38bdf8);
+
+          // Solid unified golden key emerges and scales up out of the slot machine!
+          this.tokenKey.visible = true;
+          this.tokenKey.position.set(forgePos.x, forgePos.y + winP * 2.5, forgePos.z + 2.0);
+          this.tokenKey.scale.setScalar(1.2 * (0.6 + winP * 0.6));
+        } else {
+          this.tokenKey.visible = false;
+          if (this.slotSparks) this.slotSparks.material.opacity = 0;
+          if (this.slotLight) this.slotLight.intensity = 1.2;
+        }
 
         moverPos = forgePos;
-        moverText = this.currentOS === 'ios' ? '🔑 Apple Generates APNs Token' : '🔑 Google Generates FCM Token';
+        moverText = mp < 0.75
+          ? (this.currentOS === 'ios' ? '🎰 Slot Machine: APNs Token Key Gen…' : '🎰 Slot Machine: FCM Token Key Gen…')
+          : (this.currentOS === 'ios' ? '🎉 JACKPOT 🔑 🔑 🔑 APNs Token Generated!' : '🎉 JACKPOT 🔑 🔑 🔑 FCM Token Generated!');
         moverCls = 'cyan';
       } else if (t < 0.62) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.50, 0.62));
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.52, 0.62));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
@@ -3014,44 +3295,47 @@ class PushnotOrbit {
         showSaved = true;
       }
     } else if (this.mode === 'push') {
-      if (t < 0.70) {
+      if (t < 0.76) {
         this.updatePhoneScreenCanvas('sleeping', 0);
       } else {
-        this.updatePhoneScreenCanvas('awake', seg(t, 0.70, 0.92));
+        this.updatePhoneScreenCanvas('awake', seg(t, 0.76, 0.94));
       }
 
-      if (t < 0.16) {
-        const p = this.arcUfoToServer.getPoint(seg(t, 0, 0.16));
-        this.triggerBolt.visible = true;
-        this.triggerBolt.position.copy(p);
-        moverPos = p;
-        moverText = '⚡ Promo Trigger';
-        moverCls = 'cyan';
-      } else if (t < 0.30) {
-        // Beat 2 in Push Delivery: App Maker tries to reach Phone directly -> Blocked by OS Firewall! Must go via Apple / Google
-        const bp = seg(t, 0.16, 0.30);
-        this.directBlockGroup.visible = true;
-        const pServer = POS.server.clone().setY(16);
-        const pMid    = new THREE.Vector3(0, 16, POS.phone.z);
-        const bounceU = bp < 0.65 ? (bp / 0.65) : (1 - (bp - 0.65) / 0.35 * 0.45);
-        const p = pServer.clone().lerp(pMid, clamp01(bounceU));
+      if (t < 0.28) {
+        // Step 1: Push Notification generated & animated directly ABOVE THE WORLD!
+        // Presenter stops to explain Bejeweled wants to send this end user a free 3-month pro trial!
+        const cardPos = POS.ufo.clone().setY(62);
         this.pushOrb.visible = true;
-        this.pushOrb.position.copy(p);
-        showNoDirect = true;
-      } else if (t < 0.48) {
-        const p = this.arcServerToPost.getPoint(seg(t, 0.30, 0.48));
-        this.pushOrb.visible = true;
-        this.pushOrb.position.copy(p);
-        moverPos = p;
-        moverText = this.currentOS === 'ios' ? ' APNs Payload + 🔑 Key' : '🤖 FCM Payload + 🔑 Key';
+        this.pushOrb.position.copy(cardPos);
+        this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
+        moverPos = cardPos;
+        moverText = '💎 Bejeweled: 3 Months Free Pro Trial (+ Token Key)';
         moverCls = 'push';
-      } else if (t < 0.70) {
-        const bp = seg(t, 0.48, 0.70);
+      } else if (t < 0.56) {
+        // Step 2: Push Notification + Token Key travels across sky to Google / Apple HQ
+        const p = this.arcServerToPost.getPoint(seg(t, 0.28, 0.56));
+        this.pushOrb.visible = true;
+        this.pushOrb.position.copy(p);
+        this.pushOrb.scale.setScalar(1.0);
+        moverPos = p;
+        moverText = this.currentOS === 'ios' ? ' Bejeweled → Apple APNs (Payload + 🔑 Token)' : '🤖 Bejeweled → Google FCM (Payload + 🔑 Token)';
+        moverCls = 'push';
+      } else if (t < 0.78) {
+        // Step 3: Google takes the Key and matches it with the end user!
+        const bp = seg(t, 0.56, 0.78);
+        this.pushOrb.visible = true;
+        this.pushOrb.position.set(POS.post.x, 26, POS.post.z);
         this.brainGroup.visible = true;
         this.updateBrainAndLedger(bp);
         showLedger = true;
-      } else if (t < 0.90) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.70, 0.90));
+        moverPos = new THREE.Vector3(POS.post.x, 26, POS.post.z);
+        moverText = this.currentOS === 'ios'
+          ? '🔍 Apple extracts Token Key & matches End-User iPhone Socket'
+          : '🔍 Google extracts Token Key & matches End-User Android Socket';
+        moverCls = 'push';
+      } else if (t < 0.94) {
+        // Step 4: Deliver from Google across persistent OS socket to End User Phone
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.78, 0.94));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         moverPos = p;
@@ -3217,58 +3501,99 @@ class PushnotOrbit {
     let focusLocal = null;
     let focusGroup = this.worldGroup;
     let focusDist = 80;
+    let customCineCam = null;
 
-    if (moverPos) {
-      focusLocal = moverPos.clone();
-      focusGroup = moverParent;
-      focusDist = 80;
-    } else if (!isLeo) {
-      if (showInstall || showPush || showToken) {
+    if (this.mode === 'setup') {
+      if (t >= 0.38 && t < 0.52) {
+        // Zoom into 3-Ring Slot Machine Key Gen at Apple/Google HQ
+        focusLocal = new THREE.Vector3(POS.post.x, 24, POS.post.z);
+        focusDist = 52;
+      } else if (moverPos) {
+        focusLocal = moverPos.clone();
+        focusDist = 76;
+      } else if (showInstall || showToken) {
         focusLocal = new THREE.Vector3(POS.phone.x, 16, POS.phone.z);
-        focusDist = 78;
-      } else if (showNoDirect) {
-        focusLocal = new THREE.Vector3(0, 16, POS.phone.z);
-        focusDist = 80;
-      } else if (showLedger) {
-        focusLocal = new THREE.Vector3(POS.post.x, 22, POS.post.z);
-        focusDist = 94;
+        focusDist = 72;
       } else if (showSaved) {
         focusLocal = new THREE.Vector3(POS.server.x, 16, POS.server.z);
-        focusDist = 82;
-      } else if (this.mode === 'world' && this.worldStimStreams?.length) {
+        focusDist = 78;
+      }
+    } else if (this.mode === 'push') {
+      if (t < 0.28) {
+        // Zoom into Push Notification message banner animated directly above the World!
+        focusLocal = new THREE.Vector3(POS.ufo.x, 62, POS.ufo.z);
+        focusDist = 42;
+      } else if (t < 0.56) {
+        // Following payload gliding to Google/Apple
+        focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 30, 0);
+        focusDist = 74;
+      } else if (t < 0.78) {
+        // Google extracts Key & matches registered End-User socket
+        focusLocal = new THREE.Vector3(POS.post.x, 26, POS.post.z);
+        focusDist = 58;
+      } else {
+        // Delivered to Phone
+        focusLocal = new THREE.Vector3(POS.phone.x, 16, POS.phone.z);
+        focusDist = 65;
+      }
+    } else if (this.mode === 'world') {
+      if (this.worldStimStreams?.length) {
         focusLocal = this.worldStimStreams[0].currentPos.clone();
-        focusDist = 82;
+        focusDist = 80;
+      } else {
+        focusLocal = new THREE.Vector3(0, 16, 0);
+        focusDist = 110;
       }
     } else {
+      // LAW ENFORCEMENT STAGE (LEO):
       focusGroup = this.leoGroup;
       if (t < 0.20) {
-        focusLocal = new THREE.Vector3(L.bandit.x, 14, L.bandit.z);
-        focusDist = 65;
-      } else if (showLeoThreat || showLeoTokens || showLeoId) {
-        focusLocal = new THREE.Vector3(L.swat.x, 14, L.swat.z);
-        focusDist = 82;
-      } else if (showLeoDenied) {
-        focusLocal = new THREE.Vector3(L.proton.x, 16, L.proton.z);
-        focusDist = 80;
-      } else if (showLeoOsint) {
-        focusLocal = new THREE.Vector3(L.osint.x, L.osint.y, L.osint.z);
-        focusDist = 58;
+        // Suspect composing threat email on laptop screen
+        focusLocal = new THREE.Vector3(L.bandit.x, 11.5, L.bandit.z);
+        customCineCam = new THREE.Vector3(L.bandit.x + 22, 12.5, L.bandit.z - 10);
+      } else if (t < 0.36) {
+        if (showLeoDenied) {
+          // Switzerland illuminated server rack + waving Swiss flag on top!
+          focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
+          customCineCam = new THREE.Vector3(L.proton.x + 36, 19.5, L.proton.z - 36);
+        } else {
+          // Police receive threat / send demand -> Facing the armed cop at eye level!
+          focusLocal = new THREE.Vector3(L.swat.x, 14.0, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 26, 14.5, L.swat.z + 26);
+        }
+      } else if (t < 0.68) {
+        // Running Cyber OSINT -> Zoomed OVER THE SHOULDER / eye level into the computer screen behind the cop!
+        focusLocal = new THREE.Vector3(L.osint.x, 12.8, L.osint.z);
+        customCineCam = new THREE.Vector3(L.osint.x + 18, 14.6, L.osint.z + 18);
+      } else if (t < 0.86) {
+        // Production orders served to Apple & Google Skyscraper
+        focusLocal = new THREE.Vector3(L.ag.x, 22.0, L.ag.z);
+        focusDist = 62;
+      } else {
+        // Suspect unmasked & arrested with BC Photo ID!
+        focusLocal = new THREE.Vector3(L.bandit.x, 14.0, L.bandit.z);
+        focusDist = 48;
       }
     }
 
     if (focusLocal) {
-      const worldFocus = focusLocal.applyMatrix4(focusGroup.matrixWorld);
+      const worldFocus = focusLocal.clone().applyMatrix4(focusGroup.matrixWorld);
       this.cineLookAt.copy(worldFocus);
 
-      // Snap strictly to the OUTSIDE facing IN LATERALLY at eye level (NO bird's eye view from top!)
-      const radial = new THREE.Vector3(worldFocus.x, 0, worldFocus.z);
-      if (radial.lengthSq() < 1) radial.set(0, 0, 1);
-      radial.normalize();
+      if (customCineCam) {
+        const worldCam = customCineCam.clone().applyMatrix4(focusGroup.matrixWorld);
+        this.cineCamPos.copy(worldCam);
+      } else {
+        // Snap strictly to the OUTSIDE facing IN LATERALLY at eye level (NO bird's eye view from top!)
+        const radial = new THREE.Vector3(worldFocus.x, 0, worldFocus.z);
+        if (radial.lengthSq() < 1) radial.set(0, 0, 1);
+        radial.normalize();
 
-      this.cineCamPos
-        .copy(worldFocus)
-        .addScaledVector(radial, focusDist);
-      this.cineCamPos.y = worldFocus.y + 1.5; // Lateral eye-level!
+        this.cineCamPos
+          .copy(worldFocus)
+          .addScaledVector(radial, focusDist);
+        this.cineCamPos.y = worldFocus.y + 1.5; // Lateral eye-level!
+      }
     }
   }
 
@@ -3319,6 +3644,17 @@ class PushnotOrbit {
       }
       pos.needsUpdate = true;
       this.swissFlagMesh.geometry.computeVertexNormals();
+    }
+
+    // Switzerland illuminated server blade LEDs and telemetry laser scan
+    if (this.swissLeds && this.leoGroup.visible) {
+      const tSec = now * 0.001;
+      for (const l of this.swissLeds) {
+        l.mesh.visible = Math.sin(tSec * l.speed + l.phase) > -0.2;
+      }
+      if (this.swissScanBar) {
+        this.swissScanBar.position.y = 2.0 + ((Math.sin(tSec * 2.8) * 0.5 + 0.5) * 18.0);
+      }
     }
 
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;

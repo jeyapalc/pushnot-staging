@@ -1415,9 +1415,9 @@ class PushnotOrbit {
       target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
       camPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y + 2, POS.ufo.z + 42);
     } else if (key === 'bandit') {
-      // Tight over-the-shoulder view of the hacker's monitor screen:
+      // Tight over-the-shoulder view looking past hacker's right shoulder directly at monitor screen:
       target = new THREE.Vector3(30.0, 15.5, 28.7);
-      camPos = new THREE.Vector3(37.2, 17.6, 36.8);
+      camPos = new THREE.Vector3(39.5, 18.2, 33.5);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
       // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward. Eye-level lateral portrait snap!
       target = new THREE.Vector3(this.leoPos.swat.x, 14.0, this.leoPos.swat.z);
@@ -1645,27 +1645,27 @@ class PushnotOrbit {
     ctx.textBaseline = 'middle';
     ctx.shadowColor = '#fbbf24';
     ctx.shadowBlur = 32;
-    ctx.fillText('🔔', 180, 256);
+    ctx.fillText('🔔', 170, 256);
     ctx.restore();
 
     // Subtle vertical separator
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.moveTo(310, 60); ctx.lineTo(310, 452);
+    ctx.moveTo(290, 60); ctx.lineTo(290, 452);
     ctx.stroke();
 
-    // Main text: Push notification from Bejeweled
+    // Two clean lines: Zero truncation, generous margins on all sides!
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 52px "Space Grotesk", sans-serif';
-    ctx.fillText('Push notification from Bejeweled', 360, 215);
+    ctx.font = '900 48px "Space Grotesk", sans-serif';
+    ctx.fillText('Push Notification', 335, 205);
 
-    ctx.fillStyle = '#94a3b8';
+    ctx.fillStyle = isIos ? '#38bdf8' : '#34d399';
     ctx.font = '700 36px "Space Grotesk", sans-serif';
-    ctx.fillText('💎 Bejeweled Blitz', 360, 295);
+    ctx.fillText('from Bejeweled Blitz 💎', 335, 285);
 
     if (this.payloadTex) this.payloadTex.needsUpdate = true;
   }
@@ -4010,10 +4010,10 @@ class PushnotOrbit {
       focusGroup = this.leoGroup;
       if (t < 0.20) {
         // Suspect composing threat email on laptop screen
-        // TIGHT OVER-THE-SHOULDER VIEW: Camera placed just above the hacker's right shoulder,
-        // framing the monitor screen large and centered with the shoulder in the lower corner!
+        // TIGHT OVER-THE-SHOULDER VIEW: Camera positioned past the hacker's right shoulder,
+        // framing the monitor screen large and 100% unobstructed!
         focusLocal = new THREE.Vector3(30.0, 15.5, 28.7);
-        customCineCam = new THREE.Vector3(37.2, 17.6, 36.8);
+        customCineCam = new THREE.Vector3(39.5, 18.2, 33.5);
       } else if (t < 0.36) {
         if (t >= 0.25 || showLeoDenied) {
           // Switzerland illuminated server rack + waving Swiss flag on top!

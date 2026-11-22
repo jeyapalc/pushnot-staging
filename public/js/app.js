@@ -35,7 +35,7 @@ const MODE_STEPS = {
   setup: [0.06, 0.25, 0.34, 0.44, 0.56, 0.68, 0.84, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
   world: [0.08, 0.24, 0.40, 0.56, 0.72, 0.88],
-  leo:   [0.05, 0.16, 0.28, 0.46, 0.54, 0.64, 0.78, 0.96]
+  leo:   [0.05, 0.18, 0.32, 0.48, 0.62, 0.76, 0.88, 0.96]
 };
 
 const WORLD_APPS = [
@@ -85,6 +85,7 @@ class PushnotOrbit {
     this.initLeoStage();
     this.loadModels();
     this.initUI();
+    this.initDirectorMode();
     this.setMode('setup', false);
     this.animate();
   }
@@ -140,6 +141,9 @@ class PushnotOrbit {
       this.cinematicFollow = false;
       this.focusCamPos = null;
       this.focusTargetPos = null;
+    });
+    this.controls.addEventListener('change', () => {
+      if (this.directorMode) this.updateDirectorHUD();
     });
 
     addEventListener('resize', () => {
@@ -582,6 +586,111 @@ class PushnotOrbit {
 
   createFingerprintToken(scale = 1) {
     return this.createTokenKey(scale);
+  }
+
+  /* ---- Unique Branded 3D App Push Token Keys (Meta, Instagram, X) ---- */
+  createBrandedKey(brand, hexColor, label, token, scale = 1) {
+    const group = new THREE.Group();
+    const colorInt = parseInt(hexColor.replace('#', '0x'), 16);
+    const mat = new THREE.MeshStandardMaterial({
+      color: colorInt,
+      emissive: colorInt,
+      emissiveIntensity: 0.55,
+      metalness: 0.9,
+      roughness: 0.18
+    });
+
+    // Key bow (ring handle)
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(1.35, 0.38, 12, 28), mat);
+    bow.position.x = -1.7;
+
+    // Center disc inside bow with brand glyph
+    const discCvs = document.createElement('canvas');
+    discCvs.width = 256; discCvs.height = 256;
+    const dctx = discCvs.getContext('2d');
+    dctx.fillStyle = hexColor;
+    dctx.beginPath(); dctx.arc(128, 128, 124, 0, Math.PI * 2); dctx.fill();
+    dctx.strokeStyle = '#ffffff'; dctx.lineWidth = 8; dctx.stroke();
+    dctx.fillStyle = '#ffffff';
+    dctx.textAlign = 'center'; dctx.textBaseline = 'middle';
+    if (brand === 'meta') {
+      dctx.font = 'bold 140px sans-serif';
+      dctx.fillText('f', 134, 134);
+    } else if (brand === 'instagram') {
+      dctx.font = '115px sans-serif';
+      dctx.fillText('📸', 128, 130);
+    } else {
+      dctx.font = '900 125px sans-serif';
+      dctx.fillText('𝕏', 128, 130);
+    }
+    const discTex = new THREE.CanvasTexture(discCvs);
+    const discMat = new THREE.MeshBasicMaterial({ map: discTex, side: THREE.DoubleSide });
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(1.15, 24), discMat);
+    disc.position.x = -1.7;
+
+    // Key blade shaft
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.58, 0.42), mat);
+    shaft.position.x = 0.9;
+
+    // Distinct tooth profile per brand
+    const tGroup = new THREE.Group();
+    if (brand === 'meta') {
+      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.1, 0.42), mat); t1.position.set(1.2, -0.75, 0);
+      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.4, 0.42), mat); t2.position.set(2.1, -0.9, 0);
+      tGroup.add(t1, t2);
+    } else if (brand === 'instagram') {
+      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.3, 0.42), mat); t1.position.set(1.0, -0.85, 0);
+      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.8, 0.42), mat); t2.position.set(1.8, -0.6, 0);
+      const t3 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.5, 0.42), mat); t3.position.set(2.4, -0.95, 0);
+      tGroup.add(t1, t2, t3);
+    } else {
+      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.4, 0.42), mat); t1.position.set(1.4, -0.9, 0);
+      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.42), mat); t2.position.set(2.3, -0.7, 0);
+      tGroup.add(t1, t2);
+    }
+
+    // Floating micro-tag with token ID
+    const tagCvs = document.createElement('canvas');
+    tagCvs.width = 384; tagCvs.height = 96;
+    const tctx = tagCvs.getContext('2d');
+    tctx.fillStyle = '#0b1329';
+    tctx.fillRect(0, 0, 384, 96);
+    tctx.strokeStyle = hexColor; tctx.lineWidth = 6;
+    tctx.strokeRect(4, 4, 376, 88);
+    tctx.fillStyle = '#ffffff';
+    tctx.font = 'bold 44px monospace';
+    tctx.textAlign = 'center'; tctx.textBaseline = 'middle';
+    tctx.fillText(token, 192, 48);
+    const tagTex = new THREE.CanvasTexture(tagCvs);
+    const tagMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.0, 0.75),
+      new THREE.MeshBasicMaterial({ map: tagTex, side: THREE.DoubleSide })
+    );
+    tagMesh.position.set(0.6, 1.1, 0);
+
+    group.add(bow, disc, shaft, tGroup, tagMesh, new THREE.PointLight(colorInt, 2.5, 20));
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  createUniqueTokenTrio(scale = 1) {
+    const group = new THREE.Group();
+    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.95);
+    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.95);
+    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.95);
+
+    kMeta.position.set(-3.2, 0, 0);
+    kMeta.rotation.z = -0.22;
+
+    kInsta.position.set(0, 0.5, 0);
+    kInsta.rotation.z = 0;
+
+    kX.position.set(3.2, 0, 0);
+    kX.rotation.z = 0.22;
+
+    group.add(kMeta, kInsta, kX);
+    group.scale.setScalar(scale);
+    return group;
   }
 
     /* ---- Industrial CNC Fiber Laser Key Fabrication Rig ---- */
@@ -1994,117 +2103,133 @@ class PushnotOrbit {
   }
 
   create3DPhotoIdCard(scale = 1) {
-    // High-res fictional 3D Canadian Provincial Photo ID Card (BC Driver's Licence)
+    // High-res Canadian Law Enforcement Hardware-Matched Photo ID Record
     const cvs = document.createElement('canvas');
     cvs.width = 512; cvs.height = 320;
     const ctx = cvs.getContext('2d');
 
     // Card base gradient
     const bg = ctx.createLinearGradient(0, 0, 512, 320);
-    bg.addColorStop(0, '#e0f2fe');
-    bg.addColorStop(1, '#bae6fd');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, 512, 320);
-
-    // Top header band (Canadian BC Driver's Licence)
-    ctx.fillStyle = '#0369a1';
-    ctx.fillRect(0, 0, 512, 58);
-    ctx.fillStyle = '#ef4444';
-    ctx.fillRect(0, 54, 512, 6);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 19px monospace';
-    ctx.fillText('BRITISH COLUMBIA · CANADA  DRIVER\'S LICENCE', 16, 36);
-
-    // Portrait frame + stylized silhouette avatar
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(22, 78, 128, 158);
-    ctx.fillStyle = '#38bdf8';
-    ctx.beginPath(); ctx.arc(86, 130, 28, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(86, 224, 48, Math.PI, 0); ctx.fill();
-    ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 3;
-    ctx.strokeRect(22, 78, 128, 158);
-
-    // Fictional Canadian subscriber fields
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 23px sans-serif';
-    ctx.fillText('DOE, JOHN A.', 170, 106);
-    ctx.fillStyle = '#334155';
-    ctx.font = 'bold 14.5px monospace';
-    ctx.fillText('DL:  BC-8492-104', 170, 138);
-    ctx.fillText('DOB: 1991-04-12', 170, 164);
-    ctx.fillText('TEL: +1 (604) 555-0194', 170, 190);
-    ctx.fillText('742 ROBSON ST, VANCOUVER BC', 170, 216);
-    ctx.fillText('IP:  24.84.100.42 (TELUS CA)', 170, 242);
-
-    // Bottom barcode strip
-    ctx.fillStyle = '#0f172a';
-    for (let x = 22; x < 488; x += 6) {
-      const w = ((x * 13) % 4) + 1;
-      ctx.fillRect(x, 266, w, 34);
-    }
-
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.4, roughness: 0.3 });
-    const faceMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.22, metalness: 0.08, clearcoat: 0.9 });
-    const mesh = new THREE.Mesh(
-      new THREE.BoxGeometry(9.6, 6.0, 0.3),
-      [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat]
-    );
-    mesh.scale.setScalar(scale);
-    return mesh;
-  }
-
-  create3DCreditCard(scale = 1) {
-    // High-res fictional 3D Platinum Credit Card
-    const cvs = document.createElement('canvas');
-    cvs.width = 512; cvs.height = 320;
-    const ctx = cvs.getContext('2d');
-
-    const bg = ctx.createLinearGradient(0, 0, 512, 320);
     bg.addColorStop(0, '#0f172a');
-    bg.addColorStop(0.55, '#1e3a8a');
-    bg.addColorStop(1, '#020617');
+    bg.addColorStop(0.5, '#1e293b');
+    bg.addColorStop(1, '#0f172a');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, 512, 320);
 
-    // Subtle diagonal metallic sheen band
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
-    ctx.beginPath(); ctx.moveTo(260, 0); ctx.lineTo(420, 0); ctx.lineTo(240, 320); ctx.lineTo(80, 320); ctx.closePath(); ctx.fill();
+    // Top header band (Royal Canadian Mounted Police / Gov of Canada Identity Record)
+    const hGrad = ctx.createLinearGradient(0, 0, 512, 0);
+    hGrad.addColorStop(0, '#1e3a8a');
+    hGrad.addColorStop(0.6, '#0284c7');
+    hGrad.addColorStop(1, '#1e3a8a');
+    ctx.fillStyle = hGrad;
+    ctx.fillRect(0, 0, 512, 56);
+    ctx.fillStyle = '#ef4444';
+    ctx.fillRect(0, 52, 512, 4);
 
-    // Issuer label
-    ctx.fillStyle = '#93c5fd';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText('BILLING CARD  ·  PLATINUM', 28, 42);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px "Space Grotesk", sans-serif';
+    ctx.fillText('🇨🇦 CANADA · SUBSCRIBER IDENTITY RECORD', 16, 35);
 
-    // Gold EMV chip
+    // Portrait frame background
+    const px = 20, py = 72, pw = 130, ph = 165;
+    ctx.fillStyle = '#060a14';
+    ctx.fillRect(px, py, pw, ph);
+
+    // Draw authentic Hacker Mugshot
+    ctx.save();
+    const cx = px + pw / 2;
+    // Dark hoodie drape over shoulders
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(cx, py + 180, 60, Math.PI, 0);
+    ctx.fill();
+
+    // Dark hoodie hood arch around head
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.ellipse(cx, py + 72, 40, 52, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Suspect face within hood
+    ctx.fillStyle = '#d4a373';
+    ctx.beginPath();
+    ctx.ellipse(cx, py + 76, 26, 34, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Messy dark hair bangs protruding from hood
+    ctx.fillStyle = '#18181b';
+    ctx.beginPath();
+    ctx.moveTo(cx - 24, py + 56);
+    ctx.lineTo(cx - 10, py + 68);
+    ctx.lineTo(cx + 2, py + 58);
+    ctx.lineTo(cx + 14, py + 69);
+    ctx.lineTo(cx + 24, py + 58);
+    ctx.lineTo(cx + 20, py + 50);
+    ctx.lineTo(cx - 20, py + 50);
+    ctx.closePath();
+    ctx.fill();
+
+    // Black cyber eyewear frames with glowing cyan screen glint!
+    ctx.strokeStyle = '#020617';
+    ctx.lineWidth = 5;
+    // Left lens
+    ctx.strokeRect(cx - 22, py + 70, 18, 12);
+    // Right lens
+    ctx.strokeRect(cx + 4, py + 70, 18, 12);
+    // Bridge
+    ctx.beginPath(); ctx.moveTo(cx - 4, py + 76); ctx.lineTo(cx + 4, py + 76); ctx.stroke();
+
+    // Glowing cyan reflection in lenses (matching hacker's glasses!)
+    ctx.fillStyle = '#38bdf8';
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 8;
+    ctx.fillRect(cx - 20, py + 72, 14, 8);
+    ctx.fillRect(cx + 6, py + 72, 14, 8);
+    ctx.restore();
+
+    // Portrait frame cyan border
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px, py, pw, ph);
+
+    // Subscriber details
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 15px "JetBrains Mono", monospace';
+    ctx.fillText('HARDWARE MATCH CONFIRMED (100%)', 168, 88);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 24px "Space Grotesk", sans-serif';
+    ctx.fillText('MALONE, CONNOR J.', 168, 118);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '700 14px "JetBrains Mono", monospace';
+    ctx.fillText('DOB:   1996-08-14 (AGE 30)', 168, 142);
+    ctx.fillText('ALIAS: badguy@proton.me', 168, 164);
+
     ctx.fillStyle = '#fbbf24';
-    ctx.fillRect(32, 86, 68, 52);
-    ctx.strokeStyle = '#92400e'; ctx.lineWidth = 2;
-    ctx.strokeRect(32, 86, 68, 52);
-    ctx.beginPath(); ctx.moveTo(32, 112); ctx.lineTo(100, 112); ctx.moveTo(66, 86); ctx.lineTo(66, 138); ctx.stroke();
+    ctx.font = 'bold 14px "JetBrains Mono", monospace';
+    ctx.fillText('ADDR:  1042 ROBSON ST, VANCOUVER BC', 168, 188);
 
-    // Fictional card number
-    ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 28px monospace';
-    ctx.fillText('4532  8810  ••••  4921', 32, 198);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 13px "JetBrains Mono", monospace';
+    ctx.fillText('DEVICE: iPhone 15 Pro & Pixel 8', 168, 210);
+    ctx.fillText('TOKENS: APNs #7A9F-FB01 / FCM #3E1B', 168, 230);
 
-    // Cardholder & expiry
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = 'bold 17px monospace';
-    ctx.fillText('JOHN A DOE', 32, 266);
-    ctx.fillText('EXP 09/29', 260, 266);
-
-    // Overlapping network circles (red & amber)
-    ctx.fillStyle = 'rgba(239, 68, 68, 0.9)';
-    ctx.beginPath(); ctx.arc(432, 256, 24, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = 'rgba(251, 191, 36, 0.88)';
-    ctx.beginPath(); ctx.arc(460, 256, 24, 0, Math.PI * 2); ctx.fill();
+    // Verification barcode at bottom
+    ctx.fillStyle = '#ffffff';
+    for (let x = 20; x < 492; x += 5) {
+      const w = ((x * 17) % 4) + 1;
+      ctx.fillRect(x, 260, w, 38);
+    }
+    ctx.fillStyle = '#64748b';
+    ctx.font = '11px monospace';
+    ctx.fillText('RCMP FORENSIC TOKEN VERIFICATION · PRODUCTION ORDER APNs/FCM-2026', 20, 310);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
-    const edgeMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.85, roughness: 0.25 });
-    const faceMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.20, metalness: 0.35, clearcoat: 1.0 });
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.85, roughness: 0.2 });
+    const faceMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.22, metalness: 0.15, clearcoat: 1.0 });
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(9.6, 6.0, 0.3),
       [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat]
@@ -2113,17 +2238,233 @@ class PushnotOrbit {
     return mesh;
   }
 
-  createSubscriberCardPair(scale = 1) {
-    const g = new THREE.Group();
+  /* ---- Adorable Tiny 3D Modern Residential Townhouse (Subscriber's Residence) ---- */
+  createTiny3DHome(scale = 1) {
+    const group = new THREE.Group();
+
+    // 1. Landscaped lawn plinth
+    const lawnGeo = new THREE.CylinderGeometry(5.4, 5.8, 0.7, 32);
+    const lawnMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85, metalness: 0.05 });
+    const lawn = new THREE.Mesh(lawnGeo, lawnMat);
+    lawn.position.y = -0.35;
+    group.add(lawn);
+
+    // 2. Main house walls (crisp modern white/slate siding)
+    const houseGeo = new THREE.BoxGeometry(5.2, 4.0, 4.6);
+    const houseMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5, metalness: 0.1 });
+    const house = new THREE.Mesh(houseGeo, houseMat);
+    house.position.y = 2.0;
+    group.add(house);
+
+    // 3. Dark architectural pitched roof
+    const roofShape = new THREE.Shape();
+    roofShape.moveTo(-3.0, 0);
+    roofShape.lineTo(0, 2.4);
+    roofShape.lineTo(3.0, 0);
+    roofShape.closePath();
+    const roofGeo = new THREE.ExtrudeGeometry(roofShape, { depth: 5.2, bevelEnabled: false });
+    roofGeo.center();
+    const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.3 });
+    const roof = new THREE.Mesh(roofGeo, roofMat);
+    roof.position.set(0, 4.9, 0);
+    group.add(roof);
+
+    // 4. Red brick chimney
+    const chimGeo = new THREE.BoxGeometry(0.85, 2.2, 0.85);
+    const chimMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.9, metalness: 0.05 });
+    const chim = new THREE.Mesh(chimGeo, chimMat);
+    chim.position.set(1.4, 5.4, -0.6);
+    group.add(chim);
+
+    // 5. Front door (warm mahogany wood)
+    const doorGeo = new THREE.BoxGeometry(1.2, 2.2, 0.15);
+    const doorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.4, metalness: 0.2 });
+    const door = new THREE.Mesh(doorGeo, doorMat);
+    door.position.set(0, 1.1, 2.38);
+    // Golden brass doorknob
+    const knob = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.1 })
+    );
+    knob.position.set(0.42, 1.1, 2.48);
+    group.add(door, knob);
+
+    // 6. Two glowing warm amber windows
+    const winGeo = new THREE.PlaneGeometry(1.0, 1.2);
+    const winMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide });
+    const winL = new THREE.Mesh(winGeo, winMat);
+    winL.position.set(-1.6, 2.4, 2.32);
+    const winR = new THREE.Mesh(winGeo, winMat);
+    winR.position.set(1.6, 2.4, 2.32);
+    group.add(winL, winR);
+
+    // Warm ambient glow cast from windows
+    const homeLight = new THREE.PointLight(0xf59e0b, 2.5, 14);
+    homeLight.position.set(0, 2.0, 3.2);
+    group.add(homeLight);
+
+    // 7. Street address post & sign plaque in front yard
+    const signCvs = document.createElement('canvas');
+    signCvs.width = 384; signCvs.height = 128;
+    const sctx = signCvs.getContext('2d');
+    sctx.fillStyle = '#0f172a';
+    sctx.fillRect(0, 0, 384, 128);
+    sctx.strokeStyle = '#38bdf8'; sctx.lineWidth = 6;
+    sctx.strokeRect(4, 4, 376, 120);
+    sctx.fillStyle = '#ffffff';
+    sctx.font = 'bold 38px "Space Grotesk", sans-serif';
+    sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
+    sctx.fillText('📍 1042 ROBSON ST', 192, 48);
+    sctx.fillStyle = '#94a3b8';
+    sctx.font = 'bold 24px monospace';
+    sctx.fillText('VANCOUVER, BC', 192, 92);
+
+    const signTex = new THREE.CanvasTexture(signCvs);
+    const signBoard = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.4, 0.8),
+      new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide })
+    );
+    signBoard.position.set(1.8, 1.1, 3.4);
+    const signPost = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.08, 0.08, 1.2, 8),
+      new THREE.MeshStandardMaterial({ color: 0x475569 })
+    );
+    signPost.position.set(1.8, 0.6, 3.4);
+    group.add(signBoard, signPost);
+
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  /* ---- Combined Subscriber Identity Bundle (3D Photo ID + Tiny 3D Home, ZERO subscription/credit cards!) ---- */
+  createSubscriberBundle(scale = 1) {
+    const group = new THREE.Group();
     const idCard = this.create3DPhotoIdCard(1.0);
-    idCard.position.set(-2.6, 1.4, 0.8);
-    idCard.rotation.set(0.05, 0.14, 0.08);
-    const ccCard = this.create3DCreditCard(1.0);
-    ccCard.position.set(2.6, -1.4, -0.8);
-    ccCard.rotation.set(-0.05, -0.14, -0.08);
-    g.add(idCard, ccCard, new THREE.PointLight(0x38bdf8, 3.2, 40));
-    g.scale.setScalar(scale);
-    return g;
+    idCard.position.set(-5.2, 3.2, 0);
+    idCard.rotation.set(0.05, 0.22, 0.04);
+
+    const home = this.createTiny3DHome(1.1);
+    home.position.set(4.6, 0, 0);
+    home.rotation.y = -0.25;
+
+    group.add(idCard, home, new THREE.PointLight(0x38bdf8, 3.5, 40));
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  /* ---- 3D Swiss Rejection Shield & Speech Bubble from Proton Server ---- */
+  createSwissRejectionShieldAndBubble() {
+    const group = new THREE.Group();
+
+    // 1. Faceted Heraldic Swiss Shield
+    const shieldShape = new THREE.Shape();
+    shieldShape.moveTo(-3.2, 3.8);
+    shieldShape.lineTo(3.2, 3.8);
+    shieldShape.lineTo(3.2, 0.4);
+    shieldShape.bezierCurveTo(3.2, -2.4, 1.8, -4.2, 0, -5.2);
+    shieldShape.bezierCurveTo(-1.8, -4.2, -3.2, -2.4, -3.2, 0.4);
+    shieldShape.closePath();
+
+    const extrudeSettings = { depth: 0.8, bevelEnabled: true, bevelSegments: 3, steps: 1, bevelSize: 0.3, bevelThickness: 0.3 };
+    const shieldGeo = new THREE.ExtrudeGeometry(shieldShape, extrudeSettings);
+    shieldGeo.center();
+
+    const shieldMat = new THREE.MeshStandardMaterial({
+      color: 0xdc2626,
+      emissive: 0x991b1b,
+      emissiveIntensity: 0.5,
+      metalness: 0.5,
+      roughness: 0.25
+    });
+    const shieldMesh = new THREE.Mesh(shieldGeo, shieldMat);
+    shieldMesh.position.set(-7.5, 3.2, 0);
+
+    // Embossed White Swiss Cross on front of shield
+    const crossMat = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xffffff,
+      emissiveIntensity: 0.6,
+      roughness: 0.2,
+      metalness: 0.1
+    });
+    const crossBar1 = new THREE.Mesh(new THREE.BoxGeometry(3.6, 1.2, 0.45), crossMat);
+    const crossBar2 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 3.6, 0.45), crossMat);
+    crossBar1.position.z = 0.65;
+    crossBar2.position.z = 0.65;
+    shieldMesh.add(crossBar1, crossBar2);
+    group.add(shieldMesh);
+
+    // 2. High-res 3D Speech Bubble with Proton Rejection Notice
+    const bubbleCvs = document.createElement('canvas');
+    bubbleCvs.width = 1024;
+    bubbleCvs.height = 420;
+    const ctx = bubbleCvs.getContext('2d');
+
+    // Speech bubble background (rounded box + triangle tail)
+    ctx.fillStyle = '#080d1a';
+    ctx.beginPath();
+    ctx.roundRect(16, 16, 992, 340, 36);
+    ctx.fill();
+
+    // Tail pointing down toward server
+    ctx.beginPath();
+    ctx.moveTo(180, 356);
+    ctx.lineTo(140, 412);
+    ctx.lineTo(240, 356);
+    ctx.closePath();
+    ctx.fill();
+
+    // Border with radiant red/violet glow
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.roundRect(16, 16, 992, 340, 36);
+    ctx.moveTo(180, 356);
+    ctx.lineTo(140, 412);
+    ctx.lineTo(240, 356);
+    ctx.stroke();
+
+    // Top Header: Swiss Flag + Jurisdiction
+    ctx.fillStyle = '#f87171';
+    ctx.font = 'bold 30px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('🇨🇭 PROTON AG · GENEVA, SWITZERLAND', 50, 72);
+
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = 'bold 22px monospace';
+    ctx.fillText('LEGAL NOTICE // JURISDICTION REFUSAL', 50, 112);
+
+    // Main Quote: PROTON DOES NOT PROVIDE USER DATA TO NON-SWISS AUTHORITIES
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 40px "Space Grotesk", sans-serif';
+    ctx.fillText('“PROTON DOES NOT PROVIDE USER DATA', 50, 185);
+    ctx.fillText(' TO NON-SWISS AUTHORITIES”', 50, 240);
+
+    // Statutory footer
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 22px "Space Grotesk", sans-serif';
+    ctx.fillText('ARTICLE 271 SWISS PENAL CODE · SWISS FEDERAL COURT ORDER MANDATORY', 50, 305);
+
+    const bubbleTex = new THREE.CanvasTexture(bubbleCvs);
+    bubbleTex.colorSpace = THREE.SRGBColorSpace;
+    bubbleTex.minFilter = THREE.LinearFilter;
+    bubbleTex.magFilter = THREE.LinearFilter;
+
+    const bubbleGeo = new THREE.PlaneGeometry(16.5, 6.8);
+    const bubbleMat = new THREE.MeshBasicMaterial({
+      map: bubbleTex,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const bubbleMesh = new THREE.Mesh(bubbleGeo, bubbleMat);
+    bubbleMesh.position.set(4.5, 2.8, 0);
+    group.add(bubbleMesh);
+
+    group.add(new THREE.PointLight(0xef4444, 3.5, 32));
+    group.position.set(0, 15.5, 4.8);
+    group.userData.stationKey = 'proton';
+    group.traverse(c => { c.userData.stationKey = 'proton'; });
+    return group;
   }
 
   /* ---- Authentic RCMP ERT Tactical Uniform Patches (Solid Ranger Green & Subdued Insignia) ---- */
@@ -2707,6 +3048,92 @@ class PushnotOrbit {
     this.hackerScreenTex.needsUpdate = true;
   }
 
+  updateHackerSeizedScreen() {
+    if (!this.hackerScreenCvs) return;
+    const ctx = this.hackerScreenCvs.getContext('2d');
+    ctx.save();
+    ctx.scale(2, 2);
+    const W = 1024, H = 1024;
+
+    // Seizure crimson & midnight black flashing border
+    ctx.fillStyle = '#060a14';
+    ctx.fillRect(0, 0, W, H);
+
+    const winX = 100, winY = 60, winW = 824, winH = 900;
+    ctx.fillStyle = '#0a1020';
+    ctx.fillRect(winX, winY, winW, winH);
+
+    // Flashing red border
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(winX, winY, winW, winH);
+
+    const grad = ctx.createLinearGradient(winX, winY, winX + winW, winY);
+    grad.addColorStop(0, '#dc2626');
+    grad.addColorStop(0.5, '#1e3a8a');
+    grad.addColorStop(1, '#dc2626');
+    ctx.fillStyle = grad;
+    ctx.fillRect(winX, winY, winW, 90);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 34px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🚨 POLICE SEIZURE // RCMP CYBER DIVISION', winX + winW / 2, winY + 45);
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '900 36px "Space Grotesk", sans-serif';
+    ctx.fillText('TARGET UNMASKED', winX + 50, winY + 160);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 46px "Space Grotesk", sans-serif';
+    ctx.fillText('CONNOR J. MALONE', winX + 50, winY + 225);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '700 28px "JetBrains Mono", monospace';
+    ctx.fillText('ALIAS: badguy@proton.me', winX + 50, winY + 285);
+
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(winX + 40, winY + 315);
+    ctx.lineTo(winX + winW - 40, winY + 315);
+    ctx.stroke();
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 30px "Space Grotesk", sans-serif';
+    ctx.fillText('📍 RESIDENTIAL ADDRESS:', winX + 50, winY + 365);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 34px "Space Grotesk", sans-serif';
+    ctx.fillText('1042 ROBSON ST, VANCOUVER BC', winX + 50, winY + 415);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 28px "JetBrains Mono", monospace';
+    ctx.fillText('CONFIRMED PUSH HARDWARE TOKENS:', winX + 50, winY + 490);
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '26px "JetBrains Mono", monospace';
+    ctx.fillText('• APNs: #7A9F-FB01 (iPhone 15 Pro)', winX + 50, winY + 540);
+    ctx.fillText('• FCM:  #3E1B-IG02 (Google Pixel 8)', winX + 50, winY + 585);
+    ctx.fillText('• 𝕏:    #9C4D-X03 (Hardware Hash Match)', winX + 50, winY + 630);
+
+    // Big red WARRANT EXECUTED stamp
+    ctx.save();
+    ctx.translate(winX + winW / 2, winY + 770);
+    ctx.rotate(-0.1);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(-260, -45, 520, 90);
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '900 42px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('WARRANT EXECUTED // SEIZED', 0, 12);
+    ctx.restore();
+
+    ctx.restore();
+    if (this.hackerScreenTex) this.hackerScreenTex.needsUpdate = true;
+  }
+
   animateWickSparks(nowMs) {
     if (!this.wickSparks) return;
     const t = nowMs * 0.004;
@@ -2752,49 +3179,57 @@ class PushnotOrbit {
     ctx.lineWidth = 2;
     ctx.strokeRect(26, 26, 460, 668);
 
+    // Official RCMP Coat of Arms Crest at top of letter
+    const crestImg = new Image();
+    crestImg.onload = () => {
+      ctx.drawImage(crestImg, 256 - 38, 36, 76, 76);
+      tex.needsUpdate = true;
+    };
+    crestImg.src = 'textures/rcmp_crest.webp';
+
     // Header: Canadian Justice / Police Crest header
     ctx.textAlign = 'center';
     ctx.fillStyle = '#0f172a';
-    ctx.font = '900 20px "Space Grotesk", sans-serif';
-    ctx.fillText('🇨🇦 ROYAL CANADIAN MOUNTED POLICE', 256, 68);
+    ctx.font = '900 18px "Space Grotesk", sans-serif';
+    ctx.fillText('🇨🇦 ROYAL CANADIAN MOUNTED POLICE · GRC', 256, 126);
 
     ctx.fillStyle = '#475569';
-    ctx.font = '700 13px "JetBrains Mono", monospace';
-    ctx.fillText('CRIMINAL CODE OF CANADA · S. 487.014(1)', 256, 92);
+    ctx.font = '700 12px "JetBrains Mono", monospace';
+    ctx.fillText('CRIMINAL CODE OF CANADA · S. 487.014(1)', 256, 146);
 
     // Bold Urgent Header Box
     ctx.fillStyle = '#dc2626';
     ctx.beginPath();
-    ctx.roundRect(40, 115, 432, 60, 8);
+    ctx.roundRect(40, 162, 432, 54, 8);
     ctx.fill();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 28px "Space Grotesk", sans-serif';
-    ctx.fillText('EXIGENT DEMAND', 256, 155);
+    ctx.font = '900 26px "Space Grotesk", sans-serif';
+    ctx.fillText('EXIGENT DEMAND', 256, 198);
 
     // Official legal document metadata
     ctx.textAlign = 'left';
     ctx.fillStyle = '#0f172a';
     ctx.font = 'bold 15px "JetBrains Mono", monospace';
-    ctx.fillText('CASE REF: #RCMP-2026-X99', 52, 215);
-    ctx.fillText('TARGET:   PROTON AG (SWITZERLAND)', 52, 245);
-    ctx.fillText('OFFENCE:  IMMINENT LIFE SAFETY THREAT', 52, 275);
-    ctx.fillText('MANDATE:  IMMEDIATE LOG PRESERVATION', 52, 305);
+    ctx.fillText('CASE REF: #RCMP-2026-X99', 52, 246);
+    ctx.fillText('TARGET:   PROTON AG (SWITZERLAND)', 52, 274);
+    ctx.fillText('OFFENCE:  IMMINENT LIFE SAFETY THREAT', 52, 302);
+    ctx.fillText('MANDATE:  IMMEDIATE LOG PRESERVATION', 52, 330);
 
     // Horizontal divider
     ctx.strokeStyle = '#cbd5e1';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(52, 330); ctx.lineTo(460, 330);
+    ctx.moveTo(52, 350); ctx.lineTo(460, 350);
     ctx.stroke();
 
     // Body lines of legal demand
     ctx.fillStyle = '#334155';
     ctx.font = '13px "Space Grotesk", sans-serif';
-    ctx.fillText('PURSUANT TO SECTION 487.014(1) OF THE CRIMINAL CODE,', 52, 365);
-    ctx.fillText('YOU ARE HEREBY COMMANDED TO DISCLOSE IDENTIFYING', 52, 390);
-    ctx.fillText('IP ACCESS RECORDS, ROUTING DATA, AND SUBSCRIBER', 52, 415);
-    ctx.fillText('CREDENTIALS ASSOCIATED WITH THE ATTACHED THREAT.', 52, 440);
+    ctx.fillText('PURSUANT TO SECTION 487.014(1) OF THE CRIMINAL CODE,', 52, 380);
+    ctx.fillText('YOU ARE HEREBY COMMANDED TO DISCLOSE IDENTIFYING', 52, 404);
+    ctx.fillText('IP ACCESS RECORDS, ROUTING DATA, AND SUBSCRIBER', 52, 428);
+    ctx.fillText('CREDENTIALS ASSOCIATED WITH THE ATTACHED THREAT.', 52, 452);
 
     // Official Red Stamp in bottom-right corner: EXIGENT / IMMEDIATE
     ctx.save();
@@ -2895,27 +3330,21 @@ class PushnotOrbit {
     this.protonGroup.traverse(c => { c.userData.stationKey = 'proton'; });
     this.leoGroup.add(this.protonGroup);
 
-    // Glowing red rejection X flash at Proton front door when demand bounces
-    this.rejectX = new THREE.Group();
-    const xMat = new THREE.MeshBasicMaterial({ color: 0xff1e56 });
-    const x1 = new THREE.Mesh(new THREE.BoxGeometry(9, 1.4, 1.4), xMat); x1.rotation.z =  Math.PI / 4;
-    const x2 = new THREE.Mesh(new THREE.BoxGeometry(9, 1.4, 1.4), xMat); x2.rotation.z = -Math.PI / 4;
-    this.rejectX.add(x1, x2);
-    this.rejectX.position.set(0, 11.8, 4.8);
-    this.rejectX.visible = false;
-    this.rejectX.userData.stationKey = 'proton';
-    this.protonGroup.add(this.rejectX);
+    // 3D Swiss Shield Icon + Speech Bubble from Proton Server ("PROTON DOES NOT PROVIDE USER DATA TO NON-SWISS AUTHORITIES")
+    this.rejectShieldBubble = this.createSwissRejectionShieldAndBubble();
+    this.rejectShieldBubble.visible = false;
+    this.protonGroup.add(this.rejectShieldBubble);
 
     // Apple & Google Subscriber Vault (cloned Skyscraper HQ mounts here once logos finish loading,
-    // topped with a glowing 3D Subscriber ID Card stack!)
+    // topped with the glowing Subscriber Identity Record!)
     this.leoAgGroup = new THREE.Group();
     this.leoAgGroup.position.set(L.ag.x, 0, L.ag.z);
     this.leoGroup.add(this.leoAgGroup);
 
-    // Floating 3D Photo ID + 3D Credit Card hovering above the Apple & Google Skyscraper HQ
-    this.leoIdStack = this.createSubscriberCardPair(1.1);
-    this.leoIdStack.position.set(0, 46, 0);
-    this.leoAgGroup.add(this.leoIdStack);
+    // Floating 3D Photo ID + Tiny 3D Home hovering above the Apple & Google Skyscraper HQ
+    this.leoAgSubscriberMesh = this.createSubscriberBundle(1.0);
+    this.leoAgSubscriberMesh.position.set(0, 46, 0);
+    this.leoAgGroup.add(this.leoAgSubscriberMesh);
 
     // Official EXIGENT DEMAND Legal Warrant Document with Rotating Emergency Siren
     this.exigentDemand = this.createExigentDemandWithSiren();
@@ -2951,16 +3380,17 @@ class PushnotOrbit {
     this.leoPacket.visible = false;
     this.leoGroup.add(this.leoPacket);
 
-    this.leoKey = this.createTokenKey(1.3);
-    this.leoKey.visible = false;
-    this.leoGroup.add(this.leoKey);
+    // Trio of 3 unique branded token keys (Meta blue, IG pink, X silver)
+    this.leoUniqueKeysGroup = this.createUniqueTokenTrio(1.2);
+    this.leoUniqueKeysGroup.visible = false;
+    this.leoGroup.add(this.leoUniqueKeysGroup);
 
     this.leoBomb = null;
 
-    // 3D Photo ID + 3D Credit Card that fly from Apple/Google -> Police in final beat!
-    this.leoDeliveredCards = this.createSubscriberCardPair(1.25);
-    this.leoDeliveredCards.visible = false;
-    this.leoGroup.add(this.leoDeliveredCards);
+    // Combined 3D Photo ID + Tiny 3D Home (Subscriber Record)
+    this.leoSubscriberBundle = this.createSubscriberBundle(1.25);
+    this.leoSubscriberBundle.visible = false;
+    this.leoGroup.add(this.leoSubscriberBundle);
 
     this.leoGroup.visible = false;
   }
@@ -3448,6 +3878,147 @@ class PushnotOrbit {
     }
   }
 
+  /* ---- Director's Camera Rig Editor Mode (Live Coordinates, Step Lock & Export) ---- */
+  initDirectorMode() {
+    this.directorMode = false;
+    this.directorRigs = {};
+    try {
+      this.directorRigs = JSON.parse(localStorage.getItem('pushnot_director_rigs') || '{}');
+    } catch (e) {
+      this.directorRigs = {};
+    }
+
+    const panel = document.getElementById('director-panel');
+    const btnToggle = document.getElementById('btn-director');
+    const btnClose = document.getElementById('dp-btn-close');
+    const btnLock = document.getElementById('dp-btn-lock');
+    const btnReset = document.getElementById('dp-btn-reset');
+    const btnCopy = document.getElementById('dp-btn-copy');
+    const btnClear = document.getElementById('dp-btn-clear');
+    const toast = document.getElementById('dp-toast');
+
+    const showToast = (msg) => {
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 2600);
+    };
+
+    const togglePanel = (force) => {
+      this.directorMode = force !== undefined ? force : !this.directorMode;
+      if (panel) panel.classList.toggle('hidden', !this.directorMode);
+      if (btnToggle) btnToggle.classList.toggle('active', this.directorMode);
+      if (this.directorMode) this.updateDirectorHUD();
+    };
+
+    if (btnToggle) btnToggle.onclick = () => togglePanel();
+    if (btnClose) btnClose.onclick = () => togglePanel(false);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+      if (e.key === 'd' || e.key === 'D') {
+        togglePanel();
+      }
+    });
+
+    if (btnLock) {
+      btnLock.onclick = () => {
+        const stepIdx = this.getCurrentStepIndex();
+        const key = `${this.mode}_step_${stepIdx}`;
+        this.directorRigs[key] = {
+          cam: {
+            x: +this.camera.position.x.toFixed(2),
+            y: +this.camera.position.y.toFixed(2),
+            z: +this.camera.position.z.toFixed(2)
+          },
+          target: {
+            x: +this.controls.target.x.toFixed(2),
+            y: +this.controls.target.y.toFixed(2),
+            z: +this.controls.target.z.toFixed(2)
+          }
+        };
+        try {
+          localStorage.setItem('pushnot_director_rigs', JSON.stringify(this.directorRigs));
+        } catch (e) {}
+        showToast(`Locked ${key}!`);
+        this.updateDirectorHUD();
+      };
+    }
+
+    if (btnReset) {
+      btnReset.onclick = () => {
+        const stepIdx = this.getCurrentStepIndex();
+        const key = `${this.mode}_step_${stepIdx}`;
+        delete this.directorRigs[key];
+        try {
+          localStorage.setItem('pushnot_director_rigs', JSON.stringify(this.directorRigs));
+        } catch (e) {}
+        showToast(`Reset ${key} to default!`);
+        this.updateDirectorHUD();
+      };
+    }
+
+    if (btnCopy) {
+      btnCopy.onclick = () => {
+        const json = JSON.stringify(this.directorRigs, null, 2);
+        navigator.clipboard.writeText(json).then(() => {
+          showToast('Copied JSON to clipboard!');
+        }).catch(() => {
+          showToast('Clipboard access denied');
+        });
+      };
+    }
+
+    if (btnClear) {
+      btnClear.onclick = () => {
+        if (confirm('Clear all locked director rigs?')) {
+          this.directorRigs = {};
+          localStorage.removeItem('pushnot_director_rigs');
+          showToast('Cleared all custom rigs!');
+          this.updateDirectorHUD();
+        }
+      };
+    }
+  }
+
+  getCurrentStepIndex() {
+    const stops = MODE_STEPS[this.mode] || [0];
+    let idx = 0;
+    for (let i = 0; i < stops.length; i++) {
+      if (this.t >= stops[i] - 0.02) idx = i;
+    }
+    return idx;
+  }
+
+  updateDirectorHUD() {
+    if (!this.directorMode) return;
+    const modeEl = document.getElementById('dp-mode');
+    const stepEl = document.getElementById('dp-step');
+    const camEl = document.getElementById('dp-campos');
+    const tgtEl = document.getElementById('dp-target');
+    const statEl = document.getElementById('dp-status');
+
+    const stepIdx = this.getCurrentStepIndex();
+    const totalSteps = (MODE_STEPS[this.mode] || []).length;
+    const key = `${this.mode}_step_${stepIdx}`;
+    const hasCustom = !!(this.directorRigs && this.directorRigs[key]);
+
+    if (modeEl) modeEl.textContent = this.mode.toUpperCase();
+    if (stepEl) stepEl.textContent = `${stepIdx + 1} / ${totalSteps} (t: ${this.t.toFixed(2)})`;
+    if (camEl) camEl.textContent = `${this.camera.position.x.toFixed(1)}, ${this.camera.position.y.toFixed(1)}, ${this.camera.position.z.toFixed(1)}`;
+    if (tgtEl) tgtEl.textContent = `${this.controls.target.x.toFixed(1)}, ${this.controls.target.y.toFixed(1)}, ${this.controls.target.z.toFixed(1)}`;
+
+    if (statEl) {
+      if (hasCustom) {
+        statEl.textContent = 'LOCKED RIG';
+        statEl.className = 'dp-tag-locked';
+      } else {
+        statEl.textContent = 'DEFAULT';
+        statEl.className = 'dp-tag-default';
+      }
+    }
+  }
+
   initUI() {
     const btnIos = document.getElementById('btn-os-ios');
     const btnAndroid = document.getElementById('btn-os-android');
@@ -3621,9 +4192,10 @@ class PushnotOrbit {
     this.leoPacket.visible = false;
     if (this.exigentDemand) this.exigentDemand.visible = false;
     if (this.leoBomb) this.leoBomb.visible = false;
-    this.leoKey.visible = false;
-    this.leoDeliveredCards.visible = false;
-    this.rejectX.visible = false;
+    if (this.leoKey) this.leoKey.visible = false;
+    if (this.leoUniqueKeysGroup) this.leoUniqueKeysGroup.visible = false;
+    if (this.leoSubscriberBundle) this.leoSubscriberBundle.visible = false;
+    if (this.rejectShieldBubble) this.rejectShieldBubble.visible = false;
     if (this.phoneEmojiBadge) this.phoneEmojiBadge.visible = false;
 
     const isLeo = this.mode === 'leo';
@@ -3925,93 +4497,105 @@ class PushnotOrbit {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE:
       moverParent = this.leoGroup;
 
-      if (t < 0.20) {
-        // Bad guy types ProtonMail threat email directly on his laptop screen (no floating HUD clutter, just the screen!)
+      if (t < 0.18) {
+        // Step 1: Bad guy types ProtonMail threat email directly on his laptop screen
         const tp = seg(t, 0, 0.16);
         this.updateHackerEmailScreen(tp);
         moverPos = null;
         moverText = '';
         moverCls = '';
-      } else if (t < 0.36) {
+      } else if (t < 0.32) {
+        // Step 2 & 3: RCMP serves Exigent Demand to Proton -> Proton Rejects
         showLeoThreat = true;
-        const u = seg(t, 0.25, 0.32);
-        const p = this.arcLeoProton.getPoint(u);
-        const showDemand = t >= 0.25 && t < 0.32;
+        const showDemand = t < 0.25;
 
-        if (this.exigentDemand) {
-          this.exigentDemand.visible = showDemand;
-          this.exigentDemand.position.copy(p);
-          this.exigentDemand.lookAt(this.camera.position);
-          this.exigentDemand.scale.setScalar(0.95);
-        }
-        this.leoPacket.visible = false;
-
-        if (t < 0.30) {
-          moverPos = p.clone().add(new THREE.Vector3(0, 9.5, 0));
-          moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Proton AG';
-          moverCls = 'red';
-        } else {
-          this.rejectX.visible = true;
-          showLeoDenied = true;
-          moverPos = new THREE.Vector3(L.proton.x, 14.0, L.proton.z);
-          moverText = '⛔ Proton Rejects Demand (Swiss Privacy & Zero Access)';
-          moverCls = 'red';
-        }
-      } else if (t < 0.68) {
-        // Beat 3 & 4: Exigent Demand served to Meta/Instagram/X (0.36–0.52),
-        // and Meta/X return the 3 Golden Keys directly to Police officer (0.52–0.68)!
-        if (t < 0.52) {
-          const p = this.arcLeoToMeta.getPoint(seg(t, 0.36, 0.52));
+        if (showDemand) {
+          const u = seg(t, 0.18, 0.25);
+          const p = this.arcLeoProton.getPoint(u);
           if (this.exigentDemand) {
             this.exigentDemand.visible = true;
             this.exigentDemand.position.copy(p);
             this.exigentDemand.lookAt(this.camera.position);
             this.exigentDemand.scale.setScalar(0.95);
           }
-          this.leoPacket.visible = false;
           moverPos = p.clone().add(new THREE.Vector3(0, 9.5, 0));
-          moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Meta / IG / X';
-          moverCls = 'cyan';
+          moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Proton AG';
+          moverCls = 'red';
         } else {
-          if (this.exigentDemand) this.exigentDemand.visible = false;
-          const p = this.arcLeoTokens.getPoint(seg(t, 0.52, 0.64));
-          this.leoKey.visible = true;
-          this.leoKey.position.copy(p);
-          if (t < 0.63) {
-            moverPos = p;
-            moverText = '🔑 3 Push Tokens Acquired';
-          } else {
-            showLeoTokens = true;
-          }
+          // Rejection Swiss Shield Icon + Speech Bubble
+          if (this.rejectShieldBubble) this.rejectShieldBubble.visible = true;
+          showLeoDenied = true;
+          moverPos = new THREE.Vector3(L.proton.x, 20.0, L.proton.z);
+          moverText = '⛔ Proton Rejects Demand (Swiss Privacy & Art. 271 Swiss Penal Code)';
+          moverCls = 'red';
         }
-      } else if (t < 0.86) {
-        const p = this.arcLeoToAg.getPoint(seg(t, 0.68, 0.84));
-        this.leoKey.visible = true;
-        this.leoKey.position.copy(p);
-        moverPos = p;
-        moverText = '🇨🇦 Order + 🔑 Tokens → Apple / Google';
+      } else if (t < 0.48) {
+        // Step 4: Exigent Demand served to App Servers (Meta, Instagram, 𝕏)
+        const p = this.arcLeoToMeta.getPoint(seg(t, 0.32, 0.48));
+        if (this.exigentDemand) {
+          this.exigentDemand.visible = true;
+          this.exigentDemand.position.copy(p);
+          this.exigentDemand.lookAt(this.camera.position);
+          this.exigentDemand.scale.setScalar(0.95);
+        }
+        moverPos = p.clone().add(new THREE.Vector3(0, 9.5, 0));
+        moverText = '🚨 EXIGENT DEMAND (s. 487.014) → App Servers (Meta, Instagram, 𝕏)';
         moverCls = 'cyan';
-      } else {
-        // Beat 6: 3D Photo ID + Credit Card fly from Apple/Google -> Police and fan out above Police!
-        const p = this.arcLeoFromAg.getPoint(seg(t, 0.86, 0.94));
-        this.leoDeliveredCards.visible = true;
-        if (t < 0.94) {
-          this.leoDeliveredCards.position.copy(p);
-          moverPos = p;
-          moverText = '🪪 ID + Billing Card';
-          moverCls = 'push';
-        } else {
-          this.leoDeliveredCards.position.set(this.leoPos.swat.x, this.leoTops.swat + 8, this.leoPos.swat.z);
-          showLeoId = true;
+      } else if (t < 0.62) {
+        // Step 5: App Servers disclose 3 UNIQUE branded Push Token Keys (Meta, Instagram, 𝕏)
+        if (this.exigentDemand) this.exigentDemand.visible = false;
+        const p = this.arcLeoTokens.getPoint(seg(t, 0.48, 0.60));
+        if (this.leoUniqueKeysGroup) {
+          this.leoUniqueKeysGroup.visible = true;
+          this.leoUniqueKeysGroup.position.copy(p);
         }
+        if (t < 0.60) {
+          moverPos = p;
+          moverText = '🔑 3 Unique App Push Tokens Disclosed: Meta (#7A9F), Instagram (#3E1B), 𝕏 (#9C4D)';
+          moverCls = 'gold';
+        } else {
+          showLeoTokens = true;
+        }
+      } else if (t < 0.76) {
+        // Step 6: Police serve Production Orders with the 3 unique tokens to Apple APNs & Google FCM
+        const p = this.arcLeoToAg.getPoint(seg(t, 0.62, 0.75));
+        if (this.leoUniqueKeysGroup) {
+          this.leoUniqueKeysGroup.visible = true;
+          this.leoUniqueKeysGroup.position.copy(p);
+        }
+        moverPos = p;
+        moverText = '🇨🇦 Order + 🔑 3 Unique Tokens → Apple APNs & Google FCM';
+        moverCls = 'cyan';
+      } else if (t < 0.88) {
+        // Step 7: Apple & Google return Subscriber Record (Photo ID + Tiny 3D Home)
+        const p = this.arcLeoFromAg.getPoint(seg(t, 0.76, 0.86));
+        if (this.leoSubscriberBundle) {
+          this.leoSubscriberBundle.visible = true;
+          this.leoSubscriberBundle.position.copy(p);
+        }
+        moverPos = p;
+        moverText = '🪪 Hardware Match Confirmed · Subscriber Record & Residence Returned';
+        moverCls = 'push';
+      } else {
+        // Step 8: BAD GUY'S IDENTITY REVEALED // POLICE SEIZURE!
+        this.updateHackerSeizedScreen();
+        if (this.leoSubscriberBundle) {
+          this.leoSubscriberBundle.visible = true;
+          this.leoSubscriberBundle.position.set(L.bandit.x, 22.0, L.bandit.z);
+          this.leoSubscriberBundle.rotation.y = Math.sin(this.clock.getElapsedTime() * 1.5) * 0.15;
+        }
+        moverPos = new THREE.Vector3(L.bandit.x, 28.0, L.bandit.z);
+        moverText = '🚨 SUSPECT UNMASKED: CONNOR J. MALONE · 1042 ROBSON ST';
+        moverCls = 'red';
+        showLeoId = true;
       }
 
       // Suspect illumination:
-      // Until ID'ed (t < 0.94): Menacing dark lighting, only hands, keyboard, and glasses shine!
-      // Once ID'ed (t >= 0.94): Overhead interrogation spotlight turns ON brightly!
+      // Until ID'ed (t < 0.88): Menacing dark lighting, only hands, keyboard, and glasses shine!
+      // Once ID'ed (t >= 0.88): Overhead interrogation spotlight turns ON brightly!
       if (this.hackerSpotlight) {
-        if (t >= 0.94) {
-          const idProg = clamp01((t - 0.94) / 0.04);
+        if (t >= 0.88) {
+          const idProg = clamp01((t - 0.88) / 0.04);
           this.hackerSpotlight.intensity = 6.5 * idProg;
           if (this.hackerGlassesMesh && this.hackerGlassesMesh.material) {
             this.hackerGlassesMesh.material.emissiveIntensity = 1.6 - 1.0 * idProg;
@@ -4259,18 +4843,21 @@ class PushnotOrbit {
     }
 
     if (this.leoAgBag && this.leoGroup.visible) this.leoAgBag.rotation.y += dt * 0.45;
-    if (this.leoIdStack && this.leoGroup.visible) {
-      this.leoIdStack.rotation.y -= dt * 0.6;
-      this.leoIdStack.position.y = 46 + Math.sin(now * 0.003) * 1.1;
+    if (this.leoAgSubscriberMesh && this.leoGroup.visible) {
+      this.leoAgSubscriberMesh.rotation.y -= dt * 0.6;
+      this.leoAgSubscriberMesh.position.y = 46 + Math.sin(now * 0.003) * 1.1;
     }
-    if (this.leoDeliveredCards && this.leoDeliveredCards.visible) {
-      this.leoDeliveredCards.rotation.y += dt * 0.7;
+    if (this.leoSubscriberBundle && this.leoSubscriberBundle.visible) {
+      this.leoSubscriberBundle.rotation.y += dt * 0.7;
     }
-    if (this.osintBot)    this.osintBot.rotation.y += dt * 0.55;
-    if (this.leoKey && this.leoKey.visible) this.leoKey.rotation.y += dt * 2.4;
-    if (this.rejectX && this.rejectX.visible) {
-      const s = 1 + Math.sin(now * 0.015) * 0.12;
-      this.rejectX.scale.setScalar(s);
+    if (this.osintBot) this.osintBot.rotation.y += dt * 0.55;
+    if (this.leoUniqueKeysGroup && this.leoUniqueKeysGroup.visible) {
+      this.leoUniqueKeysGroup.rotation.y += dt * 1.8;
+    }
+    if (this.rejectShieldBubble && this.rejectShieldBubble.visible) {
+      const s = 1 + Math.sin(now * 0.008) * 0.05;
+      this.rejectShieldBubble.scale.setScalar(s);
+      this.rejectShieldBubble.rotation.y = Math.sin(now * 0.003) * 0.08;
     }
     if (this.directBlockGroup && this.directBlockGroup.visible) {
       // Subtle alternating red / blue police strobe just behind the diamond tile (no scale throbbing!)
@@ -4315,14 +4902,32 @@ class PushnotOrbit {
         this.focusCamPos = null;
       }
     } else if (this.playing || this.cinematicFollow) {
-      // Video-Game Cinematic Step-by-Step Camera: smoothly dolly & pan onto the active packet / node!
-      const camLerp = Math.min(1, dt * 3.8);
-      const tgtLerp = Math.min(1, dt * 5.0);
-      this.camera.position.lerp(this.cineCamPos, camLerp);
-      this.controls.target.lerp(this.cineLookAt, tgtLerp);
-      this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-      if (!this.playing && this.camera.position.distanceTo(this.cineCamPos) < 0.6) {
-        this.cinematicFollow = false;
+      // Check if Director's Custom Rig is locked for this narrative step!
+      const stepIdx = this.getCurrentStepIndex();
+      const rigKey = `${this.mode}_step_${stepIdx}`;
+      const customRig = this.directorRigs && this.directorRigs[rigKey];
+
+      if (customRig) {
+        const camLerp = Math.min(1, dt * 4.5);
+        const tgtLerp = Math.min(1, dt * 5.0);
+        const rigCam = new THREE.Vector3(customRig.cam.x, customRig.cam.y, customRig.cam.z);
+        const rigTgt = new THREE.Vector3(customRig.target.x, customRig.target.y, customRig.target.z);
+        this.camera.position.lerp(rigCam, camLerp);
+        this.controls.target.lerp(rigTgt, tgtLerp);
+        this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
+        if (!this.playing && this.camera.position.distanceTo(rigCam) < 0.6) {
+          this.cinematicFollow = false;
+        }
+      } else {
+        // Video-Game Cinematic Step-by-Step Camera: smoothly dolly & pan onto the active packet / node!
+        const camLerp = Math.min(1, dt * 3.8);
+        const tgtLerp = Math.min(1, dt * 5.0);
+        this.camera.position.lerp(this.cineCamPos, camLerp);
+        this.controls.target.lerp(this.cineLookAt, tgtLerp);
+        this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
+        if (!this.playing && this.camera.position.distanceTo(this.cineCamPos) < 0.6) {
+          this.cinematicFollow = false;
+        }
       }
     } else if (this.autoOrbit) {
       this.orbitAngle += dt * 0.12;
@@ -4423,6 +5028,7 @@ class PushnotOrbit {
 
     this.controls.update();
     this.updateState();
+    this.updateDirectorHUD();
     this.renderer.render(this.scene, this.camera);
   }
 }

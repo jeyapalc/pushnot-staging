@@ -1357,8 +1357,8 @@ class PushnotOrbit {
       customCamPos = target.clone().add(new THREE.Vector3(26, 0.5, 26));
     } else if (key === 'osint') {
       // Zoomed directly into the police computer screen facing back of cop!
-      target = this.leoPos.osint.clone().setY(13.8);
-      customCamPos = new THREE.Vector3(this.leoPos.osint.x + 5.5, 14.2, this.leoPos.osint.z + 2.8);
+      target = this.leoPos.osint.clone().setY(13.6);
+      customCamPos = new THREE.Vector3(this.leoPos.osint.x + 8.5, 14.0, this.leoPos.osint.z - 0.5);
     } else if (key === 'proton') {
       // Facing Swiss illuminated server station & waving Swiss flag at eye level
       target = this.leoPos.proton.clone().setY(15.0);
@@ -2441,7 +2441,7 @@ class PushnotOrbit {
 
       // Center and scale the PC so it sits naturally on top of the workstation desk at cop eye level with zero air gap
       // Screen turns to face the back of the cop (back-to-back cop & PC setup)
-      const rotAngle = Math.atan2(5.5, 2.8); // 1.10 rad, points directly at the OSINT camera
+      const rotAngle = Math.atan2(8.5, -0.5); // 1.63 rad, faces directly into the unoccluded OSINT camera
       laptop.rotation.set(0, rotAngle, 0);
       let box = new THREE.Box3().setFromObject(laptop);
       const dim = box.getSize(new THREE.Vector3());
@@ -3722,8 +3722,8 @@ class PushnotOrbit {
         }
       } else if (t < 0.68) {
         // Running Cyber OSINT -> Zoomed directly into the computer screen facing back of cop!
-        focusLocal = new THREE.Vector3(L.osint.x, 13.8, L.osint.z);
-        customCineCam = new THREE.Vector3(L.osint.x + 5.5, 14.2, L.osint.z + 2.8);
+        focusLocal = new THREE.Vector3(L.osint.x, 13.6, L.osint.z);
+        customCineCam = new THREE.Vector3(L.osint.x + 8.5, 14.0, L.osint.z - 0.5);
       } else if (t < 0.86) {
         // Production orders served to Apple & Google Skyscraper
         focusLocal = new THREE.Vector3(L.ag.x, 22.0, L.ag.z);

@@ -1514,8 +1514,8 @@ class PushnotOrbit {
       camPos = new THREE.Vector3(47.5, 20.0, 39.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
       // RCMP "E" Division Headquarters at Green Timbers Entrance (-32.5, 0, 32.5)
-      target = new THREE.Vector3(this.leoPos.swat.x, 3.5, this.leoPos.swat.z);
-      camPos = new THREE.Vector3(this.leoPos.swat.x + 18, 11.5, this.leoPos.swat.z + 18);
+      target = new THREE.Vector3(this.leoPos.swat.x, 2.8, this.leoPos.swat.z);
+      camPos = new THREE.Vector3(this.leoPos.swat.x + 18, 9.5, this.leoPos.swat.z + 18);
     } else if (key === 'proton') {
       // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Front-angled view capturing illuminated front & full waving flag!
       target = new THREE.Vector3(this.leoPos.proton.x, 18.0, this.leoPos.proton.z);
@@ -3549,34 +3549,102 @@ class PushnotOrbit {
       const m = gltf.scene;
       m.userData.stationKey = 'swat';
 
+      // Cut out large surrounding property (outer terrain, municipal streets, trees, parking lots, distant annexes)
+      // Keep strictly the RCMP Headquarters building footprint and entrance
+      const excludeKeywords = [
+        'adjacent',
+        'parking',
+        'terrain',
+        'woodland',
+        'street',
+        'road',
+        'trail',
+        'tree',
+        'vegetation',
+        'laboratory',
+        'workshop',
+        'support building',
+        'pond',
+        'paving',
+        'grass',
+        'lawn',
+        'flagpole',
+        'median',
+        'marking',
+        'timbers way'
+      ];
+
+      const toRemove = [];
       m.traverse(c => {
         if (!c.isMesh) return;
-        c.userData.stationKey = 'swat';
-        c.castShadow = true;
-        c.receiveShadow = true;
+        const nameLower = (c.name || '').toLowerCase();
+        const isExcluded = excludeKeywords.some(k => nameLower.includes(k));
+        if (isExcluded) {
+          toRemove.push(c);
+        } else {
+          c.userData.stationKey = 'swat';
+          c.castShadow = true;
+          c.receiveShadow = true;
+        }
+      });
+      toRemove.forEach(c => {
+        c.visible = false;
+        if (c.parent) c.parent.remove(c);
+        if (c.geometry) c.geometry.dispose();
       });
 
-      this.harmonizeAsset(m, { minRough: 0.28, maxRough: 0.72, maxMetal: 0.7, envIntensity: 1.0, liftDark: false });
+      this.harmonizeAsset(m, { minRough: 0.28, maxRough: 0.72, maxMetal: 0.7, envIntensity: 1.15, liftDark: false });
 
-      // Ground and angle the RCMP Green Timbers Headquarters model
+      // Ground and angle the RCMP Green Timbers Headquarters building footprint
       // Angle the entrance towards the viewer / cinematic camera angle (facing south-east)
       m.rotation.y = Math.PI * 0.22;
-      this.leoTops.swat = this.ground(m, 38, this.leoPos.swat);
-
-      // Fine-tune offset so the HQ entrance building sits centered at swat station
-      const rotY = Math.PI * 0.22;
-      const cosR = Math.cos(rotY);
-      const sinR = Math.sin(rotY);
-      const dx = 4.075 - 59.935;
-      const dz = -0.943 - (-42.395);
-      const rotDx = dx * cosR + dz * sinR;
-      const rotDz = -dx * sinR + dz * cosR;
-      const scaleFactor = 38 / 540.8;
-      m.position.x += rotDx * scaleFactor;
-      m.position.z += rotDz * scaleFactor;
-
-      this.leoTops.swat = new THREE.Box3().setFromObject(m).max.y;
+      this.leoTops.swat = this.ground(m, 32, this.leoPos.swat);
       this.leoGroup.add(m);
+
+      // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node
+      this.rcmpDaylightGroup = new THREE.Group();
+      this.rcmpDaylightGroup.userData.stationKey = 'swat';
+
+      // 1. Warm afternoon directional sunlight (~5400K natural sunlight)
+      const sunLight = new THREE.DirectionalLight(0xfff5e6, 3.4);
+      sunLight.position.set(this.leoPos.swat.x + 18, 28, this.leoPos.swat.z + 22);
+      sunLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
+      sunLight.castShadow = true;
+      this.rcmpDaylightGroup.add(sunLight);
+      this.rcmpDaylightGroup.add(sunLight.target);
+
+      // 2. Soft sky ambient fill (diffuse natural daylight atmosphere from above)
+      const skyLight = new THREE.DirectionalLight(0xbde0fe, 1.8);
+      skyLight.position.set(this.leoPos.swat.x - 14, 24, this.leoPos.swat.z - 16);
+      skyLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
+      this.rcmpDaylightGroup.add(skyLight);
+      this.rcmpDaylightGroup.add(skyLight.target);
+
+      // 3. Crisp daylight entrance accent on the glass atrium, cedar awning & etched bison crest
+      const entranceDaylight = new THREE.PointLight(0xfffaed, 2.8, 36, 1.4);
+      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 6.0, this.leoPos.swat.z + 5.0);
+      this.rcmpDaylightGroup.add(entranceDaylight);
+
+      // 4. Ground bounce daylight fill (subtle warm reflection off ground plane)
+      const bounceLight = new THREE.PointLight(0xfef3c7, 1.2, 28, 1.8);
+      bounceLight.position.set(this.leoPos.swat.x - 4, 1.0, this.leoPos.swat.z - 2);
+      this.rcmpDaylightGroup.add(bounceLight);
+
+      // 5. Sleek architectural foundation slab under the building footprint
+      const plinthGeo = new THREE.BoxGeometry(34.0, 0.45, 16.5);
+      const plinthMat = new THREE.MeshStandardMaterial({
+        color: 0x111827,
+        roughness: 0.65,
+        metalness: 0.25
+      });
+      const plinth = new THREE.Mesh(plinthGeo, plinthMat);
+      plinth.position.set(this.leoPos.swat.x, -0.22, this.leoPos.swat.z);
+      plinth.rotation.y = Math.PI * 0.22;
+      plinth.receiveShadow = true;
+      plinth.userData.stationKey = 'swat';
+      this.rcmpDaylightGroup.add(plinth);
+
+      this.leoGroup.add(this.rcmpDaylightGroup);
       done();
     }, undefined, done);
   }
@@ -4574,7 +4642,7 @@ class PushnotOrbit {
     const showLeoPins = isLeo && this.flipRoll > Math.PI * 0.55;
     // Hacker node has zero floating HUD labels (sole focus is the 3D computer screen)
     this.place('pin-leo-bandit',      null, false);
-    this.place('pin-leo-swat',        new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 8),   showLeoPins, this.leoGroup);
+    this.place('pin-leo-swat',        new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 10),  showLeoPins, this.leoGroup);
     this.place('pin-leo-bot',         new THREE.Vector3(L.bot.x,    -1.5, L.bot.z + 8),    showLeoPins, this.leoGroup);
     this.place('pin-leo-proton',      new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
     this.place('pin-leo-ag',          new THREE.Vector3(L.ag.x,     this.leoTops.ag + 2, L.ag.z), showLeoPins, this.leoGroup);
@@ -4663,9 +4731,9 @@ class PushnotOrbit {
           focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
           customCineCam = new THREE.Vector3(L.proton.x + 20.0, 20.0, L.proton.z + 46.0);
         } else {
-          // Police receive threat / send demand -> Facing the RCMP Green Timbers entrance!
-          focusLocal = new THREE.Vector3(L.swat.x, 3.5, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 18, 11.5, L.swat.z + 18);
+          // Police receive threat / send demand -> Facing the RCMP Green Timbers entrance under natural daylight!
+          focusLocal = new THREE.Vector3(L.swat.x, 2.8, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 18, 9.5, L.swat.z + 18);
         }
       } else if (t < 0.68) {
         if (t < 0.52) {
@@ -4673,9 +4741,9 @@ class PushnotOrbit {
           focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 13.0, L.bot.z);
           customCineCam = new THREE.Vector3(L.bot.x - 22, 15.0, L.bot.z + 22);
         } else {
-          // 3 Push Token Keys acquired by RCMP -> Facing the RCMP Green Timbers entrance!
-          focusLocal = new THREE.Vector3(L.swat.x, 3.5, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 18, 11.5, L.swat.z + 18);
+          // 3 Push Token Keys acquired by RCMP -> Facing the RCMP Green Timbers entrance under natural daylight!
+          focusLocal = new THREE.Vector3(L.swat.x, 2.8, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 18, 9.5, L.swat.z + 18);
         }
       } else if (t < 0.88) {
         // Production orders served to Apple & Google Skyscraper

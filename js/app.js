@@ -3515,7 +3515,7 @@ class PushnotOrbit {
     this.storedKey.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.92);
 
     let moverPos = null;
-    let moverParent = this.worldGroup;
+    let moverParent = this.normalGroup;
     let moverText = '';
     let moverCls = '';
 
@@ -3666,7 +3666,7 @@ class PushnotOrbit {
           }
         }
 
-        moverPos = forgePos;
+        moverPos = forgePos.clone().add(new THREE.Vector3(0, 8.5, 0));
         moverText = 'NEW TOKEN CREATED';
         moverCls = 'cyan';
       } else if (t < 0.62) {

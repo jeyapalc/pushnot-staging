@@ -3770,10 +3770,15 @@ class PushnotOrbit {
     }
 
     // Directional flow cones glide directly along the active mode's arcs
-    const activeCurves = this.mode === 'setup' ? this.setupCurves : this.pushCurves;
+    const activeCurves = this.mode === 'setup' ? this.setupCurves : (this.mode === 'push' ? this.pushCurves : null);
     const speed = (now * 0.00028) % 1;
     for (const fc of this.flowCones) {
-      const curve = activeCurves[fc.curveIdx];
+      const curve = activeCurves ? activeCurves[fc.curveIdx] : null;
+      if (!curve || this.mode === 'leo') {
+        fc.mesh.visible = false;
+        continue;
+      }
+      fc.mesh.visible = true;
       const u = (fc.offset + speed) % 1;
       const p = curve.getPoint(u);
       const pNext = curve.getPoint(Math.min(1, u + 0.02));

@@ -351,6 +351,11 @@ body.leo-mode {
 .ctl.play.push { background: var(--green); border-color: var(--green); }
 .ctl.play.manual { background: rgba(255,255,255,.1); border-color: var(--cyan); color: var(--cyan); }
 .ctl.orbit-toggle.on { border-color: rgba(56,189,248,.5); color: var(--cyan); background: rgba(56,189,248,.12); }
+.ctl.cam-lock-btn { font-weight: 700; transition: all .25s ease; letter-spacing: 0.02em; }
+.ctl.cam-lock-btn.locked { border-color: rgba(56,189,248,.4); color: var(--cyan); background: rgba(56,189,248,.08); }
+.ctl.cam-lock-btn.locked:hover { background: rgba(56,189,248,.2); }
+.ctl.cam-lock-btn.unlocked { border-color: #34d399; color: #34d399; background: rgba(52,211,153,.18); box-shadow: 0 0 12px rgba(52,211,153,.35); }
+.ctl.cam-lock-btn.unlocked:hover { background: rgba(52,211,153,.28); }
 
 #scrub { flex: 1; accent-color: var(--amber); cursor: pointer; height: 4px; }
 #scrub.push { accent-color: var(--green); }

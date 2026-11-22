@@ -34,9 +34,19 @@ const MODE_SECONDS = { setup: 13, push: 11, world: 12, leo: 18 };
 const MODE_STEPS = {
   setup: [0.06, 0.25, 0.34, 0.44, 0.56, 0.68, 0.84, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
-  world: [0.10, 0.30, 0.55, 0.80, 0.95],
+  world: [0.08, 0.24, 0.40, 0.56, 0.72, 0.88],
   leo:   [0.05, 0.16, 0.28, 0.46, 0.54, 0.64, 0.78, 0.96]
 };
+
+const WORLD_APPS = [
+  { brand: 'bejeweled', name: 'Bejeweled Blitz', emoji: '💎', title: 'Daily Energy Restored! 💎', body: 'Spin the Wheel & claim 5,000 Free Coins!', color: '#38bdf8' },
+  { brand: 'facebook',  name: 'Facebook',        emoji: '📘', title: 'Sarah Jenkins sent a message', body: '“Hey, are you presenting the push talk today?”', color: '#1877f2' },
+  { brand: 'instagram', name: 'Instagram',       emoji: '📸', title: 'Alex Rivera liked your post', body: '“Tagged you in: Tech Architecture 2026”', color: '#ec4899' },
+  { brand: 'x',         name: '𝕏 Alert',         emoji: '𝕏',  title: 'Your post is trending on 𝕏!', body: '“Push notification forensic reverse-tracing!”', color: '#e2e8f0' },
+  { brand: 'uber',      name: 'Uber',            emoji: '🚗', title: 'Driver arriving in 2 minutes', body: 'Michael · Silver Toyota Prius (BC 784-XYZ)', color: '#34d399' },
+  { brand: 'amazon',    name: 'Amazon Delivery', emoji: '📦', title: 'Package Delivered!', body: 'Order #408-9821 was placed on front porch', color: '#ff9900' }
+];
+
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
 
@@ -48,6 +58,9 @@ class PushnotOrbit {
     const draco = new DRACOLoader();
     draco.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/draco/gltf/');
     this.loader.setDRACOLoader(draco);
+
+    this.cameraUnlocked = false;
+    this.worldStepTime = performance.now();
 
     this.mode = 'setup'; // 'setup' | 'push' | 'world' | 'leo'
     this.currentOS = 'ios'; // 'ios' | 'android'
@@ -1059,7 +1072,7 @@ class PushnotOrbit {
   }
 
   /* ---- Dynamic Phone Screen Canvas (Interactive iOS vs Android + Bejeweled Blitz) ---- */
-  updatePhoneScreenCanvas(state = 'awake', notifProgress = 0) {
+  updatePhoneScreenCanvas(state = 'awake', notifProgress = 0, customNotif = null) {
     this.lastPhoneScreenState = state;
     this.lastPhoneNotifProgress = notifProgress;
     if (!this.phoneCvs) return;
@@ -1206,22 +1219,22 @@ class PushnotOrbit {
           ctx.beginPath();
           ctx.roundRect(32, bannerY, 448, 126, 24);
           ctx.fill();
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+          ctx.strokeStyle = customNotif?.color || 'rgba(56, 189, 248, 0.75)';
           ctx.lineWidth = 2;
           ctx.stroke();
 
           ctx.textAlign = 'left';
-          ctx.fillStyle = '#38bdf8';
+          ctx.fillStyle = customNotif?.color || '#38bdf8';
           ctx.font = 'bold 17px -apple-system, sans-serif';
-          ctx.fillText('💎 BEJEWELED BLITZ · now', 56, bannerY + 36);
+          ctx.fillText(customNotif ? `${customNotif.emoji} ${customNotif.name.toUpperCase()} · now` : '💎 BEJEWELED BLITZ · now', 56, bannerY + 36);
 
           ctx.fillStyle = '#ffffff';
           ctx.font = 'bold 20px -apple-system, sans-serif';
-          ctx.fillText('Energy Refilled! Play Now 💎', 56, bannerY + 68);
+          ctx.fillText(customNotif ? customNotif.title : 'Energy Refilled! Play Now 💎', 56, bannerY + 68);
 
           ctx.fillStyle = '#94a3b8';
           ctx.font = '16px -apple-system, sans-serif';
-          ctx.fillText('Your lives are full. Tap to beat high scores!', 56, bannerY + 98);
+          ctx.fillText(customNotif ? customNotif.body : 'Your lives are full. Tap to beat high scores!', 56, bannerY + 98);
         }
         ctx.textAlign = 'left';
       }
@@ -1354,22 +1367,22 @@ class PushnotOrbit {
           ctx.beginPath();
           ctx.roundRect(32, bannerY, 448, 126, 24);
           ctx.fill();
-          ctx.strokeStyle = '#34d399';
+          ctx.strokeStyle = customNotif?.color || '#34d399';
           ctx.lineWidth = 2.5;
           ctx.stroke();
 
           ctx.textAlign = 'left';
-          ctx.fillStyle = '#34d399';
+          ctx.fillStyle = customNotif?.color || '#34d399';
           ctx.font = 'bold 17px Roboto, sans-serif';
-          ctx.fillText('💎 Bejeweled Blitz · Firebase FCM', 56, bannerY + 36);
+          ctx.fillText(customNotif ? `${customNotif.emoji} ${customNotif.name} · FCM` : '💎 Bejeweled Blitz · Firebase FCM', 56, bannerY + 36);
 
           ctx.fillStyle = '#ffffff';
           ctx.font = 'bold 20px Roboto, sans-serif';
-          ctx.fillText('Daily Energy Restored! 💎', 56, bannerY + 68);
+          ctx.fillText(customNotif ? customNotif.title : 'Daily Energy Restored! 💎', 56, bannerY + 68);
 
           ctx.fillStyle = '#6ee7b7';
           ctx.font = '16px Roboto, sans-serif';
-          ctx.fillText('Spin the Wheel & claim 5,000 Free Coins!', 56, bannerY + 98);
+          ctx.fillText(customNotif ? customNotif.body : 'Spin the Wheel & claim 5,000 Free Coins!', 56, bannerY + 98);
         }
         ctx.textAlign = 'left';
       }
@@ -1460,6 +1473,31 @@ class PushnotOrbit {
     this.focusTargetPos = null;
     this.focusCamPos = null;
     if (this.focusSpot) this.focusSpot.visible = false;
+  }
+
+  toggleCameraLock() {
+    this.setCameraUnlocked(!this.cameraUnlocked);
+  }
+
+  setCameraUnlocked(unlocked) {
+    this.cameraUnlocked = !!unlocked;
+    if (this.cameraUnlocked) {
+      // Disengage all camera snaps and automatic dolly/pan tracking immediately
+      this.cinematicFollow = false;
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
+      this.setAutoOrbit(false);
+      if (this.focusSpot) this.focusSpot.visible = false;
+    }
+    const btn = document.getElementById('btn-cam-lock');
+    if (btn) {
+      btn.classList.toggle('unlocked', this.cameraUnlocked);
+      btn.classList.toggle('locked', !this.cameraUnlocked);
+      btn.innerHTML = this.cameraUnlocked ? '🔓 Free Cam' : '🔒 Snap';
+      btn.title = this.cameraUnlocked
+        ? 'Camera Unlocked (C) · Click anywhere to step forward without camera snap'
+        : 'Camera Snap ON (C) · Snaps camera to active step or clicked node';
+    }
   }
 
   /* ---- 3D Phone App State Emoji Badge (😴 App Sleeping vs. 😃 App Awake!) ---- */
@@ -3204,6 +3242,7 @@ class PushnotOrbit {
     if (resetT) {
       this.t = 0;
       this.targetT = 0;
+      this.worldStepTime = performance.now();
     }
 
     const isPush  = mode === 'push';
@@ -3269,9 +3308,15 @@ class PushnotOrbit {
   }
 
   stepCycle(dir) {
-    // Step cleanly to the next or previous narrative beat with smooth cinematic camera tracking
+    // Step cleanly to the next or previous narrative beat
     if (this.playing) this.setPlaying(false);
-    this.cinematicFollow = true;
+    if (!this.cameraUnlocked) {
+      this.cinematicFollow = true;
+    } else {
+      this.cinematicFollow = false;
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
+    }
     const stops = MODE_STEPS[this.mode];
     const eps = 0.015;
     if (dir > 0) {
@@ -3280,6 +3325,9 @@ class PushnotOrbit {
     } else {
       const prev = [...stops].reverse().find((s) => s < this.targetT - eps);
       this.targetT = prev !== undefined ? prev : stops[stops.length - 1];
+    }
+    if (this.mode === 'world') {
+      this.worldStepTime = performance.now();
     }
   }
 
@@ -3319,6 +3367,8 @@ class PushnotOrbit {
       this.resetFocus();
       this.setAutoOrbit(!this.autoOrbit);
     });
+    const btnCamLock = document.getElementById('btn-cam-lock');
+    if (btnCamLock) btnCamLock.addEventListener('click', () => this.toggleCameraLock());
     document.getElementById('btn-fullscreen').addEventListener('click', () => {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
@@ -3336,6 +3386,13 @@ class PushnotOrbit {
 
     this.renderer.domElement.addEventListener('pointerup', (e) => {
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > 8) return; // user dragged/orbited
+
+      if (this.cameraUnlocked) {
+        // UNLOCKED CAMERA MODE:
+        // Clicking again and again will just step forward without the camera snap!
+        this.stepCycle(1);
+        return;
+      }
 
       const rect = this.renderer.domElement.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -3422,6 +3479,7 @@ class PushnotOrbit {
       else if (e.key === '2') this.setMode('push');
       else if (e.key === '3') this.setMode('world');
       else if (e.key.toLowerCase() === 'l') this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
+      else if (e.key.toLowerCase() === 'c' || e.key.toLowerCase() === 'u') this.toggleCameraLock();
       else if (e.key === 'ArrowRight') this.stepCycle(1);
       else if (e.key === 'ArrowLeft')  this.stepCycle(-1);
     });
@@ -3670,11 +3728,101 @@ class PushnotOrbit {
         showPush = true;
       }
     } else if (this.mode === 'world') {
-      this.updatePhoneScreenCanvas('awake', 1.0);
+      const stepIdx = Math.min(5, Math.floor(t * 6));
+      const segStart = stepIdx / 6;
+      const segEnd = (stepIdx + 1) / 6;
+      const segT = seg(t, segStart, segEnd);
+
+      // Smooth flight progress:
+      // When playing or scrubbing, directly track timeline segment progress;
+      // When manually stepped / paused, allow a smooth 1.25s flight from when the step was triggered!
+      const timeSinceTrigger = (performance.now() - (this.worldStepTime || 0)) * 0.001;
+      let flightProgress;
+      if (this.playing) {
+        flightProgress = segT;
+      } else {
+        flightProgress = Math.min(1.0, Math.max(segT, timeSinceTrigger / 1.25));
+      }
+
+      const activeApp = WORLD_APPS[stepIdx];
+
+      // Update phone screen with current app notification as it arrives at phone (flightProgress >= 0.75)!
+      if (flightProgress >= 0.75) {
+        this.updatePhoneScreenCanvas('home', flightProgress, activeApp);
+      } else {
+        this.updatePhoneScreenCanvas('sleeping', 0);
+      }
+
       moverParent = this.normalGroup;
-      moverPos = new THREE.Vector3(POS.ufo.x, 65, POS.ufo.z);
-      moverText = '🌐 Live Global Push Traffic → Phones';
       moverCls = 'push';
+
+      if (this.worldStimStreams) {
+        for (let i = 0; i < this.worldStimStreams.length; i++) {
+          const s = this.worldStimStreams[i];
+          if (i < stepIdx) {
+            // Previously triggered lines remain visible as soft lines (demonstrating cumulative connections)
+            s.line.material.opacity = 0.28;
+            s.line.visible = true;
+            s.orb.visible = false;
+            s.pulses.visible = false;
+            if (s.cones) s.cones.forEach(c => (c.mesh.visible = false));
+          } else if (i === stepIdx) {
+            // The currently triggered active app line!
+            s.line.material.opacity = 0.85;
+            s.line.visible = true;
+            s.orb.visible = true;
+            s.pulses.visible = true;
+
+            // Position 3D App Brand Logo Tile
+            const pt = s.curve.getPoint(flightProgress);
+            s.currentPos.copy(pt);
+            s.orb.position.copy(pt);
+            s.orb.lookAt(this.camera.position);
+
+            // 14 glowing additive pulses streaming along the curve leading to current position
+            if (s.pulses) {
+              const posAttr = s.pulses.geometry.attributes.position;
+              const arr = posAttr.array;
+              for (let k = 0; k < s.pulseCount; k++) {
+                const pulseU = Math.max(0, Math.min(1, flightProgress - (k * 0.035)));
+                const pPulse = s.curve.getPoint(pulseU);
+                arr[k * 3]     = pPulse.x;
+                arr[k * 3 + 1] = pPulse.y;
+                arr[k * 3 + 2] = pPulse.z;
+              }
+              posAttr.needsUpdate = true;
+            }
+
+            // Directional flow cones gliding along active curve
+            if (s.cones) {
+              for (const cone of s.cones) {
+                cone.mesh.visible = true;
+                const coneU = (flightProgress + cone.offset * 0.15) % 1.0;
+                const pCone = s.curve.getPoint(coneU);
+                const pNext = s.curve.getPoint(Math.min(1, coneU + 0.02));
+                cone.mesh.position.copy(pCone);
+                cone.mesh.lookAt(pNext);
+              }
+            }
+
+            moverPos = pt.clone().add(new THREE.Vector3(0, 4.5, 0));
+            if (flightProgress < 0.35) {
+              moverText = `${activeApp.emoji} ${stepIdx + 1}/6 ${activeApp.name}: Outbound Push from Earth`;
+            } else if (flightProgress < 0.70) {
+              moverText = `${activeApp.emoji} ${stepIdx + 1}/6 ${activeApp.name} → Apple/Google Shared Gateway`;
+            } else {
+              moverText = `${activeApp.emoji} Delivered via Single Push Tunnel → Phone!`;
+            }
+          } else {
+            // Future lines that haven't triggered yet: dormant
+            s.line.material.opacity = 0.08;
+            s.line.visible = true;
+            s.orb.visible = false;
+            s.pulses.visible = false;
+            if (s.cones) s.cones.forEach(c => (c.mesh.visible = false));
+          }
+        }
+      }
     } else {
       // LAW ENFORCEMENT UPSIDE-DOWN REVERSE TRACE:
       moverParent = this.leoGroup;
@@ -3797,7 +3945,6 @@ class PushnotOrbit {
     if (this.worldStimGroup) this.worldStimGroup.visible = showStims;
     if (this.worldStimStreams) {
       for (const s of this.worldStimStreams) {
-        s.orb.visible = showStims;
         this.place(s.id, null, false);
       }
     }
@@ -4035,7 +4182,13 @@ class PushnotOrbit {
       if (Math.abs(this.targetT - this.t) < 0.0004) this.t = this.targetT;
     }
 
-    if (this.focusTargetPos && this.focusCamPos) {
+    if (this.cameraUnlocked) {
+      // UNLOCKED CAMERA MODE:
+      // Absolutely zero camera snapping or forced follow! Full free camera control.
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
+      this.cinematicFollow = false;
+    } else if (this.focusTargetPos && this.focusCamPos) {
       // Smooth cinematic camera snap into focus on clicked GLB model with shallow depth of field emphasis!
       this.controls.target.lerp(this.focusTargetPos, Math.min(1, dt * 5.0));
       this.camera.position.lerp(this.focusCamPos, Math.min(1, dt * 4.2));
@@ -4083,44 +4236,6 @@ class PushnotOrbit {
       const pNext = curve.getPoint(Math.min(1, u + 0.02));
       fc.mesh.position.copy(p);
       fc.mesh.lookAt(pNext);
-    }
-
-    // Animate 6 Multi-Stream Outbound Lines in Mode 3 (World) continuously!
-    if (this.mode === 'world' && this.worldStimStreams) {
-      const liveStreamSpeed = (now * 0.00018) % 1.0;
-      for (const s of this.worldStimStreams) {
-        // 1. Advance the 3D App Brand Logo Tile
-        const uOrb = (s.offset + liveStreamSpeed + this.t * 0.35) % 1.0;
-        const pOrb = s.curve.getPoint(uOrb);
-        s.currentPos.copy(pOrb);
-        s.orb.position.copy(pOrb);
-        s.orb.lookAt(this.camera.position);
-
-        // 2. Advance the 14 glowing additive data pulses along the curve
-        if (s.pulses) {
-          const posAttr = s.pulses.geometry.attributes.position;
-          const arr = posAttr.array;
-          for (let k = 0; k < s.pulseCount; k++) {
-            const uPulse = (s.offset + liveStreamSpeed + (k / s.pulseCount)) % 1.0;
-            const pt = s.curve.getPoint(uPulse);
-            arr[k * 3]     = pt.x;
-            arr[k * 3 + 1] = pt.y;
-            arr[k * 3 + 2] = pt.z;
-          }
-          posAttr.needsUpdate = true;
-        }
-
-        // 3. Advance the 3 directional flow chevrons / cones pointing in flow direction
-        if (s.cones) {
-          for (const cone of s.cones) {
-            const uCone = (s.offset + liveStreamSpeed + cone.offset) % 1.0;
-            const pt = s.curve.getPoint(uCone);
-            const ptNext = s.curve.getPoint((uCone + 0.02) % 1.0);
-            cone.mesh.position.copy(pt);
-            cone.mesh.lookAt(ptNext);
-          }
-        }
-      }
     }
 
     // Gently rotate ONLY the 3D Brain mesh when active above the Apple & Google Skyscraper HQ

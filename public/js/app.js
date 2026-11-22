@@ -4583,7 +4583,7 @@ class PushnotOrbit {
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
           // Positioned to the right of the desk from camera's POV (cleanly separated from suspect & monitor!)
-          this.leoSubscriberBundle.position.set(L.bandit.x + 7.5, 14.5, L.bandit.z - 7.5);
+          this.leoSubscriberBundle.position.set(L.bandit.x + 10.0, 14.0, L.bandit.z - 10.0);
           this.leoSubscriberBundle.lookAt(new THREE.Vector3(L.bandit.x + 26, 16.5, L.bandit.z + 18));
           this.leoSubscriberBundle.rotation.y += Math.sin(performance.now() * 0.0015) * 0.12;
         }

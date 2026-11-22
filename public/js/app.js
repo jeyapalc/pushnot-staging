@@ -3983,10 +3983,6 @@ class PushnotOrbit {
             showLeoTokens = true;
           }
         }
-          } else {
-            showLeoTokens = true;
-          }
-        }
       } else if (t < 0.86) {
         const p = this.arcLeoToAg.getPoint(seg(t, 0.68, 0.84));
         this.leoKey.visible = true;

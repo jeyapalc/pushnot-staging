@@ -666,12 +666,8 @@ class PushnotOrbit {
       cRing.rotation.x = Math.PI / 2;
       emitterNode.add(cRing);
 
-      // Laser Beam shooting from emitter to central focal point
-      const beamVec = focalCenter.clone().sub(emitterNode.position);
-      const beamLen = beamVec.length();
-      const beamGeo = new THREE.CylinderGeometry(0.12, 0.24, beamLen, 12, 1, true);
-      beamGeo.translate(0, beamLen / 2, 0);
-      beamGeo.rotateX(Math.PI / 2);
+      // Laser Beam shooting from emitter directly into central focal point
+      const beamGeo = new THREE.CylinderGeometry(0.12, 0.28, 1.0, 12, 1, true);
       const beamMat = new THREE.MeshBasicMaterial({
         color: beamColors[i],
         transparent: true,
@@ -680,8 +676,6 @@ class PushnotOrbit {
         side: THREE.DoubleSide
       });
       const beam = new THREE.Mesh(beamGeo, beamMat);
-      beam.position.copy(emitterNode.position);
-      beam.lookAt(focalCenter);
       group.add(beam);
 
       crystalsGroup.add(emitterNode);
@@ -3509,9 +3503,15 @@ class PushnotOrbit {
             em.crystal.rotation.x = nowMs * 0.002;
             em.ring.rotation.z = nowMs * 0.004;
 
-            // Re-aim laser beam from moving emitter to central focal point
-            em.beam.position.copy(em.node.position);
-            em.beam.lookAt(S.focalCenter);
+            // Mathematically exact laser beam alignment from moving crystal emitter down into central focal key core!
+            const posA = em.node.position;
+            const posB = S.focalCenter;
+            const len = posA.distanceTo(posB);
+            const mid = new THREE.Vector3().addVectors(posA, posB).multiplyScalar(0.5);
+            const dir = new THREE.Vector3().subVectors(posB, posA).normalize();
+            em.beam.position.copy(mid);
+            em.beam.scale.set(1, len, 1);
+            em.beam.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir);
 
             // Laser beam pulses in brightness as summoning progresses
             const beamPulse = 0.55 + Math.sin(nowMs * 0.012 + idx) * 0.25;

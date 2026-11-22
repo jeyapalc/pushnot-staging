@@ -195,9 +195,14 @@ class PushnotOrbit {
     this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 8),  pServer);
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
     this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(26));
+    this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
+      POS.ufo.clone().setY(78),
+      new THREE.Vector3(-D * 0.5, 56, -D * 0.3),
+      pPost.clone().setY(22)
+    );
 
     this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
-    this.pushCurves  = [this.arcUfoToServer,  this.arcServerToPost, this.arcPostToPhone];
+    this.pushCurves  = [this.arcPushWorldToPost, this.arcPostToPhone];
 
     this.setupLines = [
       this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.4,  this.normalGroup),
@@ -205,9 +210,8 @@ class PushnotOrbit {
       this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.4,  this.normalGroup)
     ];
     this.pushLines = [
-      this.addArc(this.arcUfoToServer,  0x38bdf8, 0.4,  this.normalGroup),
-      this.addArc(this.arcServerToPost, 0x34d399, 0.45, this.normalGroup),
-      this.addArc(this.arcPostToPhone,  0x34d399, 0.45, this.normalGroup)
+      this.addArc(this.arcPushWorldToPost, 0x34d399, 0.45, this.normalGroup),
+      this.addArc(this.arcPostToPhone,     0x34d399, 0.45, this.normalGroup)
     ];
 
     // 4 Multi-Stream World Outbound Stimulus Lines from Planet Earth -> Datacentre -> Post Office -> Phone
@@ -465,30 +469,58 @@ class PushnotOrbit {
     const group = new THREE.Group();
     this.slotReels = [];
 
-    // Outer cyber casing
+    // Outer cyber casing - Open-Frame Bracket (Zero Occlusion!)
     const caseMat = new THREE.MeshStandardMaterial({
       color: 0x0f172a, metalness: 0.85, roughness: 0.25
     });
     const borderMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
 
-    // Main housing box
-    const caseBox = new THREE.Mesh(new THREE.BoxGeometry(14.2, 8.4, 6.4), caseMat);
-    caseBox.add(new THREE.LineSegments(new THREE.EdgesGeometry(caseBox.geometry), borderMat));
-    group.add(caseBox);
+    // Base pedestal
+    const basePedestal = new THREE.Mesh(new THREE.BoxGeometry(15.2, 1.4, 6.0), caseMat);
+    basePedestal.position.y = -3.5;
+    basePedestal.add(new THREE.LineSegments(new THREE.EdgesGeometry(basePedestal.geometry), borderMat));
+    group.add(basePedestal);
 
-    // Front viewing window opening / recess
-    const windowFrame = new THREE.Mesh(
-      new THREE.BoxGeometry(12.4, 5.8, 0.4),
-      new THREE.MeshBasicMaterial({ color: 0x0284c7, transparent: true, opacity: 0.32 })
-    );
-    windowFrame.position.z = 3.22;
-    group.add(windowFrame);
+    // Top marquee housing
+    const topHousing = new THREE.Mesh(new THREE.BoxGeometry(15.2, 1.8, 6.0), caseMat);
+    topHousing.position.y = 3.6;
+    topHousing.add(new THREE.LineSegments(new THREE.EdgesGeometry(topHousing.geometry), borderMat));
+    group.add(topHousing);
 
-    // Payline indicator (horizontal glowing laser bar across the center row)
-    const paylineGeo = new THREE.BoxGeometry(12.8, 0.18, 0.18);
+    // Side columns (left & right)
+    const leftCol = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.8, 6.0), caseMat);
+    leftCol.position.set(-7.0, 0, 0);
+    leftCol.add(new THREE.LineSegments(new THREE.EdgesGeometry(leftCol.geometry), borderMat));
+    group.add(leftCol);
+
+    const rightCol = new THREE.Mesh(new THREE.BoxGeometry(1.2, 5.8, 6.0), caseMat);
+    rightCol.position.set(7.0, 0, 0);
+    rightCol.add(new THREE.LineSegments(new THREE.EdgesGeometry(rightCol.geometry), borderMat));
+    group.add(rightCol);
+
+    // Reel separator pillars
+    [-2.3, 2.3].forEach(x => {
+      const sep = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.14, 5.8, 12),
+        new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.9, roughness: 0.2 })
+      );
+      sep.position.set(x, 0, 0);
+      group.add(sep);
+    });
+
+    // Dark translucent backdrop panel
+    const backMat = new THREE.MeshBasicMaterial({
+      color: 0x030712, transparent: true, opacity: 0.75, side: THREE.DoubleSide
+    });
+    const backMesh = new THREE.Mesh(new THREE.PlaneGeometry(12.8, 5.8), backMat);
+    backMesh.position.set(0, 0, -2.8);
+    group.add(backMesh);
+
+    // Payline indicator (horizontal glowing gold laser bar across the center row)
+    const paylineGeo = new THREE.BoxGeometry(13.6, 0.22, 0.22);
     const paylineMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.95 });
     const payline = new THREE.Mesh(paylineGeo, paylineMat);
-    payline.position.set(0, 0, 3.32);
+    payline.position.set(0, 0, 2.7);
     group.add(payline);
     this.slotPayline = payline;
 
@@ -504,16 +536,26 @@ class PushnotOrbit {
     headerTex.minFilter = THREE.LinearFilter;
     headerTex.magFilter = THREE.LinearFilter;
     headerTex.generateMipmaps = false;
+
+    // Front Marquee
     const headerMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(11.2, 2.5),
+      new THREE.PlaneGeometry(13.6, 1.6),
       new THREE.MeshBasicMaterial({ map: headerTex })
     );
-    headerMesh.position.set(0, 4.8, 1.4);
-    headerMesh.rotation.x = -0.22;
+    headerMesh.position.set(0, 3.6, 3.02);
     group.add(headerMesh);
 
+    // Back Marquee
+    const headerMeshBack = new THREE.Mesh(
+      new THREE.PlaneGeometry(13.6, 1.6),
+      new THREE.MeshBasicMaterial({ map: headerTex })
+    );
+    headerMeshBack.position.set(0, 3.6, -3.02);
+    headerMeshBack.rotation.y = Math.PI;
+    group.add(headerMeshBack);
+
     // 3 Cylindrical Reels side-by-side
-    const reelX = [-3.6, 0, 3.6];
+    const reelX = [-4.6, 0, 4.6];
     const R_REEL = 2.2;
 
     for (let r = 0; r < 3; r++) {
@@ -1209,7 +1251,7 @@ class PushnotOrbit {
     } else if (key === 'osint') {
       // Over the shoulder / zoomed into the police computer screen at eye level!
       target = this.leoPos.osint.clone().setY(12.8);
-      customCamPos = target.clone().add(new THREE.Vector3(18, 1.8, 18));
+      customCamPos = new THREE.Vector3(this.leoPos.osint.x + 22, 14.5, this.leoPos.osint.z - 12);
     } else if (key === 'proton') {
       // Facing Swiss illuminated server station & waving Swiss flag at eye level
       target = this.leoPos.proton.clone().setY(18.0);
@@ -1398,50 +1440,50 @@ class PushnotOrbit {
 
     // Top Header Badge
     ctx.fillStyle = isIos ? '#38bdf8' : '#34d399';
-    ctx.font = 'bold 36px monospace';
-    ctx.fillText(isIos ? ' APNs PUSH NOTIFICATION' : '🤖 GOOGLE FCM PUSH NOTIFICATION', 48, 76);
+    ctx.font = 'bold 32px monospace';
+    ctx.fillText(isIos ? ' APNs PUSH NOTIFICATION' : '🤖 GOOGLE FCM PUSH NOTIFICATION', 48, 72);
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 30px monospace';
-    ctx.fillText('🔑 ATTACHED DEVICE TOKEN: #7A9F-2B4C', 48, 132);
+    ctx.font = 'bold 26px monospace';
+    ctx.fillText('🔑 ATTACHED DEVICE TOKEN: #7A9F-2B4C', 48, 124);
 
     // Separator rule
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(48, 160); ctx.lineTo(976, 160);
+    ctx.moveTo(48, 150); ctx.lineTo(976, 150);
     ctx.stroke();
 
     // App Title
     ctx.fillStyle = '#38bdf8';
-    ctx.font = '900 48px sans-serif';
-    ctx.fillText('💎 BEJEWELED BLITZ  •  SPECIAL GIFT', 48, 226);
+    ctx.font = '900 40px sans-serif';
+    ctx.fillText('💎 BEJEWELED BLITZ  •  SPECIAL GIFT', 48, 214);
 
     // Headline Offer
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 52px sans-serif';
-    ctx.fillText('🎉 3 Months Free Pro Trial!', 48, 296);
+    ctx.font = '900 46px sans-serif';
+    ctx.fillText('🎉 3 Months Free Pro Trial!', 48, 282);
 
     // Offer description
     ctx.fillStyle = '#cbd5e1';
-    ctx.font = '500 34px sans-serif';
-    ctx.fillText('Unlimited lives, zero ads, and 500 bonus gems unlocked for 90 days.', 48, 360);
+    ctx.font = '500 26px sans-serif';
+    ctx.fillText('Unlimited lives, zero ads, and 500 bonus gems unlocked for 90 days.', 48, 348);
 
     // Action button & Route
     ctx.fillStyle = '#10b981';
     ctx.beginPath();
-    ctx.roundRect(48, 410, 380, 68, 16);
+    ctx.roundRect(48, 396, 360, 64, 16);
     ctx.fill();
 
     ctx.fillStyle = '#06281e';
-    ctx.font = '900 32px sans-serif';
+    ctx.font = '900 28px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('CLAIM FREE 3 MONTHS', 238, 455);
+    ctx.fillText('CLAIM FREE 3 MONTHS', 228, 438);
     ctx.textAlign = 'left';
 
     ctx.fillStyle = '#34d399';
-    ctx.font = 'bold 26px monospace';
-    ctx.fillText('ROUTE: Bejeweled ➔ Google FCM ➔ Phone', 460, 455);
+    ctx.font = 'bold 24px monospace';
+    ctx.fillText('ROUTE: Bejeweled ➔ Google FCM ➔ Phone', 438, 438);
 
     if (this.payloadTex) this.payloadTex.needsUpdate = true;
   }
@@ -3304,7 +3346,7 @@ class PushnotOrbit {
       if (t < 0.28) {
         // Step 1: Push Notification generated & animated directly ABOVE THE WORLD!
         // Presenter stops to explain Bejeweled wants to send this end user a free 3-month pro trial!
-        const cardPos = POS.ufo.clone().setY(62);
+        const cardPos = POS.ufo.clone().setY(78);
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(cardPos);
         this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
@@ -3313,7 +3355,7 @@ class PushnotOrbit {
         moverCls = 'push';
       } else if (t < 0.56) {
         // Step 2: Push Notification + Token Key travels across sky to Google / Apple HQ
-        const p = this.arcServerToPost.getPoint(seg(t, 0.28, 0.56));
+        const p = this.arcPushWorldToPost.getPoint(seg(t, 0.28, 0.56));
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(p);
         this.pushOrb.scale.setScalar(1.0);
@@ -3521,8 +3563,8 @@ class PushnotOrbit {
     } else if (this.mode === 'push') {
       if (t < 0.28) {
         // Zoom into Push Notification message banner animated directly above the World!
-        focusLocal = new THREE.Vector3(POS.ufo.x, 62, POS.ufo.z);
-        focusDist = 42;
+        focusLocal = new THREE.Vector3(POS.ufo.x, 78, POS.ufo.z);
+        focusDist = 38;
       } else if (t < 0.56) {
         // Following payload gliding to Google/Apple
         focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 30, 0);
@@ -3552,7 +3594,7 @@ class PushnotOrbit {
         focusLocal = new THREE.Vector3(L.bandit.x, 11.5, L.bandit.z);
         customCineCam = new THREE.Vector3(L.bandit.x + 22, 12.5, L.bandit.z - 10);
       } else if (t < 0.36) {
-        if (showLeoDenied) {
+        if (t >= 0.25 || showLeoDenied) {
           // Switzerland illuminated server rack + waving Swiss flag on top!
           focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
           customCineCam = new THREE.Vector3(L.proton.x + 36, 19.5, L.proton.z - 36);
@@ -3564,7 +3606,7 @@ class PushnotOrbit {
       } else if (t < 0.68) {
         // Running Cyber OSINT -> Zoomed OVER THE SHOULDER / eye level into the computer screen behind the cop!
         focusLocal = new THREE.Vector3(L.osint.x, 12.8, L.osint.z);
-        customCineCam = new THREE.Vector3(L.osint.x + 18, 14.6, L.osint.z + 18);
+        customCineCam = new THREE.Vector3(L.osint.x + 22, 14.5, L.osint.z - 12);
       } else if (t < 0.86) {
         // Production orders served to Apple & Google Skyscraper
         focusLocal = new THREE.Vector3(L.ag.x, 22.0, L.ag.z);
@@ -3754,6 +3796,12 @@ class PushnotOrbit {
       const dx = this.camera.position.x - POS.post.x;
       const dz = this.camera.position.z - POS.post.z;
       this.storeGroup.rotation.y = Math.atan2(dx, dz);
+    }
+    if (this.keyForge && this.keyForge.visible && this.camera) {
+      // Always keep the 3-Ring Slot Machine facing directly towards the camera!
+      const dx = this.camera.position.x - this.keyForge.position.x;
+      const dz = this.camera.position.z - this.keyForge.position.z;
+      this.keyForge.rotation.y = Math.atan2(dx, dz);
     }
 
     this.appOrb.rotation.y += dt * 1.4;

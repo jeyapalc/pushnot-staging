@@ -2479,12 +2479,11 @@ class PushnotOrbit {
     ctx.fillStyle = '#080711';
     ctx.fillRect(0, 0, W, H);
 
-    // ProtonMail window centered on screen
-    const pad = 40;
-    const winW = W - pad * 2;
-    const winH = H - pad * 2;
-    const winX = pad;
-    const winY = pad;
+    // ProtonMail window centered on screen with generous inset so bezels never clip text
+    const winX = 140;
+    const winY = 70;
+    const winW = 760;
+    const winH = 860;
 
     // Window shadow / outer glow
     ctx.fillStyle = 'rgba(109, 74, 255, 0.25)';
@@ -2505,23 +2504,23 @@ class PushnotOrbit {
     grad.addColorStop(0.7, '#4c1d95');
     grad.addColorStop(1, '#2e1065');
     ctx.fillStyle = grad;
-    ctx.fillRect(winX, winY, winW, 80);
+    ctx.fillRect(winX, winY, winW, 76);
 
     // Window Control Dots (macOS/Linux style)
     const dots = ['#ef4444', '#f59e0b', '#10b981'];
     dots.forEach((col, i) => {
       ctx.fillStyle = col;
       ctx.beginPath();
-      ctx.arc(winX + 45 + i * 36, winY + 40, 12, 0, Math.PI * 2);
+      ctx.arc(winX + 40 + i * 32, winY + 38, 10, 0, Math.PI * 2);
       ctx.fill();
     });
 
     // Proton Mail Header Title
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 38px "Space Grotesk", sans-serif';
+    ctx.font = '900 34px "Space Grotesk", sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText('🇨🇭 Proton Mail · Encrypted Threat Composer', winX + 175, winY + 42);
+    ctx.fillText('🇨🇭 Proton Mail', winX + 160, winY + 38);
 
     // Helper for progressive text typing
     const clip = (str, startP, endP) => {
@@ -2529,84 +2528,101 @@ class PushnotOrbit {
       return str.slice(0, Math.ceil(str.length * p));
     };
 
-    // Metadata field rows (TO, FROM, SUBJECT)
+    // Metadata field rows (TO, FROM, SUBJECT) - generously indented away from left monitor bezel
     const drawField = (y, label, val, color) => {
       ctx.fillStyle = '#94a3b8';
       ctx.font = '700 32px "JetBrains Mono", monospace';
-      ctx.fillText(label, winX + 36, winY + y);
+      ctx.fillText(label, winX + 45, winY + y);
 
       ctx.fillStyle = color;
       ctx.font = '900 36px "JetBrains Mono", monospace';
-      ctx.fillText(val, winX + 220, winY + y);
+      ctx.fillText(val, winX + 240, winY + y);
 
       // Separator line
       ctx.strokeStyle = 'rgba(109, 74, 255, 0.35)';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(winX + 30, winY + y + 26);
-      ctx.lineTo(winX + winW - 30, winY + y + 26);
+      ctx.moveTo(winX + 35, winY + y + 24);
+      ctx.lineTo(winX + winW - 35, winY + y + 24);
       ctx.stroke();
     };
 
-    drawField(150, 'TO:',      clip('911@POJ.CA', 0.0, 0.25),        '#38bdf8');
-    drawField(230, 'FROM:',    clip('BADGUY@PROTON.ME', 0.20, 0.50),  '#c4b5fd');
-    drawField(310, 'SUBJECT:', clip('RISE UP! THREAT NOTICE', 0.45, 0.70), '#fb7185');
+    drawField(140, 'TO:',      clip('911@POJ.CA', 0.0, 0.25),        '#38bdf8');
+    drawField(215, 'FROM:',    clip('BADGUY@PROTON.ME', 0.20, 0.45),  '#c4b5fd');
+    drawField(290, 'SUBJECT:', clip('TIMES UP!', 0.45, 0.65),         '#fb7185');
 
     // Message Body Area
-    const bodyY = 380;
-    const bodyH = winH - bodyY - 110;
+    const bodyY = 350;
+    const bodyH = winH - bodyY - 40;
     ctx.fillStyle = '#0a0915';
     ctx.fillRect(winX + 30, winY + bodyY, winW - 60, bodyH);
     ctx.strokeStyle = 'rgba(109, 74, 255, 0.5)';
     ctx.lineWidth = 2;
     ctx.strokeRect(winX + 30, winY + bodyY, winW - 60, bodyH);
 
-    // Body content lines
-    if (progress >= 0.55) {
-      const bodyAlpha = clamp01((progress - 0.55) / 0.35);
+    // Menacing Threat Text & Low Digital Pixelated Skulls
+    if (progress >= 0.50) {
+      const bodyAlpha = clamp01((progress - 0.50) / 0.25);
       ctx.save();
       ctx.globalAlpha = bodyAlpha;
 
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = '700 30px "JetBrains Mono", monospace';
-      ctx.fillText('> TARGET: CANADIAN POLICE HEADQUARTERS', winX + 60, winY + bodyY + 65);
-
+      // GOOD LUCK FINDING THE BOMB!
+      const threatText = clip('GOOD LUCK FINDING THE BOMB!', 0.50, 0.80);
       ctx.fillStyle = '#ef4444';
-      ctx.font = '900 34px "JetBrains Mono", monospace';
-      ctx.fillText('⚠ THREAT: IMMINENT ATTACK SCHEDULED', winX + 60, winY + bodyY + 125);
+      ctx.font = '900 38px "JetBrains Mono", monospace';
+      ctx.fillText(threatText, winX + 55, winY + bodyY + 75);
 
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 26px "JetBrains Mono", monospace';
-      ctx.fillText('ENCRYPTION: 4096-bit RSA · ZERO-ACCESS PGP', winX + 60, winY + bodyY + 185);
-      ctx.fillText('ORIGIN: SWISS RELAY · IP ANONYMIZED', winX + 60, winY + bodyY + 230);
+      // Authentic low digital pixelated skulls
+      const drawPixelSkull = (sx, sy, px, color) => {
+        const map = [
+          "  ████████  ",
+          " ██████████ ",
+          "████████████",
+          "██  ████  ██",
+          "██  ████  ██",
+          "████    ████",
+          " ██████████ ",
+          "  ████████  ",
+          "  █ █  █ █  ",
+          "  ████████  ",
+          "  █ █  █ █  ",
+          "   ██████   "
+        ];
+        ctx.fillStyle = color;
+        for (let r = 0; r < map.length; r++) {
+          const row = map[r];
+          for (let c = 0; c < row.length; c++) {
+            if (row[c] === '█') {
+              ctx.fillRect(sx + c * px, sy + r * px, px, px);
+            }
+          }
+        }
+      };
 
-      // Skull & warning badge
-      ctx.fillStyle = '#f43f5e';
-      ctx.font = 'bold 54px monospace';
-      ctx.fillText('☠ 💣 ⚠', winX + 60, winY + bodyY + 310);
+      const pxSize = 8;
+      const skullW = 12 * pxSize; // 96px
+      const skullY = winY + bodyY + 130;
+      const skullSpacing = 160;
+      const startSkullX = winX + Math.floor((winW - (2 * skullSpacing + skullW)) / 2);
+
+      // Draw 3 pixelated skull icons in digital crimson
+      for (let s = 0; s < 3; s++) {
+        drawPixelSkull(startSkullX + s * skullSpacing, skullY, pxSize, '#f43f5e');
+      }
 
       ctx.restore();
     }
 
-    // Status bar at bottom
-    const statusY = winY + winH - 75;
-    ctx.fillStyle = '#161426';
-    ctx.fillRect(winX + 30, statusY, winW - 60, 55);
-    ctx.strokeStyle = '#22c55e';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(winX + 30, statusY, winW - 60, 55);
-
-    ctx.fillStyle = '#22c55e';
-    ctx.font = '900 28px "JetBrains Mono", monospace';
-    ctx.fillText('✔ STATUS: DISPATCHED [SWISS ZERO-ACCESS]', winX + 60, statusY + 36);
-
-    // Send button icon
-    ctx.fillStyle = '#6d4aff';
-    ctx.fillRect(winX + winW - 200, statusY + 8, 150, 40);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 22px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('SENT ✉', winX + winW - 125, statusY + 34);
+    // Clean Sent tag in bottom right (zero Swiss Zero-Access clutter)
+    if (progress >= 0.85) {
+      ctx.fillStyle = '#6d4aff';
+      ctx.fillRect(winX + winW - 190, winY + bodyY + bodyH - 60, 140, 38);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 20px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('SENT ✉', winX + winW - 120, winY + bodyY + bodyH - 35);
+      ctx.textAlign = 'left';
+    }
 
     ctx.restore();
     this.hackerScreenTex.needsUpdate = true;

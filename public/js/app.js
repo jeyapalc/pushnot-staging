@@ -4405,7 +4405,7 @@ class PushnotOrbit {
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(cardPos);
         this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
-        moverPos = cardPos;
+        moverPos = cardPos.clone().add(new THREE.Vector3(0, 10.5, 0));
         moverText = '🔔 Push Notification from Bejeweled (+ Token Key)';
         moverCls = 'push';
       } else if (t < 0.56) {
@@ -4525,7 +4525,7 @@ class PushnotOrbit {
           // Rejection Swiss Shield Icon + Speech Bubble
           if (this.rejectShieldBubble) this.rejectShieldBubble.visible = true;
           showLeoDenied = true;
-          moverPos = new THREE.Vector3(L.proton.x, 20.0, L.proton.z);
+          moverPos = new THREE.Vector3(L.proton.x, 26.5, L.proton.z);
           moverText = '⛔ Proton Rejects Demand (Swiss Privacy & Art. 271 Swiss Penal Code)';
           moverCls = 'red';
         }
@@ -4550,7 +4550,7 @@ class PushnotOrbit {
           this.leoUniqueKeysGroup.position.copy(p);
         }
         if (t < 0.60) {
-          moverPos = p;
+          moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
           moverText = '🔑 3 Unique App Push Tokens Disclosed: Meta (#7A9F), Instagram (#3E1B), 𝕏 (#9C4D)';
           moverCls = 'gold';
         } else {
@@ -4563,7 +4563,7 @@ class PushnotOrbit {
           this.leoUniqueKeysGroup.visible = true;
           this.leoUniqueKeysGroup.position.copy(p);
         }
-        moverPos = p;
+        moverPos = p.clone().add(new THREE.Vector3(0, 6.5, 0));
         moverText = '🇨🇦 Order + 🔑 3 Unique Tokens → Apple APNs & Google FCM';
         moverCls = 'cyan';
       } else if (t < 0.88) {
@@ -4572,8 +4572,9 @@ class PushnotOrbit {
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
           this.leoSubscriberBundle.position.copy(p);
+          this.leoSubscriberBundle.lookAt(this.camera.position);
         }
-        moverPos = p;
+        moverPos = p.clone().add(new THREE.Vector3(0, 8.5, 0));
         moverText = '🪪 Hardware Match Confirmed · Subscriber Record & Residence Returned';
         moverCls = 'push';
       } else {
@@ -4581,10 +4582,11 @@ class PushnotOrbit {
         this.updateHackerSeizedScreen();
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
-          this.leoSubscriberBundle.position.set(L.bandit.x, 22.0, L.bandit.z);
-          this.leoSubscriberBundle.rotation.y = Math.sin(this.clock.getElapsedTime() * 1.5) * 0.15;
+          this.leoSubscriberBundle.position.set(L.bandit.x - 3.5, 17.5, L.bandit.z + 5.0);
+          this.leoSubscriberBundle.lookAt(new THREE.Vector3(L.bandit.x + 22, 17.5, L.bandit.z + 22));
+          this.leoSubscriberBundle.rotation.y += Math.sin(performance.now() * 0.0015) * 0.15;
         }
-        moverPos = new THREE.Vector3(L.bandit.x, 28.0, L.bandit.z);
+        moverPos = new THREE.Vector3(L.bandit.x - 1.0, 26.5, L.bandit.z + 2.0);
         moverText = '🚨 SUSPECT UNMASKED: CONNOR J. MALONE · 1042 ROBSON ST';
         moverCls = 'red';
         showLeoId = true;
@@ -4750,14 +4752,14 @@ class PushnotOrbit {
           focusLocal = new THREE.Vector3(L.swat.x, 13.5, L.swat.z);
           customCineCam = new THREE.Vector3(L.swat.x + 22, 14.5, L.swat.z + 22);
         }
-      } else if (t < 0.86) {
+      } else if (t < 0.88) {
         // Production orders served to Apple & Google Skyscraper
         focusLocal = new THREE.Vector3(L.ag.x, 20.0, L.ag.z);
         customCineCam = new THREE.Vector3(L.ag.x + 22, 22.0, L.ag.z + 28);
       } else {
-        // Suspect unmasked & arrested with BC Photo ID!
-        focusLocal = new THREE.Vector3(L.bandit.x, 14.0, L.bandit.z);
-        customCineCam = new THREE.Vector3(L.bandit.x + 22, 15.5, L.bandit.z + 22);
+        // Suspect unmasked & seized with Photo ID Card & Tiny 3D Home!
+        focusLocal = new THREE.Vector3(L.bandit.x - 1.0, 15.0, L.bandit.z + 2.0);
+        customCineCam = new THREE.Vector3(L.bandit.x + 24, 18.0, L.bandit.z + 24);
       }
     }
 

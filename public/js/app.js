@@ -209,7 +209,7 @@ class PushnotOrbit {
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
     this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(26));
     this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
-      POS.ufo.clone().setY(63.8),
+      POS.ufo.clone().setY(69.5),
       new THREE.Vector3(-D * 0.5, 42, -D * 0.3),
       pPost.clone().setY(18)
     );
@@ -1415,9 +1415,9 @@ class PushnotOrbit {
       target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
       camPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y + 2, POS.ufo.z + 42);
     } else if (key === 'bandit') {
-      // Hacker at desk with laptop at (32.5, 0, 32.5).
-      target = new THREE.Vector3(this.leoPos.bandit.x, 11.5, this.leoPos.bandit.z);
-      camPos = new THREE.Vector3(this.leoPos.bandit.x + 22, 12.5, this.leoPos.bandit.z - 10);
+      // Tight over-the-shoulder view of the hacker's monitor screen:
+      target = new THREE.Vector3(30.0, 15.5, 28.7);
+      camPos = new THREE.Vector3(37.2, 17.6, 36.8);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
       // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward. Eye-level lateral portrait snap!
       target = new THREE.Vector3(this.leoPos.swat.x, 14.0, this.leoPos.swat.z);
@@ -1624,66 +1624,48 @@ class PushnotOrbit {
 
     const isIos = this.currentOS === 'ios';
 
-    // Background gradient with emerald / cyan glow
+    // Sleek frosted glass dark card with vibrant cyan/emerald border
     const bg = ctx.createLinearGradient(0, 0, 1024, 512);
-    bg.addColorStop(0, '#061715');
-    bg.addColorStop(0.5, '#0b2621');
-    bg.addColorStop(1, '#051311');
+    bg.addColorStop(0, '#07101e');
+    bg.addColorStop(0.5, '#0b1f2e');
+    bg.addColorStop(1, '#050c18');
     ctx.fillStyle = bg;
     ctx.beginPath();
-    ctx.roundRect(16, 16, 992, 480, 32);
+    ctx.roundRect(24, 24, 976, 464, 40);
     ctx.fill();
 
-    ctx.strokeStyle = '#34d399';
-    ctx.lineWidth = 6;
+    ctx.strokeStyle = isIos ? 'rgba(56, 189, 248, 0.9)' : 'rgba(52, 211, 153, 0.9)';
+    ctx.lineWidth = 8;
     ctx.stroke();
 
-    // Top Header Badge
-    ctx.fillStyle = isIos ? '#38bdf8' : '#34d399';
-    ctx.font = 'bold 32px monospace';
-    ctx.fillText(isIos ? ' APNs PUSH NOTIFICATION' : '🤖 GOOGLE FCM PUSH NOTIFICATION', 48, 72);
-
-    ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 26px monospace';
-    ctx.fillText('🔑 ATTACHED DEVICE TOKEN: #7A9F-2B4C', 48, 124);
-
-    // Separator rule
-    ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(48, 150); ctx.lineTo(976, 150);
-    ctx.stroke();
-
-    // App Title
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = '900 40px sans-serif';
-    ctx.fillText('💎 BEJEWELED BLITZ  •  SPECIAL GIFT', 48, 214);
-
-    // Headline Offer
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 46px sans-serif';
-    ctx.fillText('🎉 3 Months Free Pro Trial!', 48, 282);
-
-    // Offer description
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = '500 26px sans-serif';
-    ctx.fillText('Unlimited lives, zero ads, and 500 bonus gems unlocked for 90 days.', 48, 348);
-
-    // Action button & Route
-    ctx.fillStyle = '#10b981';
-    ctx.beginPath();
-    ctx.roundRect(48, 396, 360, 64, 16);
-    ctx.fill();
-
-    ctx.fillStyle = '#06281e';
-    ctx.font = '900 28px sans-serif';
+    // Large glowing Golden Bell Icon on left
+    ctx.save();
+    ctx.font = '160px sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('CLAIM FREE 3 MONTHS', 228, 438);
-    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.shadowColor = '#fbbf24';
+    ctx.shadowBlur = 32;
+    ctx.fillText('🔔', 180, 256);
+    ctx.restore();
 
-    ctx.fillStyle = isIos ? '#38bdf8' : '#34d399';
-    ctx.font = 'bold 24px monospace';
-    ctx.fillText(isIos ? 'ROUTE: Bejeweled ➔ Apple APNs ➔ iPhone' : 'ROUTE: Bejeweled ➔ Google FCM ➔ Android', 438, 438);
+    // Subtle vertical separator
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(310, 60); ctx.lineTo(310, 452);
+    ctx.stroke();
+
+    // Main text: Push notification from Bejeweled
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 52px "Space Grotesk", sans-serif';
+    ctx.fillText('Push notification from Bejeweled', 360, 215);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '700 36px "Space Grotesk", sans-serif';
+    ctx.fillText('💎 Bejeweled Blitz', 360, 295);
 
     if (this.payloadTex) this.payloadTex.needsUpdate = true;
   }
@@ -3685,14 +3667,13 @@ class PushnotOrbit {
       }
 
       if (t < 0.28) {
-        // Step 1: Push Notification generated & animated directly ON TOP OF THE EARTH GLB!
-        // Presenter stops to explain Bejeweled wants to send this end user a free 3-month pro trial!
-        const cardPos = POS.ufo.clone().setY(63.8);
+        // Step 1: Clean Push Notification with Bell Icon resting directly above North Pole of Earth GLB
+        const cardPos = POS.ufo.clone().setY(69.5);
         this.pushOrb.visible = true;
         this.pushOrb.position.copy(cardPos);
         this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
         moverPos = cardPos;
-        moverText = '💎 Bejeweled: 3 Months Free Pro Trial (+ Token Key)';
+        moverText = '🔔 Push Notification from Bejeweled (+ Token Key)';
         moverCls = 'push';
       } else if (t < 0.56) {
         // Step 2: Push Notification + Token Key travels across sky to Google / Apple HQ
@@ -3938,7 +3919,7 @@ class PushnotOrbit {
     this.place('pin-phone',  new THREE.Vector3(POS.phone.x,  -1.5, POS.phone.z + 8), showNorm);
     this.place('pin-phone-os', new THREE.Vector3(POS.phone.x, this.tops.phone + 14.5, POS.phone.z), showNorm);
     this.place('pin-server', new THREE.Vector3(POS.server.x, -1.5, POS.server.z + 8), showNorm);
-    this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 15, POS.ufo.z), showNorm);
+    this.place('pin-ufo',    new THREE.Vector3(POS.ufo.x,    POS.ufo.y + 17.5, POS.ufo.z), showNorm);
 
     // 3D App Icon Tiles stream in Mode 3 (no 2D HUD pills attached to them, keeping the HUD clean!)
     const showStims = showNorm && this.mode === 'world';
@@ -4004,8 +3985,8 @@ class PushnotOrbit {
       }
     } else if (this.mode === 'push') {
       if (t < 0.28) {
-        // Zoom into Push Notification message banner resting directly on the Earth GLB!
-        focusLocal = new THREE.Vector3(POS.ufo.x, 58, POS.ufo.z);
+        // Zoom into Push Notification message banner resting cleanly above Earth North Pole!
+        focusLocal = new THREE.Vector3(POS.ufo.x, 67, POS.ufo.z);
         focusDist = 42;
       } else if (t < 0.56) {
         // Following payload gliding to Google/Apple
@@ -4029,8 +4010,10 @@ class PushnotOrbit {
       focusGroup = this.leoGroup;
       if (t < 0.20) {
         // Suspect composing threat email on laptop screen
-        focusLocal = new THREE.Vector3(L.bandit.x, 11.5, L.bandit.z);
-        customCineCam = new THREE.Vector3(L.bandit.x + 22, 12.5, L.bandit.z - 10);
+        // TIGHT OVER-THE-SHOULDER VIEW: Camera placed just above the hacker's right shoulder,
+        // framing the monitor screen large and centered with the shoulder in the lower corner!
+        focusLocal = new THREE.Vector3(30.0, 15.5, 28.7);
+        customCineCam = new THREE.Vector3(37.2, 17.6, 36.8);
       } else if (t < 0.36) {
         if (t >= 0.25 || showLeoDenied) {
           // Switzerland illuminated server rack + waving Swiss flag on top!

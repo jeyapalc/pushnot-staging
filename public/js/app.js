@@ -1333,9 +1333,9 @@ class PushnotOrbit {
       camPos = new THREE.Vector3(POS.phone.x + 22, 15.0, POS.phone.z + 22);
     } else if (key === 'server') {
       // Datacentre server rack is at POS.server (46, 0, 0), rotated +45 deg.
-      // Front glass door & pulsing scanbar face (-X, +Z) inward towards orbit center.
+      // Front glass door & pulsing scanbar face (+X, +Z) into room. Camera placed at (+X, +Z) facing directly into glass door & LEDs!
       target = new THREE.Vector3(POS.server.x, 13.0, POS.server.z);
-      camPos = new THREE.Vector3(POS.server.x - 24, 15.0, POS.server.z + 24);
+      camPos = new THREE.Vector3(POS.server.x + 20, 15.0, POS.server.z + 20);
     } else if (key === 'post' || key === 'store') {
       // Apple and Google platform is at POS.post (0, 0, -46).
       // Glowing signs face +Z directly into the room.
@@ -1347,20 +1347,24 @@ class PushnotOrbit {
       camPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y + 2, POS.ufo.z + 42);
     } else if (key === 'bandit') {
       // Hacker at desk with laptop at (32.5, 0, 32.5).
-      target = new THREE.Vector3(this.leoPos.bandit.x, 10.5, this.leoPos.bandit.z);
-      camPos = new THREE.Vector3(this.leoPos.bandit.x + 18, 13.0, this.leoPos.bandit.z - 8);
+      target = new THREE.Vector3(this.leoPos.bandit.x, 11.5, this.leoPos.bandit.z);
+      camPos = new THREE.Vector3(this.leoPos.bandit.x + 22, 12.5, this.leoPos.bandit.z - 10);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
-      // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward.
+      // Armed RCMP officer at (-32.5, 0, 32.5), facing 63 deg outward. Eye-level lateral portrait snap!
       target = new THREE.Vector3(this.leoPos.swat.x, 14.0, this.leoPos.swat.z);
-      camPos = new THREE.Vector3(this.leoPos.swat.x + 24, 15.0, this.leoPos.swat.z + 24);
+      camPos = new THREE.Vector3(this.leoPos.swat.x + 26, 14.5, this.leoPos.swat.z + 26);
     } else if (key === 'proton') {
-      // Swiss Server & waving Swiss flag at (0, 0, -46).
-      target = new THREE.Vector3(this.leoPos.proton.x, 14.0, this.leoPos.proton.z);
-      camPos = new THREE.Vector3(this.leoPos.proton.x + 20, 16.0, this.leoPos.proton.z + 22);
+      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Eye level lateral snap!
+      target = new THREE.Vector3(this.leoPos.proton.x, 15.0, this.leoPos.proton.z);
+      camPos = new THREE.Vector3(this.leoPos.proton.x + 22, 16.5, this.leoPos.proton.z + 26);
     } else if (key === 'facebook' || key === 'bot') {
-      // App Servers at (46, 0, 0) in LEO mode.
+      // App Servers at (0, 0, 4) in LEO mode.
       target = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
-      camPos = new THREE.Vector3(this.leoPos.bot.x - 24, 15.0, this.leoPos.bot.z + 24);
+      camPos = new THREE.Vector3(this.leoPos.bot.x - 22, 15.0, this.leoPos.bot.z + 22);
+    } else if (key === 'ag') {
+      // Apple & Google HQ in LEO mode.
+      target = new THREE.Vector3(this.leoPos.ag.x, 22.0, this.leoPos.ag.z);
+      camPos = new THREE.Vector3(this.leoPos.ag.x + 22, 22.0, this.leoPos.ag.z + 26);
     }
 
     if (!target || !camPos) return;
@@ -1370,8 +1374,14 @@ class PushnotOrbit {
     this.cinematicFollow = false;
     this.setAutoOrbit(false);
 
-    this.focusTargetPos = target.clone();
-    this.focusCamPos = camPos.clone();
+    // Transform local coordinates into WORLD SPACE (vital in LEO mode where worldPivot flips 180 deg around Z!)
+    const activeGroup = this.mode === 'leo' ? this.leoGroup : this.normalGroup;
+    activeGroup.updateMatrixWorld(true);
+    const worldTarget = target.clone().applyMatrix4(activeGroup.matrixWorld);
+    const worldCam = camPos.clone().applyMatrix4(activeGroup.matrixWorld);
+
+    this.focusTargetPos = worldTarget;
+    this.focusCamPos = worldCam;
 
     // Shallow depth-of-field focal spotlight (keep hacker dark until ID'ed at t >= 0.94!)
     const isBanditDark = (key === 'bandit' && (!this.t || this.t < 0.94));
@@ -1384,8 +1394,8 @@ class PushnotOrbit {
       this.focusSpot.visible = false;
     } else {
       this.focusSpot.visible = true;
-      this.focusSpot.target.position.copy(target);
-      this.focusSpot.position.copy(target).add(new THREE.Vector3(0, 32, 18));
+      this.focusSpot.target.position.copy(worldTarget);
+      this.focusSpot.position.copy(worldTarget).add(new THREE.Vector3(0, 32, 18));
     }
   }
 
@@ -2675,6 +2685,8 @@ class PushnotOrbit {
     this.protonGroup = this.createSwissServerStation();
     this.protonGroup.position.set(L.proton.x, 0, L.proton.z);
     this.protonGroup.rotation.y = Math.PI * 0.2;
+    this.protonGroup.userData.stationKey = 'proton';
+    this.protonGroup.traverse(c => { c.userData.stationKey = 'proton'; });
     this.leoGroup.add(this.protonGroup);
 
     // Glowing red rejection X flash at Proton front door when demand bounces
@@ -2685,6 +2697,7 @@ class PushnotOrbit {
     this.rejectX.add(x1, x2);
     this.rejectX.position.set(0, 11.8, 4.8);
     this.rejectX.visible = false;
+    this.rejectX.userData.stationKey = 'proton';
     this.protonGroup.add(this.rejectX);
 
     // Apple & Google Subscriber Vault (cloned Skyscraper HQ mounts here once logos finish loading,
@@ -3292,12 +3305,17 @@ class PushnotOrbit {
         if (!nodeKey) {
           const hp = hits[0].point;
           if (this.mode === 'leo') {
-            const d1 = hp.distanceTo(this.leoPos.bandit);
-            const d2 = hp.distanceTo(this.leoPos.swat);
-            const d3 = hp.distanceTo(this.leoPos.proton);
-            const d4 = hp.distanceTo(this.leoPos.bot);
+            activeGroup.updateMatrixWorld(true);
+            const wBandit = this.leoPos.bandit.clone().applyMatrix4(activeGroup.matrixWorld);
+            const wSwat   = this.leoPos.swat.clone().applyMatrix4(activeGroup.matrixWorld);
+            const wProton = this.leoPos.proton.clone().applyMatrix4(activeGroup.matrixWorld);
+            const wBot    = this.leoPos.bot.clone().applyMatrix4(activeGroup.matrixWorld);
+            const d1 = hp.distanceTo(wBandit);
+            const d2 = hp.distanceTo(wSwat);
+            const d3 = hp.distanceTo(wProton);
+            const d4 = hp.distanceTo(wBot);
             const minD = Math.min(d1, d2, d3, d4);
-            if (minD < 18) {
+            if (minD < 24) {
               if (minD === d1) nodeKey = 'bandit';
               else if (minD === d2) nodeKey = 'swat';
               else if (minD === d3) nodeKey = 'proton';
@@ -3309,7 +3327,7 @@ class PushnotOrbit {
             const d3 = hp.distanceTo(POS.post);
             const d4 = hp.distanceTo(POS.ufo);
             const minD = Math.min(d1, d2, d3, d4);
-            if (minD < 18) {
+            if (minD < 24) {
               if (minD === d1) nodeKey = 'phone';
               else if (minD === d2) nodeKey = 'server';
               else if (minD === d3) nodeKey = 'post';

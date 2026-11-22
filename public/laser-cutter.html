@@ -166,9 +166,9 @@
       background: rgba(56,189,248,0.15); border-color: var(--cyan); color: #fff;
     }
 
-    /* Legend tooltip */
+    /* Legend tooltip placed cleanly below the top-left status overlay to avoid bottom dock overlap */
     .legend {
-      position: absolute; bottom: 104px; left: 24px; z-index: 10;
+      position: absolute; top: 180px; left: 24px; z-index: 10;
       background: rgba(4,6,11,0.7); border: 1px solid rgba(255,255,255,0.08);
       border-radius: 8px; padding: 8px 12px;
       font-family: var(--mono); font-size: 0.68rem; color: var(--text-dim);

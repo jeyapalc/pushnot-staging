@@ -701,7 +701,7 @@ class PushnotOrbit {
     const group = new THREE.Group();
 
     // 1. Sleek forensic digital disclosure dossier tray
-    const trayGeo = new THREE.BoxGeometry(10.2, 3.4, 0.35);
+    const trayGeo = new THREE.BoxGeometry(11.0, 4.4, 0.4);
     const trayMat = new THREE.MeshStandardMaterial({
       color: 0x070e1b,
       metalness: 0.85,
@@ -716,14 +716,18 @@ class PushnotOrbit {
     ));
     group.add(tray);
 
-    // 2. Three neat, compact cryptographic keys mounted side-by-side inside the tray (spaced generously to prevent collision)
+    // 2. Three neat, compact cryptographic keys mounted side-by-side vertically inside the tray (spaced generously to prevent collision)
     const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.52);
     const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.52);
     const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.52);
 
-    kMeta.position.set(-3.2, 0, 0.25);
-    kInsta.position.set(0, 0, 0.25);
-    kX.position.set(3.2, 0, 0.25);
+    kMeta.rotation.z  = -Math.PI * 0.5;
+    kInsta.rotation.z = -Math.PI * 0.5;
+    kX.rotation.z     = -Math.PI * 0.5;
+
+    kMeta.position.set(-3.4, 0.2, 0.25);
+    kInsta.position.set(0, 0.2, 0.25);
+    kX.position.set(3.4, 0.2, 0.25);
 
     group.add(kMeta, kInsta, kX);
 
@@ -3859,13 +3863,25 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Imposing, menacing law enforcement finish with deep architectural contrast shadows
-      this.harmonizeAsset(m, { minRough: 0.55, maxRough: 0.95, maxMetal: 0.25, envIntensity: 0.18, liftDark: false });
+      // Imposing, menacing law enforcement finish: zero ambient/env wash, deep contrast shadows
+      m.traverse(c => {
+        if (!c.isMesh) return;
+        c.castShadow = true;
+        c.receiveShadow = true;
+        if (c.material) {
+          c.material.envMapIntensity = 0.0;
+          if (c.material.color) {
+            c.material.color.multiplyScalar(0.70);
+          }
+          c.material.roughness = Math.max(c.material.roughness || 0.5, 0.65);
+          c.material.needsUpdate = true;
+        }
+      });
 
       // Ground and angle the RCMP Green Timbers Headquarters building footprint
-      // Scaled up to 48.0 for a towering, imposing, menacing presence!
+      // Scaled up to 52.0 for a towering, imposing, menacing presence!
       m.rotation.y = Math.PI * 0.22;
-      this.leoTops.swat = this.ground(m, 48.0, this.leoPos.swat);
+      this.leoTops.swat = this.ground(m, 52.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
       // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
@@ -3873,16 +3889,16 @@ class PushnotOrbit {
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
       // Single Dramatic Spotlight intensely lighting the front entrance and bison logo!
-      const spotLight = new THREE.SpotLight(0xf1f5f9, 15.0, 125, Math.PI / 4.8, 0.35, 1.3);
-      spotLight.position.set(this.leoPos.swat.x + 10.0, 48.0, this.leoPos.swat.z + 24.0);
-      spotLight.target.position.set(this.leoPos.swat.x + 1.2, 5.5, this.leoPos.swat.z + 3.0);
+      const spotLight = new THREE.SpotLight(0xffffff, 28.0, 140, Math.PI / 5.2, 0.25, 1.4);
+      spotLight.position.set(this.leoPos.swat.x + 8.0, 52.0, this.leoPos.swat.z + 20.0);
+      spotLight.target.position.set(this.leoPos.swat.x + 1.2, 5.5, this.leoPos.swat.z + 2.5);
       spotLight.castShadow = true;
       this.rcmpDaylightGroup.add(spotLight);
       this.rcmpDaylightGroup.add(spotLight.target);
 
       // Sleek Dark Architectural Base Plinth (Enlarged to match menacing building footprint, zero grass)
-      const plinthW = 54.0;
-      const plinthD = 30.0;
+      const plinthW = 58.0;
+      const plinthD = 34.0;
       const plinthH = 0.5;
       const plinthGeo = new THREE.BoxGeometry(plinthW, plinthH, plinthD);
       const plinthMat = new THREE.MeshStandardMaterial({

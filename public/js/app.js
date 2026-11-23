@@ -69,7 +69,7 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
   // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage at constant R = 88
-  "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 34.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
+  "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 42.0, z: 62.5 },  target: { x: 32.5, y: 22.0, z: 32.5 } },
   "leo_step_1": { angle: -0.18, radius: 94.0, cam: { x: -16.8, y: 40.0, z: 92.5 },  target: { x: -32.5, y: 20.0, z: 32.5 } },
   "leo_step_2": { angle: -2.05, radius: 96.0, cam: { x: -84.9, y: 40.0, z: -44.5 }, target: { x: -32.5, y: 22.0, z: -32.5 } },
   "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 36.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
@@ -1760,9 +1760,9 @@ class PushnotOrbit {
       target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
       camPos = new THREE.Vector3(POS.ufo.x + 22, POS.ufo.y + 4, POS.ufo.z + 36);
     } else if (key === 'bandit') {
-      // Natural cinematic over-the-shoulder view with comfortable breathing room (not tight):
-      target = new THREE.Vector3(30.5, 14.8, 29.5);
-      camPos = new THREE.Vector3(47.5, 20.0, 39.0);
+      // Elevated cinematic over-the-shoulder view with comfortable headroom (not too low):
+      target = new THREE.Vector3(31.5, 19.5, 30.5);
+      camPos = new THREE.Vector3(50.0, 27.0, 42.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
       // RCMP "E" Division Headquarters at Green Timbers Entrance (-32.5, 0, 32.5)
       target = new THREE.Vector3(this.leoPos.swat.x, 2.8, this.leoPos.swat.z);
@@ -4199,7 +4199,7 @@ class PushnotOrbit {
     this.directorMode = false;
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v7') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v8') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4254,7 +4254,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v7', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v8', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4271,7 +4271,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v7', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v8', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4293,6 +4293,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v8');
           localStorage.removeItem('pushnot_director_rigs_v7');
           localStorage.removeItem('pushnot_director_rigs_v6');
           localStorage.removeItem('pushnot_director_rigs_v5');
@@ -5113,9 +5114,9 @@ class PushnotOrbit {
       focusGroup = this.leoGroup;
       if (t < 0.20) {
         // Suspect composing threat email on laptop screen
-        // Natural cinematic over-the-shoulder view with comfortable breathing room (not tight):
-        focusLocal = new THREE.Vector3(30.5, 14.8, 29.5);
-        customCineCam = new THREE.Vector3(47.5, 20.0, 39.0);
+        // Elevated cinematic over-the-shoulder view with comfortable headroom (not too low):
+        focusLocal = new THREE.Vector3(31.5, 19.5, 30.5);
+        customCineCam = new THREE.Vector3(50.0, 27.0, 42.0);
       } else if (t < 0.36) {
         if (t >= 0.25 && t < 0.31) {
           // Exigent Demand + Siren flying across from Police to Swiss server

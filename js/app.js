@@ -3859,47 +3859,36 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      this.harmonizeAsset(m, { minRough: 0.45, maxRough: 0.85, maxMetal: 0.35, envIntensity: 0.65, liftDark: false });
+      // Imposing, menacing law enforcement finish with deep architectural contrast shadows
+      this.harmonizeAsset(m, { minRough: 0.55, maxRough: 0.95, maxMetal: 0.25, envIntensity: 0.18, liftDark: false });
 
       // Ground and angle the RCMP Green Timbers Headquarters building footprint
-      // Angle the entrance towards the viewer / cinematic camera angle (facing south-east)
+      // Scaled up to 48.0 for a towering, imposing, menacing presence!
       m.rotation.y = Math.PI * 0.22;
-      this.leoTops.swat = this.ground(m, 32, this.leoPos.swat);
+      this.leoTops.swat = this.ground(m, 48.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
-      // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node (Soft, authentic natural light)
+      // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
       this.rcmpDaylightGroup = new THREE.Group();
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
-      // 1. Soft natural warm sunlight (authentic sun angle and balanced intensity)
-      const sunLight = new THREE.DirectionalLight(0xfff3df, 1.15);
-      sunLight.position.set(this.leoPos.swat.x + 16, 26, this.leoPos.swat.z + 20);
-      sunLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
-      sunLight.castShadow = true;
-      this.rcmpDaylightGroup.add(sunLight);
-      this.rcmpDaylightGroup.add(sunLight.target);
+      // Single Dramatic Spotlight intensely lighting the front entrance and bison logo!
+      const spotLight = new THREE.SpotLight(0xf1f5f9, 15.0, 125, Math.PI / 4.8, 0.35, 1.3);
+      spotLight.position.set(this.leoPos.swat.x + 10.0, 48.0, this.leoPos.swat.z + 24.0);
+      spotLight.target.position.set(this.leoPos.swat.x + 1.2, 5.5, this.leoPos.swat.z + 3.0);
+      spotLight.castShadow = true;
+      this.rcmpDaylightGroup.add(spotLight);
+      this.rcmpDaylightGroup.add(spotLight.target);
 
-      // 2. Diffuse natural sky ambient fill from opposite sky quadrant
-      const skyLight = new THREE.DirectionalLight(0xbfdbfe, 0.55);
-      skyLight.position.set(this.leoPos.swat.x - 14, 22, this.leoPos.swat.z - 14);
-      skyLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
-      this.rcmpDaylightGroup.add(skyLight);
-      this.rcmpDaylightGroup.add(skyLight.target);
-
-      // 3. Subtle soft daylight entrance fill (gentle reading of cedar awning & bison decal without washout)
-      const entranceDaylight = new THREE.PointLight(0xfff7ed, 0.45, 24, 1.8);
-      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 5.0, this.leoPos.swat.z + 4.0);
-      this.rcmpDaylightGroup.add(entranceDaylight);
-
-      // 4. Sleek Dark Architectural Base Plinth (Zero grass, clean cyber-forensic aesthetic)
-      const plinthW = 36.0;
-      const plinthD = 20.0;
-      const plinthH = 0.4;
+      // Sleek Dark Architectural Base Plinth (Enlarged to match menacing building footprint, zero grass)
+      const plinthW = 54.0;
+      const plinthD = 30.0;
+      const plinthH = 0.5;
       const plinthGeo = new THREE.BoxGeometry(plinthW, plinthH, plinthD);
       const plinthMat = new THREE.MeshStandardMaterial({
-        color: 0x0c1322,
-        roughness: 0.35,
-        metalness: 0.85
+        color: 0x060b14, // Deep menacing black-navy architectural slate
+        roughness: 0.25,
+        metalness: 0.90
       });
       const plinthMesh = new THREE.Mesh(plinthGeo, plinthMat);
       plinthMesh.position.set(this.leoPos.swat.x, plinthH * 0.5, this.leoPos.swat.z);
@@ -3908,7 +3897,7 @@ class PushnotOrbit {
       plinthMesh.userData.stationKey = 'swat';
       plinthMesh.add(new THREE.LineSegments(
         new THREE.EdgesGeometry(plinthGeo),
-        new THREE.LineBasicMaterial({ color: 0x1e3a8a, transparent: true, opacity: 0.7 })
+        new THREE.LineBasicMaterial({ color: 0x0284c7, transparent: true, opacity: 0.75 })
       ));
       this.rcmpDaylightGroup.add(plinthMesh);
 

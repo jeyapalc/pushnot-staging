@@ -69,14 +69,14 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
   // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage at constant R = 88
-  "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 32.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.40, radius: 88.0, cam: { x: -34.3, y: 32.0, z: 81.1 },  target: { x: -31.0, y: 12.0, z: 34.0 } },
-  "leo_step_2": { angle: -2.05, radius: 88.0, cam: { x: -77.9, y: 34.0, z: -40.8 }, target: { x: -32.5, y: 20.0, z: -32.5 } },
-  "leo_step_3": { angle: -0.55, radius: 88.0, cam: { x: -46.0, y: 32.0, z: 75.0 },  target: { x: 0.0, y: 16.0, z: 6.0 } },
-  "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 32.0, z: 88.0 },  target: { x: 0.0, y: 18.0, z: 14.0 } },
-  "leo_step_5": { angle: 2.05,  radius: 88.0, cam: { x: 77.9,  y: 34.0, z: -40.8 }, target: { x: 32.5, y: 20.0, z: -32.5 } },
-  "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9,  y: 34.0, z: 80.4 },  target: { x: -6.0, y: 18.0, z: 14.0 } },
-  "leo_step_7": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 32.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } }
+  "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 34.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
+  "leo_step_1": { angle: -0.40, radius: 88.0, cam: { x: -34.3, y: 38.0, z: 81.1 },  target: { x: -31.0, y: 22.0, z: 34.0 } },
+  "leo_step_2": { angle: -2.05, radius: 92.0, cam: { x: -81.4, y: 38.0, z: -42.6 }, target: { x: -32.5, y: 24.0, z: -32.5 } },
+  "leo_step_3": { angle: -0.55, radius: 88.0, cam: { x: -46.0, y: 38.0, z: 75.0 },  target: { x: 0.0,   y: 20.0, z: 6.0 } },
+  "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 36.0, z: 88.0 },  target: { x: 0.0,   y: 20.0, z: 14.0 } },
+  "leo_step_5": { angle: 2.05,  radius: 92.0, cam: { x: 81.4,  y: 38.0, z: -42.6 }, target: { x: 32.5, y: 22.0, z: -32.5 } },
+  "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9,  y: 36.0, z: 80.4 },  target: { x: -6.0,  y: 20.0, z: 14.0 } },
+  "leo_step_7": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 34.0, z: 62.5 },  target: { x: 32.5, y: 18.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -4010,6 +4010,8 @@ class PushnotOrbit {
 
     document.body.classList.toggle('leo-mode', isLeo);
     document.getElementById('btn-leo').classList.toggle('active', isLeo);
+    const btnLeoMode = document.getElementById('mode-leo');
+    if (btnLeoMode) btnLeoMode.classList.toggle('active', isLeo);
     document.getElementById('mode-setup').classList.toggle('active', mode === 'setup');
     document.getElementById('mode-push').classList.toggle('active', isPush);
     const btnWorld = document.getElementById('mode-world');
@@ -4067,7 +4069,7 @@ class PushnotOrbit {
       this.focusTargetPos = null;
     }
     const stops = MODE_STEPS[this.mode];
-    const eps = 0.015;
+    const eps = 0.005;
     if (dir > 0) {
       const next = stops.find((s) => s > this.targetT + eps);
       this.targetT = next !== undefined ? next : stops[0];
@@ -4240,6 +4242,8 @@ class PushnotOrbit {
     document.getElementById('mode-push').addEventListener('click', () => this.setMode('push'));
     const btnWorld = document.getElementById('mode-world');
     if (btnWorld) btnWorld.addEventListener('click', () => this.setMode('world'));
+    const btnLeoDock = document.getElementById('mode-leo');
+    if (btnLeoDock) btnLeoDock.addEventListener('click', () => this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo'));
     document.getElementById('btn-leo').addEventListener('click', () => {
       this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
     });

@@ -3554,17 +3554,18 @@ class PushnotOrbit {
     this.leoTops.ag = 20;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 6, 2));
+    // pSwat lifted to y=24.0, z=+12.0 so Exigent Demand emerges outside and above the RCMP building facade, completely clear of roof and walls
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 24.0, 12.0));
     const pProton      = L.proton.clone().setY(15.0);
     const pBot         = L.bot.clone().setY(16);
     const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 16, 7.5));
     const pAg          = L.ag.clone().setY(15);
 
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-R - 8, 22, 0), pProton);
-    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-14, 24, 16),   pBot);
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3(-14, 20, 22),   pSwat);
-    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 34, 0),      pAg);
-    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 26, 12),     pSwat);
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-R - 8, 30, 0), pProton);
+    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-14, 28, 16),   pBot);
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3(-14, 26, 22),   pSwat);
+    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 36, 0),      pAg);
+    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 30, 14),     pSwat);
 
     this.leoLines = [
       this.addArc(this.arcLeoProton, 0xf43f5e, 0.45, this.leoGroup),
@@ -3905,23 +3906,27 @@ class PushnotOrbit {
     ring.position.y = 1.22;
     this.storeGroup.add(ring);
 
-    // Front-facing logo mount group for Apple and Google signs
+    // Front-facing and back-facing logo mount group for Apple and Google signs (Coin layout)
     this.frontLogosGroup = new THREE.Group();
     this.frontLogosGroup.userData.stationKey = 'post';
     this.frontLogosGroup.position.set(0, 10.5, 0);
     this.storeGroup.add(this.frontLogosGroup);
 
-    // Illumination for the signs
-    const signLight = new THREE.PointLight(0xffffff, 2.8, 60);
-    signLight.position.set(0, 14, 12);
-    this.storeGroup.add(signLight);
+    // Illumination for both faces of the coin (Front: Apple, Back: Google)
+    const signLightFront = new THREE.PointLight(0xffffff, 2.8, 60);
+    signLightFront.position.set(0, 14, 12);
+    this.storeGroup.add(signLightFront);
 
-    const cyanGlow = new THREE.PointLight(0x38bdf8, 2.0, 35);
-    cyanGlow.position.set(-6.8, 8, 4);
+    const signLightBack = new THREE.PointLight(0xffffff, 2.8, 60);
+    signLightBack.position.set(0, 14, -12);
+    this.storeGroup.add(signLightBack);
+
+    const cyanGlow = new THREE.PointLight(0x38bdf8, 2.2, 35);
+    cyanGlow.position.set(0, 8, 7);
     this.storeGroup.add(cyanGlow);
 
-    const amberGlow = new THREE.PointLight(0xf59e0b, 2.0, 35);
-    amberGlow.position.set(6.8, 8, 4);
+    const amberGlow = new THREE.PointLight(0xf59e0b, 2.2, 35);
+    amberGlow.position.set(0, 8, -7);
     this.storeGroup.add(amberGlow);
 
     this.tops.post  = 18;
@@ -3940,8 +3945,8 @@ class PushnotOrbit {
       done();
     };
 
-    // Mount Apple Logo (left) and Google Logo (right) - Identical scale and matching finish
-    const mountLogo = (path, xOffset, isApple) => {
+    // Mount Apple Logo and Google Logo back-to-back like a two-sided coin (centered at x=0, air gap along z, no touching)
+    const mountLogo = (path, zOffset, yRot, isApple) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
         logo.traverse((ch) => {
@@ -3968,7 +3973,9 @@ class PushnotOrbit {
         const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
         wrap.add(logo);
-        wrap.position.set(xOffset, 0, 0);
+        // Positioned at x=0, separated along z with opposite rotations like a two-sided coin
+        wrap.position.set(0, 0, zOffset);
+        wrap.rotation.y = yRot;
 
         if (isApple) this.appleLogoMesh = wrap;
         else this.googleLogoMesh = wrap;
@@ -3979,8 +3986,9 @@ class PushnotOrbit {
       }, undefined, checkClone);
     };
 
-    mountLogo('models/apple_logo.glb', -6.8, true);
-    mountLogo('models/google_logo.glb',  6.8, false);
+    // Apple facing front (+Z), Google facing back (-Z) back-to-back with a clean air gap
+    mountLogo('models/apple_logo.glb',  1.6, 0, true);
+    mountLogo('models/google_logo.glb', -1.6, Math.PI, false);
   }
 
   centerAndScale(obj, size) {

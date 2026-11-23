@@ -38,27 +38,27 @@ const MODE_STEPS = {
   leo:   [0.08, 0.20, 0.28, 0.40, 0.58, 0.68, 0.82, 0.94]
 };
 
-// Default Director's Camera Rigs (Mounted on a circular track dolly with generous vertical headroom)
+// Default Director's Camera Rigs (Eye-level circular carousel track orbiting at natural eye level Y ≈ 26, constant R = 90)
 const DEFAULT_DIRECTOR_RIGS = {
-  // Mode 1: Setup (10 steps) — Circular Track Dolly smoothly framing each station at constant R = 92
-  "setup_step_0": { angle: 0.35,  radius: 92.0, cam: { x: 31.5,  y: 40.0, z: 86.4 }, target: { x: 22.0, y: 20.0, z: -22.0 } },
-  "setup_step_1": { angle: 0.45,  radius: 92.0, cam: { x: 39.9,  y: 40.0, z: 82.8 }, target: { x: 24.0, y: 20.0, z: -20.0 } },
-  "setup_step_2": { angle: 0.65,  radius: 92.0, cam: { x: 55.7,  y: 40.0, z: 73.2 }, target: { x: 28.0, y: 18.0, z: 8.0 } },
-  "setup_step_3": { angle: 0.82,  radius: 92.0, cam: { x: 67.3,  y: 40.0, z: 62.7 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
-  "setup_step_4": { angle: 0.60,  radius: 92.0, cam: { x: 51.9,  y: 40.0, z: 75.9 }, target: { x: 22.0, y: 18.0, z: -4.0 } },
-  "setup_step_5": { angle: 0.35,  radius: 92.0, cam: { x: 31.5,  y: 40.0, z: 86.4 }, target: { x: 18.0, y: 22.0, z: -28.0 } },
-  "setup_step_6": { angle: 0.70,  radius: 92.0, cam: { x: 59.3,  y: 40.0, z: 70.4 }, target: { x: 26.0, y: 18.0, z: 16.0 } },
-  "setup_step_7": { angle: 0.82,  radius: 92.0, cam: { x: 67.3,  y: 40.0, z: 62.7 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
-  "setup_step_8": { angle: -0.82, radius: 92.0, cam: { x: -67.3, y: 40.0, z: 62.7 }, target: { x: -32.5, y: 20.0, z: 32.5 } },
-  "setup_step_9": { angle: 0.00,  radius: 92.0, cam: { x: 0.0,   y: 42.0, z: 92.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  // Mode 1: Setup (10 steps) — Eye-level Circular Track Carousel at constant R = 90.0, cam.y = 26.0, target.y = 18.0
+  "setup_step_0": { angle: 0.35,  radius: 90.0, cam: { x: 30.9,  y: 26.0, z: 84.5 }, target: { x: 22.0, y: 18.0, z: -22.0 } },
+  "setup_step_1": { angle: 0.45,  radius: 90.0, cam: { x: 39.1,  y: 26.0, z: 81.0 }, target: { x: 24.0, y: 18.0, z: -20.0 } },
+  "setup_step_2": { angle: 0.65,  radius: 90.0, cam: { x: 54.5,  y: 26.0, z: 71.6 }, target: { x: 28.0, y: 18.0, z: 8.0 } },
+  "setup_step_3": { angle: 0.82,  radius: 90.0, cam: { x: 65.8,  y: 26.0, z: 61.4 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
+  "setup_step_4": { angle: 0.60,  radius: 90.0, cam: { x: 50.8,  y: 26.0, z: 74.3 }, target: { x: 22.0, y: 18.0, z: -4.0 } },
+  "setup_step_5": { angle: 0.35,  radius: 90.0, cam: { x: 30.9,  y: 26.0, z: 84.5 }, target: { x: 18.0, y: 18.0, z: -28.0 } },
+  "setup_step_6": { angle: 0.70,  radius: 90.0, cam: { x: 58.0,  y: 26.0, z: 68.8 }, target: { x: 26.0, y: 18.0, z: 16.0 } },
+  "setup_step_7": { angle: 0.82,  radius: 90.0, cam: { x: 65.8,  y: 26.0, z: 61.4 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
+  "setup_step_8": { angle: -0.82, radius: 90.0, cam: { x: -65.8, y: 26.0, z: 61.4 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
+  "setup_step_9": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 26.0, z: 90.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 2: Push (6 steps) — Circular Track Dolly smoothly framing push flow at constant R = 92
-  "push_step_0": { angle: -0.82, radius: 92.0, cam: { x: -67.3, y: 40.0, z: 62.7 }, target: { x: -32.5, y: 20.0, z: 32.5 } },
-  "push_step_1": { angle: -0.40, radius: 92.0, cam: { x: -35.8, y: 40.0, z: 84.7 }, target: { x: -16.0, y: 18.0, z: -8.0 } },
-  "push_step_2": { angle: 0.35,  radius: 92.0, cam: { x: 31.5,  y: 40.0, z: 86.4 }, target: { x: 18.0, y: 20.0, z: -26.0 } },
-  "push_step_3": { angle: 0.65,  radius: 92.0, cam: { x: 55.7,  y: 40.0, z: 73.2 }, target: { x: 26.0, y: 18.0, z: 14.0 } },
-  "push_step_4": { angle: 0.82,  radius: 92.0, cam: { x: 67.3,  y: 40.0, z: 62.7 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
-  "push_step_5": { angle: 0.00,  radius: 92.0, cam: { x: 0.0,   y: 42.0, z: 92.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  // Mode 2: Push (6 steps) — Eye-level Circular Track Carousel at constant R = 90.0, cam.y = 26.0, target.y = 18.0
+  "push_step_0": { angle: -0.82, radius: 90.0, cam: { x: -65.8, y: 26.0, z: 61.4 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
+  "push_step_1": { angle: -0.40, radius: 90.0, cam: { x: -35.0, y: 26.0, z: 82.9 }, target: { x: -16.0, y: 18.0, z: -8.0 } },
+  "push_step_2": { angle: 0.35,  radius: 90.0, cam: { x: 30.9,  y: 26.0, z: 84.5 }, target: { x: 18.0, y: 18.0, z: -26.0 } },
+  "push_step_3": { angle: 0.65,  radius: 90.0, cam: { x: 54.5,  y: 26.0, z: 71.6 }, target: { x: 26.0, y: 18.0, z: 14.0 } },
+  "push_step_4": { angle: 0.82,  radius: 90.0, cam: { x: 65.8,  y: 26.0, z: 61.4 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
+  "push_step_5": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 26.0, z: 90.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
 
   // Mode 3: World (6 steps) — Continuous 360° orbital dolly sweep around Earth
   "world_step_0": { angle: 0.60, radius: 108.0, cam: { x: 61.0, y: 56.0, z: 89.0 },   target: { x: 0.0, y: 32.0, z: 0.0 } },
@@ -68,15 +68,15 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage at constant R = 88
-  "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 42.0, z: 62.5 },  target: { x: 32.5, y: 22.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.18, radius: 94.0, cam: { x: -16.8, y: 40.0, z: 92.5 },  target: { x: -32.5, y: 20.0, z: 32.5 } },
-  "leo_step_2": { angle: -2.05, radius: 96.0, cam: { x: -84.9, y: 40.0, z: -44.5 }, target: { x: -32.5, y: 22.0, z: -32.5 } },
-  "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 36.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
-  "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 36.0, z: 88.0 },  target: { x: -16.0, y: 18.0, z: 22.0 } },
-  "leo_step_5": { angle: 2.05,  radius: 92.0, cam: { x: 81.4,  y: 38.0, z: -42.6 }, target: { x: 32.5, y: 22.0, z: -32.5 } },
-  "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9,  y: 36.0, z: 80.4 },  target: { x: -6.0,  y: 20.0, z: 14.0 } },
-  "leo_step_7": { angle: 0.78,  radius: 94.0, cam: { x: 66.1,  y: 36.0, z: 66.8 },  target: { x: 32.5, y: 22.0, z: 32.5 } }
+  // Mode 4: Law Enforcement (8 steps) — Eye-level Circular Track Carousel at constant R = 90.0, cam.y = 26.0, target.y = 18.0
+  "leo_step_0": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 26.0, z: 64.0 },  target: { x: 32.5, y: 18.0, z: 32.5 } },
+  "leo_step_1": { angle: -0.18, radius: 90.0, cam: { x: -16.1, y: 26.0, z: 88.5 },  target: { x: -32.5, y: 18.0, z: 32.5 } },
+  "leo_step_2": { angle: -2.05, radius: 90.0, cam: { x: -79.9, y: 26.0, z: -41.5 }, target: { x: -32.5, y: 18.0, z: -32.5 } },
+  "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 26.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
+  "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 26.0, z: 90.0 },  target: { x: -16.0, y: 18.0, z: 22.0 } },
+  "leo_step_5": { angle: 2.05,  radius: 90.0, cam: { x: 79.9,  y: 26.0, z: -41.5 }, target: { x: 32.5, y: 18.0, z: -32.5 } },
+  "leo_step_6": { angle: 0.42,  radius: 90.0, cam: { x: 36.7,  y: 26.0, z: 82.2 },  target: { x: -6.0,  y: 18.0, z: 14.0 } },
+  "leo_step_7": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 26.0, z: 64.0 },  target: { x: 32.5, y: 18.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -114,8 +114,8 @@ class PushnotOrbit {
     this.playing = true;
     this.autoOrbit = true;
     this.cinematicFollow = false;
-    this.cineLookAt = new THREE.Vector3(0, 16, 0);
-    this.cineCamPos = new THREE.Vector3(42, 58, 134);
+    this.cineLookAt = new THREE.Vector3(22.0, 18.0, -22.0);
+    this.cineCamPos = new THREE.Vector3(30.9, 26.0, 84.5);
     this.orbitAngle = 0.35;
     this.flipRoll = 0;
     this.flipTarget = 0;
@@ -159,7 +159,7 @@ class PushnotOrbit {
     this.worldGroup.add(this.leoGroup);
 
     this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
-    this.camera.position.set(42, 58, 134);
+    this.camera.position.set(30.9, 26.0, 84.5);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setSize(innerWidth, innerHeight);
@@ -176,7 +176,7 @@ class PushnotOrbit {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-    this.controls.target.set(0, 16, 0);
+    this.controls.target.set(22.0, 18.0, -22.0);
     this.controls.minDistance = 15;
     this.controls.maxDistance = 450;
     this.controls.maxPolarAngle = Math.PI * 0.52;
@@ -2681,26 +2681,23 @@ class PushnotOrbit {
     ctx.lineTo(240, 356);
     ctx.stroke();
 
-    // Top Header: Swiss Flag + Jurisdiction
+    // Clean, high-impact rejection notices: short bold lines with no legal paragraphs
+    ctx.textAlign = 'center';
+
+    // 1. Swiss Host Header
     ctx.fillStyle = '#f87171';
-    ctx.font = 'bold 30px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('🇨🇭 PROTON AG · GENEVA, SWITZERLAND', 50, 72);
+    ctx.font = '900 42px "Space Grotesk", sans-serif';
+    ctx.fillText('🇨🇭 PROTON AG', 512, 102);
 
-    ctx.fillStyle = '#cbd5e1';
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText('LEGAL NOTICE // JURISDICTION REFUSAL', 50, 112);
-
-    // Main Quote: PROTON DOES NOT PROVIDE USER DATA TO NON-SWISS AUTHORITIES
+    // 2. Bold Rejection Notice
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 40px "Space Grotesk", sans-serif';
-    ctx.fillText('“PROTON DOES NOT PROVIDE USER DATA', 50, 185);
-    ctx.fillText(' TO NON-SWISS AUTHORITIES”', 50, 240);
+    ctx.font = '900 62px "Space Grotesk", sans-serif';
+    ctx.fillText('REQUEST DENIED', 512, 195);
 
-    // Statutory footer
+    // 3. Clear Jurisdiction Rule
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 22px "Space Grotesk", sans-serif';
-    ctx.fillText('ARTICLE 271 SWISS PENAL CODE · SWISS FEDERAL COURT ORDER MANDATORY', 50, 305);
+    ctx.font = 'bold 36px "Space Grotesk", sans-serif';
+    ctx.fillText('SWISS JURISDICTION ONLY', 512, 280);
 
     const bubbleTex = new THREE.CanvasTexture(bubbleCvs);
     bubbleTex.colorSpace = THREE.SRGBColorSpace;
@@ -3611,8 +3608,8 @@ class PushnotOrbit {
     this.leoTops.ag = 20;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
-    // pSwat anchored in the open entrance courtyard of RCMP Green Timbers (outside doors, completely clear of walls)
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 5.5, 8.0));
+    // pSwat anchored centered directly at the front glass doors / entrance threshold under the entrance canopy of RCMP Green Timbers
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 3.6, 5.8));
     const pProton      = L.proton.clone().add(new THREE.Vector3(0, 8.5, 3.0));
     const pBot         = L.bot.clone().add(new THREE.Vector3(0, 8.0, 2.5));
     const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 8.0, 3.5));
@@ -4199,7 +4196,15 @@ class PushnotOrbit {
     this.directorMode = false;
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v8') || '{}');
+      // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
+      localStorage.removeItem('pushnot_director_rigs_v8');
+      localStorage.removeItem('pushnot_director_rigs_v7');
+      localStorage.removeItem('pushnot_director_rigs_v6');
+      localStorage.removeItem('pushnot_director_rigs_v5');
+      localStorage.removeItem('pushnot_director_rigs_v4');
+      localStorage.removeItem('pushnot_director_rigs_v3');
+      localStorage.removeItem('pushnot_director_rigs');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v9') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4254,7 +4259,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v8', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v9', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4271,7 +4276,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v8', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v9', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4293,6 +4298,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v9');
           localStorage.removeItem('pushnot_director_rigs_v8');
           localStorage.removeItem('pushnot_director_rigs_v7');
           localStorage.removeItem('pushnot_director_rigs_v6');
@@ -4882,12 +4888,13 @@ class PushnotOrbit {
         moverText = '';
         moverCls = '';
       } else if (t < 0.32) {
-        // Step 2 & 3: RCMP serves Exigent Demand to Proton -> Proton Rejects
-        const showDemand = t < 0.25;
+        // Step 2 & 3: RCMP serves Emergency Order to Proton -> Proton Rejects
+        const showDemand = t < 0.26;
         showLeoThreat = showDemand;
 
         if (showDemand) {
-          const u = seg(t, 0.18, 0.25);
+          // At Step 2 (t = 0.20), u = 0, document sits directly at front door of RCMP (pSwat)
+          const u = seg(t, 0.20, 0.26);
           const p = this.arcLeoProton.getPoint(u);
           if (this.exigentDemand) {
             this.exigentDemand.visible = true;
@@ -4895,19 +4902,19 @@ class PushnotOrbit {
             this.exigentDemand.lookAt(this.camera.position);
             this.exigentDemand.scale.setScalar(0.95);
           }
-          moverPos = p.clone().add(new THREE.Vector3(0, 9.5, 0));
-          moverText = '🚨 EXIGENT DEMAND (s. 487.014) → Proton AG';
+          moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
+          moverText = '🚨 Emergency Order';
           moverCls = 'red';
         } else {
           // Rejection Swiss Shield Icon + Speech Bubble
           if (this.rejectShieldBubble) this.rejectShieldBubble.visible = true;
           showLeoDenied = true;
           moverPos = new THREE.Vector3(L.proton.x, 26.5, L.proton.z);
-          moverText = '⛔ Proton Rejects Demand (Swiss Privacy & Art. 271 Swiss Penal Code)';
+          moverText = '⛔ Proton: Request Denied';
           moverCls = 'red';
         }
       } else if (t < 0.48) {
-        // Step 4: Exigent Demand served to App Servers (Meta, Instagram, 𝕏)
+        // Step 4: Emergency Order served to App Servers (Meta, Instagram, 𝕏)
         const p = this.arcLeoToMeta.getPoint(seg(t, 0.32, 0.48));
         if (this.exigentDemand) {
           this.exigentDemand.visible = true;
@@ -4915,8 +4922,8 @@ class PushnotOrbit {
           this.exigentDemand.lookAt(this.camera.position);
           this.exigentDemand.scale.setScalar(0.95);
         }
-        moverPos = p.clone().add(new THREE.Vector3(0, 9.5, 0));
-        moverText = '🚨 EXIGENT DEMAND (s. 487.014) → App Servers (Meta, Instagram, 𝕏)';
+        moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
+        moverText = '🚨 Order → App Servers';
         moverCls = 'cyan';
       } else if (t < 0.62) {
         // Step 5: App Server discloses unique Push Token Key
@@ -4929,7 +4936,7 @@ class PushnotOrbit {
         }
         if (t < 0.60) {
           moverPos = p.clone().add(new THREE.Vector3(0, 4.2, 0));
-          moverText = '🔑 App Push Token Disclosed: #7A9F-FB';
+          moverText = '🔑 Push Token Disclosed';
           moverCls = 'gold';
         } else {
           showLeoTokens = true;
@@ -4944,7 +4951,7 @@ class PushnotOrbit {
           this.leoUniqueKeysGroup.lookAt(this.camera.position);
         }
         moverPos = p.clone().add(new THREE.Vector3(0, 4.5, 0));
-        moverText = '🇨🇦 Court Order + 🔑 Push Token → Apple APNs & Google FCM';
+        moverText = '🇨🇦 Order → Apple & Google';
         moverCls = 'cyan';
       } else if (t < 0.88) {
         // Step 7: Apple & Google return Subscriber Record (Photo ID + Residential Home)
@@ -4958,8 +4965,8 @@ class PushnotOrbit {
           const camDir = this.camera.position.clone().sub(p);
           this.leoSubscriberBundle.rotation.y = Math.atan2(camDir.x, camDir.z);
         }
-        moverPos = p.clone().add(new THREE.Vector3(0, 8.5, 0));
-        moverText = '🪪 Hardware Match Confirmed · Subscriber Record & Residence Returned';
+        moverPos = p.clone().add(new THREE.Vector3(0, 6.5, 0));
+        moverText = '🪪 Subscriber Record';
         moverCls = 'push';
       } else {
         // Step 8: BAD GUY'S IDENTITY REVEALED // POLICE SEIZURE!
@@ -4972,7 +4979,7 @@ class PushnotOrbit {
           this.leoSubscriberBundle.rotation.set(0, -Math.PI * 0.28, 0);
         }
         moverPos = new THREE.Vector3(L.bandit.x + 1.0, 24.0, L.bandit.z - 1.0);
-        moverText = '🚨 SUSPECT UNMASKED: CONNOR J. MALONE · 1042 ROBSON ST';
+        moverText = '🚨 Suspect Identified';
         moverCls = 'red';
         showLeoId = true;
       }
@@ -5051,11 +5058,11 @@ class PushnotOrbit {
     this.place('pin-push',      phoneFace, showNorm && showPush);
     this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 54, POS.post.z), showNorm && showLedger);
 
-    // Law Enforcement contextual callouts
-    this.place('pin-leo-threat', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoThreat, this.leoGroup);
-    this.place('pin-leo-denied', new THREE.Vector3(L.proton.x, this.leoTops.proton + 6, L.proton.z), showLeoPins && showLeoDenied, this.leoGroup);
-    this.place('pin-leo-tokens', new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoTokens, this.leoGroup);
-    this.place('pin-leo-id',     new THREE.Vector3(L.swat.x,   this.leoTops.swat + 4,   L.swat.z),   showLeoPins && showLeoId,     this.leoGroup);
+    // Law Enforcement contextual callouts disabled to eliminate HUD creep
+    this.place('pin-leo-threat', null, false);
+    this.place('pin-leo-denied', null, false);
+    this.place('pin-leo-tokens', null, false);
+    this.place('pin-leo-id',     null, false);
 
     const mv = document.getElementById('pin-mover');
     mv.className = 'pin-mover' + (moverCls ? ' ' + moverCls : '');
@@ -5114,32 +5121,31 @@ class PushnotOrbit {
       focusGroup = this.leoGroup;
       if (t < 0.20) {
         // Suspect composing threat email on laptop screen
-        // Elevated cinematic over-the-shoulder view with comfortable headroom (not too low):
-        focusLocal = new THREE.Vector3(31.5, 19.5, 30.5);
-        customCineCam = new THREE.Vector3(50.0, 27.0, 42.0);
+        focusLocal = new THREE.Vector3(31.5, 18.0, 30.5);
+        customCineCam = new THREE.Vector3(50.0, 26.0, 42.0);
       } else if (t < 0.36) {
         if (t >= 0.25 && t < 0.31) {
-          // Exigent Demand + Siren flying across from Police to Swiss server
+          // Emergency Order + Siren flying across from Police to Swiss server
           focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
           customCineCam = new THREE.Vector3(L.swat.x + 14, 20.0, L.swat.z + 30.0);
         } else if (t >= 0.31 || showLeoDenied) {
           // Switzerland illuminated server rack + waving Swiss flag on top + red rejection X!
           focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
-          customCineCam = new THREE.Vector3(L.proton.x + 20.0, 20.0, L.proton.z + 46.0);
+          customCineCam = new THREE.Vector3(L.proton.x + 20.0, 22.0, L.proton.z + 46.0);
         } else {
           // Police receive threat / send demand -> Facing the RCMP Green Timbers entrance under natural daylight!
-          focusLocal = new THREE.Vector3(L.swat.x, 2.8, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 18, 9.5, L.swat.z + 18);
+          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 18, 14.0, L.swat.z + 18);
         }
       } else if (t < 0.68) {
         if (t < 0.52) {
-          // Exigent Demand sent from Police to App Server Tower (Meta/X)
+          // Emergency Order sent from Police to App Server Tower (Meta/X)
           focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 13.0, L.bot.z);
           customCineCam = new THREE.Vector3(L.bot.x - 22, 15.0, L.bot.z + 22);
         } else {
           // 3 Push Token Keys acquired by RCMP -> Facing the RCMP Green Timbers entrance under natural daylight!
-          focusLocal = new THREE.Vector3(L.swat.x, 2.8, L.swat.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 18, 9.5, L.swat.z + 18);
+          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z);
+          customCineCam = new THREE.Vector3(L.swat.x + 18, 14.0, L.swat.z + 18);
         }
       } else if (t < 0.88) {
         // Production orders served to Apple & Google Skyscraper
@@ -5354,14 +5360,14 @@ class PushnotOrbit {
       }
     } else if (this.autoOrbit) {
       this.orbitAngle += dt * 0.12;
-      const camR = 136;
+      const camR = 90.0;
       const desiredPos = new THREE.Vector3(
         Math.sin(this.orbitAngle) * camR,
-        56 + Math.sin(this.orbitAngle * 0.7) * 6,
+        26.0,
         Math.cos(this.orbitAngle) * camR
       );
       this.camera.position.lerp(desiredPos, Math.min(1, dt * 3.5));
-      this.controls.target.lerp(new THREE.Vector3(0, 16, 0), Math.min(1, dt * 4.0));
+      this.controls.target.lerp(new THREE.Vector3(0, 18, 0), Math.min(1, dt * 4.0));
     }
 
     // Animated moving dotted lines streaming smoothly along curves (zero arrows/cones!)

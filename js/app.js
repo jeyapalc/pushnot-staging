@@ -619,16 +619,16 @@ class PushnotOrbit {
     const mat = new THREE.MeshStandardMaterial({
       color: colorInt,
       emissive: colorInt,
-      emissiveIntensity: 0.55,
-      metalness: 0.9,
-      roughness: 0.18
+      emissiveIntensity: 0.50,
+      metalness: 0.85,
+      roughness: 0.22
     });
 
-    // Key bow (ring handle)
-    const bow = new THREE.Mesh(new THREE.TorusGeometry(1.35, 0.38, 12, 28), mat);
-    bow.position.x = -1.7;
+    // 1. Key bow (circular ring handle at TOP)
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.28, 12, 28), mat);
+    bow.position.set(0, 1.0, 0);
 
-    // Center disc inside bow with brand glyph
+    // 2. Center disc inside bow with brand glyph
     const discCvs = document.createElement('canvas');
     discCvs.width = 256; discCvs.height = 256;
     const dctx = discCvs.getContext('2d');
@@ -649,48 +649,48 @@ class PushnotOrbit {
     }
     const discTex = new THREE.CanvasTexture(discCvs);
     const discMat = new THREE.MeshBasicMaterial({ map: discTex, side: THREE.DoubleSide });
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(1.15, 24), discMat);
-    disc.position.set(-1.7, 0, 0.22);
+    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.85, 24), discMat);
+    disc.position.set(0, 1.0, 0.16);
 
-    // Key blade shaft
-    const shaft = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.58, 0.42), mat);
-    shaft.position.x = 0.9;
+    // 3. Key blade shaft extending DOWNWARDS
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.40, 2.3, 0.30), mat);
+    shaft.position.set(0, -0.65, 0);
 
-    // Distinct tooth profile per brand
+    // 4. Distinct tooth profile per brand branching to the right
     const tGroup = new THREE.Group();
     if (brand === 'meta') {
-      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.1, 0.42), mat); t1.position.set(1.2, -0.75, 0);
-      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.48, 1.4, 0.42), mat); t2.position.set(2.1, -0.9, 0);
+      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.35, 0.30), mat); t1.position.set(0.55, -0.65, 0);
+      const t2 = new THREE.Mesh(new THREE.BoxGeometry(1.10, 0.35, 0.30), mat); t2.position.set(0.68, -1.35, 0);
       tGroup.add(t1, t2);
     } else if (brand === 'instagram') {
-      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.3, 0.42), mat); t1.position.set(1.0, -0.85, 0);
-      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.8, 0.42), mat); t2.position.set(1.8, -0.6, 0);
-      const t3 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.5, 0.42), mat); t3.position.set(2.4, -0.95, 0);
+      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.30), mat); t1.position.set(0.60, -0.45, 0);
+      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.32, 0.30), mat); t2.position.set(0.45, -0.95, 0);
+      const t3 = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.32, 0.30), mat); t3.position.set(0.70, -1.45, 0);
       tGroup.add(t1, t2, t3);
     } else {
-      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.4, 0.42), mat); t1.position.set(1.4, -0.9, 0);
-      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 1.0, 0.42), mat); t2.position.set(2.3, -0.7, 0);
+      const t1 = new THREE.Mesh(new THREE.BoxGeometry(1.10, 0.35, 0.30), mat); t1.position.set(0.68, -0.75, 0);
+      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.80, 0.35, 0.30), mat); t2.position.set(0.52, -1.35, 0);
       tGroup.add(t1, t2);
     }
 
-    // Floating micro-tag with token ID
+    // 5. Horizontal micro-tag with token ID right above the bow (completely horizontal & legible)
     const tagCvs = document.createElement('canvas');
     tagCvs.width = 384; tagCvs.height = 96;
     const tctx = tagCvs.getContext('2d');
-    tctx.fillStyle = '#0b1329';
+    tctx.fillStyle = '#060c18';
     tctx.fillRect(0, 0, 384, 96);
     tctx.strokeStyle = hexColor; tctx.lineWidth = 6;
     tctx.strokeRect(4, 4, 376, 88);
     tctx.fillStyle = '#ffffff';
-    tctx.font = 'bold 44px monospace';
+    tctx.font = 'bold 42px monospace';
     tctx.textAlign = 'center'; tctx.textBaseline = 'middle';
     tctx.fillText(token, 192, 48);
     const tagTex = new THREE.CanvasTexture(tagCvs);
     const tagMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(3.0, 0.75),
+      new THREE.PlaneGeometry(2.5, 0.62),
       new THREE.MeshBasicMaterial({ map: tagTex, side: THREE.DoubleSide })
     );
-    tagMesh.position.set(0.6, 1.1, 0.22);
+    tagMesh.position.set(0, 2.38, 0.16);
 
     group.add(bow, disc, shaft, tGroup, tagMesh);
     group.scale.setScalar(scale);
@@ -701,46 +701,42 @@ class PushnotOrbit {
     const group = new THREE.Group();
 
     // 1. Sleek forensic digital disclosure dossier tray
-    const trayGeo = new THREE.BoxGeometry(11.0, 4.4, 0.4);
+    const trayGeo = new THREE.BoxGeometry(12.0, 5.8, 0.4);
     const trayMat = new THREE.MeshStandardMaterial({
       color: 0x070e1b,
       metalness: 0.85,
       roughness: 0.25,
       transparent: true,
-      opacity: 0.92
+      opacity: 0.94
     });
     const tray = new THREE.Mesh(trayGeo, trayMat);
     tray.add(new THREE.LineSegments(
       new THREE.EdgesGeometry(trayGeo),
-      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 })
+      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
     ));
     group.add(tray);
 
-    // 2. Three neat, compact cryptographic keys mounted side-by-side vertically inside the tray (spaced generously to prevent collision)
-    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.52);
-    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.52);
-    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.52);
+    // 2. Three neat, compact cryptographic keys mounted side-by-side vertically inside the tray (spaced generously with zero overlap)
+    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.58);
+    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.58);
+    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.58);
 
-    kMeta.rotation.z  = -Math.PI * 0.5;
-    kInsta.rotation.z = -Math.PI * 0.5;
-    kX.rotation.z     = -Math.PI * 0.5;
-
-    kMeta.position.set(-3.4, 0.2, 0.25);
-    kInsta.position.set(0, 0.2, 0.25);
-    kX.position.set(3.4, 0.2, 0.25);
+    kMeta.position.set(-3.6, -0.2, 0.25);
+    kInsta.position.set(0, -0.2, 0.25);
+    kX.position.set(3.6, -0.2, 0.25);
 
     group.add(kMeta, kInsta, kX);
 
     // 3. Single soft evidence glow light
-    const glow = new THREE.PointLight(0x38bdf8, 1.2, 16);
-    glow.position.set(0, 0.5, 1.0);
+    const glow = new THREE.PointLight(0x38bdf8, 1.4, 18);
+    glow.position.set(0, 0.5, 1.2);
     group.add(glow);
 
     group.scale.setScalar(scale);
     return group;
   }
 
-    /* ---- Industrial CNC Fiber Laser Key Fabrication Rig ---- */
+  /* ---- Industrial CNC Fiber Laser Key Fabrication Rig ---- */
   createLaserCutterForge() {
     const group = new THREE.Group();
 
@@ -3615,11 +3611,12 @@ class PushnotOrbit {
     const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 6, 2));
     const pProton      = L.proton.clone().setY(15.0);
     const pBot         = L.bot.clone().setY(16);
+    const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 16, 7.5));
     const pAg          = L.ag.clone().setY(15);
 
     this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-R - 8, 22, 0), pProton);
     this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-14, 24, 16),   pBot);
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBot,  new THREE.Vector3(-14, 20, 22),   pSwat);
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3(-14, 20, 22),   pSwat);
     this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 34, 0),      pAg);
     this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 26, 12),     pSwat);
 
@@ -3863,25 +3860,39 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Imposing, menacing law enforcement finish: zero ambient/env wash, deep contrast shadows
+      // Imposing, menacing law enforcement finish: dark tactical monolith with bright entrance accents
       m.traverse(c => {
         if (!c.isMesh) return;
         c.castShadow = true;
         c.receiveShadow = true;
         if (c.material) {
           c.material.envMapIntensity = 0.0;
-          if (c.material.color) {
-            c.material.color.multiplyScalar(0.70);
+          const matName = (c.material.name || '').toLowerCase();
+          const meshName = (c.name || '').toLowerCase();
+          const isEntrance = meshName.includes('crest') || meshName.includes('canopy') || meshName.includes('bison') ||
+                             meshName.includes('sign') || matName.includes('bison') || matName.includes('canopy') ||
+                             matName.includes('sign') || matName.includes('crest');
+          if (isEntrance) {
+            // Entrance and bison logo pop brightly under the dramatic spotlight!
+            if (c.material.color) c.material.color.setHex(0xffffff);
+            c.material.roughness = 0.25;
+            c.material.metalness = 0.50;
+          } else {
+            // Menacing dark tactical slate/charcoal exterior across roof and shells
+            if (c.material.color) {
+              c.material.color.setHex(0x18202e);
+            }
+            c.material.roughness = 0.88;
+            c.material.metalness = 0.12;
           }
-          c.material.roughness = Math.max(c.material.roughness || 0.5, 0.65);
           c.material.needsUpdate = true;
         }
       });
 
       // Ground and angle the RCMP Green Timbers Headquarters building footprint
-      // Scaled up to 52.0 for a towering, imposing, menacing presence!
+      // Scaled up to 54.0 for a towering, imposing, menacing presence!
       m.rotation.y = Math.PI * 0.22;
-      this.leoTops.swat = this.ground(m, 52.0, this.leoPos.swat);
+      this.leoTops.swat = this.ground(m, 54.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
       // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
@@ -3889,22 +3900,22 @@ class PushnotOrbit {
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
       // Single Dramatic Spotlight intensely lighting the front entrance and bison logo!
-      const spotLight = new THREE.SpotLight(0xffffff, 28.0, 140, Math.PI / 5.2, 0.25, 1.4);
-      spotLight.position.set(this.leoPos.swat.x + 8.0, 52.0, this.leoPos.swat.z + 20.0);
+      const spotLight = new THREE.SpotLight(0xffffff, 36.0, 160, Math.PI / 5.2, 0.25, 1.3);
+      spotLight.position.set(this.leoPos.swat.x + 8.0, 54.0, this.leoPos.swat.z + 20.0);
       spotLight.target.position.set(this.leoPos.swat.x + 1.2, 5.5, this.leoPos.swat.z + 2.5);
       spotLight.castShadow = true;
       this.rcmpDaylightGroup.add(spotLight);
       this.rcmpDaylightGroup.add(spotLight.target);
 
       // Sleek Dark Architectural Base Plinth (Enlarged to match menacing building footprint, zero grass)
-      const plinthW = 58.0;
-      const plinthD = 34.0;
+      const plinthW = 60.0;
+      const plinthD = 36.0;
       const plinthH = 0.5;
       const plinthGeo = new THREE.BoxGeometry(plinthW, plinthH, plinthD);
       const plinthMat = new THREE.MeshStandardMaterial({
-        color: 0x060b14, // Deep menacing black-navy architectural slate
-        roughness: 0.25,
-        metalness: 0.90
+        color: 0x070c16, // Deep menacing black-navy architectural slate
+        roughness: 0.85,
+        metalness: 0.20
       });
       const plinthMesh = new THREE.Mesh(plinthGeo, plinthMat);
       plinthMesh.position.set(this.leoPos.swat.x, plinthH * 0.5, this.leoPos.swat.z);

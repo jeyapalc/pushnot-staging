@@ -3564,18 +3564,18 @@ class PushnotOrbit {
     this.leoTops.ag = 20;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
-    // pSwat lifted to y=24.0, z=+12.0 so Exigent Demand emerges outside and above the RCMP building facade, completely clear of roof and walls
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 24.0, 12.0));
-    const pProton      = L.proton.clone().setY(15.0);
-    const pBot         = L.bot.clone().setY(16);
-    const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 16, 7.5));
-    const pAg          = L.ag.clone().setY(15);
+    // pSwat anchored in the open entrance courtyard of RCMP Green Timbers (outside doors, completely clear of walls)
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 5.5, 8.0));
+    const pProton      = L.proton.clone().add(new THREE.Vector3(0, 8.5, 3.0));
+    const pBot         = L.bot.clone().add(new THREE.Vector3(0, 8.0, 2.5));
+    const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 8.0, 3.5));
+    const pAg          = L.ag.clone().setY(10.0);
 
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-R - 8, 30, 0), pProton);
-    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-14, 28, 16),   pBot);
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3(-14, 26, 22),   pSwat);
-    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 36, 0),      pAg);
-    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 30, 14),     pSwat);
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-R - 4, 11.0, 0), pProton);
+    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-14, 10.5, 16),   pBot);
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3(-14, 11.5, 18),   pSwat);
+    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 14.0, 0),      pAg);
+    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 13.0, 12),     pSwat);
 
     this.leoLines = [
       this.addArc(this.arcLeoProton, 0xf43f5e, 0.45, this.leoGroup),
@@ -3708,15 +3708,9 @@ class PushnotOrbit {
           c.material = screenMat;
           this.hackerScreenMesh = c;
         } else if (mName.includes('Eyewear') || cName.includes('Eyewear')) {
-          // Glasses shine! Menacing digital cyan specular glint through the hoodie shadow
-          if (c.material) {
-            c.material = c.material.clone();
-            c.material.emissive = new THREE.Color(0x38bdf8);
-            c.material.emissiveIntensity = 1.6;
-            c.material.roughness = 0.1;
-            c.material.metalness = 0.9;
-          }
-          this.hackerGlassesMesh = c;
+          // Hide detached unskinned glasses from the hacker model so suspect has a clean, natural dark silhouette
+          c.visible = false;
+          this.hackerGlassesMesh = null;
         } else if (mName.includes('Topmat') || mName.includes('Hairmat') || mName.includes('Bodymat') || mName.includes('Bottommat')) {
           // Cloaked in menacing deep dark shadow until ID'ed
           if (c.material) {
@@ -4843,7 +4837,7 @@ class PushnotOrbit {
           this.leoUniqueKeysGroup.lookAt(this.camera.position);
         }
         if (t < 0.60) {
-          moverPos = p.clone().add(new THREE.Vector3(0, 5.0, 0));
+          moverPos = p.clone().add(new THREE.Vector3(0, 4.2, 0));
           moverText = '🔑 3 Unique App Push Tokens Disclosed: Meta (#7A9F), Instagram (#3E1B), 𝕏 (#9C4D)';
           moverCls = 'gold';
         } else {
@@ -4858,7 +4852,7 @@ class PushnotOrbit {
           this.leoUniqueKeysGroup.position.copy(p);
           this.leoUniqueKeysGroup.lookAt(this.camera.position);
         }
-        moverPos = p.clone().add(new THREE.Vector3(0, 5.5, 0));
+        moverPos = p.clone().add(new THREE.Vector3(0, 4.5, 0));
         moverText = '🇨🇦 Order + 🔑 3 Unique Tokens → Apple APNs & Google FCM';
         moverCls = 'cyan';
       } else if (t < 0.88) {

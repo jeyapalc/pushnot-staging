@@ -70,7 +70,7 @@ const DEFAULT_DIRECTOR_RIGS = {
 
   // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage at constant R = 88
   "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 34.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.15, radius: 92.0, cam: { x: -13.7, y: 22.0, z: 91.0 },  target: { x: -32.5, y: 7.0,  z: 32.5 } },
+  "leo_step_1": { angle: -0.18, radius: 94.0, cam: { x: -16.8, y: 40.0, z: 92.5 },  target: { x: -32.5, y: 20.0, z: 32.5 } },
   "leo_step_2": { angle: -2.05, radius: 96.0, cam: { x: -84.9, y: 40.0, z: -44.5 }, target: { x: -32.5, y: 22.0, z: -32.5 } },
   "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 36.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
   "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 36.0, z: 88.0 },  target: { x: 0.0,   y: 20.0, z: 14.0 } },
@@ -4105,7 +4105,7 @@ class PushnotOrbit {
     this.directorMode = false;
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v5') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v6') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4160,7 +4160,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v5', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v6', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4177,7 +4177,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v5', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v6', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4199,6 +4199,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v6');
           localStorage.removeItem('pushnot_director_rigs_v5');
           localStorage.removeItem('pushnot_director_rigs_v4');
           localStorage.removeItem('pushnot_director_rigs_v3');

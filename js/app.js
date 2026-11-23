@@ -76,7 +76,7 @@ const DEFAULT_DIRECTOR_RIGS = {
   "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
   "leo_step_5": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
   "leo_step_6": { angle: 2.35,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: -64.0 }, target: { x: 32.5, y: 46.0, z: -32.5 } },
-  "leo_step_7": { angle: 0.52,  radius: 90.0, cam: { x: 45.0,  y: 53.0, z: 78.0 },  target: { x: 32.5, y: 45.0, z: 32.5 } }
+  "leo_step_7": { angle: 0.45,  radius: 90.0, cam: { x: 39.0,  y: 55.0, z: 81.0 },  target: { x: 32.5, y: 49.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -2485,18 +2485,11 @@ class PushnotOrbit {
     group.name = 'idCard';
     group.add(mesh);
 
-    // Front portrait photo frame sub-mesh (for 3D still headshot from hack.glb!)
-    const photoGeo = new THREE.PlaneGeometry(2.42, 3.08);
-    const photoMat = new THREE.MeshBasicMaterial({ color: 0x0a101d, transparent: false });
-    const photoMesh = new THREE.Mesh(photoGeo, photoMat);
-    photoMesh.position.set(-3.20, 0.10, 0.16);
-    photoMesh.name = 'photoMesh';
-    photoMesh.visible = false;
-    group.add(photoMesh);
-    if (!this.idCardMugshotMats) this.idCardMugshotMats = [];
-    this.idCardMugshotMats.push(photoMat);
-    if (!this.idCardPhotoMeshes) this.idCardPhotoMeshes = [];
-    this.idCardPhotoMeshes.push(photoMesh);
+    // 3D Miniature Headshot Bust anchor for Hacker's Head from hack.glb
+    const headBustWrap = new THREE.Group();
+    headBustWrap.name = 'headBustWrap';
+    headBustWrap.position.set(-3.20, 0.10, 0.18);
+    group.add(headBustWrap);
 
     group.scale.setScalar(scale);
     return group;
@@ -2778,16 +2771,16 @@ class PushnotOrbit {
     const group = new THREE.Group();
     group.name = 'subscriberBundle';
 
-    // Object 1: Sleek 3D Credit Card (Left)
+    // Object 1: Sleek 3D Credit Card (Left, RBC Royal Canadian Bank)
     const creditCard = this.create3DCreditCard(0.92);
-    creditCard.position.set(-7.4, 2.4, 1.0);
-    creditCard.rotation.set(0, 0.12, 0);
+    creditCard.position.set(-9.2, 2.4, 0.4);
+    creditCard.rotation.set(0, 0.10, 0);
     group.add(creditCard);
 
-    // Object 2: 3D Photo ID Card with Hacker's Mugshot Still (Middle)
+    // Object 2: 3D Photo ID Card with Hacker's Mugshot Still & 3D Head (Middle)
     const idCard = this.create3DPhotoIdCard(0.92);
-    idCard.position.set(-1.4, 2.8, 0.4);
-    idCard.rotation.set(0, 0.04, 0);
+    idCard.position.set(0.0, 2.6, 0.0);
+    idCard.rotation.set(0, 0.0, 0);
     group.add(idCard);
 
     // Object 3: Real Architectural Residential Home from Downloads (Right)
@@ -2796,30 +2789,31 @@ class PushnotOrbit {
     if (this.homeSweetHomeScene) {
       homeWrap.add(this.homeSweetHomeScene.clone(true));
     }
-    homeWrap.position.set(6.6, 0, 0);
+    homeWrap.position.set(10.2, 0, 0);
     // REMOVE ROTATE: front yard with tree faces forward toward user, level with ground!
     homeWrap.rotation.set(0, 0, 0);
     group.add(homeWrap);
 
-    // Front yard address plaque standing in front of the house lawn
+    // Front yard address plaque standing on front-right side of lawn
+    // (So walkway, front door, lawn, and tree are 100% visible!)
     const addrPlaque = this.createHouseAddressPlaque();
-    addrPlaque.position.set(6.6, 0, 4.8);
+    addrPlaque.position.set(10.2, 0, 5.2);
     group.add(addrPlaque);
 
     // Dedicated high-intensity architectural lighting rig on the home
     // (Crisp, warm, bright: illuminates roof shingles, walls, lawn, and tree!)
     const homeKey = new THREE.DirectionalLight(0xfffaea, 4.5);
-    homeKey.position.set(10.0, 14.0, 12.0);
-    homeKey.target.position.set(6.6, 2.0, 0);
+    homeKey.position.set(13.5, 14.0, 12.0);
+    homeKey.target.position.set(10.2, 2.0, 0);
 
     const homeFill = new THREE.PointLight(0x38bdf8, 3.2, 40);
-    homeFill.position.set(2.0, 8.0, 8.0);
+    homeFill.position.set(6.0, 8.0, 8.0);
 
     const homeSun = new THREE.DirectionalLight(0xffeedd, 3.2);
-    homeSun.position.set(6.6, 18.0, 4.0);
+    homeSun.position.set(10.2, 18.0, 4.0);
 
     const homeRim = new THREE.DirectionalLight(0x60a5fa, 2.2);
-    homeRim.position.set(6.6, 10.0, -8.0);
+    homeRim.position.set(10.2, 10.0, -8.0);
 
     group.add(homeKey, homeKey.target, homeFill, homeSun, homeRim);
     group.scale.setScalar(scale);
@@ -3875,16 +3869,12 @@ class PushnotOrbit {
     this.leoGroup.visible = false;
   }
 
-  /* ---- Render Still 3D Perspective Mugshot of Hacker Face for ID Card Reveal ---- */
-  generateHackerHeadshot(hacker) {
+  /* ---- Attach 3D Miniature Relief Bust of Hacker Head on ID Card ---- */
+  attachHacker3DBust(hacker) {
     try {
-      const w = 260, h = 330;
-      const rt = new THREE.WebGLRenderTarget(w, h, {
-        format: THREE.RGBAFormat,
-        colorSpace: THREE.SRGBColorSpace
-      });
-
       const bust = new THREE.Group();
+      const hx = 108.0, hy = 258.0, hz = 83.0;
+
       hacker.traverse(c => {
         if (!c.isMesh) return;
         const mName = c.material ? (c.material.name || '') : '';
@@ -3900,50 +3890,35 @@ class PushnotOrbit {
             mClone.material.metalness = 0.05;
             if (c.userData && c.userData.origColor) {
               mClone.material.color.copy(c.userData.origColor);
-            } else {
-              mClone.material.color.setHex(0xffffff);
             }
           }
           bust.add(mClone);
         }
       });
 
-      const shotScene = new THREE.Scene();
-      shotScene.background = new THREE.Color(0x0f172a);
-      shotScene.add(bust);
+      // Center around hacker head (hx, hy, hz)
+      bust.position.set(-hx, -hy, -hz);
 
-      // In hack.glb, hacker head is centered around X = 108.0, Y = 258.0, Z = 83.0 facing in -X direction
-      const hx = 108.0, hy = 258.0, hz = 83.0;
-      const key = new THREE.DirectionalLight(0xfffaea, 5.0);
-      key.position.set(hx - 50, hy + 35, hz + 35);
-      const fill = new THREE.DirectionalLight(0x93c5fd, 3.0);
-      fill.position.set(hx + 30, hy + 15, hz + 20);
-      const amb = new THREE.AmbientLight(0xffffff, 2.5);
-      shotScene.add(key, fill, amb);
+      const bustRoot = new THREE.Group();
+      bustRoot.add(bust);
+      // Scale down to fit neatly in portrait frame (target height ≈ 2.4 units)
+      const scaleBust = 2.4 / 45.0;
+      bustRoot.scale.setScalar(scaleBust);
+      // Face in hack.glb faces -X: rotate by +PI/2 around Y so face points directly forward (+Z) toward user!
+      bustRoot.rotation.y = Math.PI * 0.5;
 
-      const cam = new THREE.PerspectiveCamera(28, w / h, 1, 300);
-      // Position camera in front of his face (offset towards -X and +Z) looking at his face
-      cam.position.set(hx - 62, hy - 2, hz + 26);
-      cam.lookAt(new THREE.Vector3(hx, hy - 4, hz));
-
-      const prevRt = this.renderer.getRenderTarget();
-      this.renderer.setRenderTarget(rt);
-      this.renderer.render(shotScene, cam);
-      this.renderer.setRenderTarget(prevRt);
-
-      if (this.idCardMugshotMats) {
-        for (const mat of this.idCardMugshotMats) {
-          mat.map = rt.texture;
-          mat.needsUpdate = true;
+      const attach = (bundle) => {
+        if (!bundle) return;
+        const hw = bundle.getObjectByName('headBustWrap');
+        if (hw) {
+          hw.clear();
+          hw.add(bustRoot.clone(true));
         }
-      }
-      if (this.idCardPhotoMeshes) {
-        for (const m of this.idCardPhotoMeshes) {
-          m.visible = true;
-        }
-      }
+      };
+      attach(this.leoSubscriberBundle);
+      attach(this.leoAgSubscriberMesh);
     } catch (e) {
-      console.warn('generateHackerHeadshot fallback:', e);
+      console.warn('attachHacker3DBust fallback:', e);
     }
   }
 
@@ -4088,7 +4063,7 @@ class PushnotOrbit {
 
       this.leoTops.bandit = this.ground(hacker, 28, this.leoPos.bandit);
       this.leoGroup.add(hacker);
-      this.generateHackerHeadshot(hacker);
+      this.attachHacker3DBust(hacker);
       done();
     }, undefined, done);
 
@@ -5291,11 +5266,11 @@ class PushnotOrbit {
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
           // Floating above his computer desk (showing 3 objects: Credit Card + Photo ID + Architectural Home)
-          this.leoSubscriberBundle.position.set(L.bandit.x - 1.5, 18.5, L.bandit.z - 2.5);
+          this.leoSubscriberBundle.position.set(L.bandit.x - 1.5, 21.5, L.bandit.z - 1.0);
           // Remove rotate: front yard with tree faces forward toward user, level with ground!
           this.leoSubscriberBundle.rotation.set(0, 0, 0);
         }
-        moverPos = new THREE.Vector3(L.bandit.x, 26.5, L.bandit.z);
+        moverPos = new THREE.Vector3(L.bandit.x, 32.0, L.bandit.z);
         moverText = '🚨 Suspect Identified';
         moverCls = 'red';
         showLeoId = true;
@@ -5470,8 +5445,8 @@ class PushnotOrbit {
         customCineCam = new THREE.Vector3(L.ag.x + 22, 22.0, L.ag.z + 28);
       } else {
         // Suspect unmasked & seized with 3 objects (Credit Card, Photo ID, Home) hovering above his desk!
-        focusLocal = new THREE.Vector3(L.bandit.x, 18.5, L.bandit.z);
-        customCineCam = new THREE.Vector3(L.bandit.x + 16.0, 24.0, L.bandit.z + 32.0);
+        focusLocal = new THREE.Vector3(L.bandit.x, 21.5, L.bandit.z);
+        customCineCam = new THREE.Vector3(L.bandit.x + 12.0, 27.0, L.bandit.z + 36.0);
       }
     }
 

@@ -1760,17 +1760,17 @@ class PushnotOrbit {
       target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
       camPos = new THREE.Vector3(POS.ufo.x + 22, POS.ufo.y + 4, POS.ufo.z + 36);
     } else if (key === 'bandit') {
-      // Elevated cinematic over-the-shoulder view with comfortable headroom (not too low):
-      target = new THREE.Vector3(31.5, 19.5, 30.5);
-      camPos = new THREE.Vector3(50.0, 27.0, 42.0);
+      // Natural cinematic eye-level framing on suspect at laptop
+      target = new THREE.Vector3(31.5, 18.0, 30.5);
+      camPos = new THREE.Vector3(50.0, 26.0, 42.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
-      // RCMP "E" Division Headquarters at Green Timbers Entrance (-32.5, 0, 32.5)
-      target = new THREE.Vector3(this.leoPos.swat.x, 2.8, this.leoPos.swat.z);
-      camPos = new THREE.Vector3(this.leoPos.swat.x + 18, 9.5, this.leoPos.swat.z + 18);
+      // RCMP "E" Division Headquarters at Green Timbers Front Entrance Threshold (-32.5, 0, 32.5)
+      target = new THREE.Vector3(this.leoPos.swat.x, 3.6, this.leoPos.swat.z + 5.8);
+      camPos = new THREE.Vector3(this.leoPos.swat.x + 18, 14.0, this.leoPos.swat.z + 18);
     } else if (key === 'proton') {
-      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Front-angled view capturing illuminated front & full waving flag!
+      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Eye-level view of illuminated front & waving flag!
       target = new THREE.Vector3(this.leoPos.proton.x, 18.0, this.leoPos.proton.z);
-      camPos = new THREE.Vector3(this.leoPos.proton.x + 20.0, 20.0, this.leoPos.proton.z + 46.0);
+      camPos = new THREE.Vector3(this.leoPos.proton.x + 20.0, 22.0, this.leoPos.proton.z + 46.0);
     } else if (key === 'facebook' || key === 'bot') {
       // App Servers at (0, 0, 4) in LEO mode.
       target = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
@@ -1833,6 +1833,8 @@ class PushnotOrbit {
       this.focusTargetPos = null;
       this.setAutoOrbit(false);
       if (this.focusSpot) this.focusSpot.visible = false;
+    } else {
+      this.cinematicFollow = true;
     }
     const btn = document.getElementById('btn-cam-lock');
     if (btn) {
@@ -4102,6 +4104,9 @@ class PushnotOrbit {
       this.targetT = 0;
       this.worldStepTime = performance.now();
     }
+    if (!this.cameraUnlocked) {
+      this.cinematicFollow = true;
+    }
 
     const isPush  = mode === 'push';
     const isWorld = mode === 'world';
@@ -5078,39 +5083,39 @@ class PushnotOrbit {
     if (this.mode === 'setup') {
       if (t < 0.18) {
         // App Selection & Jewel Appearance at Apple & Google
-        focusLocal = new THREE.Vector3(POS.post.x, 22, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x + 18, 30, POS.post.z + 32);
+        focusLocal = new THREE.Vector3(POS.post.x, 18.0, POS.post.z);
+        customCineCam = new THREE.Vector3(POS.post.x + 18, 26.0, POS.post.z + 32);
       } else if (t >= 0.48 && t < 0.60) {
-        // Isometric close-up of CNC Laser Key Fabrication at Apple/Google HQ
-        focusLocal = new THREE.Vector3(POS.post.x, 24, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x + 16, 36, POS.post.z + 26);
+        // Laser Key Fabrication at Apple/Google HQ
+        focusLocal = new THREE.Vector3(POS.post.x, 18.0, POS.post.z);
+        customCineCam = new THREE.Vector3(POS.post.x + 16, 26.0, POS.post.z + 26);
       } else if (moverPos) {
         focusLocal = moverPos.clone();
-        focusDist = 74;
+        focusDist = 90.0;
       } else if (showInstall || showToken) {
-        focusLocal = new THREE.Vector3(POS.phone.x, 12.0, POS.phone.z);
-        customCineCam = new THREE.Vector3(POS.phone.x + 20, 13.5, POS.phone.z + 20);
+        focusLocal = new THREE.Vector3(POS.phone.x, 18.0, POS.phone.z);
+        customCineCam = new THREE.Vector3(POS.phone.x + 20, 24.0, POS.phone.z + 20);
       } else if (showSaved) {
-        focusLocal = new THREE.Vector3(POS.server.x, 12.5, POS.server.z);
-        customCineCam = new THREE.Vector3(POS.server.x + 22, 14.5, POS.server.z + 22);
+        focusLocal = new THREE.Vector3(POS.server.x, 18.0, POS.server.z);
+        customCineCam = new THREE.Vector3(POS.server.x + 22, 24.0, POS.server.z + 22);
       }
     } else if (this.mode === 'push') {
       if (t < 0.28) {
-        // Elevated cinematic overview of Push Notification banner resting cleanly above Earth GLB
-        focusLocal = new THREE.Vector3(POS.ufo.x, 72.5, POS.ufo.z);
-        customCineCam = new THREE.Vector3(POS.ufo.x + 18, 74.0, POS.ufo.z + 24);
+        // Eye-level cinematic framing of Push Notification banner
+        focusLocal = new THREE.Vector3(POS.ufo.x, 18.0, POS.ufo.z);
+        customCineCam = new THREE.Vector3(POS.ufo.x + 18, 26.0, POS.ufo.z + 24);
       } else if (t < 0.56) {
         // Following payload gliding to Google/Apple
-        focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 30, 0);
-        focusDist = 72;
+        focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 18.0, 0);
+        focusDist = 90.0;
       } else if (t < 0.78) {
         // Google extracts Token Key & matches registered End-User socket
-        focusLocal = new THREE.Vector3(POS.post.x, 24, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x, 28, POS.post.z + 36);
+        focusLocal = new THREE.Vector3(POS.post.x, 18.0, POS.post.z);
+        customCineCam = new THREE.Vector3(POS.post.x, 26.0, POS.post.z + 36);
       } else {
         // Delivered to Phone
-        focusLocal = new THREE.Vector3(POS.phone.x, 12.0, POS.phone.z);
-        customCineCam = new THREE.Vector3(POS.phone.x + 20, 13.5, POS.phone.z + 20);
+        focusLocal = new THREE.Vector3(POS.phone.x, 18.0, POS.phone.z);
+        customCineCam = new THREE.Vector3(POS.phone.x + 20, 24.0, POS.phone.z + 20);
       }
     } else if (this.mode === 'world') {
       // Cinematic overview of all 6 live multi-stream global notification lines
@@ -5133,8 +5138,8 @@ class PushnotOrbit {
           focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
           customCineCam = new THREE.Vector3(L.proton.x + 20.0, 22.0, L.proton.z + 46.0);
         } else {
-          // Police receive threat / send demand -> Facing the RCMP Green Timbers entrance under natural daylight!
-          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z);
+          // Police receive threat / send demand -> Facing RCMP Green Timbers front door threshold under natural daylight!
+          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z + 5.8);
           customCineCam = new THREE.Vector3(L.swat.x + 18, 14.0, L.swat.z + 18);
         }
       } else if (t < 0.68) {
@@ -5143,8 +5148,8 @@ class PushnotOrbit {
           focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 13.0, L.bot.z);
           customCineCam = new THREE.Vector3(L.bot.x - 22, 15.0, L.bot.z + 22);
         } else {
-          // 3 Push Token Keys acquired by RCMP -> Facing the RCMP Green Timbers entrance under natural daylight!
-          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z);
+          // 3 Push Token Keys acquired by RCMP -> Facing RCMP Green Timbers front door threshold!
+          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z + 5.8);
           customCineCam = new THREE.Vector3(L.swat.x + 18, 14.0, L.swat.z + 18);
         }
       } else if (t < 0.88) {
@@ -5166,15 +5171,15 @@ class PushnotOrbit {
         const worldCam = customCineCam.clone().applyMatrix4(focusGroup.matrixWorld);
         this.cineCamPos.copy(worldCam);
       } else {
-        // Snap strictly to the OUTSIDE facing IN LATERALLY at eye level (NO bird's eye view from top!)
+        // Snap strictly to the OUTSIDE facing IN LATERALLY at eye level on constant circular carousel rail
         const radial = new THREE.Vector3(worldFocus.x, 0, worldFocus.z);
         if (radial.lengthSq() < 1) radial.set(0, 0, 1);
         radial.normalize();
 
         this.cineCamPos
           .copy(worldFocus)
-          .addScaledVector(radial, focusDist);
-        this.cineCamPos.y = worldFocus.y + 1.5; // Lateral eye-level!
+          .addScaledVector(radial, 90.0);
+        this.cineCamPos.y = 26.0; // Lateral eye-level!
       }
     }
   }
@@ -5355,7 +5360,7 @@ class PushnotOrbit {
       this.camera.position.lerp(targetCam, camLerp);
       this.controls.target.lerp(targetTgt, tgtLerp);
       this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-      if (!this.playing && this.camera.position.distanceTo(targetCam) < 0.6) {
+      if (!this.playing && Math.abs(this.targetT - this.t) < 0.002 && this.camera.position.distanceTo(targetCam) < 0.3) {
         this.cinematicFollow = false;
       }
     } else if (this.autoOrbit) {

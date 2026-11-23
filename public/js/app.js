@@ -40,25 +40,25 @@ const MODE_STEPS = {
 
 // Default Director's Camera Rigs (Mounted on a circular track dolly with generous vertical headroom)
 const DEFAULT_DIRECTOR_RIGS = {
-  // Mode 1: Setup (10 steps) — Circular Track Dolly smoothly framing each station
-  "setup_step_0": { angle: 0.28,  radius: 88.0, cam: { x: 24.3, y: 38.0, z: 84.6 }, target: { x: 0.0, y: 22.0, z: -42.0 } },
-  "setup_step_1": { angle: 0.32,  radius: 88.0, cam: { x: 27.7, y: 36.0, z: 83.5 }, target: { x: 0.0, y: 22.0, z: -40.0 } },
-  "setup_step_2": { angle: 0.72,  radius: 92.0, cam: { x: 60.7, y: 44.0, z: 69.2 }, target: { x: 16.0, y: 18.0, z: -4.0 } },
-  "setup_step_3": { angle: 0.84,  radius: 90.0, cam: { x: 67.0, y: 32.0, z: 60.1 }, target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "setup_step_4": { angle: 0.65,  radius: 96.0, cam: { x: 58.1, y: 52.0, z: 76.4 }, target: { x: 16.0, y: 18.0, z: -6.0 } },
-  "setup_step_5": { angle: 0.22,  radius: 86.0, cam: { x: 18.8, y: 48.0, z: 83.9 }, target: { x: 0.0, y: 36.0, z: -46.0 } },
-  "setup_step_6": { angle: 0.76,  radius: 92.0, cam: { x: 63.4, y: 44.0, z: 66.7 }, target: { x: 20.0, y: 20.0, z: 4.0 } },
-  "setup_step_7": { angle: 0.00,  radius: 94.0, cam: { x: 0.0,  y: 42.0, z: 94.0 }, target: { x: 0.0, y: 16.0, z: 32.5 } },
-  "setup_step_8": { angle: -0.84, radius: 90.0, cam: { x: -67.0, y: 34.0, z: 60.1 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
-  "setup_step_9": { angle: 0.45,  radius: 110.0, cam: { x: 47.9, y: 58.0, z: 99.0 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
+  // Mode 1: Setup (10 steps) — Circular Track Dolly smoothly framing each station at constant R = 92
+  "setup_step_0": { angle: 0.35,  radius: 92.0, cam: { x: 31.5,  y: 40.0, z: 86.4 }, target: { x: 22.0, y: 20.0, z: -22.0 } },
+  "setup_step_1": { angle: 0.45,  radius: 92.0, cam: { x: 39.9,  y: 40.0, z: 82.8 }, target: { x: 24.0, y: 20.0, z: -20.0 } },
+  "setup_step_2": { angle: 0.65,  radius: 92.0, cam: { x: 55.7,  y: 40.0, z: 73.2 }, target: { x: 28.0, y: 18.0, z: 8.0 } },
+  "setup_step_3": { angle: 0.82,  radius: 92.0, cam: { x: 67.3,  y: 40.0, z: 62.7 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
+  "setup_step_4": { angle: 0.60,  radius: 92.0, cam: { x: 51.9,  y: 40.0, z: 75.9 }, target: { x: 22.0, y: 18.0, z: -4.0 } },
+  "setup_step_5": { angle: 0.35,  radius: 92.0, cam: { x: 31.5,  y: 40.0, z: 86.4 }, target: { x: 18.0, y: 22.0, z: -28.0 } },
+  "setup_step_6": { angle: 0.70,  radius: 92.0, cam: { x: 59.3,  y: 40.0, z: 70.4 }, target: { x: 26.0, y: 18.0, z: 16.0 } },
+  "setup_step_7": { angle: 0.82,  radius: 92.0, cam: { x: 67.3,  y: 40.0, z: 62.7 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
+  "setup_step_8": { angle: -0.82, radius: 92.0, cam: { x: -67.3, y: 40.0, z: 62.7 }, target: { x: -32.5, y: 20.0, z: 32.5 } },
+  "setup_step_9": { angle: 0.00,  radius: 92.0, cam: { x: 0.0,   y: 42.0, z: 92.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 2: Push (6 steps)
-  "push_step_0": { angle: -0.84, radius: 90.0, cam: { x: -67.0, y: 36.0, z: 60.1 }, target: { x: -32.5, y: 22.0, z: 32.5 } },
-  "push_step_1": { angle: -0.35, radius: 96.0, cam: { x: -33.0, y: 48.0, z: 90.2 }, target: { x: -16.0, y: 20.0, z: -8.0 } },
-  "push_step_2": { angle: 0.28,  radius: 88.0, cam: { x: 24.3, y: 38.0, z: 84.6 }, target: { x: 0.0, y: 20.0, z: -44.0 } },
-  "push_step_3": { angle: 0.65,  radius: 94.0, cam: { x: 56.9, y: 46.0, z: 74.8 }, target: { x: 18.0, y: 18.0, z: -6.0 } },
-  "push_step_4": { angle: 0.84,  radius: 88.0, cam: { x: 65.5, y: 30.0, z: 58.8 }, target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "push_step_5": { angle: 0.45,  radius: 108.0, cam: { x: 47.0, y: 56.0, z: 97.2 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
+  // Mode 2: Push (6 steps) — Circular Track Dolly smoothly framing push flow at constant R = 92
+  "push_step_0": { angle: -0.82, radius: 92.0, cam: { x: -67.3, y: 40.0, z: 62.7 }, target: { x: -32.5, y: 20.0, z: 32.5 } },
+  "push_step_1": { angle: -0.40, radius: 92.0, cam: { x: -35.8, y: 40.0, z: 84.7 }, target: { x: -16.0, y: 18.0, z: -8.0 } },
+  "push_step_2": { angle: 0.35,  radius: 92.0, cam: { x: 31.5,  y: 40.0, z: 86.4 }, target: { x: 18.0, y: 20.0, z: -26.0 } },
+  "push_step_3": { angle: 0.65,  radius: 92.0, cam: { x: 55.7,  y: 40.0, z: 73.2 }, target: { x: 26.0, y: 18.0, z: 14.0 } },
+  "push_step_4": { angle: 0.82,  radius: 92.0, cam: { x: 67.3,  y: 40.0, z: 62.7 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
+  "push_step_5": { angle: 0.00,  radius: 92.0, cam: { x: 0.0,   y: 42.0, z: 92.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
 
   // Mode 3: World (6 steps) — Continuous 360° orbital dolly sweep around Earth
   "world_step_0": { angle: 0.60, radius: 108.0, cam: { x: 61.0, y: 56.0, z: 89.0 },   target: { x: 0.0, y: 18.0, z: 0.0 } },
@@ -68,15 +68,15 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage
-  "leo_step_0": { angle: 0.78,  radius: 84.0, cam: { x: 59.1, y: 24.0, z: 59.7 },  target: { x: 32.5, y: 12.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.40, radius: 76.0, cam: { x: -29.6, y: 22.0, z: 70.0 }, target: { x: -31.0, y: 6.0, z: 34.0 } },
-  "leo_step_2": { angle: -2.05, radius: 82.0, cam: { x: -72.6, y: 36.0, z: -38.0 }, target: { x: -32.5, y: 20.0, z: -32.5 } },
-  "leo_step_3": { angle: -0.55, radius: 78.0, cam: { x: -40.8, y: 28.0, z: 66.5 }, target: { x: 0.0, y: 15.0, z: 4.0 } },
-  "leo_step_4": { angle: 0.00,  radius: 58.0, cam: { x: 0.0, y: 24.0, z: 58.0 },   target: { x: 0.0, y: 18.0, z: 14.0 } },
-  "leo_step_5": { angle: 2.05,  radius: 82.0, cam: { x: 72.6, y: 36.0, z: -38.0 }, target: { x: 32.5, y: 20.0, z: -32.5 } },
-  "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9, y: 42.0, z: 80.4 },  target: { x: -6.0, y: 20.0, z: 14.0 } },
-  "leo_step_7": { angle: 0.78,  radius: 84.0, cam: { x: 59.1, y: 26.0, z: 59.7 },  target: { x: 32.5, y: 14.0, z: 32.5 } }
+  // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage at constant R = 88
+  "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 32.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
+  "leo_step_1": { angle: -0.40, radius: 88.0, cam: { x: -34.3, y: 32.0, z: 81.1 },  target: { x: -31.0, y: 12.0, z: 34.0 } },
+  "leo_step_2": { angle: -2.05, radius: 88.0, cam: { x: -77.9, y: 34.0, z: -40.8 }, target: { x: -32.5, y: 20.0, z: -32.5 } },
+  "leo_step_3": { angle: -0.55, radius: 88.0, cam: { x: -46.0, y: 32.0, z: 75.0 },  target: { x: 0.0, y: 16.0, z: 6.0 } },
+  "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 32.0, z: 88.0 },  target: { x: 0.0, y: 18.0, z: 14.0 } },
+  "leo_step_5": { angle: 2.05,  radius: 88.0, cam: { x: 77.9,  y: 34.0, z: -40.8 }, target: { x: 32.5, y: 20.0, z: -32.5 } },
+  "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9,  y: 34.0, z: 80.4 },  target: { x: -6.0, y: 18.0, z: 14.0 } },
+  "leo_step_7": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 32.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -1148,217 +1148,130 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- Interactive Holographic App Store Selection Showcase at Apple & Google Station ---- */
-  createAppStoreSelector() {
+  /* ---- Iconic 3D Paper Shopping Bag (Apple / Google App Store Package) ---- */
+  createShoppingBag(scale = 1.0) {
     const group = new THREE.Group();
     group.userData.stationKey = 'post';
 
-    const W = 1024, H = 640;
-    const cvs = document.createElement('canvas');
-    cvs.width = W;
-    cvs.height = H;
-    this.storeSelectorCvs = cvs;
-    this.storeSelectorCtx = cvs.getContext('2d');
+    // 1. Sleek paper bag body (crisp Apple/Google boutique paper bag)
+    const bagW = 4.0, bagH = 4.8, bagD = 2.4;
+    const bagGeo = new THREE.BoxGeometry(bagW, bagH, bagD);
+    const bagMat = new THREE.MeshStandardMaterial({
+      color: 0xf8fafc,
+      roughness: 0.32,
+      metalness: 0.06
+    });
+    const bagBody = new THREE.Mesh(bagGeo, bagMat);
+    bagBody.position.y = bagH / 2;
+    bagBody.castShadow = true;
+    bagBody.receiveShadow = true;
+    group.add(bagBody);
 
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
-    tex.generateMipmaps = false;
-    this.storeSelectorTex = tex;
+    // Subtle edge crease outlines for folded paper boutique bag look
+    const edgeGeo = new THREE.EdgesGeometry(bagGeo);
+    const edgeMat = new THREE.LineBasicMaterial({
+      color: 0x94a3b8,
+      transparent: true,
+      opacity: 0.45
+    });
+    const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+    edges.position.y = bagH / 2;
+    group.add(edges);
 
-    // Outer cyber card glass backing
-    const cardW = 12.0;
-    const cardH = 7.5;
-    const cardGeo = new THREE.PlaneGeometry(cardW, cardH);
-    const cardMat = new THREE.MeshBasicMaterial({
-      map: tex,
+    // 2. Top folded collar rim
+    const collarGeo = new THREE.BoxGeometry(bagW + 0.16, 0.42, bagD + 0.16);
+    const collarMat = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      roughness: 0.28,
+      metalness: 0.08
+    });
+    const collar = new THREE.Mesh(collarGeo, collarMat);
+    collar.position.y = bagH - 0.21;
+    group.add(collar);
+
+    // 3. Top interior cavity (dark recessed opening so bag looks open)
+    const cavityGeo = new THREE.PlaneGeometry(bagW - 0.2, bagD - 0.2);
+    const cavityMat = new THREE.MeshBasicMaterial({ color: 0x0f172a, side: THREE.DoubleSide });
+    const cavity = new THREE.Mesh(cavityGeo, cavityMat);
+    cavity.rotation.x = Math.PI / 2;
+    cavity.position.y = bagH - 0.05;
+    group.add(cavity);
+
+    // 4. Two elegant arched braided cord handles on front and back
+    const handleMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7, // Vibrant tech cyan-blue cord
+      roughness: 0.45,
+      metalness: 0.15
+    });
+    const handleGeo = new THREE.TorusGeometry(0.95, 0.12, 10, 32, Math.PI);
+
+    // Front handle
+    const handleFront = new THREE.Mesh(handleGeo, handleMat);
+    handleFront.position.set(0, bagH - 0.1, bagD / 2 + 0.06);
+    group.add(handleFront);
+
+    // Back handle
+    const handleBack = new THREE.Mesh(handleGeo, handleMat);
+    handleBack.position.set(0, bagH - 0.1, -bagD / 2 - 0.06);
+    group.add(handleBack);
+
+    // Metal eyelet grommets where handles enter the bag
+    const eyeletGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.08, 16);
+    const eyeletMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.85, roughness: 0.2 });
+    eyeletGeo.rotateX(Math.PI / 2);
+    const eyeletOffsets = [
+      [-0.95, bagH - 0.1, bagD / 2 + 0.08],
+      [ 0.95, bagH - 0.1, bagD / 2 + 0.08],
+      [-0.95, bagH - 0.1, -bagD / 2 - 0.08],
+      [ 0.95, bagH - 0.1, -bagD / 2 - 0.08]
+    ];
+    for (const [ex, ey, ez] of eyeletOffsets) {
+      const eyelet = new THREE.Mesh(eyeletGeo, eyeletMat);
+      eyelet.position.set(ex, ey, ez);
+      group.add(eyelet);
+    }
+
+    // 5. Sleek embossed Store Emblem badge on the front face
+    const badgeCvs = document.createElement('canvas');
+    badgeCvs.width = 256;
+    badgeCvs.height = 256;
+    const bctx = badgeCvs.getContext('2d');
+    bctx.fillStyle = '#ffffff';
+    bctx.beginPath();
+    bctx.arc(128, 128, 116, 0, Math.PI * 2);
+    bctx.fill();
+    bctx.fillStyle = '#0284c7';
+    bctx.font = '76px sans-serif';
+    bctx.textAlign = 'center';
+    bctx.textBaseline = 'middle';
+    bctx.fillText('🛍️', 128, 128);
+
+    const badgeTex = new THREE.CanvasTexture(badgeCvs);
+    badgeTex.colorSpace = THREE.SRGBColorSpace;
+    const badgeGeo = new THREE.PlaneGeometry(1.6, 1.6);
+    const badgeMat = new THREE.MeshBasicMaterial({
+      map: badgeTex,
       transparent: true,
       side: THREE.DoubleSide
     });
-    const cardMesh = new THREE.Mesh(cardGeo, cardMat);
-    group.add(cardMesh);
+    const badgeMesh = new THREE.Mesh(badgeGeo, badgeMat);
+    badgeMesh.position.set(0, bagH * 0.52, bagD / 2 + 0.03);
+    group.add(badgeMesh);
 
-    // Glowing cyan/blue border trim
-    const frameGeo = new THREE.BoxGeometry(cardW + 0.15, cardH + 0.15, 0.2);
-    const frameMat = new THREE.MeshStandardMaterial({
-      color: 0x070e1e,
-      metalness: 0.9,
-      roughness: 0.2
-    });
-    const frameMesh = new THREE.Mesh(frameGeo, frameMat);
-    frameMesh.position.z = -0.12;
-    frameMesh.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(frameGeo),
-      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
-    ));
-    group.add(frameMesh);
+    // Subtle internal point light radiating from inside the bag
+    const bagLight = new THREE.PointLight(0x38bdf8, 1.8, 22);
+    bagLight.position.set(0, bagH, 0);
+    group.add(bagLight);
 
-    // Subtle beacon point light
-    this.storeSelectorLight = new THREE.PointLight(0x38bdf8, 2.2, 28);
-    this.storeSelectorLight.position.set(0, 0, 3.0);
-    group.add(this.storeSelectorLight);
-
-    // Initial draw
-    this.updateAppStoreSelectorCanvas(0, false);
-
-    group.position.set(POS.post.x, 22.0, POS.post.z + 5.0);
+    group.scale.setScalar(scale);
     group.visible = false;
-    this.normalGroup.add(group);
-    this.storeGameSelector = group;
-  }
-
-  updateAppStoreSelectorCanvas(progress = 0, selected = false) {
-    if (!this.storeSelectorCtx) return;
-    const ctx = this.storeSelectorCtx;
-    const W = 1024, H = 640;
-
-    ctx.clearRect(0, 0, W, H);
-
-    // 1. Semi-translucent dark cyber glass background
-    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
-    bgGrad.addColorStop(0, 'rgba(10, 18, 38, 0.94)');
-    bgGrad.addColorStop(1, 'rgba(4, 8, 20, 0.96)');
-    ctx.fillStyle = bgGrad;
-    ctx.beginPath();
-    ctx.roundRect(16, 16, W - 32, H - 32, 28);
-    ctx.fill();
-
-    // 2. Cyan neon edge stroke
-    ctx.strokeStyle = selected ? '#38bdf8' : 'rgba(56, 189, 248, 0.45)';
-    ctx.lineWidth = selected ? 6 : 3;
-    ctx.stroke();
-
-    // 3. Top App Store Header
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '700 24px "Space Grotesk", sans-serif';
-    ctx.fillText(' APP STORE  ·  🤖 GOOGLE PLAY', 48, 68);
-
-    // Live status badge on top right
-    const statusText = selected ? '● GAME CONFIRMED' : '● SELECTING APPLICATION';
-    ctx.fillStyle = selected ? '#34d399' : '#38bdf8';
-    ctx.font = '700 20px "JetBrains Mono", monospace';
-    ctx.textAlign = 'right';
-    ctx.fillText(statusText, W - 48, 68);
-    ctx.textAlign = 'left';
-
-    // 4. Search input bar
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.beginPath();
-    ctx.roundRect(48, 92, W - 96, 64, 16);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = '#e2e8f0';
-    ctx.font = '500 26px "Space Grotesk", sans-serif';
-    const query = 'Bejeweled Blitz';
-    const charCount = Math.min(query.length, Math.floor(progress * (query.length + 4)));
-    const typedQuery = query.slice(0, charCount);
-    const cursor = (Math.floor(Date.now() / 400) % 2 === 0) ? '|' : '';
-    ctx.fillText(`🔍  ${typedQuery}${charCount < query.length ? cursor : ''}`, 68, 134);
-
-    // 5. Featured Game Listing Card
-    const cardY = 180;
-    const cardH = 390;
-    ctx.fillStyle = selected ? 'rgba(14, 165, 233, 0.12)' : 'rgba(30, 41, 59, 0.6)';
-    ctx.beginPath();
-    ctx.roundRect(48, cardY, W - 96, cardH, 24);
-    ctx.fill();
-    ctx.strokeStyle = selected ? '#38bdf8' : 'rgba(56, 189, 248, 0.35)';
-    ctx.lineWidth = selected ? 4 : 2;
-    ctx.stroke();
-
-    // 6. Glowing Game App Icon (Bejeweled Diamond Badge)
-    const iconX = 84, iconY = cardY + 44, iconS = 140;
-    const iconGrad = ctx.createLinearGradient(iconX, iconY, iconX + iconS, iconY + iconS);
-    iconGrad.addColorStop(0, '#0284c7');
-    iconGrad.addColorStop(0.5, '#38bdf8');
-    iconGrad.addColorStop(1, '#a855f7');
-    ctx.fillStyle = iconGrad;
-    ctx.beginPath();
-    ctx.roundRect(iconX, iconY, iconS, iconS, 32);
-    ctx.fill();
-
-    // Faceted diamond drawing inside icon
-    ctx.save();
-    ctx.translate(iconX + iconS / 2, iconY + iconS / 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.moveTo(0, -42);
-    ctx.lineTo(42, -6);
-    ctx.lineTo(0, 46);
-    ctx.lineTo(-42, -6);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#0284c7';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
-    ctx.beginPath();
-    ctx.moveTo(0, -42);
-    ctx.lineTo(18, -6);
-    ctx.lineTo(0, 46);
-    ctx.closePath();
-    ctx.fill();
-    ctx.restore();
-
-    // 7. Title, Developer & Rating
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 40px "Space Grotesk", sans-serif';
-    ctx.fillText('Bejeweled Blitz', 256, cardY + 90);
-
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '500 24px "Space Grotesk", sans-serif';
-    ctx.fillText('PopCap Games · Electronic Arts', 256, cardY + 132);
-
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = '700 22px "JetBrains Mono", monospace';
-    ctx.fillText('★★★★★  4.8 · #1 Puzzle Action Game', 256, cardY + 172);
-
-    // 8. Interactive Animated "GET / INSTALL" Button
-    const btnX = 256, btnY = cardY + 214, btnW = 320, btnH = 68;
-    const btnGrad = ctx.createLinearGradient(btnX, btnY, btnX + btnW, btnY);
-    if (selected) {
-      btnGrad.addColorStop(0, '#10b981');
-      btnGrad.addColorStop(1, '#059669');
-    } else {
-      btnGrad.addColorStop(0, '#0284c7');
-      btnGrad.addColorStop(1, '#38bdf8');
-    }
-    ctx.fillStyle = btnGrad;
-    ctx.beginPath();
-    ctx.roundRect(btnX, btnY, btnW, btnH, 34);
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '700 26px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    const btnLabel = selected ? '✓ SELECTED · GET' : (progress > 0.65 ? 'SELECTING...' : 'GET / INSTALL');
-    ctx.fillText(btnLabel, btnX + btnW / 2, btnY + 44);
-    ctx.textAlign = 'left';
-
-    // Animated finger pointer clicking the button
-    if (!selected && progress > 0.45) {
-      const curX = btnX + btnW / 2 + Math.sin(progress * 12) * 10;
-      const curY = btnY + btnH / 2 + 15;
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = '36px sans-serif';
-      ctx.fillText('👆', curX, curY);
-    }
-
-    // 9. Bottom Info Footnote
-    ctx.fillStyle = '#64748b';
-    ctx.font = '500 20px "JetBrains Mono", monospace';
-    ctx.fillText('PUSH SERVICE: Apple APNs + Google FCM Payload Channels Enabled', 48, H - 42);
-
-    this.storeSelectorTex.needsUpdate = true;
+    return group;
   }
 
   initMovers() {
-    // 0. App Store Selection Showcase Hologram at Apple & Google station
-    this.createAppStoreSelector();
+    // 0. 3D Shopping Bag at Apple & Google station (changes into Bejeweled 3D jewels)
+    this.shoppingBag = this.createShoppingBag(1.0);
+    this.normalGroup.add(this.shoppingBag);
 
     // 1. Bejeweled app travelling App Stores -> Phone
     this.appOrb = this.createBejeweledCluster(1.2);
@@ -4172,7 +4085,7 @@ class PushnotOrbit {
     this.directorMode = false;
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v3') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v4') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4227,7 +4140,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v3', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v4', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4244,7 +4157,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v3', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v4', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4266,6 +4179,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v4');
           localStorage.removeItem('pushnot_director_rigs_v3');
           localStorage.removeItem('pushnot_director_rigs');
           showToast('Restored locked director presets!');
@@ -4491,7 +4405,7 @@ class PushnotOrbit {
     if (this.leoSubscriberBundle) this.leoSubscriberBundle.visible = false;
     if (this.rejectShieldBubble) this.rejectShieldBubble.visible = false;
     if (this.phoneEmojiBadge) this.phoneEmojiBadge.visible = false;
-    if (this.storeGameSelector) this.storeGameSelector.visible = false;
+    if (this.shoppingBag) this.shoppingBag.visible = false;
 
     const isLeo = this.mode === 'leo';
     const L = this.leoPos;
@@ -4534,47 +4448,54 @@ class PushnotOrbit {
       this.updatePhoneScreenCanvas('home', 0);
 
       if (t < 0.08) {
-        // Step 0: Google / Apple selecting the game animation!
-        if (this.storeGameSelector) {
-          this.storeGameSelector.visible = true;
-          this.storeGameSelector.lookAt(this.camera.position);
-          this.updateAppStoreSelectorCanvas(clamp01(t / 0.08), false);
+        // Step 0: 3D Paper Shopping Bag hovering above Apple & Google
+        if (this.shoppingBag) {
+          this.shoppingBag.visible = true;
+          this.shoppingBag.position.set(POS.post.x, 24.0 + Math.sin(performance.now() * 0.003) * 0.5, POS.post.z + 8.0);
+          this.shoppingBag.rotation.y = performance.now() * 0.0018;
+          this.shoppingBag.scale.setScalar(1.2);
         }
         this.appOrb.visible = false;
-        moverPos = new THREE.Vector3(POS.post.x, 30.0, POS.post.z + 5.0);
-        moverText = ' App Store & 🤖 Google Play · Selecting "Bejeweled Blitz"';
+        moverPos = new THREE.Vector3(POS.post.x, 31.0, POS.post.z + 8.0);
+        moverText = 'Bejeweled Blitz';
         moverCls = 'cyan';
       } else if (t < 0.18) {
-        // Step 1: Game selected! Jewel GLB appears & materializes above Apple & Google!
-        if (this.storeGameSelector) {
-          this.storeGameSelector.visible = true;
-          this.storeGameSelector.lookAt(this.camera.position);
-          this.updateAppStoreSelectorCanvas(1.0, true);
+        // Step 1: Shopping bag smoothly morphs / changes into 3D Bejeweled jewels!
+        const morphU = clamp01((t - 0.08) / 0.05);
+        if (this.shoppingBag) {
+          if (morphU < 0.95) {
+            this.shoppingBag.visible = true;
+            this.shoppingBag.scale.setScalar(1.2 * (1.0 - morphU * 0.9));
+            this.shoppingBag.position.set(POS.post.x, 24.0, POS.post.z + 8.0);
+            this.shoppingBag.rotation.y = performance.now() * 0.0022;
+          } else {
+            this.shoppingBag.visible = false;
+          }
         }
         this.appOrb.visible = true;
-        const appearU = clamp01((t - 0.08) / 0.03);
+        const jewelScale = 1.2 * Math.min(1.0, morphU * 1.15);
         this.appOrb.position.set(POS.post.x, 24.0, POS.post.z + 8.0);
-        this.appOrb.scale.setScalar(1.2 * appearU);
+        this.appOrb.scale.setScalar(jewelScale);
         this.appOrb.rotation.y = performance.now() * 0.0022;
-        moverPos = new THREE.Vector3(POS.post.x, 32.0, POS.post.z + 8.0);
-        moverText = '💎 Bejeweled Blitz Selected · 3D Gemstones Packaged';
+        moverPos = new THREE.Vector3(POS.post.x, 31.0, POS.post.z + 8.0);
+        moverText = 'Bejeweled Blitz';
         moverCls = 'cyan';
       } else if (t < 0.30) {
         // Step 2: Jewel flies along arc from Apple & Google to Phone
-        if (this.storeGameSelector) this.storeGameSelector.visible = false;
+        if (this.shoppingBag) this.shoppingBag.visible = false;
         const p = this.arcStoreToPhone.getPoint(seg(t, 0.18, 0.30));
         this.appOrb.visible = true;
         this.appOrb.scale.setScalar(1.2);
         this.appOrb.position.copy(p);
         moverPos = p;
-        moverText = this.currentOS === 'ios' ? ' App Store · Bejeweled Blitz Flying to Device' : '🤖 Google Play · Bejeweled Blitz Flying to Device';
+        moverText = 'Bejeweled Blitz';
         moverCls = 'cyan';
       } else if (t < 0.38) {
         // Step 3: Installed on Phone
-        if (this.storeGameSelector) this.storeGameSelector.visible = false;
+        if (this.shoppingBag) this.shoppingBag.visible = false;
         showInstall = true;
         moverPos = new THREE.Vector3(POS.phone.x, this.tops.phone + 14, POS.phone.z);
-        moverText = '📱 Bejeweled Blitz Installed · Needs Push Token';
+        moverText = 'Bejeweled Blitz';
         moverCls = 'cyan';
       } else if (t < 0.48) {
         // Step 4: Phone requests token from Apple & Google
@@ -5262,8 +5183,8 @@ class PushnotOrbit {
       const rigNext = (this.directorRigs && this.directorRigs[rigKeyNext]) || DEFAULT_DIRECTOR_RIGS[rigKeyNext] || rigCurr;
 
       let targetCam, targetTgt;
-      if (rigCurr && rigNext && i !== nextI && this.playing) {
-        // Continuous circular track dolly interpolation along curved track arc
+      if (rigCurr && rigNext && i !== nextI) {
+        // Continuous circular track dolly interpolation along curved track rail arc
         const u = seg(this.t, stops[i], stops[nextI]);
         const s = u * u * (3 - 2 * u); // Smooth cubic ease
 
@@ -5301,8 +5222,9 @@ class PushnotOrbit {
         targetTgt = this.cineLookAt;
       }
 
-      const camLerp = Math.min(1, dt * 4.2);
-      const tgtLerp = Math.min(1, dt * 4.8);
+      // Smooth cinema dolly rolling speed along the rails (eliminates any jerky snap zoom/snap dolly)
+      const camLerp = Math.min(1, dt * 2.8);
+      const tgtLerp = Math.min(1, dt * 3.2);
       this.camera.position.lerp(targetCam, camLerp);
       this.controls.target.lerp(targetTgt, tgtLerp);
       this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);

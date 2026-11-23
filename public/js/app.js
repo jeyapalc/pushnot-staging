@@ -41,7 +41,7 @@ const MODE_STEPS = {
 // Default Director's Camera Rigs (Eye-level circular carousel track orbiting at natural eye level Y ≈ 26, constant R = 90)
 const DEFAULT_DIRECTOR_RIGS = {
   // Mode 1: Setup (10 steps) — Eye-level Circular Track Carousel at constant R = 90.0, cam.y = 26.0, target.y = 18.0
-  "setup_step_0": { angle: 0.35,  radius: 90.0, cam: { x: 30.9,  y: 26.0, z: 84.5 }, target: { x: 22.0, y: 18.0, z: -22.0 } },
+  "setup_step_0": { angle: 0.43,  radius: 57.3, cam: { x: 24.0,  y: 30.0, z: 52.0 }, target: { x: 0.0,  y: 14.0, z: -46.0 } },
   "setup_step_1": { angle: 0.45,  radius: 90.0, cam: { x: 39.1,  y: 26.0, z: 81.0 }, target: { x: 24.0, y: 18.0, z: -20.0 } },
   "setup_step_2": { angle: 0.65,  radius: 90.0, cam: { x: 54.5,  y: 26.0, z: 71.6 }, target: { x: 28.0, y: 18.0, z: 8.0 } },
   "setup_step_3": { angle: 0.82,  radius: 90.0, cam: { x: 65.8,  y: 26.0, z: 61.4 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
@@ -111,11 +111,11 @@ class PushnotOrbit {
     this.prevNormalMode = 'setup';
     this.t = 0.0;
     this.targetT = 0.0;
-    this.playing = true;
-    this.autoOrbit = true;
+    this.playing = false;
+    this.autoOrbit = false;
     this.cinematicFollow = false;
-    this.cineLookAt = new THREE.Vector3(22.0, 18.0, -22.0);
-    this.cineCamPos = new THREE.Vector3(30.9, 26.0, 84.5);
+    this.cineLookAt = new THREE.Vector3(0.0, 14.0, -46.0);
+    this.cineCamPos = new THREE.Vector3(24.0, 30.0, 52.0);
     this.orbitAngle = 0.35;
     this.flipRoll = 0;
     this.flipTarget = 0;
@@ -159,7 +159,7 @@ class PushnotOrbit {
     this.worldGroup.add(this.leoGroup);
 
     this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
-    this.camera.position.set(30.9, 26.0, 84.5);
+    this.camera.position.set(24.0, 30.0, 52.0);
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setSize(innerWidth, innerHeight);
@@ -176,7 +176,7 @@ class PushnotOrbit {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-    this.controls.target.set(22.0, 18.0, -22.0);
+    this.controls.target.set(0.0, 14.0, -46.0);
     this.controls.minDistance = 15;
     this.controls.maxDistance = 450;
     this.controls.maxPolarAngle = Math.PI * 0.52;
@@ -4168,7 +4168,7 @@ class PushnotOrbit {
     // Always allow 100% free zoom on mouse wheel and trackpad pinch
     this.controls.enableZoom = true;
     const btn = document.getElementById('btn-play');
-    btn.textContent = auto ? '▶' : '🎥';
+    btn.textContent = auto ? '❚❚' : '▶';
     btn.classList.toggle('manual', !auto);
   }
 
@@ -4202,6 +4202,7 @@ class PushnotOrbit {
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
       // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
+      localStorage.removeItem('pushnot_director_rigs_v9');
       localStorage.removeItem('pushnot_director_rigs_v8');
       localStorage.removeItem('pushnot_director_rigs_v7');
       localStorage.removeItem('pushnot_director_rigs_v6');
@@ -4209,7 +4210,7 @@ class PushnotOrbit {
       localStorage.removeItem('pushnot_director_rigs_v4');
       localStorage.removeItem('pushnot_director_rigs_v3');
       localStorage.removeItem('pushnot_director_rigs');
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v9') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v10') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4264,7 +4265,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v9', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v10', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4281,7 +4282,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v9', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v10', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4303,6 +4304,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v10');
           localStorage.removeItem('pushnot_director_rigs_v9');
           localStorage.removeItem('pushnot_director_rigs_v8');
           localStorage.removeItem('pushnot_director_rigs_v7');
@@ -4511,7 +4513,8 @@ class PushnotOrbit {
       else if (e.key === 'ArrowLeft')  this.stepCycle(-1);
     });
 
-    this.setPlaying(true);
+    this.setPlaying(false);
+    this.setAutoOrbit(false);
   }
 
   /* ---------------- render state from (mode, t) ---------------- */
@@ -5082,9 +5085,9 @@ class PushnotOrbit {
 
     if (this.mode === 'setup') {
       if (t < 0.18) {
-        // App Selection & Jewel Appearance at Apple & Google
-        focusLocal = new THREE.Vector3(POS.post.x, 18.0, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x + 18, 26.0, POS.post.z + 32);
+        // App Selection & Candy Crush Appearance at Apple & Google (zoomed-out showing 2+ nodes)
+        focusLocal = new THREE.Vector3(POS.post.x, 14.0, POS.post.z);
+        customCineCam = new THREE.Vector3(24.0, 30.0, 52.0);
       } else if (t >= 0.48 && t < 0.60) {
         // Laser Key Fabrication at Apple/Google HQ
         focusLocal = new THREE.Vector3(POS.post.x, 18.0, POS.post.z);

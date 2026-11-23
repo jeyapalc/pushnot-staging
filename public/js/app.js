@@ -93,6 +93,9 @@ const seg = (t, a, b) => clamp01((t - a) / (b - a));
 
 class PushnotOrbit {
   constructor() {
+    window.app = this;
+    this.MODE_STEPS = MODE_STEPS;
+    this.DEFAULT_DIRECTOR_RIGS = DEFAULT_DIRECTOR_RIGS;
     this.container = document.getElementById('canvas-container');
 
     this.loader = new GLTFLoader();
@@ -4196,7 +4199,7 @@ class PushnotOrbit {
     this.directorMode = false;
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v6') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v7') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4251,7 +4254,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v6', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v7', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4268,7 +4271,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v6', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v7', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4290,6 +4293,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v7');
           localStorage.removeItem('pushnot_director_rigs_v6');
           localStorage.removeItem('pushnot_director_rigs_v5');
           localStorage.removeItem('pushnot_director_rigs_v4');

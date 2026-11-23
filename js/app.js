@@ -5313,12 +5313,6 @@ class PushnotOrbit {
       this.ufoGroup.rotation.y += dt * 0.7;
       this.ufoGroup.position.y = POS.ufo.y + Math.sin(now * 0.0025) * 1.4;
     }
-    if (this.storeGroup && this.camera) {
-      // Always keep the San Francisco cityscape and logos facing directly towards the camera during orbit!
-      const dx = this.camera.position.x - POS.post.x;
-      const dz = this.camera.position.z - POS.post.z;
-      this.storeGroup.rotation.y = Math.atan2(dx, dz);
-    }
 
     this.appOrb.rotation.y += dt * 1.4;
     if (this.installedApp.visible) {

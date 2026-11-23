@@ -10,13 +10,13 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
    PUSHNOT // 3D Push Notification Orbit
    Stations on orbit ring (R = 46):
      Apple & Google Stores (logos) : back-right   (+32.5, 0, -32.5)
-     Phone (Smartphone + Bejeweled): front-right  (+32.5, 0, +32.5)
+     Phone (Smartphone + Candy Crush): front-right  (+32.5, 0, +32.5)
      App Server (Server Rack)      : front-left   (-32.5, 0, +32.5)
      Post Office (Post Box)        : back-left    (-32.5, 0, -32.5)
      External Stimulus (UFO)       : hovering above App Server (-32.5, 48, +32.5)
 
    Two Polarity Modes:
-     'setup' (↺): App Stores -> Phone (Bejeweled) -> Post Office -> Key Token -> App Server (stored)
+     'setup' (↺): App Stores -> Phone (Candy Crush) -> Post Office -> Key Token -> App Server (stored)
      'push'  (↻): UFO Event Trigger -> App Server (uses stored Key) -> Post Office -> Phone
    ===================================================================== */
 
@@ -80,7 +80,7 @@ const DEFAULT_DIRECTOR_RIGS = {
 };
 
 const WORLD_APPS = [
-  { brand: 'bejeweled', name: 'Bejeweled Blitz', emoji: '💎', title: 'Daily Energy Restored! 💎', body: 'Spin the Wheel & claim 5,000 Free Coins!', color: '#38bdf8' },
+  { brand: 'candycrush', name: 'Candy Crush Saga', emoji: '🍬', title: 'Lives Full! Play Now 🍬', body: 'Your 5 lives have refilled. Tap to crush candies!', color: '#f59e0b' },
   { brand: 'facebook',  name: 'Facebook',        emoji: '📘', title: 'Sarah Jenkins sent a message', body: '“Hey, are you presenting the push talk today?”', color: '#1877f2' },
   { brand: 'instagram', name: 'Instagram',       emoji: '📸', title: 'Alex Rivera liked your post', body: '“Tagged you in: Tech Architecture 2026”', color: '#ec4899' },
   { brand: 'x',         name: '𝕏 Alert',         emoji: '𝕏',  title: 'Your post is trending on 𝕏!', body: '“Push notification forensic reverse-tracing!”', color: '#e2e8f0' },
@@ -319,7 +319,7 @@ class PushnotOrbit {
     return line;
   }
 
-  /* ---- 3D App Brand Logo Tile (Facebook, Instagram, X, Uber, Amazon, Bejeweled) ---- */
+  /* ---- 3D App Brand Logo Tile (Facebook, Instagram, X, Uber, Amazon, Candy Crush) ---- */
   create3DBrandLogoOrb(brand, hexColor) {
     const cvs = document.createElement('canvas');
     cvs.width = 256; cvs.height = 256;
@@ -395,17 +395,17 @@ class PushnotOrbit {
       ctx.lineTo(190, 198);
       ctx.stroke();
     } else {
-      // Bejeweled diamond badge
+      // Candy Crush candy badge
       const grad = ctx.createLinearGradient(0, 0, 256, 256);
-      grad.addColorStop(0, '#0ea5e9');
-      grad.addColorStop(1, '#10b981');
+      grad.addColorStop(0, '#f59e0b');
+      grad.addColorStop(1, '#ec4899');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 256, 256);
       ctx.fillStyle = '#ffffff';
       ctx.font = '135px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('💎', 128, 136);
+      ctx.fillText('🍬', 128, 136);
     }
 
     const tex = new THREE.CanvasTexture(cvs);
@@ -433,7 +433,7 @@ class PushnotOrbit {
     this.normalGroup.add(this.worldStimGroup);
 
     const specs = [
-      { id: 'pin-stim-0', brand: 'bejeweled', color: 0x38bdf8, offset: 0.00,  spread: new THREE.Vector3(-8.0,  4.0, -6.0), mid1: new THREE.Vector3(-4.5,  3.0,  1.5), mid2: new THREE.Vector3( 0.0,  4.0, -3.5) },
+      { id: 'pin-stim-0', brand: 'candycrush', color: 0xf59e0b, offset: 0.00,  spread: new THREE.Vector3(-8.0,  4.0, -6.0), mid1: new THREE.Vector3(-4.5,  3.0,  1.5), mid2: new THREE.Vector3( 0.0,  4.0, -3.5) },
       { id: 'pin-stim-1', brand: 'facebook',  color: 0x1877f2, offset: 0.166, spread: new THREE.Vector3( 8.0,  3.5, -5.0), mid1: new THREE.Vector3( 4.5,  2.0, -1.5), mid2: new THREE.Vector3( 0.0,  2.2,  3.5) },
       { id: 'pin-stim-2', brand: 'instagram', color: 0xec4899, offset: 0.333, spread: new THREE.Vector3(-7.0,  0.5,  7.0), mid1: new THREE.Vector3(-3.2,  0.0,  3.2), mid2: new THREE.Vector3( 0.0,  0.4, -2.2) },
       { id: 'pin-stim-3', brand: 'x',         color: 0xe2e8f0, offset: 0.500, spread: new THREE.Vector3( 7.0, -0.5,  7.0), mid1: new THREE.Vector3( 3.2, -1.2, -2.5), mid2: new THREE.Vector3( 0.0, -1.4,  2.5) },
@@ -480,23 +480,31 @@ class PushnotOrbit {
     });
   }
 
-  /* ---- 5 magic neon-glow faceted gemstones representing Bejeweled ---- */
-  createBejeweledCluster(scale = 1) {
+  /* ---- 6 vibrant glossy 3D candies representing Candy Crush Saga ---- */
+  createCandyCrushCluster(scale = 1) {
     const group = new THREE.Group();
     const specs = [
-      { color: 0xff2a55, emissive: 0xd90429, geo: new THREE.CylinderGeometry(0.9, 1.1, 3.0, 5), pos: [-2.8,  0.4,  0.6], rot: [0.2, 0.4,  0.15] },
-      { color: 0xffaa00, emissive: 0xe85d04, geo: new THREE.ConeGeometry(1.4, 2.6, 4),           pos: [-1.4, -0.7, -1.1], rot: [0.1, 0.8, -0.25] },
-      { color: 0x22ff88, emissive: 0x059669, geo: new THREE.OctahedronGeometry(1.8, 0),          pos: [ 0.0,  0.9,  0.0], rot: [0.1, 0.2,  0.0]  },
-      { color: 0x2299ff, emissive: 0x1d4ed8, geo: new THREE.CylinderGeometry(1.3, 0.8, 2.7, 4), pos: [ 1.6, -0.5,  1.0], rot: [-0.2, 0.5, -0.15] },
-      { color: 0xc026ff, emissive: 0x7e22ce, geo: new THREE.DodecahedronGeometry(1.4, 0),        pos: [ 2.7,  0.5, -0.7], rot: [0.3, -0.4,  0.2]  }
+      // 1. Red Jelly Bean (smooth elongated capsule)
+      { color: 0xef4444, emissive: 0xb91c1c, geo: new THREE.SphereGeometry(1.2, 24, 24), scale: [1.4, 0.88, 0.88], pos: [-2.8,  0.4,  0.6], rot: [0.2, 0.4,  0.15] },
+      // 2. Yellow Lemon Drop (teardrop / rounded cone)
+      { color: 0xfacc15, emissive: 0xca8a04, geo: new THREE.ConeGeometry(1.3, 2.4, 24),           scale: [1.0, 1.0, 1.0],   pos: [-1.4, -0.6, -1.1], rot: [0.1, 0.8, -0.25] },
+      // 3. Green Chiclet (rounded square wrapped candy)
+      { color: 0x22c55e, emissive: 0x15803d, geo: new THREE.BoxGeometry(1.8, 1.8, 0.85),          scale: [1.0, 1.0, 1.0],   pos: [ 0.0,  0.9,  0.0], rot: [0.1, 0.2,  0.0]  },
+      // 4. Orange Lozenge (flat cylinder lozenge)
+      { color: 0xf97316, emissive: 0xc2410c, geo: new THREE.CylinderGeometry(1.2, 1.2, 0.7, 24), scale: [1.0, 1.0, 1.0],   pos: [ 1.6, -0.5,  1.0], rot: [-0.2, 0.5, -0.15] },
+      // 5. Purple Grape Candy (faceted jewel-cut candy)
+      { color: 0xa855f7, emissive: 0x7e22ce, geo: new THREE.DodecahedronGeometry(1.3, 0),        scale: [1.0, 1.0, 1.0],   pos: [ 2.7,  0.5, -0.7], rot: [0.3, -0.4,  0.2]  },
+      // 6. Blue Orb (glossy sphere lollipop candy)
+      { color: 0x06b6d4, emissive: 0x0e7490, geo: new THREE.SphereGeometry(1.15, 24, 24),        scale: [1.0, 1.0, 1.0],   pos: [ 0.2, -1.2,  0.8], rot: [0.0, 0.0,  0.0]  }
     ];
 
     for (const s of specs) {
       const mat = new THREE.MeshPhysicalMaterial({
-        color: s.color, emissive: s.emissive, emissiveIntensity: 0.75,
-        roughness: 0.12, metalness: 0.15, clearcoat: 1.0, clearcoatRoughness: 0.08, flatShading: true
+        color: s.color, emissive: s.emissive, emissiveIntensity: 0.7,
+        roughness: 0.08, metalness: 0.05, clearcoat: 1.0, clearcoatRoughness: 0.04, transmission: 0.12
       });
       const mesh = new THREE.Mesh(s.geo, mat);
+      if (s.scale) mesh.scale.set(...s.scale);
       mesh.position.set(...s.pos);
       mesh.rotation.set(...s.rot);
       mesh.add(new THREE.LineSegments(
@@ -506,17 +514,19 @@ class PushnotOrbit {
       group.add(mesh);
     }
 
+    // Floating sugar crystal sparkle motes around the candies
     const motePts = [];
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 26; i++) {
       const a = Math.random() * Math.PI * 2;
-      const r = 2.2 + Math.random() * 2.2;
+      const r = 2.4 + Math.random() * 2.2;
       motePts.push(Math.cos(a) * r, (Math.random() - 0.5) * 4.2, Math.sin(a) * r);
     }
     const moteGeo = new THREE.BufferGeometry();
     moteGeo.setAttribute('position', new THREE.Float32BufferAttribute(motePts, 3));
-    group.add(new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.5, transparent: true, opacity: 0.8 })));
+    group.add(new THREE.Points(moteGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.55, transparent: true, opacity: 0.85 })));
 
-    group.add(new THREE.PointLight(0x22ff88, 2.5, 24));
+    // Warm golden-pink candy radiance
+    group.add(new THREE.PointLight(0xf59e0b, 2.5, 24));
     group.scale.setScalar(scale);
     return group;
   }
@@ -1269,16 +1279,16 @@ class PushnotOrbit {
   }
 
   initMovers() {
-    // 0. 3D Shopping Bag at Apple & Google station (changes into Bejeweled 3D jewels)
+    // 0. 3D Shopping Bag at Apple & Google station (changes into Candy Crush 3D candies)
     this.shoppingBag = this.createShoppingBag(1.0);
     this.normalGroup.add(this.shoppingBag);
 
-    // 1. Bejeweled app travelling App Stores -> Phone
-    this.appOrb = this.createBejeweledCluster(1.2);
+    // 1. Candy Crush app travelling App Stores -> Phone
+    this.appOrb = this.createCandyCrushCluster(1.2);
     this.normalGroup.add(this.appOrb);
 
-    // 2. Installed Bejeweled hovering above the Phone
-    this.installedApp = this.createBejeweledCluster(0.85);
+    // 2. Installed Candy Crush hovering above the Phone
+    this.installedApp = this.createCandyCrushCluster(0.85);
     this.installedApp.position.set(POS.phone.x, 32, POS.phone.z);
     this.normalGroup.add(this.installedApp);
 
@@ -1367,7 +1377,7 @@ class PushnotOrbit {
     this.googleLogoMesh.scale.setScalar(1.0);
   }
 
-  /* ---- Dynamic Phone Screen Canvas (Interactive iOS vs Android + Bejeweled Blitz) ---- */
+  /* ---- Dynamic Phone Screen Canvas (Interactive iOS vs Android + Candy Crush) ---- */
   updatePhoneScreenCanvas(state = 'awake', notifProgress = 0, customNotif = null) {
     this.lastPhoneScreenState = state;
     this.lastPhoneNotifProgress = notifProgress;
@@ -1456,7 +1466,7 @@ class PushnotOrbit {
         ctx.fillText('😴 App Sleeping · APNs Idle', w / 2, 562);
         ctx.textAlign = 'left';
       } else {
-        // iOS Home Screen / Active State with Bejeweled App
+        // iOS Home Screen / Active State with Candy Crush App
         const drawSquircleIcon = (x, y, iconEmoji, title) => {
           ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
           ctx.beginPath();
@@ -1472,10 +1482,10 @@ class PushnotOrbit {
           ctx.fillText(title, x + 38, y + 98);
         };
 
-        // Bejeweled blitz highlighted app icon
+        // Candy Crush highlighted app icon
         const bjX = 86, bjY = 220;
         const bGrad = ctx.createLinearGradient(bjX, bjY, bjX + 88, bjY + 88);
-        bGrad.addColorStop(0, '#8b5cf6');
+        bGrad.addColorStop(0, '#f59e0b');
         bGrad.addColorStop(1, '#ec4899');
         ctx.fillStyle = bGrad;
         ctx.beginPath();
@@ -1486,10 +1496,10 @@ class PushnotOrbit {
         ctx.stroke();
         ctx.font = '48px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('💎', bjX + 44, bjY + 62);
-        ctx.font = 'bold 16px -apple-system, sans-serif';
+        ctx.fillText('🍬', bjX + 44, bjY + 62);
+        ctx.font = 'bold 15px -apple-system, sans-serif';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('Bejeweled', bjX + 44, bjY + 114);
+        ctx.fillText('Candy Crush', bjX + 44, bjY + 114);
 
         // Other utility icons
         drawSquircleIcon(212, 226, '💬', 'Messages');
@@ -1515,22 +1525,22 @@ class PushnotOrbit {
           ctx.beginPath();
           ctx.roundRect(32, bannerY, 448, 126, 24);
           ctx.fill();
-          ctx.strokeStyle = customNotif?.color || 'rgba(56, 189, 248, 0.75)';
+          ctx.strokeStyle = customNotif?.color || 'rgba(245, 158, 11, 0.75)';
           ctx.lineWidth = 2;
           ctx.stroke();
 
           ctx.textAlign = 'left';
-          ctx.fillStyle = customNotif?.color || '#38bdf8';
+          ctx.fillStyle = customNotif?.color || '#f59e0b';
           ctx.font = 'bold 17px -apple-system, sans-serif';
-          ctx.fillText(customNotif ? `${customNotif.emoji} ${customNotif.name.toUpperCase()} · now` : '💎 BEJEWELED BLITZ · now', 56, bannerY + 36);
+          ctx.fillText(customNotif ? `${customNotif.emoji} ${customNotif.name.toUpperCase()} · now` : '🍬 CANDY CRUSH · now', 56, bannerY + 36);
 
           ctx.fillStyle = '#ffffff';
           ctx.font = 'bold 20px -apple-system, sans-serif';
-          ctx.fillText(customNotif ? customNotif.title : 'Energy Refilled! Play Now 💎', 56, bannerY + 68);
+          ctx.fillText(customNotif ? customNotif.title : 'Lives Full! Play Now 🍬', 56, bannerY + 68);
 
           ctx.fillStyle = '#94a3b8';
           ctx.font = '16px -apple-system, sans-serif';
-          ctx.fillText(customNotif ? customNotif.body : 'Your lives are full. Tap to beat high scores!', 56, bannerY + 98);
+          ctx.fillText(customNotif ? customNotif.body : 'Your 5 lives have refilled. Tap to crush candies!', 56, bannerY + 98);
         }
         ctx.textAlign = 'left';
       }
@@ -1598,7 +1608,7 @@ class PushnotOrbit {
         ctx.fillText('💤 Android Doze · FCM Socket', w / 2, 596);
         ctx.textAlign = 'left';
       } else {
-        // Android Material You Home Screen with Bejeweled Blitz
+        // Android Material You Home Screen with Candy Crush Saga
         const drawCircleIcon = (x, y, iconEmoji, title) => {
           ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
           ctx.beginPath();
@@ -1615,24 +1625,24 @@ class PushnotOrbit {
           ctx.fillText(title, x + 40, y + 98);
         };
 
-        // Bejeweled circular adaptive icon
+        // Candy Crush circular adaptive icon
         const bjX = 86, bjY = 220;
         const bGrad = ctx.createLinearGradient(bjX, bjY, bjX + 84, bjY + 84);
-        bGrad.addColorStop(0, '#059669');
-        bGrad.addColorStop(1, '#0284c7');
+        bGrad.addColorStop(0, '#f59e0b');
+        bGrad.addColorStop(1, '#ec4899');
         ctx.fillStyle = bGrad;
         ctx.beginPath();
         ctx.arc(bjX + 44, bjY + 44, 44, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = '#34d399';
+        ctx.strokeStyle = '#fbbf24';
         ctx.lineWidth = 3;
         ctx.stroke();
         ctx.font = '48px sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('💎', bjX + 44, bjY + 60);
-        ctx.font = 'bold 16px Roboto, sans-serif';
+        ctx.fillText('🍬', bjX + 44, bjY + 60);
+        ctx.font = 'bold 15px Roboto, sans-serif';
         ctx.fillStyle = '#ffffff';
-        ctx.fillText('Bejeweled', bjX + 44, bjY + 114);
+        ctx.fillText('Candy Crush', bjX + 44, bjY + 114);
 
         // Other icons
         drawCircleIcon(212, 226, '🤖', 'Chrome');
@@ -1646,10 +1656,10 @@ class PushnotOrbit {
         ctx.beginPath();
         ctx.roundRect(46, 890, 420, 68, 34);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(52, 211, 153, 0.5)';
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
         ctx.stroke();
         ctx.textAlign = 'left';
-        ctx.fillStyle = '#34d399';
+        ctx.fillStyle = '#f59e0b';
         ctx.font = 'bold 24px sans-serif';
         ctx.fillText('G', 76, 934);
         ctx.fillStyle = '#94a3b8';
@@ -1659,26 +1669,26 @@ class PushnotOrbit {
         // If push notification is triggered / arrived:
         if (notifProgress > 0) {
           const bannerY = 110 + (1 - Math.pow(1 - notifProgress, 3)) * 20;
-          ctx.fillStyle = '#0f2924';
+          ctx.fillStyle = '#261b0f';
           ctx.beginPath();
           ctx.roundRect(32, bannerY, 448, 126, 24);
           ctx.fill();
-          ctx.strokeStyle = customNotif?.color || '#34d399';
+          ctx.strokeStyle = customNotif?.color || '#f59e0b';
           ctx.lineWidth = 2.5;
           ctx.stroke();
 
           ctx.textAlign = 'left';
-          ctx.fillStyle = customNotif?.color || '#34d399';
+          ctx.fillStyle = customNotif?.color || '#f59e0b';
           ctx.font = 'bold 17px Roboto, sans-serif';
-          ctx.fillText(customNotif ? `${customNotif.emoji} ${customNotif.name} · FCM` : '💎 Bejeweled Blitz · Firebase FCM', 56, bannerY + 36);
+          ctx.fillText(customNotif ? `${customNotif.emoji} ${customNotif.name} · FCM` : '🍬 Candy Crush Saga · Firebase FCM', 56, bannerY + 36);
 
           ctx.fillStyle = '#ffffff';
           ctx.font = 'bold 20px Roboto, sans-serif';
-          ctx.fillText(customNotif ? customNotif.title : 'Daily Energy Restored! 💎', 56, bannerY + 68);
+          ctx.fillText(customNotif ? customNotif.title : 'Lives Full! Play Now 🍬', 56, bannerY + 68);
 
-          ctx.fillStyle = '#6ee7b7';
+          ctx.fillStyle = '#fcd34d';
           ctx.font = '16px Roboto, sans-serif';
-          ctx.fillText(customNotif ? customNotif.body : 'Spin the Wheel & claim 5,000 Free Coins!', 56, bannerY + 98);
+          ctx.fillText(customNotif ? customNotif.body : 'Your 5 lives have refilled. Tap to crush candies!', 56, bannerY + 98);
         }
         ctx.textAlign = 'left';
       }
@@ -1957,9 +1967,9 @@ class PushnotOrbit {
     ctx.font = '900 48px "Space Grotesk", sans-serif';
     ctx.fillText('Push Notification', 335, 205);
 
-    ctx.fillStyle = isIos ? '#38bdf8' : '#34d399';
+    ctx.fillStyle = isIos ? '#f59e0b' : '#34d399';
     ctx.font = '700 36px "Space Grotesk", sans-serif';
-    ctx.fillText('from Bejeweled Blitz 💎', 335, 285);
+    ctx.fillText('from Candy Crush 🍬', 335, 285);
 
     if (this.payloadTex) this.payloadTex.needsUpdate = true;
   }
@@ -4046,11 +4056,11 @@ class PushnotOrbit {
     document.getElementById('pol-arrow').textContent = isLeo ? '⚖' : (isWorld ? '🌐' : (isPush ? '↻' : '↺'));
     document.getElementById('pol-label').textContent = isLeo
       ? 'LAW ENFORCEMENT TRACE'
-      : (isWorld ? 'ALL WORLD STIMS' : (isPush ? 'BEJEWELED PUSH' : 'INSTALL & SETUP'));
+      : (isWorld ? 'ALL WORLD STIMS' : (isPush ? 'CANDY CRUSH PUSH' : 'INSTALL & SETUP'));
     document.getElementById('pol-route').textContent = isLeo
       ? 'Threat → Proton (Denied) → RCMP OSINT Laptop → Meta/X Tokens → Apple/Google HQ'
       : (isWorld
-        ? 'Planet Earth (Bejeweled / FB / IG / X / Uber / Amazon) → Datacentre → Apple/Google HQ → Phone'
+        ? 'Planet Earth (Candy Crush / FB / IG / X / Uber / Amazon) → Datacentre → Apple/Google HQ → Phone'
         : (isPush
           ? 'Planet Earth Trigger → Datacentre → Apple/Google HQ → Phone'
           : 'Apple/Google HQ → Phone → Unique Key → Datacentre'));
@@ -4445,7 +4455,7 @@ class PushnotOrbit {
       }
     }
 
-    // Bejeweled gemstones stay visibly installed on the phone ONLY in Mode 1 (after install) & Mode 2 (Bejeweled push) — hidden during Mode 3 multi-app push stream!
+    // Candy Crush candies stay visibly installed on the phone ONLY in Mode 1 (after install) & Mode 2 (Candy Crush push) — hidden during Mode 3 multi-app push stream!
     this.installedApp.visible = !isLeo && (this.mode === 'push' || (this.mode === 'setup' && t >= 0.30));
     // Fingerprint stays persistently stored on the server once registered!
     this.storedKey.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.92);
@@ -4482,10 +4492,10 @@ class PushnotOrbit {
         }
         this.appOrb.visible = false;
         moverPos = new THREE.Vector3(POS.post.x, 31.0, POS.post.z + 8.0);
-        moverText = 'Bejeweled Blitz';
+        moverText = 'Candy Crush Saga';
         moverCls = 'cyan';
       } else if (t < 0.18) {
-        // Step 1: Shopping bag smoothly morphs / changes into 3D Bejeweled jewels!
+        // Step 1: Shopping bag smoothly morphs / changes into 3D Candy Crush candies!
         const morphU = clamp01((t - 0.08) / 0.05);
         if (this.shoppingBag) {
           if (morphU < 0.95) {
@@ -4498,29 +4508,29 @@ class PushnotOrbit {
           }
         }
         this.appOrb.visible = true;
-        const jewelScale = 1.2 * Math.min(1.0, morphU * 1.15);
+        const candyScale = 1.2 * Math.min(1.0, morphU * 1.15);
         this.appOrb.position.set(POS.post.x, 24.0, POS.post.z + 8.0);
-        this.appOrb.scale.setScalar(jewelScale);
+        this.appOrb.scale.setScalar(candyScale);
         this.appOrb.rotation.y = performance.now() * 0.0022;
         moverPos = new THREE.Vector3(POS.post.x, 31.0, POS.post.z + 8.0);
-        moverText = 'Bejeweled Blitz';
+        moverText = 'Candy Crush Saga';
         moverCls = 'cyan';
       } else if (t < 0.30) {
-        // Step 2: Jewel flies along arc from Apple & Google to Phone
+        // Step 2: Candy Crush flies along arc from Apple & Google to Phone
         if (this.shoppingBag) this.shoppingBag.visible = false;
         const p = this.arcStoreToPhone.getPoint(seg(t, 0.18, 0.30));
         this.appOrb.visible = true;
         this.appOrb.scale.setScalar(1.2);
         this.appOrb.position.copy(p);
         moverPos = p;
-        moverText = 'Bejeweled Blitz';
+        moverText = 'Candy Crush Saga';
         moverCls = 'cyan';
       } else if (t < 0.38) {
         // Step 3: Installed on Phone
         if (this.shoppingBag) this.shoppingBag.visible = false;
         showInstall = true;
         moverPos = new THREE.Vector3(POS.phone.x, this.tops.phone + 14, POS.phone.z);
-        moverText = 'Bejeweled Blitz';
+        moverText = 'Candy Crush Saga';
         moverCls = 'cyan';
       } else if (t < 0.48) {
         // Step 4: Phone requests token from Apple & Google
@@ -4687,7 +4697,7 @@ class PushnotOrbit {
         this.pushOrb.position.copy(cardPos);
         this.pushOrb.scale.setScalar(1.15 + Math.sin(t * 24) * 0.04);
         moverPos = cardPos.clone().add(new THREE.Vector3(0, 10.5, 0));
-        moverText = '🔔 Push Notification from Bejeweled (+ Token Key)';
+        moverText = '🔔 Push Notification from Candy Crush (+ Token Key)';
         moverCls = 'push';
       } else if (t < 0.56) {
         // Step 2: Push Notification + Token Key travels across sky to Google / Apple HQ
@@ -4696,7 +4706,7 @@ class PushnotOrbit {
         this.pushOrb.position.copy(p);
         this.pushOrb.scale.setScalar(1.0);
         moverPos = p;
-        moverText = this.currentOS === 'ios' ? ' Bejeweled → Apple APNs (Payload + 🔑 Token)' : '🤖 Bejeweled → Google FCM (Payload + 🔑 Token)';
+        moverText = this.currentOS === 'ios' ? ' Candy Crush → Apple APNs (Payload + 🔑 Token)' : '🤖 Candy Crush → Google FCM (Payload + 🔑 Token)';
         moverCls = 'push';
       } else if (t < 0.78) {
         // Step 3: Google takes the Key and matches it with the end user!

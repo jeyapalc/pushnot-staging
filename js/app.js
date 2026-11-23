@@ -701,7 +701,7 @@ class PushnotOrbit {
     const group = new THREE.Group();
 
     // 1. Sleek forensic digital disclosure dossier tray
-    const trayGeo = new THREE.BoxGeometry(8.6, 3.2, 0.35);
+    const trayGeo = new THREE.BoxGeometry(10.2, 3.4, 0.35);
     const trayMat = new THREE.MeshStandardMaterial({
       color: 0x070e1b,
       metalness: 0.85,
@@ -716,14 +716,14 @@ class PushnotOrbit {
     ));
     group.add(tray);
 
-    // 2. Three neat, compact cryptographic keys mounted side-by-side inside the tray (spaced to prevent collision)
-    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.55);
-    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.55);
-    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.55);
+    // 2. Three neat, compact cryptographic keys mounted side-by-side inside the tray (spaced generously to prevent collision)
+    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.52);
+    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.52);
+    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.52);
 
-    kMeta.position.set(-2.7, 0, 0.25);
+    kMeta.position.set(-3.2, 0, 0.25);
     kInsta.position.set(0, 0, 0.25);
-    kX.position.set(2.7, 0, 0.25);
+    kX.position.set(3.2, 0, 0.25);
 
     group.add(kMeta, kInsta, kX);
 
@@ -4428,7 +4428,7 @@ class PushnotOrbit {
   }
 
   /* ---------------- render state from (mode, t) ---------------- */
-  updateState() {
+  updateState(dt = 0.016) {
     const t = this.t;
     document.getElementById('scrub').value = Math.round(t * 1000);
     document.getElementById('scrub-pct').textContent = Math.round(t * 100) + '%';
@@ -4510,11 +4510,11 @@ class PushnotOrbit {
           this.updateAppStoreSelectorCanvas(1.0, true);
         }
         this.appOrb.visible = true;
-        const appearU = clamp01((t - 0.08) / 0.06);
-        this.appOrb.position.set(POS.post.x, 26.0, POS.post.z + 10.0);
+        const appearU = clamp01((t - 0.08) / 0.03);
+        this.appOrb.position.set(POS.post.x, 24.0, POS.post.z + 8.0);
         this.appOrb.scale.setScalar(1.2 * appearU);
-        this.appOrb.rotation.y += dt * 2.2;
-        moverPos = new THREE.Vector3(POS.post.x, 33.0, POS.post.z + 10.0);
+        this.appOrb.rotation.y = performance.now() * 0.0022;
+        moverPos = new THREE.Vector3(POS.post.x, 32.0, POS.post.z + 8.0);
         moverText = '💎 Bejeweled Blitz Selected · 3D Gemstones Packaged';
         moverCls = 'cyan';
       } else if (t < 0.30) {
@@ -5331,7 +5331,7 @@ class PushnotOrbit {
     }
 
     this.controls.update();
-    this.updateState();
+    this.updateState(dt);
     this.updateDirectorHUD();
     this.renderer.render(this.scene, this.camera);
   }

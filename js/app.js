@@ -38,45 +38,45 @@ const MODE_STEPS = {
   leo:   [0.05, 0.18, 0.32, 0.48, 0.62, 0.76, 0.88, 0.96]
 };
 
-// Default Director's Camera Rigs (Completely framed from scratch with ample vertical headroom)
+// Default Director's Camera Rigs (Mounted on a circular track dolly with generous vertical headroom)
 const DEFAULT_DIRECTOR_RIGS = {
-  // Mode 1: Setup (10 steps) — Zero top crop, generous headroom for banners & icons
-  "setup_step_0": { cam: { x: 26.0, y: 38.0, z: 8.0 },   target: { x: 0.0, y: 20.0, z: -43.0 } },
-  "setup_step_1": { cam: { x: 28.0, y: 36.0, z: 12.0 },  target: { x: 0.0, y: 22.0, z: -40.0 } },
-  "setup_step_2": { cam: { x: 74.0, y: 52.0, z: 32.0 },  target: { x: 16.0, y: 18.0, z: -4.0 } },
-  "setup_step_3": { cam: { x: 68.0, y: 32.0, z: 68.0 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "setup_step_4": { cam: { x: 76.0, y: 58.0, z: 42.0 },  target: { x: 16.0, y: 18.0, z: -6.0 } },
-  "setup_step_5": { cam: { x: 28.0, y: 56.0, z: -10.0 }, target: { x: 0.0, y: 36.0, z: -46.0 } },
-  "setup_step_6": { cam: { x: 68.0, y: 48.0, z: 38.0 },  target: { x: 20.0, y: 20.0, z: 4.0 } },
-  "setup_step_7": { cam: { x: 0.0,  y: 42.0, z: 92.0 },  target: { x: 0.0, y: 16.0, z: 32.5 } },
-  "setup_step_8": { cam: { x: -68.0, y: 36.0, z: 68.0 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
-  "setup_step_9": { cam: { x: 52.0, y: 64.0, z: 112.0 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
+  // Mode 1: Setup (10 steps) — Circular Track Dolly smoothly framing each station
+  "setup_step_0": { angle: 0.28,  radius: 88.0, cam: { x: 24.3, y: 38.0, z: 84.6 }, target: { x: 0.0, y: 22.0, z: -42.0 } },
+  "setup_step_1": { angle: 0.32,  radius: 88.0, cam: { x: 27.7, y: 36.0, z: 83.5 }, target: { x: 0.0, y: 22.0, z: -40.0 } },
+  "setup_step_2": { angle: 0.72,  radius: 92.0, cam: { x: 60.7, y: 44.0, z: 69.2 }, target: { x: 16.0, y: 18.0, z: -4.0 } },
+  "setup_step_3": { angle: 0.84,  radius: 90.0, cam: { x: 67.0, y: 32.0, z: 60.1 }, target: { x: 32.5, y: 16.0, z: 32.5 } },
+  "setup_step_4": { angle: 0.65,  radius: 96.0, cam: { x: 58.1, y: 52.0, z: 76.4 }, target: { x: 16.0, y: 18.0, z: -6.0 } },
+  "setup_step_5": { angle: 0.22,  radius: 86.0, cam: { x: 18.8, y: 48.0, z: 83.9 }, target: { x: 0.0, y: 36.0, z: -46.0 } },
+  "setup_step_6": { angle: 0.76,  radius: 92.0, cam: { x: 63.4, y: 44.0, z: 66.7 }, target: { x: 20.0, y: 20.0, z: 4.0 } },
+  "setup_step_7": { angle: 0.00,  radius: 94.0, cam: { x: 0.0,  y: 42.0, z: 94.0 }, target: { x: 0.0, y: 16.0, z: 32.5 } },
+  "setup_step_8": { angle: -0.84, radius: 90.0, cam: { x: -67.0, y: 34.0, z: 60.1 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
+  "setup_step_9": { angle: 0.45,  radius: 110.0, cam: { x: 47.9, y: 58.0, z: 99.0 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
 
-  // Mode 2: Push (6 steps) — Framing server, flight path, and smartphone wake-up cleanly
-  "push_step_0": { cam: { x: -66.0, y: 40.0, z: 70.0 }, target: { x: -32.5, y: 22.0, z: 32.5 } },
-  "push_step_1": { cam: { x: 48.0,  y: 54.0, z: 52.0 }, target: { x: -16.0, y: 20.0, z: -8.0 } },
-  "push_step_2": { cam: { x: 26.0,  y: 38.0, z: 8.0 },  target: { x: 0.0, y: 20.0, z: -44.0 } },
-  "push_step_3": { cam: { x: 68.0,  y: 48.0, z: 34.0 }, target: { x: 18.0, y: 18.0, z: -6.0 } },
-  "push_step_4": { cam: { x: 64.0,  y: 30.0, z: 64.0 }, target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "push_step_5": { cam: { x: 52.0,  y: 62.0, z: 108.0 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
+  // Mode 2: Push (6 steps)
+  "push_step_0": { angle: -0.84, radius: 90.0, cam: { x: -67.0, y: 36.0, z: 60.1 }, target: { x: -32.5, y: 22.0, z: 32.5 } },
+  "push_step_1": { angle: -0.35, radius: 96.0, cam: { x: -33.0, y: 48.0, z: 90.2 }, target: { x: -16.0, y: 20.0, z: -8.0 } },
+  "push_step_2": { angle: 0.28,  radius: 88.0, cam: { x: 24.3, y: 38.0, z: 84.6 }, target: { x: 0.0, y: 20.0, z: -44.0 } },
+  "push_step_3": { angle: 0.65,  radius: 94.0, cam: { x: 56.9, y: 46.0, z: 74.8 }, target: { x: 18.0, y: 18.0, z: -6.0 } },
+  "push_step_4": { angle: 0.84,  radius: 88.0, cam: { x: 65.5, y: 30.0, z: 58.8 }, target: { x: 32.5, y: 16.0, z: 32.5 } },
+  "push_step_5": { angle: 0.45,  radius: 108.0, cam: { x: 47.0, y: 56.0, z: 97.2 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
 
-  // Mode 3: World (6 steps) — Smooth elevated orbital progression around Earth GLB
-  "world_step_0": { cam: { x: 68.0,  y: 64.0, z: 96.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_1": { cam: { x: 98.0,  y: 58.0, z: 42.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_2": { cam: { x: 62.0,  y: 68.0, z: -78.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_3": { cam: { x: -56.0, y: 64.0, z: -82.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_4": { cam: { x: -88.0, y: 58.0, z: 44.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_5": { cam: { x: -38.0, y: 68.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+  // Mode 3: World (6 steps) — Continuous 360° orbital dolly sweep around Earth
+  "world_step_0": { angle: 0.60, radius: 108.0, cam: { x: 61.0, y: 56.0, z: 89.0 },   target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_1": { angle: 1.65, radius: 108.0, cam: { x: 108.0, y: 54.0, z: -9.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_2": { angle: 2.70, radius: 108.0, cam: { x: 46.0, y: 58.0, z: -98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_3": { angle: 3.75, radius: 108.0, cam: { x: -61.0, y: 58.0, z: -89.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Imposing angles with zero top crop
-  "leo_step_0": { cam: { x: 56.0,  y: 24.0, z: 54.0 },  target: { x: 32.5, y: 12.0, z: 32.5 } },
-  "leo_step_1": { cam: { x: -12.0, y: 22.0, z: 66.0 },  target: { x: -31.0, y: 6.0, z: 34.0 } },
-  "leo_step_2": { cam: { x: -14.0, y: 34.0, z: -2.0 },  target: { x: -32.5, y: 20.0, z: -32.5 } },
-  "leo_step_3": { cam: { x: -24.0, y: 30.0, z: 38.0 },  target: { x: 0.0, y: 15.0, z: 4.0 } },
-  "leo_step_4": { cam: { x: 0.0,   y: 24.0, z: 44.0 },  target: { x: 0.0, y: 18.0, z: 14.0 } },
-  "leo_step_5": { cam: { x: 14.0,  y: 34.0, z: -2.0 },  target: { x: 32.5, y: 20.0, z: -32.5 } },
-  "leo_step_6": { cam: { x: 32.0,  y: 46.0, z: 52.0 },  target: { x: -6.0, y: 20.0, z: 14.0 } },
-  "leo_step_7": { cam: { x: 58.0,  y: 26.0, z: 56.0 },  target: { x: 32.5, y: 14.0, z: 32.5 } }
+  // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage
+  "leo_step_0": { angle: 0.78,  radius: 84.0, cam: { x: 59.1, y: 24.0, z: 59.7 },  target: { x: 32.5, y: 12.0, z: 32.5 } },
+  "leo_step_1": { angle: -0.40, radius: 76.0, cam: { x: -29.6, y: 22.0, z: 70.0 }, target: { x: -31.0, y: 6.0, z: 34.0 } },
+  "leo_step_2": { angle: -2.05, radius: 82.0, cam: { x: -72.6, y: 36.0, z: -38.0 }, target: { x: -32.5, y: 20.0, z: -32.5 } },
+  "leo_step_3": { angle: -0.55, radius: 78.0, cam: { x: -40.8, y: 28.0, z: 66.5 }, target: { x: 0.0, y: 15.0, z: 4.0 } },
+  "leo_step_4": { angle: 0.00,  radius: 58.0, cam: { x: 0.0, y: 24.0, z: 58.0 },   target: { x: 0.0, y: 18.0, z: 14.0 } },
+  "leo_step_5": { angle: 2.05,  radius: 82.0, cam: { x: 72.6, y: 36.0, z: -38.0 }, target: { x: 32.5, y: 20.0, z: -32.5 } },
+  "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9, y: 42.0, z: 80.4 },  target: { x: -6.0, y: 20.0, z: 14.0 } },
+  "leo_step_7": { angle: 0.78,  radius: 84.0, cam: { x: 59.1, y: 26.0, z: 59.7 },  target: { x: 32.5, y: 14.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -241,6 +241,22 @@ class PushnotOrbit {
     outer.rotation.x = Math.PI / 2;
     outer.position.y = 0.1;
     this.worldGroup.add(outer);
+
+    // Subtle Cinema Circular Track Dolly Rails at outer perimeter
+    const trackRailMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      metalness: 0.85,
+      roughness: 0.28,
+      transparent: true,
+      opacity: 0.50
+    });
+    const trackInner = new THREE.Mesh(new THREE.TorusGeometry(88, 0.16, 8, 160), trackRailMat);
+    trackInner.rotation.x = Math.PI / 2;
+    trackInner.position.y = 0.12;
+    const trackOuter = new THREE.Mesh(new THREE.TorusGeometry(92, 0.16, 8, 160), trackRailMat);
+    trackOuter.rotation.x = Math.PI / 2;
+    trackOuter.position.y = 0.12;
+    this.worldGroup.add(trackInner, trackOuter);
 
     // Arcs emerging cleanly between Apple and Google signs
     const pPhone  = POS.phone.clone().setY(15);
@@ -4197,12 +4213,13 @@ class PushnotOrbit {
       btnLock.onclick = () => {
         const stepIdx = this.getCurrentStepIndex();
         const key = `${this.mode}_step_${stepIdx}`;
+        const cx = +this.camera.position.x.toFixed(2);
+        const cy = +this.camera.position.y.toFixed(2);
+        const cz = +this.camera.position.z.toFixed(2);
         this.directorRigs[key] = {
-          cam: {
-            x: +this.camera.position.x.toFixed(2),
-            y: +this.camera.position.y.toFixed(2),
-            z: +this.camera.position.z.toFixed(2)
-          },
+          angle: +Math.atan2(cx, cz).toFixed(3),
+          radius: +Math.hypot(cx, cz).toFixed(2),
+          cam: { x: cx, y: cy, z: cz },
           target: {
             x: +this.controls.target.x.toFixed(2),
             y: +this.controls.target.y.toFixed(2),
@@ -5246,14 +5263,31 @@ class PushnotOrbit {
 
       let targetCam, targetTgt;
       if (rigCurr && rigNext && i !== nextI && this.playing) {
-        // Smoothly interpolate between current step and next step based on timeline progress!
+        // Continuous circular track dolly interpolation along curved track arc
         const u = seg(this.t, stops[i], stops[nextI]);
-        const s = u * u * (3 - 2 * u); // Smooth Hermite curve
-        targetCam = new THREE.Vector3().lerpVectors(
-          new THREE.Vector3(rigCurr.cam.x, rigCurr.cam.y, rigCurr.cam.z),
-          new THREE.Vector3(rigNext.cam.x, rigNext.cam.y, rigNext.cam.z),
-          s
+        const s = u * u * (3 - 2 * u); // Smooth cubic ease
+
+        // Calculate angular track positions on circular dolly track
+        const angleA = rigCurr.angle !== undefined ? rigCurr.angle : Math.atan2(rigCurr.cam.x, rigCurr.cam.z);
+        const angleB = rigNext.angle !== undefined ? rigNext.angle : Math.atan2(rigNext.cam.x, rigNext.cam.z);
+        const radiusA = rigCurr.radius !== undefined ? rigCurr.radius : Math.hypot(rigCurr.cam.x, rigCurr.cam.z);
+        const radiusB = rigNext.radius !== undefined ? rigNext.radius : Math.hypot(rigNext.cam.x, rigNext.cam.z);
+
+        // Shortest angular path around circular track dolly
+        let diff = angleB - angleA;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+
+        const curAngle = angleA + diff * s;
+        const curRadius = radiusA + (radiusB - radiusA) * s;
+        const curY = rigCurr.cam.y + (rigNext.cam.y - rigCurr.cam.y) * s;
+
+        targetCam = new THREE.Vector3(
+          Math.sin(curAngle) * curRadius,
+          curY,
+          Math.cos(curAngle) * curRadius
         );
+
         targetTgt = new THREE.Vector3().lerpVectors(
           new THREE.Vector3(rigCurr.target.x, rigCurr.target.y, rigCurr.target.z),
           new THREE.Vector3(rigNext.target.x, rigNext.target.y, rigNext.target.z),

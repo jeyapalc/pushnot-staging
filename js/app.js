@@ -35,7 +35,7 @@ const MODE_STEPS = {
   setup: [0.04, 0.12, 0.22, 0.32, 0.42, 0.52, 0.64, 0.74, 0.86, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
   world: [0.08, 0.24, 0.40, 0.56, 0.72, 0.88],
-  leo:   [0.05, 0.18, 0.32, 0.48, 0.62, 0.76, 0.88, 0.96]
+  leo:   [0.08, 0.20, 0.28, 0.40, 0.58, 0.68, 0.82, 0.94]
 };
 
 // Default Director's Camera Rigs (Mounted on a circular track dolly with generous vertical headroom)
@@ -61,7 +61,7 @@ const DEFAULT_DIRECTOR_RIGS = {
   "push_step_5": { angle: 0.00,  radius: 92.0, cam: { x: 0.0,   y: 42.0, z: 92.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
 
   // Mode 3: World (6 steps) — Continuous 360° orbital dolly sweep around Earth
-  "world_step_0": { angle: 0.60, radius: 108.0, cam: { x: 61.0, y: 56.0, z: 89.0 },   target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_0": { angle: 0.60, radius: 108.0, cam: { x: 61.0, y: 56.0, z: 89.0 },   target: { x: 0.0, y: 32.0, z: 0.0 } },
   "world_step_1": { angle: 1.65, radius: 108.0, cam: { x: 108.0, y: 54.0, z: -9.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_2": { angle: 2.70, radius: 108.0, cam: { x: 46.0, y: 58.0, z: -98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_3": { angle: 3.75, radius: 108.0, cam: { x: -61.0, y: 58.0, z: -89.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
@@ -73,10 +73,10 @@ const DEFAULT_DIRECTOR_RIGS = {
   "leo_step_1": { angle: -0.18, radius: 94.0, cam: { x: -16.8, y: 40.0, z: 92.5 },  target: { x: -32.5, y: 20.0, z: 32.5 } },
   "leo_step_2": { angle: -2.05, radius: 96.0, cam: { x: -84.9, y: 40.0, z: -44.5 }, target: { x: -32.5, y: 22.0, z: -32.5 } },
   "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 36.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
-  "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 36.0, z: 88.0 },  target: { x: 0.0,   y: 20.0, z: 14.0 } },
+  "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 36.0, z: 88.0 },  target: { x: -16.0, y: 18.0, z: 22.0 } },
   "leo_step_5": { angle: 2.05,  radius: 92.0, cam: { x: 81.4,  y: 38.0, z: -42.6 }, target: { x: 32.5, y: 22.0, z: -32.5 } },
   "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9,  y: 36.0, z: 80.4 },  target: { x: -6.0,  y: 20.0, z: 14.0 } },
-  "leo_step_7": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 34.0, z: 62.5 },  target: { x: 32.5, y: 18.0, z: 32.5 } }
+  "leo_step_7": { angle: 0.78,  radius: 94.0, cam: { x: 66.1,  y: 36.0, z: 66.8 },  target: { x: 32.5, y: 22.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -740,43 +740,81 @@ class PushnotOrbit {
     return group;
   }
 
-  createUniqueTokenTrio(scale = 1) {
+  /* ---- Single Sleek Cryptographic App Push Token Key (Clean & Minimalist) ---- */
+  createSingleTokenKey(scale = 1) {
     const group = new THREE.Group();
 
-    // 1. Sleek forensic digital disclosure dossier tray
-    const trayGeo = new THREE.BoxGeometry(12.0, 5.8, 0.4);
-    const trayMat = new THREE.MeshStandardMaterial({
-      color: 0x070e1b,
-      metalness: 0.85,
-      roughness: 0.25,
-      transparent: true,
-      opacity: 0.94
+    // 1. Sleek, solid cryptographic gold physical key
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      emissive: 0xb45309,
+      emissiveIntensity: 0.35,
+      metalness: 0.92,
+      roughness: 0.18
     });
-    const tray = new THREE.Mesh(trayGeo, trayMat);
-    tray.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(trayGeo),
-      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
-    ));
-    group.add(tray);
 
-    // 2. Three neat, compact cryptographic keys mounted side-by-side vertically inside the tray (spaced generously with zero overlap)
-    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.58);
-    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.58);
-    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.58);
+    // Bow (circular ring head)
+    const bow = new THREE.Mesh(new THREE.TorusGeometry(1.6, 0.42, 16, 32), goldMat);
+    bow.position.set(0, 3.2, 0);
 
-    kMeta.position.set(-3.6, -0.2, 0.25);
-    kInsta.position.set(0, -0.2, 0.25);
-    kX.position.set(3.6, -0.2, 0.25);
+    // Inner glowing cyan cyber core disc
+    const coreGeo = new THREE.CylinderGeometry(1.15, 1.15, 0.22, 24);
+    const coreMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7,
+      emissive: 0x0284c7,
+      emissiveIntensity: 0.85,
+      metalness: 0.8,
+      roughness: 0.2
+    });
+    const core = new THREE.Mesh(coreGeo, coreMat);
+    core.rotation.x = Math.PI / 2;
+    core.position.set(0, 3.2, 0);
 
-    group.add(kMeta, kInsta, kX);
+    // Key shaft
+    const shaftGeo = new THREE.BoxGeometry(0.72, 3.6, 0.42);
+    const shaft = new THREE.Mesh(shaftGeo, goldMat);
+    shaft.position.set(0, 1.0, 0);
 
-    // 3. Single soft evidence glow light
-    const glow = new THREE.PointLight(0x38bdf8, 1.4, 18);
-    glow.position.set(0, 0.5, 1.2);
-    group.add(glow);
+    // Key bit teeth
+    const bitGeo1 = new THREE.BoxGeometry(0.9, 0.6, 0.38);
+    const bit1 = new THREE.Mesh(bitGeo1, goldMat);
+    bit1.position.set(0.65, 0.2, 0);
 
+    const bitGeo2 = new THREE.BoxGeometry(1.2, 0.6, 0.38);
+    const bit2 = new THREE.Mesh(bitGeo2, goldMat);
+    bit2.position.set(0.8, -0.6, 0);
+
+    // Sleek cryptographic token hash plaque floating below the key
+    const cvs = document.createElement('canvas');
+    cvs.width = 384; cvs.height = 96;
+    const ctx = cvs.getContext('2d');
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, 384, 96);
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, 380, 92);
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 36px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🔑 PUSH TOKEN #7A9F', 192, 48);
+
+    const plaqueTex = new THREE.CanvasTexture(cvs);
+    const plaqueMat = new THREE.MeshBasicMaterial({ map: plaqueTex, side: THREE.DoubleSide, transparent: true, opacity: 0.95 });
+    const plaque = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.9), plaqueMat);
+    plaque.position.set(0, -1.8, 0);
+
+    const glow = new THREE.PointLight(0xf59e0b, 2.2, 20);
+    glow.position.set(0, 1.5, 1.5);
+
+    group.add(bow, core, shaft, bit1, bit2, plaque, glow);
     group.scale.setScalar(scale);
     return group;
+  }
+
+  // Backward compatibility alias for single token key
+  createUniqueTokenTrio(scale = 1) {
+    return this.createSingleTokenKey(scale);
   }
 
   /* ---- Industrial CNC Fiber Laser Key Fabrication Rig ---- */
@@ -2546,18 +2584,24 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- Combined Subscriber Identity Bundle (3D Photo ID + Tiny 3D Home, ZERO subscription/credit cards!) ---- */
+  /* ---- Combined Subscriber Identity Bundle (3D Photo ID + Residential Home from Downloads) ---- */
   createSubscriberBundle(scale = 1) {
     const group = new THREE.Group();
+    // Vertical Photo ID card standing upright on the evidence plane
     const idCard = this.create3DPhotoIdCard(0.85);
-    idCard.position.set(-4.0, 1.8, 0);
-    idCard.rotation.set(0.05, 0.18, 0.04);
+    idCard.position.set(-5.6, 2.6, 0);
+    idCard.rotation.set(0, 0.16, 0); // vertical standing card
 
-    const home = this.createTiny3DHome(0.85);
-    home.position.set(3.4, 0, 0);
-    home.rotation.y = -0.22;
+    // Real architectural residential house model from Downloads (models/home_sweet_home.glb)
+    const homeWrap = new THREE.Group();
+    homeWrap.name = 'homeWrap';
+    if (this.homeSweetHomeScene) {
+      homeWrap.add(this.homeSweetHomeScene.clone(true));
+    }
+    homeWrap.position.set(4.2, 0, 0);
+    homeWrap.rotation.set(0, -0.22, 0); // strictly level with ground (pitch=0, roll=0)
 
-    group.add(idCard, home, new THREE.PointLight(0x38bdf8, 3.2, 36));
+    group.add(idCard, homeWrap, new THREE.PointLight(0x38bdf8, 3.2, 36));
     group.scale.setScalar(scale);
     return group;
   }
@@ -3610,7 +3654,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 7; // single server tower + phone + apple + google + earth + bandit + swat
+    let left = 8; // single server tower + phone + apple + google + earth + bandit + swat + home
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -3878,6 +3922,48 @@ class PushnotOrbit {
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
       this.leoGroup.add(this.rcmpDaylightGroup);
+      done();
+    }, undefined, done);
+
+    // 7. Residential Home GLB from Downloads (models/home_sweet_home.glb)
+    this.loader.load('models/home_sweet_home.glb', (gltf) => {
+      const house = gltf.scene;
+      house.userData.stationKey = 'bandit';
+      house.traverse((c) => {
+        if (c.isMesh) {
+          c.userData.stationKey = 'bandit';
+          if (c.material) {
+            c.material = c.material.clone();
+            c.material.roughness = Math.max(0.4, c.material.roughness || 0.5);
+            c.material.metalness = Math.min(0.25, c.material.metalness || 0.1);
+            c.material.needsUpdate = true;
+          }
+        }
+      });
+      // Center and ground house at y = 0
+      const box = new THREE.Box3().setFromObject(house);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const targetSize = 9.0;
+      const s = targetSize / (maxDim || 1);
+      house.scale.setScalar(s);
+      house.position.set(-center.x * s, -box.min.y * s, -center.z * s);
+
+      const houseRoot = new THREE.Group();
+      houseRoot.add(house);
+      this.homeSweetHomeScene = houseRoot;
+
+      const attachHouse = (bundle) => {
+        if (!bundle) return;
+        const hw = bundle.getObjectByName('homeWrap');
+        if (hw) {
+          hw.clear();
+          hw.add(houseRoot.clone(true));
+        }
+      };
+      attachHouse(this.leoSubscriberBundle);
+      attachHouse(this.leoAgSubscriberMesh);
       done();
     }, undefined, done);
   }
@@ -4828,7 +4914,7 @@ class PushnotOrbit {
         moverText = '🚨 EXIGENT DEMAND (s. 487.014) → App Servers (Meta, Instagram, 𝕏)';
         moverCls = 'cyan';
       } else if (t < 0.62) {
-        // Step 5: App Servers disclose 3 UNIQUE branded Push Token Keys (Meta, Instagram, 𝕏)
+        // Step 5: App Server discloses unique Push Token Key
         if (this.exigentDemand) this.exigentDemand.visible = false;
         const p = this.arcLeoTokens.getPoint(seg(t, 0.48, 0.60));
         if (this.leoUniqueKeysGroup) {
@@ -4838,14 +4924,14 @@ class PushnotOrbit {
         }
         if (t < 0.60) {
           moverPos = p.clone().add(new THREE.Vector3(0, 4.2, 0));
-          moverText = '🔑 3 Unique App Push Tokens Disclosed: Meta (#7A9F), Instagram (#3E1B), 𝕏 (#9C4D)';
+          moverText = '🔑 App Push Token Disclosed: #7A9F-FB';
           moverCls = 'gold';
         } else {
           showLeoTokens = true;
           moverPos = null;
         }
       } else if (t < 0.76) {
-        // Step 6: Police serve Production Orders with the 3 unique tokens to Apple APNs & Google FCM
+        // Step 6: Police serve Production Orders with the Push Token to Apple APNs & Google FCM
         const p = this.arcLeoToAg.getPoint(seg(t, 0.62, 0.75));
         if (this.leoUniqueKeysGroup) {
           this.leoUniqueKeysGroup.visible = true;
@@ -4853,15 +4939,19 @@ class PushnotOrbit {
           this.leoUniqueKeysGroup.lookAt(this.camera.position);
         }
         moverPos = p.clone().add(new THREE.Vector3(0, 4.5, 0));
-        moverText = '🇨🇦 Order + 🔑 3 Unique Tokens → Apple APNs & Google FCM';
+        moverText = '🇨🇦 Court Order + 🔑 Push Token → Apple APNs & Google FCM';
         moverCls = 'cyan';
       } else if (t < 0.88) {
-        // Step 7: Apple & Google return Subscriber Record (Photo ID + Tiny 3D Home)
+        // Step 7: Apple & Google return Subscriber Record (Photo ID + Residential Home)
         const p = this.arcLeoFromAg.getPoint(seg(t, 0.76, 0.86));
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
           this.leoSubscriberBundle.position.copy(p);
-          this.leoSubscriberBundle.lookAt(this.camera.position);
+          // Keep house strictly LEVEL with ground (pitch=0, roll=0)
+          this.leoSubscriberBundle.rotation.x = 0;
+          this.leoSubscriberBundle.rotation.z = 0;
+          const camDir = this.camera.position.clone().sub(p);
+          this.leoSubscriberBundle.rotation.y = Math.atan2(camDir.x, camDir.z);
         }
         moverPos = p.clone().add(new THREE.Vector3(0, 8.5, 0));
         moverText = '🪪 Hardware Match Confirmed · Subscriber Record & Residence Returned';
@@ -4871,10 +4961,10 @@ class PushnotOrbit {
         this.updateHackerSeizedScreen();
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
-          // Positioned to the right of the desk from camera's POV (cleanly separated from suspect & monitor!)
-          this.leoSubscriberBundle.position.set(L.bandit.x + 10.0, 14.0, L.bandit.z - 10.0);
-          this.leoSubscriberBundle.lookAt(new THREE.Vector3(L.bandit.x + 26, 16.5, L.bandit.z + 18));
-          this.leoSubscriberBundle.rotation.y += Math.sin(performance.now() * 0.0015) * 0.12;
+          // Positioned level on the ground to the right of the suspect's desk
+          this.leoSubscriberBundle.position.set(L.bandit.x + 14.0, 0.0, L.bandit.z - 2.0);
+          // House is strictly LEVEL with ground (pitch=0, roll=0), facing camera smoothly
+          this.leoSubscriberBundle.rotation.set(0, -Math.PI * 0.28, 0);
         }
         moverPos = new THREE.Vector3(L.bandit.x + 1.0, 24.0, L.bandit.z - 1.0);
         moverText = '🚨 SUSPECT UNMASKED: CONNOR J. MALONE · 1042 ROBSON ST';
@@ -5142,9 +5232,6 @@ class PushnotOrbit {
     if (this.leoAgSubscriberMesh && this.leoGroup.visible && this.leoAgSubscriberMesh.visible) {
       this.leoAgSubscriberMesh.rotation.y -= dt * 0.6;
       this.leoAgSubscriberMesh.position.y = 16.0 + Math.sin(now * 0.003) * 0.4;
-    }
-    if (this.leoSubscriberBundle && this.leoSubscriberBundle.visible) {
-      this.leoSubscriberBundle.rotation.y += dt * 0.7;
     }
     if (this.osintBot) this.osintBot.rotation.y += dt * 0.55;
     if (this.leoUniqueKeysGroup && this.leoUniqueKeysGroup.visible) {

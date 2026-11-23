@@ -76,7 +76,7 @@ const DEFAULT_DIRECTOR_RIGS = {
   "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
   "leo_step_5": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
   "leo_step_6": { angle: 2.35,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: -64.0 }, target: { x: 32.5, y: 46.0, z: -32.5 } },
-  "leo_step_7": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 54.0, z: 64.0 },  target: { x: 32.5, y: 44.0, z: 32.5 } }
+  "leo_step_7": { angle: 0.52,  radius: 90.0, cam: { x: 45.0,  y: 53.0, z: 78.0 },  target: { x: 32.5, y: 45.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -2491,9 +2491,12 @@ class PushnotOrbit {
     const photoMesh = new THREE.Mesh(photoGeo, photoMat);
     photoMesh.position.set(-3.20, 0.10, 0.16);
     photoMesh.name = 'photoMesh';
+    photoMesh.visible = false;
     group.add(photoMesh);
     if (!this.idCardMugshotMats) this.idCardMugshotMats = [];
     this.idCardMugshotMats.push(photoMat);
+    if (!this.idCardPhotoMeshes) this.idCardPhotoMeshes = [];
+    this.idCardPhotoMeshes.push(photoMesh);
 
     group.scale.setScalar(scale);
     return group;
@@ -3886,38 +3889,42 @@ class PushnotOrbit {
         if (!c.isMesh) return;
         const mName = c.material ? (c.material.name || '') : '';
         const cName = c.name || '';
-        // Skip glasses
+        // Skip screen and detached eyewear
+        if (mName.includes('blinn4') || cName.includes('blinn4')) return;
         if (mName.includes('Eyewear') || cName.includes('Eyewear')) return;
         if (mName.includes('Bodymat') || mName.includes('Hairmat') || mName.includes('Topmat') || mName.includes('Ch01_body')) {
           const mClone = c.clone(true);
           if (mClone.material) {
             mClone.material = mClone.material.clone();
+            mClone.material.roughness = 0.45;
+            mClone.material.metalness = 0.05;
             if (c.userData && c.userData.origColor) {
               mClone.material.color.copy(c.userData.origColor);
             } else {
               mClone.material.color.setHex(0xffffff);
             }
-            mClone.material.roughness = 0.52;
-            mClone.material.metalness = 0.05;
           }
           bust.add(mClone);
         }
       });
 
       const shotScene = new THREE.Scene();
-      shotScene.background = new THREE.Color(0x0c1424);
+      shotScene.background = new THREE.Color(0x0f172a);
       shotScene.add(bust);
 
-      const key = new THREE.DirectionalLight(0xfffaea, 3.8);
-      key.position.set(8, 255, 30);
-      const fill = new THREE.DirectionalLight(0x93c5fd, 2.0);
-      fill.position.set(-8, 250, 24);
-      const amb = new THREE.AmbientLight(0xffffff, 1.2);
+      // In hack.glb, hacker head is centered around X = 108.0, Y = 258.0, Z = 83.0 facing in -X direction
+      const hx = 108.0, hy = 258.0, hz = 83.0;
+      const key = new THREE.DirectionalLight(0xfffaea, 5.0);
+      key.position.set(hx - 50, hy + 35, hz + 35);
+      const fill = new THREE.DirectionalLight(0x93c5fd, 3.0);
+      fill.position.set(hx + 30, hy + 15, hz + 20);
+      const amb = new THREE.AmbientLight(0xffffff, 2.5);
       shotScene.add(key, fill, amb);
 
-      const cam = new THREE.PerspectiveCamera(30, w / h, 1, 300);
-      cam.position.set(0, 248, 32);
-      cam.lookAt(new THREE.Vector3(0, 246, 0));
+      const cam = new THREE.PerspectiveCamera(28, w / h, 1, 300);
+      // Position camera in front of his face (offset towards -X and +Z) looking at his face
+      cam.position.set(hx - 62, hy - 2, hz + 26);
+      cam.lookAt(new THREE.Vector3(hx, hy - 4, hz));
 
       const prevRt = this.renderer.getRenderTarget();
       this.renderer.setRenderTarget(rt);
@@ -3928,6 +3935,11 @@ class PushnotOrbit {
         for (const mat of this.idCardMugshotMats) {
           mat.map = rt.texture;
           mat.needsUpdate = true;
+        }
+      }
+      if (this.idCardPhotoMeshes) {
+        for (const m of this.idCardPhotoMeshes) {
+          m.visible = true;
         }
       }
     } catch (e) {
@@ -5279,7 +5291,7 @@ class PushnotOrbit {
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
           // Floating above his computer desk (showing 3 objects: Credit Card + Photo ID + Architectural Home)
-          this.leoSubscriberBundle.position.set(L.bandit.x - 1.5, 16.0, L.bandit.z - 2.5);
+          this.leoSubscriberBundle.position.set(L.bandit.x - 1.5, 18.5, L.bandit.z - 2.5);
           // Remove rotate: front yard with tree faces forward toward user, level with ground!
           this.leoSubscriberBundle.rotation.set(0, 0, 0);
         }
@@ -5458,8 +5470,8 @@ class PushnotOrbit {
         customCineCam = new THREE.Vector3(L.ag.x + 22, 22.0, L.ag.z + 28);
       } else {
         // Suspect unmasked & seized with 3 objects (Credit Card, Photo ID, Home) hovering above his desk!
-        focusLocal = new THREE.Vector3(L.bandit.x, 16.5, L.bandit.z);
-        customCineCam = new THREE.Vector3(L.bandit.x + 24.0, 20.0, L.bandit.z + 20.0);
+        focusLocal = new THREE.Vector3(L.bandit.x, 18.5, L.bandit.z);
+        customCineCam = new THREE.Vector3(L.bandit.x + 16.0, 24.0, L.bandit.z + 32.0);
       }
     }
 

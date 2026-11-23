@@ -70,9 +70,9 @@ const DEFAULT_DIRECTOR_RIGS = {
 
   // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage at constant R = 88
   "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 34.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.40, radius: 88.0, cam: { x: -34.3, y: 38.0, z: 81.1 },  target: { x: -31.0, y: 22.0, z: 34.0 } },
-  "leo_step_2": { angle: -2.05, radius: 92.0, cam: { x: -81.4, y: 38.0, z: -42.6 }, target: { x: -32.5, y: 24.0, z: -32.5 } },
-  "leo_step_3": { angle: -0.55, radius: 88.0, cam: { x: -46.0, y: 38.0, z: 75.0 },  target: { x: 0.0,   y: 20.0, z: 6.0 } },
+  "leo_step_1": { angle: -0.28, radius: 96.0, cam: { x: -26.5, y: 36.0, z: 92.3 },  target: { x: -22.0, y: 14.0, z: 16.0 } },
+  "leo_step_2": { angle: -2.05, radius: 96.0, cam: { x: -84.9, y: 40.0, z: -44.5 }, target: { x: -32.5, y: 22.0, z: -32.5 } },
+  "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 36.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
   "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 36.0, z: 88.0 },  target: { x: 0.0,   y: 20.0, z: 14.0 } },
   "leo_step_5": { angle: 2.05,  radius: 92.0, cam: { x: 81.4,  y: 38.0, z: -42.6 }, target: { x: 32.5, y: 22.0, z: -32.5 } },
   "leo_step_6": { angle: 0.42,  radius: 88.0, cam: { x: 35.9,  y: 36.0, z: 80.4 },  target: { x: -6.0,  y: 20.0, z: 14.0 } },
@@ -3846,12 +3846,17 @@ class PushnotOrbit {
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
       // Single Dramatic Spotlight intensely lighting the front entrance and bison logo!
-      const spotLight = new THREE.SpotLight(0xffffff, 36.0, 160, Math.PI / 5.2, 0.25, 1.3);
-      spotLight.position.set(this.leoPos.swat.x + 8.0, 54.0, this.leoPos.swat.z + 20.0);
+      const spotLight = new THREE.SpotLight(0xfffaea, 65.0, 180, Math.PI / 4.5, 0.35, 1.2);
+      spotLight.position.set(this.leoPos.swat.x + 8.0, 52.0, this.leoPos.swat.z + 24.0);
       spotLight.target.position.set(this.leoPos.swat.x + 1.2, 5.5, this.leoPos.swat.z + 2.5);
       spotLight.castShadow = true;
       this.rcmpDaylightGroup.add(spotLight);
       this.rcmpDaylightGroup.add(spotLight.target);
+
+      // Warm entrance illumination pool highlighting canopy and silver RCMP crest
+      const entranceLight = new THREE.PointLight(0xfffaea, 3.8, 28);
+      entranceLight.position.set(this.leoPos.swat.x + 1.2, 6.2, this.leoPos.swat.z + 2.5);
+      this.rcmpDaylightGroup.add(entranceLight);
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
       this.leoGroup.add(this.rcmpDaylightGroup);

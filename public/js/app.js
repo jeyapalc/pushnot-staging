@@ -668,27 +668,46 @@ class PushnotOrbit {
     );
     tagMesh.position.set(0.6, 1.1, 0);
 
-    group.add(bow, disc, shaft, tGroup, tagMesh, new THREE.PointLight(colorInt, 2.5, 20));
+    group.add(bow, disc, shaft, tGroup, tagMesh);
     group.scale.setScalar(scale);
     return group;
   }
 
   createUniqueTokenTrio(scale = 1) {
     const group = new THREE.Group();
-    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.95);
-    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.95);
-    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.95);
 
-    kMeta.position.set(-3.2, 0, 0);
-    kMeta.rotation.z = -0.22;
+    // 1. Sleek forensic digital disclosure dossier tray
+    const trayGeo = new THREE.BoxGeometry(7.2, 2.6, 0.35);
+    const trayMat = new THREE.MeshStandardMaterial({
+      color: 0x070e1b,
+      metalness: 0.85,
+      roughness: 0.25,
+      transparent: true,
+      opacity: 0.92
+    });
+    const tray = new THREE.Mesh(trayGeo, trayMat);
+    tray.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(trayGeo),
+      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.8 })
+    ));
+    group.add(tray);
 
-    kInsta.position.set(0, 0.5, 0);
-    kInsta.rotation.z = 0;
+    // 2. Three neat, compact cryptographic keys mounted side-by-side inside the tray
+    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.65);
+    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.65);
+    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.65);
 
-    kX.position.set(3.2, 0, 0);
-    kX.rotation.z = 0.22;
+    kMeta.position.set(-2.1, 0, 0.22);
+    kInsta.position.set(0, 0, 0.22);
+    kX.position.set(2.1, 0, 0.22);
 
     group.add(kMeta, kInsta, kX);
+
+    // 3. Single soft evidence glow light
+    const glow = new THREE.PointLight(0x38bdf8, 1.2, 16);
+    glow.position.set(0, 0.5, 1.0);
+    group.add(glow);
+
     group.scale.setScalar(scale);
     return group;
   }
@@ -2467,49 +2486,6 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- Procedural Manicured Pacific Northwest Grass Turf Texture ---- */
-  createGrassTexture() {
-    const cvs = document.createElement('canvas');
-    cvs.width = 512;
-    cvs.height = 512;
-    const ctx = cvs.getContext('2d');
-
-    // Base rich turf green
-    ctx.fillStyle = '#347a28';
-    ctx.fillRect(0, 0, 512, 512);
-
-    // Multilayer tonal variance patches
-    for (let i = 0; i < 50; i++) {
-      const px = Math.random() * 512;
-      const py = Math.random() * 512;
-      const r = 20 + Math.random() * 60;
-      const g = ctx.createRadialGradient(px, py, 0, px, py, r);
-      g.addColorStop(0, Math.random() > 0.45 ? 'rgba(74, 168, 58, 0.5)' : 'rgba(42, 102, 32, 0.5)');
-      g.addColorStop(1, 'rgba(52, 122, 40, 0)');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(px, py, r, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Micro blade & lawn stippling
-    const imgData = ctx.getImageData(0, 0, 512, 512);
-    const d = imgData.data;
-    for (let i = 0; i < d.length; i += 4) {
-      const noise = (Math.random() - 0.5) * 32;
-      d[i]     = Math.max(0, Math.min(255, d[i] + noise * 0.6));
-      d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + noise * 1.4));
-      d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + noise * 0.5));
-    }
-    ctx.putImageData(imgData, 0, 0);
-
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(6, 4);
-    return tex;
-  }
-
   /* ---- Authentic RCMP ERT Tactical Uniform Patches (Solid Ranger Green & Subdued Insignia) ---- */
   createPoliceChestPatchTexture() {
     const cvs = document.createElement('canvas');
@@ -3643,15 +3619,6 @@ class PushnotOrbit {
       // Angle the entrance towards the viewer / cinematic camera angle (facing south-east)
       m.rotation.y = Math.PI * 0.22;
       this.leoTops.swat = this.ground(m, 32, this.leoPos.swat);
-
-      // Elevated manicured grass turf lawn bed (42 x 24 units, height 0.6)
-      const lawnW = 42.0;
-      const lawnD = 24.0;
-      const lawnH = 0.6;
-
-      // Elevate building so its base rests cleanly ON TOP of the manicured grass lawn
-      m.position.y += lawnH * 0.95;
-      this.leoTops.swat = new THREE.Box3().setFromObject(m).max.y;
       this.leoGroup.add(m);
 
       // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node (Soft, authentic natural light)
@@ -3678,36 +3645,26 @@ class PushnotOrbit {
       entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 5.0, this.leoPos.swat.z + 4.0);
       this.rcmpDaylightGroup.add(entranceDaylight);
 
-      // 4. Landscaped Grass Lawn Ground Bed (Lush Pacific Northwest turf)
-      const grassTex = this.createGrassTexture();
-      const grassGeo = new THREE.BoxGeometry(lawnW, lawnH, lawnD);
-      const grassMat = new THREE.MeshStandardMaterial({
-        map: grassTex,
-        color: 0x48c238, // Bright, lush natural green turf
-        roughness: 0.88,
-        metalness: 0.02
+      // 4. Sleek Dark Architectural Base Plinth (Zero grass, clean cyber-forensic aesthetic)
+      const plinthW = 36.0;
+      const plinthD = 20.0;
+      const plinthH = 0.4;
+      const plinthGeo = new THREE.BoxGeometry(plinthW, plinthH, plinthD);
+      const plinthMat = new THREE.MeshStandardMaterial({
+        color: 0x0c1322,
+        roughness: 0.35,
+        metalness: 0.85
       });
-      const lawnMesh = new THREE.Mesh(grassGeo, grassMat);
-      // Center of grass lawn sits at Y = lawnH / 2 so its top surface sits at Y = lawnH (0.6) above ground
-      lawnMesh.position.set(this.leoPos.swat.x, lawnH * 0.5, this.leoPos.swat.z);
-      lawnMesh.rotation.y = Math.PI * 0.22;
-      lawnMesh.receiveShadow = true;
-      lawnMesh.userData.stationKey = 'swat';
-      this.rcmpDaylightGroup.add(lawnMesh);
-
-      // Architectural landscape curb edging around perimeter of grass lawn
-      const curbGeo = new THREE.BoxGeometry(lawnW + 0.8, lawnH * 0.8, lawnD + 0.8);
-      const curbMat = new THREE.MeshStandardMaterial({
-        color: 0x334155, // Architectural brushed slate / concrete curb
-        roughness: 0.75,
-        metalness: 0.15
-      });
-      const curbMesh = new THREE.Mesh(curbGeo, curbMat);
-      curbMesh.position.set(this.leoPos.swat.x, lawnH * 0.35, this.leoPos.swat.z);
-      curbMesh.rotation.y = Math.PI * 0.22;
-      curbMesh.receiveShadow = true;
-      curbMesh.userData.stationKey = 'swat';
-      this.rcmpDaylightGroup.add(curbMesh);
+      const plinthMesh = new THREE.Mesh(plinthGeo, plinthMat);
+      plinthMesh.position.set(this.leoPos.swat.x, plinthH * 0.5, this.leoPos.swat.z);
+      plinthMesh.rotation.y = Math.PI * 0.22;
+      plinthMesh.receiveShadow = true;
+      plinthMesh.userData.stationKey = 'swat';
+      plinthMesh.add(new THREE.LineSegments(
+        new THREE.EdgesGeometry(plinthGeo),
+        new THREE.LineBasicMaterial({ color: 0x1e3a8a, transparent: true, opacity: 0.7 })
+      ));
+      this.rcmpDaylightGroup.add(plinthMesh);
 
       this.leoGroup.add(this.rcmpDaylightGroup);
       done();
@@ -4564,8 +4521,8 @@ class PushnotOrbit {
         moverCls = '';
       } else if (t < 0.32) {
         // Step 2 & 3: RCMP serves Exigent Demand to Proton -> Proton Rejects
-        showLeoThreat = true;
         const showDemand = t < 0.25;
+        showLeoThreat = showDemand;
 
         if (showDemand) {
           const u = seg(t, 0.18, 0.25);
@@ -4606,13 +4563,15 @@ class PushnotOrbit {
         if (this.leoUniqueKeysGroup) {
           this.leoUniqueKeysGroup.visible = true;
           this.leoUniqueKeysGroup.position.copy(p);
+          this.leoUniqueKeysGroup.lookAt(this.camera.position);
         }
         if (t < 0.60) {
-          moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
+          moverPos = p.clone().add(new THREE.Vector3(0, 5.0, 0));
           moverText = '🔑 3 Unique App Push Tokens Disclosed: Meta (#7A9F), Instagram (#3E1B), 𝕏 (#9C4D)';
           moverCls = 'gold';
         } else {
           showLeoTokens = true;
+          moverPos = null;
         }
       } else if (t < 0.76) {
         // Step 6: Police serve Production Orders with the 3 unique tokens to Apple APNs & Google FCM
@@ -4620,8 +4579,9 @@ class PushnotOrbit {
         if (this.leoUniqueKeysGroup) {
           this.leoUniqueKeysGroup.visible = true;
           this.leoUniqueKeysGroup.position.copy(p);
+          this.leoUniqueKeysGroup.lookAt(this.camera.position);
         }
-        moverPos = p.clone().add(new THREE.Vector3(0, 6.5, 0));
+        moverPos = p.clone().add(new THREE.Vector3(0, 5.5, 0));
         moverText = '🇨🇦 Order + 🔑 3 Unique Tokens → Apple APNs & Google FCM';
         moverCls = 'cyan';
       } else if (t < 0.88) {
@@ -4913,7 +4873,7 @@ class PushnotOrbit {
     }
     if (this.osintBot) this.osintBot.rotation.y += dt * 0.55;
     if (this.leoUniqueKeysGroup && this.leoUniqueKeysGroup.visible) {
-      this.leoUniqueKeysGroup.rotation.y += dt * 1.8;
+      this.leoUniqueKeysGroup.lookAt(this.camera.position);
     }
     if (this.rejectShieldBubble && this.rejectShieldBubble.visible) {
       const s = 1 + Math.sin(now * 0.008) * 0.05;

@@ -2475,17 +2475,17 @@ class PushnotOrbit {
     const ctx = cvs.getContext('2d');
 
     // Base rich turf green
-    ctx.fillStyle = '#26511e';
+    ctx.fillStyle = '#347a28';
     ctx.fillRect(0, 0, 512, 512);
 
     // Multilayer tonal variance patches
-    for (let i = 0; i < 48; i++) {
+    for (let i = 0; i < 50; i++) {
       const px = Math.random() * 512;
       const py = Math.random() * 512;
-      const r = 20 + Math.random() * 55;
+      const r = 20 + Math.random() * 60;
       const g = ctx.createRadialGradient(px, py, 0, px, py, r);
-      g.addColorStop(0, Math.random() > 0.45 ? 'rgba(58, 110, 46, 0.45)' : 'rgba(30, 68, 24, 0.45)');
-      g.addColorStop(1, 'rgba(38, 81, 30, 0)');
+      g.addColorStop(0, Math.random() > 0.45 ? 'rgba(74, 168, 58, 0.5)' : 'rgba(42, 102, 32, 0.5)');
+      g.addColorStop(1, 'rgba(52, 122, 40, 0)');
       ctx.fillStyle = g;
       ctx.beginPath();
       ctx.arc(px, py, r, 0, Math.PI * 2);
@@ -2496,17 +2496,17 @@ class PushnotOrbit {
     const imgData = ctx.getImageData(0, 0, 512, 512);
     const d = imgData.data;
     for (let i = 0; i < d.length; i += 4) {
-      const noise = (Math.random() - 0.5) * 28;
+      const noise = (Math.random() - 0.5) * 32;
       d[i]     = Math.max(0, Math.min(255, d[i] + noise * 0.6));
-      d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + noise * 1.3));
-      d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + noise * 0.4));
+      d[i + 1] = Math.max(0, Math.min(255, d[i + 1] + noise * 1.4));
+      d[i + 2] = Math.max(0, Math.min(255, d[i + 2] + noise * 0.5));
     }
     ctx.putImageData(imgData, 0, 0);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.wrapS = THREE.RepeatWrapping;
     tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(4, 2);
+    tex.repeat.set(6, 4);
     return tex;
   }
 
@@ -3643,6 +3643,15 @@ class PushnotOrbit {
       // Angle the entrance towards the viewer / cinematic camera angle (facing south-east)
       m.rotation.y = Math.PI * 0.22;
       this.leoTops.swat = this.ground(m, 32, this.leoPos.swat);
+
+      // Elevated manicured grass turf lawn bed (42 x 24 units, height 0.6)
+      const lawnW = 42.0;
+      const lawnD = 24.0;
+      const lawnH = 0.6;
+
+      // Elevate building so its base rests cleanly ON TOP of the manicured grass lawn
+      m.position.y += lawnH * 0.95;
+      this.leoTops.swat = new THREE.Box3().setFromObject(m).max.y;
       this.leoGroup.add(m);
 
       // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node (Soft, authentic natural light)
@@ -3666,37 +3675,35 @@ class PushnotOrbit {
 
       // 3. Subtle soft daylight entrance fill (gentle reading of cedar awning & bison decal without washout)
       const entranceDaylight = new THREE.PointLight(0xfff7ed, 0.45, 24, 1.8);
-      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 4.5, this.leoPos.swat.z + 4.0);
+      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 5.0, this.leoPos.swat.z + 4.0);
       this.rcmpDaylightGroup.add(entranceDaylight);
 
       // 4. Landscaped Grass Lawn Ground Bed (Lush Pacific Northwest turf)
       const grassTex = this.createGrassTexture();
-      const lawnW = 34.5;
-      const lawnD = 17.0;
-      const lawnH = 0.5;
       const grassGeo = new THREE.BoxGeometry(lawnW, lawnH, lawnD);
       const grassMat = new THREE.MeshStandardMaterial({
         map: grassTex,
-        color: 0x3d702d, // Lush Pacific Northwest turf green
-        roughness: 0.92, // Matte grass
+        color: 0x48c238, // Bright, lush natural green turf
+        roughness: 0.88,
         metalness: 0.02
       });
       const lawnMesh = new THREE.Mesh(grassGeo, grassMat);
-      lawnMesh.position.set(this.leoPos.swat.x, -lawnH * 0.5, this.leoPos.swat.z);
+      // Center of grass lawn sits at Y = lawnH / 2 so its top surface sits at Y = lawnH (0.6) above ground
+      lawnMesh.position.set(this.leoPos.swat.x, lawnH * 0.5, this.leoPos.swat.z);
       lawnMesh.rotation.y = Math.PI * 0.22;
       lawnMesh.receiveShadow = true;
       lawnMesh.userData.stationKey = 'swat';
       this.rcmpDaylightGroup.add(lawnMesh);
 
-      // Concrete landscape edging curb around the perimeter of the grass lawn
-      const curbGeo = new THREE.BoxGeometry(lawnW + 0.6, 0.18, lawnD + 0.6);
+      // Architectural landscape curb edging around perimeter of grass lawn
+      const curbGeo = new THREE.BoxGeometry(lawnW + 0.8, lawnH * 0.8, lawnD + 0.8);
       const curbMat = new THREE.MeshStandardMaterial({
-        color: 0x334155, // Architectural slate / brushed concrete curb
+        color: 0x334155, // Architectural brushed slate / concrete curb
         roughness: 0.75,
         metalness: 0.15
       });
       const curbMesh = new THREE.Mesh(curbGeo, curbMat);
-      curbMesh.position.set(this.leoPos.swat.x, -lawnH - 0.05, this.leoPos.swat.z);
+      curbMesh.position.set(this.leoPos.swat.x, lawnH * 0.35, this.leoPos.swat.z);
       curbMesh.rotation.y = Math.PI * 0.22;
       curbMesh.receiveShadow = true;
       curbMesh.userData.stationKey = 'swat';

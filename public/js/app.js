@@ -70,7 +70,7 @@ const DEFAULT_DIRECTOR_RIGS = {
 
   // Mode 4: Law Enforcement (8 steps) — Circular Track Dolly around underside LEO stage at constant R = 88
   "leo_step_0": { angle: 0.78,  radius: 88.0, cam: { x: 61.9,  y: 34.0, z: 62.5 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.28, radius: 96.0, cam: { x: -26.5, y: 36.0, z: 92.3 },  target: { x: -22.0, y: 14.0, z: 16.0 } },
+  "leo_step_1": { angle: -0.15, radius: 92.0, cam: { x: -13.7, y: 22.0, z: 91.0 },  target: { x: -32.5, y: 7.0,  z: 32.5 } },
   "leo_step_2": { angle: -2.05, radius: 96.0, cam: { x: -84.9, y: 40.0, z: -44.5 }, target: { x: -32.5, y: 22.0, z: -32.5 } },
   "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 36.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
   "leo_step_4": { angle: 0.00,  radius: 88.0, cam: { x: 0.0,   y: 36.0, z: 88.0 },  target: { x: 0.0,   y: 20.0, z: 14.0 } },
@@ -3845,18 +3845,31 @@ class PushnotOrbit {
       this.rcmpDaylightGroup = new THREE.Group();
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
-      // Single Dramatic Spotlight intensely lighting the front entrance and bison logo!
-      const spotLight = new THREE.SpotLight(0xfffaea, 65.0, 180, Math.PI / 4.5, 0.35, 1.2);
-      spotLight.position.set(this.leoPos.swat.x + 8.0, 52.0, this.leoPos.swat.z + 24.0);
-      spotLight.target.position.set(this.leoPos.swat.x + 1.2, 5.5, this.leoPos.swat.z + 2.5);
+      // Bright dramatic spotlight directly lighting the entrance canopy and RCMP crest
+      const spotLight = new THREE.SpotLight(0xfffae0, 95.0, 200, Math.PI / 4.0, 0.4, 1.1);
+      spotLight.position.set(this.leoPos.swat.x + 6.0, 48.0, this.leoPos.swat.z + 22.0);
+      spotLight.target.position.set(this.leoPos.swat.x, 4.0, this.leoPos.swat.z + 4.0);
       spotLight.castShadow = true;
       this.rcmpDaylightGroup.add(spotLight);
       this.rcmpDaylightGroup.add(spotLight.target);
 
       // Warm entrance illumination pool highlighting canopy and silver RCMP crest
-      const entranceLight = new THREE.PointLight(0xfffaea, 3.8, 28);
-      entranceLight.position.set(this.leoPos.swat.x + 1.2, 6.2, this.leoPos.swat.z + 2.5);
+      const entranceLight = new THREE.PointLight(0xfffaea, 18.0, 42, 1.2);
+      entranceLight.position.set(this.leoPos.swat.x, 7.5, this.leoPos.swat.z + 6.0);
       this.rcmpDaylightGroup.add(entranceLight);
+
+      // Bright ground light pool in front of the entrance doors
+      const poolGeo = new THREE.CircleGeometry(6.5, 32);
+      const poolMat = new THREE.MeshBasicMaterial({
+        color: 0xfff5dd,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending
+      });
+      const poolMesh = new THREE.Mesh(poolGeo, poolMat);
+      poolMesh.rotation.x = -Math.PI / 2;
+      poolMesh.position.set(this.leoPos.swat.x, 0.08, this.leoPos.swat.z + 6.0);
+      this.rcmpDaylightGroup.add(poolMesh);
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
       this.leoGroup.add(this.rcmpDaylightGroup);
@@ -4092,7 +4105,7 @@ class PushnotOrbit {
     this.directorMode = false;
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v4') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v5') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4147,7 +4160,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v4', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v5', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4164,7 +4177,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v4', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v5', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4186,6 +4199,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v5');
           localStorage.removeItem('pushnot_director_rigs_v4');
           localStorage.removeItem('pushnot_director_rigs_v3');
           localStorage.removeItem('pushnot_director_rigs');

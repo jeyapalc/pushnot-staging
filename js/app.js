@@ -68,15 +68,15 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Eye-level Circular Track Carousel at constant R = 90.0, cam.y = 26.0, target.y = 18.0
-  "leo_step_0": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 26.0, z: 64.0 },  target: { x: 32.5, y: 18.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.18, radius: 90.0, cam: { x: -16.1, y: 26.0, z: 88.5 },  target: { x: -32.5, y: 18.0, z: 32.5 } },
-  "leo_step_2": { angle: -2.05, radius: 90.0, cam: { x: -79.9, y: 26.0, z: -41.5 }, target: { x: -32.5, y: 18.0, z: -32.5 } },
-  "leo_step_3": { angle: -0.55, radius: 90.0, cam: { x: -47.0, y: 26.0, z: 76.7 },  target: { x: -8.0,  y: 18.0, z: 6.0 } },
-  "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 26.0, z: 90.0 },  target: { x: -16.0, y: 18.0, z: 22.0 } },
-  "leo_step_5": { angle: 2.05,  radius: 90.0, cam: { x: 79.9,  y: 26.0, z: -41.5 }, target: { x: 32.5, y: 18.0, z: -32.5 } },
-  "leo_step_6": { angle: 0.42,  radius: 90.0, cam: { x: 36.7,  y: 26.0, z: 82.2 },  target: { x: -6.0,  y: 18.0, z: 14.0 } },
-  "leo_step_7": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 26.0, z: 64.0 },  target: { x: 32.5, y: 18.0, z: 32.5 } }
+  // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track above LEO floor (LEO floor at world Y = 29.0, cam.y = 55.0, target.y = 45.0)
+  "leo_step_0": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: 64.0 },  target: { x: 32.5, y: 45.0, z: 32.5 } },
+  "leo_step_1": { angle: -0.18, radius: 90.0, cam: { x: -16.1, y: 55.0, z: 88.5 },  target: { x: -32.5, y: 42.0, z: 32.5 } },
+  "leo_step_2": { angle: -2.05, radius: 90.0, cam: { x: -79.9, y: 55.0, z: -41.5 }, target: { x: -32.5, y: 46.0, z: -32.5 } },
+  "leo_step_3": { angle: -2.05, radius: 90.0, cam: { x: -72.0, y: 55.0, z: -35.0 }, target: { x: -30.0, y: 46.0, z: -30.0 } },
+  "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
+  "leo_step_5": { angle: 0.42,  radius: 90.0, cam: { x: 36.7,  y: 55.0, z: 82.2 },  target: { x: 0.0,  y: 44.0, z: 4.0 } },
+  "leo_step_6": { angle: 2.05,  radius: 90.0, cam: { x: 79.9,  y: 55.0, z: -41.5 }, target: { x: 32.5, y: 48.0, z: -32.5 } },
+  "leo_step_7": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 54.0, z: 64.0 },  target: { x: 32.5, y: 46.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -1781,6 +1781,11 @@ class PushnotOrbit {
       camPos = new THREE.Vector3(this.leoPos.ag.x + 22, 22.0, this.leoPos.ag.z + 28);
     }
 
+    if (this.mode === 'leo' && target && camPos) {
+      target.y += 29.0;
+      camPos.y += 29.0;
+    }
+
     if (!target || !camPos) return;
 
     this.focusedNode = key;
@@ -2422,22 +2427,15 @@ class PushnotOrbit {
     ctx.closePath();
     ctx.fill();
 
-    // Black cyber eyewear frames with glowing cyan screen glint!
-    ctx.strokeStyle = '#020617';
-    ctx.lineWidth = 5;
-    // Left lens
-    ctx.strokeRect(cx - 22, py + 70, 18, 12);
-    // Right lens
-    ctx.strokeRect(cx + 4, py + 70, 18, 12);
-    // Bridge
-    ctx.beginPath(); ctx.moveTo(cx - 4, py + 76); ctx.lineTo(cx + 4, py + 76); ctx.stroke();
-
-    // Glowing cyan reflection in lenses (matching hacker's glasses!)
-    ctx.fillStyle = '#38bdf8';
-    ctx.shadowColor = '#38bdf8';
-    ctx.shadowBlur = 8;
-    ctx.fillRect(cx - 20, py + 72, 14, 8);
-    ctx.fillRect(cx + 6, py + 72, 14, 8);
+    // Natural facial features matching hacker model (clean dark silhouette / mugshot)
+    ctx.fillStyle = '#1e293b';
+    // Brow & Eyes
+    ctx.fillRect(cx - 18, py + 72, 10, 4);
+    ctx.fillRect(cx + 8, py + 72, 10, 4);
+    // Nose bridge
+    ctx.fillRect(cx - 2, py + 74, 4, 12);
+    // Mouth
+    ctx.fillRect(cx - 10, py + 92, 20, 3);
     ctx.restore();
 
     // Portrait frame cyan border
@@ -2487,8 +2485,23 @@ class PushnotOrbit {
       new THREE.BoxGeometry(9.6, 6.0, 0.3),
       [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat]
     );
-    mesh.scale.setScalar(scale);
-    return mesh;
+
+    const group = new THREE.Group();
+    group.name = 'idCard';
+    group.add(mesh);
+
+    // Front portrait photo frame sub-mesh (for 3D still headshot from hack.glb!)
+    const photoGeo = new THREE.PlaneGeometry(2.42, 3.08);
+    const photoMat = new THREE.MeshBasicMaterial({ color: 0x0a101d, transparent: false });
+    const photoMesh = new THREE.Mesh(photoGeo, photoMat);
+    photoMesh.position.set(-3.20, 0.10, 0.16);
+    photoMesh.name = 'photoMesh';
+    group.add(photoMesh);
+    if (!this.idCardMugshotMats) this.idCardMugshotMats = [];
+    this.idCardMugshotMats.push(photoMat);
+
+    group.scale.setScalar(scale);
+    return group;
   }
 
   /* ---- Adorable Tiny 3D Modern Residential Townhouse (Subscriber's Residence) ---- */
@@ -2589,24 +2602,228 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- Combined Subscriber Identity Bundle (3D Photo ID + Residential Home from Downloads) ---- */
+  /* ---- 3D Sleek Titanium Credit Card (Object 1 of 3 for Suspect ID Reveal) ---- */
+  create3DCreditCard(scale = 1) {
+    const group = new THREE.Group();
+    group.name = 'creditCard';
+
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 320;
+    const ctx = cvs.getContext('2d');
+
+    // Deep matte obsidian / navy titanium card base
+    const bg = ctx.createLinearGradient(0, 0, 512, 320);
+    bg.addColorStop(0, '#0a0f1d');
+    bg.addColorStop(0.5, '#151f33');
+    bg.addColorStop(1, '#0a0f1d');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, 512, 320);
+
+    // Subtle holographic wave pattern
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.16)';
+    ctx.lineWidth = 1.5;
+    for (let y = 30; y < 320; y += 28) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.bezierCurveTo(170, y - 15, 340, y + 15, 512, y);
+      ctx.stroke();
+    }
+
+    // Top gold/cyan accent band
+    const bGrad = ctx.createLinearGradient(0, 0, 512, 0);
+    bGrad.addColorStop(0, '#f59e0b');
+    bGrad.addColorStop(0.5, '#38bdf8');
+    bGrad.addColorStop(1, '#ec4899');
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(0, 0, 512, 6);
+
+    // Bank Title at top
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 16px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('🇨🇦 ROYAL CANADIAN BANK', 24, 38);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '700 11px "JetBrains Mono", monospace';
+    ctx.fillText('TITANIUM INFINITE PREFERRED', 24, 54);
+
+    // Gold Metallic EMV Contact Chip
+    const cx = 58, cy = 96, cw = 72, ch = 54;
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.roundRect(cx, cy, cw, ch, 8);
+    ctx.fill();
+    ctx.strokeStyle = '#fef08a';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Chip contact grid lines
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy + 27); ctx.lineTo(cx + cw, cy + 27);
+    ctx.moveTo(cx + 24, cy); ctx.lineTo(cx + 24, cy + ch);
+    ctx.moveTo(cx + 48, cy); ctx.lineTo(cx + 48, cy + ch);
+    ctx.stroke();
+
+    // Contactless NFC Wave Symbol
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2.5;
+    for (let r = 10; r <= 22; r += 6) {
+      ctx.beginPath();
+      ctx.arc(cx + cw + 24, cy + 27, r, -Math.PI * 0.35, Math.PI * 0.35);
+      ctx.stroke();
+    }
+
+    // Embossed Card Number (Matching registered subscriber tokens!)
+    ctx.textAlign = 'left';
+    ctx.font = '900 22px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#f8fafc';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)';
+    ctx.shadowBlur = 4;
+    ctx.fillText('4520  ••••  ••••  4092', 40, 206);
+    ctx.shadowBlur = 0;
+
+    // Valid Thru & Security Hash
+    ctx.font = '700 11px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText('GOOD THRU: 08/28', 40, 234);
+    ctx.fillText('CARD ID: #7A9F-MC', 240, 234);
+
+    // Cardholder Name (Matching suspect and ID card!)
+    ctx.font = '900 18px "Space Grotesk", sans-serif';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('CONNOR J. MALONE', 40, 268);
+
+    // Visa / Mastercard Holographic Logo in bottom-right corner
+    ctx.beginPath();
+    ctx.arc(430, 260, 22, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(458, 260, 22, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(245, 158, 11, 0.85)';
+    ctx.fill();
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    // Physical Card Mesh
+    const cardGeo = new THREE.BoxGeometry(6.4, 4.0, 0.12);
+    const cardMat = new THREE.MeshStandardMaterial({
+      map: tex,
+      metalness: 0.35,
+      roughness: 0.28
+    });
+    const cardMesh = new THREE.Mesh(cardGeo, cardMat);
+    group.add(cardMesh);
+    group.scale.setScalar(scale);
+    return group;
+  }
+
+  /* ---- 3D House Address Plaque for Front Yard ---- */
+  createHouseAddressPlaque() {
+    const group = new THREE.Group();
+    group.name = 'houseAddressPlaque';
+
+    const cvs = document.createElement('canvas');
+    cvs.width = 512; cvs.height = 160;
+    const ctx = cvs.getContext('2d');
+
+    ctx.fillStyle = '#090d16';
+    ctx.beginPath();
+    ctx.roundRect(8, 8, 496, 144, 20);
+    ctx.fill();
+
+    ctx.strokeStyle = '#f59e0b';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#ef4444';
+    ctx.font = '32px sans-serif';
+    ctx.fillText('📍', 24, 72);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 24px "Space Grotesk", sans-serif';
+    ctx.fillText('1042 ROBSON ST', 76, 68);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 16px "JetBrains Mono", monospace';
+    ctx.fillText('VANCOUVER, BC · RESIDENCE CONFIRMED', 76, 102);
+
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 12px "JetBrains Mono", monospace';
+    ctx.fillText('LEGAL EVIDENCE MATCH · 100% HARDWARE BIND', 76, 126);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    const board = new THREE.Mesh(
+      new THREE.BoxGeometry(4.2, 1.3, 0.12),
+      new THREE.MeshStandardMaterial({ map: tex, metalness: 0.2, roughness: 0.3 })
+    );
+    board.position.y = 1.0;
+
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 });
+    const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 12), postMat);
+    postL.position.set(-1.6, 0.5, 0);
+    const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 12), postMat);
+    postR.position.set(1.6, 0.5, 0);
+
+    group.add(board, postL, postR);
+    return group;
+  }
+
+  /* ---- Combined Subscriber Identity Bundle (3 Objects: Credit Card + Photo ID + Architectural Home) ---- */
   createSubscriberBundle(scale = 1) {
     const group = new THREE.Group();
-    // Vertical Photo ID card standing upright on the evidence plane
-    const idCard = this.create3DPhotoIdCard(0.85);
-    idCard.position.set(-5.6, 2.6, 0);
-    idCard.rotation.set(0, 0.16, 0); // vertical standing card
+    group.name = 'subscriberBundle';
 
-    // Real architectural residential house model from Downloads (models/home_sweet_home.glb)
+    // Object 1: Sleek 3D Credit Card (Left)
+    const creditCard = this.create3DCreditCard(0.92);
+    creditCard.position.set(-7.4, 2.4, 1.0);
+    creditCard.rotation.set(0, 0.12, 0);
+    group.add(creditCard);
+
+    // Object 2: 3D Photo ID Card with Hacker's Mugshot Still (Middle)
+    const idCard = this.create3DPhotoIdCard(0.92);
+    idCard.position.set(-1.4, 2.8, 0.4);
+    idCard.rotation.set(0, 0.04, 0);
+    group.add(idCard);
+
+    // Object 3: Real Architectural Residential Home from Downloads (Right)
     const homeWrap = new THREE.Group();
     homeWrap.name = 'homeWrap';
     if (this.homeSweetHomeScene) {
       homeWrap.add(this.homeSweetHomeScene.clone(true));
     }
-    homeWrap.position.set(4.2, 0, 0);
-    homeWrap.rotation.set(0, -0.22, 0); // strictly level with ground (pitch=0, roll=0)
+    homeWrap.position.set(6.6, 0, 0);
+    // REMOVE ROTATE: front yard with tree faces forward toward user, level with ground!
+    homeWrap.rotation.set(0, 0, 0);
+    group.add(homeWrap);
 
-    group.add(idCard, homeWrap, new THREE.PointLight(0x38bdf8, 3.2, 36));
+    // Front yard address plaque standing in front of the house lawn
+    const addrPlaque = this.createHouseAddressPlaque();
+    addrPlaque.position.set(6.6, 0, 4.8);
+    group.add(addrPlaque);
+
+    // Dedicated high-intensity architectural lighting rig on the home
+    // (Crisp, warm, bright: illuminates roof shingles, walls, lawn, and tree!)
+    const homeKey = new THREE.DirectionalLight(0xfffaea, 4.5);
+    homeKey.position.set(10.0, 14.0, 12.0);
+    homeKey.target.position.set(6.6, 2.0, 0);
+
+    const homeFill = new THREE.PointLight(0x38bdf8, 3.2, 40);
+    homeFill.position.set(2.0, 8.0, 8.0);
+
+    const homeSun = new THREE.DirectionalLight(0xffeedd, 3.2);
+    homeSun.position.set(6.6, 18.0, 4.0);
+
+    const homeRim = new THREE.DirectionalLight(0x60a5fa, 2.2);
+    homeRim.position.set(6.6, 10.0, -8.0);
+
+    group.add(homeKey, homeKey.target, homeFill, homeSun, homeRim);
     group.scale.setScalar(scale);
     return group;
   }
@@ -3513,22 +3730,24 @@ class PushnotOrbit {
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;
 
-    // 2. Paper Mesh (5.2 width x 7.2 height)
-    const paperGeo = new THREE.PlaneGeometry(5.2, 7.2);
+    // 2. Paper Mesh (5.2 width x 7.2 height) — anchored so bottom edge is at Y = 0!
+    const paperH = 7.2;
+    const paperGeo = new THREE.PlaneGeometry(5.2, paperH);
     const paperMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
     const paperMesh = new THREE.Mesh(paperGeo, paperMat);
+    paperMesh.position.y = paperH * 0.5;
     group.add(paperMesh);
 
     // Thin dark backing card to give paper physical thickness & edge
-    const backingGeo = new THREE.BoxGeometry(5.24, 7.24, 0.1);
+    const backingGeo = new THREE.BoxGeometry(5.24, paperH + 0.04, 0.1);
     const backingMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.3, roughness: 0.6 });
     const backing = new THREE.Mesh(backingGeo, backingMat);
-    backing.position.z = -0.06;
+    backing.position.set(0, paperH * 0.5, -0.06);
     group.add(backing);
 
     // 3. Emergency Siren Beacon mounted on top of the paper
     const sirenGroup = new THREE.Group();
-    sirenGroup.position.set(0, 4.4, 0);
+    sirenGroup.position.set(0, paperH + 0.8, 0);
 
     const baseGeo = new THREE.CylinderGeometry(0.9, 1.1, 0.5, 16);
     const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.2 });
@@ -3610,18 +3829,19 @@ class PushnotOrbit {
     this.leoTops.ag = 20;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
-    // pSwat anchored centered directly at the front glass doors / entrance threshold under the entrance canopy of RCMP Green Timbers
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 3.6, 5.8));
+    // pSwat anchored cleanly ABOVE and IN FRONT of the RCMP entrance wooden awning so paper bottom is completely above awning!
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 8.8, 8.2));
     const pProton      = L.proton.clone().add(new THREE.Vector3(0, 8.5, 3.0));
     const pBot         = L.bot.clone().add(new THREE.Vector3(0, 8.0, 2.5));
     const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 8.0, 3.5));
     const pAg          = L.ag.clone().setY(10.0);
 
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-R - 4, 11.0, 0), pProton);
-    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(-14, 10.5, 16),   pBot);
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3(-14, 11.5, 18),   pSwat);
-    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 14.0, 0),      pAg);
-    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 13.0, 12),     pSwat);
+    // High mortar trajectory arcs: curving dramatically up and over buildings like high-angle artillery mortar shells!
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((-D - D) * 0.5 - 6, 42.0, 0), pProton);
+    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.bot.x) * 0.5, 38.0, (L.swat.z + L.bot.z) * 0.5), pBot);
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3((L.swat.x + L.bot.x) * 0.5, 42.0, (L.swat.z + L.bot.z) * 0.5 + 4), pSwat);
+    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 46.0, 0),      pAg);
+    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 48.0, 10),     pSwat);
 
     this.leoLines = [
       this.addArc(this.arcLeoProton, 0xf43f5e, 0.45, this.leoGroup),
@@ -3652,6 +3872,69 @@ class PushnotOrbit {
     this.leoGroup.add(this.leoSubscriberBundle);
 
     this.leoGroup.visible = false;
+  }
+
+  /* ---- Render Still 3D Perspective Mugshot of Hacker Face for ID Card Reveal ---- */
+  generateHackerHeadshot(hacker) {
+    try {
+      const w = 260, h = 330;
+      const rt = new THREE.WebGLRenderTarget(w, h, {
+        format: THREE.RGBAFormat,
+        colorSpace: THREE.SRGBColorSpace
+      });
+
+      const bust = new THREE.Group();
+      hacker.traverse(c => {
+        if (!c.isMesh) return;
+        const mName = c.material ? (c.material.name || '') : '';
+        const cName = c.name || '';
+        // Skip glasses
+        if (mName.includes('Eyewear') || cName.includes('Eyewear')) return;
+        if (mName.includes('Bodymat') || mName.includes('Hairmat') || mName.includes('Topmat') || mName.includes('Ch01_body')) {
+          const mClone = c.clone(true);
+          if (mClone.material) {
+            mClone.material = mClone.material.clone();
+            if (c.userData && c.userData.origColor) {
+              mClone.material.color.copy(c.userData.origColor);
+            } else {
+              mClone.material.color.setHex(0xffffff);
+            }
+            mClone.material.roughness = 0.52;
+            mClone.material.metalness = 0.05;
+          }
+          bust.add(mClone);
+        }
+      });
+
+      const shotScene = new THREE.Scene();
+      shotScene.background = new THREE.Color(0x0c1424);
+      shotScene.add(bust);
+
+      const key = new THREE.DirectionalLight(0xfffaea, 3.8);
+      key.position.set(8, 255, 30);
+      const fill = new THREE.DirectionalLight(0x93c5fd, 2.0);
+      fill.position.set(-8, 250, 24);
+      const amb = new THREE.AmbientLight(0xffffff, 1.2);
+      shotScene.add(key, fill, amb);
+
+      const cam = new THREE.PerspectiveCamera(30, w / h, 1, 300);
+      cam.position.set(0, 248, 32);
+      cam.lookAt(new THREE.Vector3(0, 246, 0));
+
+      const prevRt = this.renderer.getRenderTarget();
+      this.renderer.setRenderTarget(rt);
+      this.renderer.render(shotScene, cam);
+      this.renderer.setRenderTarget(prevRt);
+
+      if (this.idCardMugshotMats) {
+        for (const mat of this.idCardMugshotMats) {
+          mat.map = rt.texture;
+          mat.needsUpdate = true;
+        }
+      }
+    } catch (e) {
+      console.warn('generateHackerHeadshot fallback:', e);
+    }
   }
 
   loadModels() {
@@ -3795,6 +4078,7 @@ class PushnotOrbit {
 
       this.leoTops.bandit = this.ground(hacker, 28, this.leoPos.bandit);
       this.leoGroup.add(hacker);
+      this.generateHackerHeadshot(hacker);
       done();
     }, undefined, done);
 
@@ -3936,8 +4220,9 @@ class PushnotOrbit {
           c.userData.stationKey = 'bandit';
           if (c.material) {
             c.material = c.material.clone();
-            c.material.roughness = Math.max(0.4, c.material.roughness || 0.5);
-            c.material.metalness = Math.min(0.25, c.material.metalness || 0.1);
+            c.material.roughness = 0.48;
+            c.material.metalness = 0.08;
+            c.material.envMapIntensity = 1.35;
             c.material.needsUpdate = true;
           }
         }
@@ -4202,6 +4487,8 @@ class PushnotOrbit {
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
       // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
+      localStorage.removeItem('pushnot_director_rigs_v11');
+      localStorage.removeItem('pushnot_director_rigs_v10');
       localStorage.removeItem('pushnot_director_rigs_v9');
       localStorage.removeItem('pushnot_director_rigs_v8');
       localStorage.removeItem('pushnot_director_rigs_v7');
@@ -4210,7 +4497,7 @@ class PushnotOrbit {
       localStorage.removeItem('pushnot_director_rigs_v4');
       localStorage.removeItem('pushnot_director_rigs_v3');
       localStorage.removeItem('pushnot_director_rigs');
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v10') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v12') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4265,7 +4552,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v10', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v12', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4282,7 +4569,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v10', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v12', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4304,6 +4591,8 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v12');
+          localStorage.removeItem('pushnot_director_rigs_v11');
           localStorage.removeItem('pushnot_director_rigs_v10');
           localStorage.removeItem('pushnot_director_rigs_v9');
           localStorage.removeItem('pushnot_director_rigs_v8');
@@ -4981,12 +5270,12 @@ class PushnotOrbit {
         this.updateHackerSeizedScreen();
         if (this.leoSubscriberBundle) {
           this.leoSubscriberBundle.visible = true;
-          // Positioned level on the ground to the right of the suspect's desk
-          this.leoSubscriberBundle.position.set(L.bandit.x + 14.0, 0.0, L.bandit.z - 2.0);
-          // House is strictly LEVEL with ground (pitch=0, roll=0), facing camera smoothly
-          this.leoSubscriberBundle.rotation.set(0, -Math.PI * 0.28, 0);
+          // Floating above his computer desk (showing 3 objects: Credit Card + Photo ID + Architectural Home)
+          this.leoSubscriberBundle.position.set(L.bandit.x - 1.5, 16.0, L.bandit.z - 2.5);
+          // Remove rotate: front yard with tree faces forward toward user, level with ground!
+          this.leoSubscriberBundle.rotation.set(0, 0, 0);
         }
-        moverPos = new THREE.Vector3(L.bandit.x + 1.0, 24.0, L.bandit.z - 1.0);
+        moverPos = new THREE.Vector3(L.bandit.x, 26.5, L.bandit.z);
         moverText = '🚨 Suspect Identified';
         moverCls = 'red';
         showLeoId = true;
@@ -5151,18 +5440,18 @@ class PushnotOrbit {
           focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 13.0, L.bot.z);
           customCineCam = new THREE.Vector3(L.bot.x - 22, 15.0, L.bot.z + 22);
         } else {
-          // 3 Push Token Keys acquired by RCMP -> Facing RCMP Green Timbers front door threshold!
-          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z + 5.8);
-          customCineCam = new THREE.Vector3(L.swat.x + 18, 14.0, L.swat.z + 18);
+          // 3 Push Token Keys acquired by RCMP -> Above & in front of RCMP Green Timbers entrance!
+          focusLocal = new THREE.Vector3(L.swat.x, 8.8, L.swat.z + 8.2);
+          customCineCam = new THREE.Vector3(L.swat.x + 20, 16.0, L.swat.z + 24);
         }
       } else if (t < 0.88) {
         // Production orders served to Apple & Google Skyscraper
         focusLocal = new THREE.Vector3(L.ag.x, 20.0, L.ag.z);
         customCineCam = new THREE.Vector3(L.ag.x + 22, 22.0, L.ag.z + 28);
       } else {
-        // Suspect unmasked & seized with Photo ID Card & Tiny 3D Home!
-        focusLocal = new THREE.Vector3(L.bandit.x + 2.0, 13.5, L.bandit.z - 2.5);
-        customCineCam = new THREE.Vector3(L.bandit.x + 26.0, 16.5, L.bandit.z + 18.0);
+        // Suspect unmasked & seized with 3 objects (Credit Card, Photo ID, Home) hovering above his desk!
+        focusLocal = new THREE.Vector3(L.bandit.x, 16.5, L.bandit.z);
+        customCineCam = new THREE.Vector3(L.bandit.x + 24.0, 20.0, L.bandit.z + 20.0);
       }
     }
 

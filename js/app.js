@@ -30,12 +30,36 @@ const POS = {
   ufo:    new THREE.Vector3(-D, 50, D)
 };
 
-const MODE_SECONDS = { setup: 13, push: 11, world: 12, leo: 18 };
+const MODE_SECONDS = { setup: 15, push: 11, world: 12, leo: 18 };
 const MODE_STEPS = {
-  setup: [0.06, 0.25, 0.34, 0.44, 0.56, 0.68, 0.84, 0.96],
+  setup: [0.04, 0.12, 0.22, 0.32, 0.42, 0.52, 0.64, 0.74, 0.86, 0.96],
   push:  [0.08, 0.24, 0.39, 0.56, 0.78, 0.95],
   world: [0.08, 0.24, 0.40, 0.56, 0.72, 0.88],
   leo:   [0.05, 0.18, 0.32, 0.48, 0.62, 0.76, 0.88, 0.96]
+};
+
+// Default Director's Camera Rigs (Preset & Locked by Director)
+const DEFAULT_DIRECTOR_RIGS = {
+  "setup_step_1": {
+    "cam": { "x": 80.64, "y": 31.38, "z": 73.45 },
+    "target": { "x": 13.15, "y": 15.87, "z": -6.34 }
+  },
+  "setup_step_3": {
+    "cam": { "x": -6.46, "y": 39.16, "z": -126.4 },
+    "target": { "x": 13.14, "y": 15.88, "z": -6.36 }
+  },
+  "setup_step_4": {
+    "cam": { "x": 44.65, "y": 125.02, "z": -55.67 },
+    "target": { "x": 13.14, "y": 15.88, "z": -6.36 }
+  },
+  "setup_step_5": {
+    "cam": { "x": 81.55, "y": 55.21, "z": 81.97 },
+    "target": { "x": 32.35, "y": 15.18, "z": 27.56 }
+  },
+  "setup_step_7": {
+    "cam": { "x": -43.6, "y": 47.74, "z": 98.63 },
+    "target": { "x": -32.44, "y": 12.5, "z": 32.53 }
+  }
 };
 
 const WORLD_APPS = [
@@ -626,7 +650,7 @@ class PushnotOrbit {
     const discTex = new THREE.CanvasTexture(discCvs);
     const discMat = new THREE.MeshBasicMaterial({ map: discTex, side: THREE.DoubleSide });
     const disc = new THREE.Mesh(new THREE.CircleGeometry(1.15, 24), discMat);
-    disc.position.x = -1.7;
+    disc.position.set(-1.7, 0, 0.22);
 
     // Key blade shaft
     const shaft = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.58, 0.42), mat);
@@ -666,7 +690,7 @@ class PushnotOrbit {
       new THREE.PlaneGeometry(3.0, 0.75),
       new THREE.MeshBasicMaterial({ map: tagTex, side: THREE.DoubleSide })
     );
-    tagMesh.position.set(0.6, 1.1, 0);
+    tagMesh.position.set(0.6, 1.1, 0.22);
 
     group.add(bow, disc, shaft, tGroup, tagMesh);
     group.scale.setScalar(scale);
@@ -677,7 +701,7 @@ class PushnotOrbit {
     const group = new THREE.Group();
 
     // 1. Sleek forensic digital disclosure dossier tray
-    const trayGeo = new THREE.BoxGeometry(7.2, 2.6, 0.35);
+    const trayGeo = new THREE.BoxGeometry(8.6, 3.2, 0.35);
     const trayMat = new THREE.MeshStandardMaterial({
       color: 0x070e1b,
       metalness: 0.85,
@@ -692,14 +716,14 @@ class PushnotOrbit {
     ));
     group.add(tray);
 
-    // 2. Three neat, compact cryptographic keys mounted side-by-side inside the tray
-    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.65);
-    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.65);
-    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.65);
+    // 2. Three neat, compact cryptographic keys mounted side-by-side inside the tray (spaced to prevent collision)
+    const kMeta  = this.createBrandedKey('meta',      '#1877f2', 'Meta',      '#7A9F-FB', 0.55);
+    const kInsta = this.createBrandedKey('instagram', '#ec4899', 'Instagram', '#3E1B-IG', 0.55);
+    const kX     = this.createBrandedKey('x',         '#e2e8f0', '𝕏',         '#9C4D-X',  0.55);
 
-    kMeta.position.set(-2.1, 0, 0.22);
-    kInsta.position.set(0, 0, 0.22);
-    kX.position.set(2.1, 0, 0.22);
+    kMeta.position.set(-2.7, 0, 0.25);
+    kInsta.position.set(0, 0, 0.25);
+    kX.position.set(2.7, 0, 0.25);
 
     group.add(kMeta, kInsta, kX);
 
@@ -1091,7 +1115,218 @@ class PushnotOrbit {
     return group;
   }
 
+  /* ---- Interactive Holographic App Store Selection Showcase at Apple & Google Station ---- */
+  createAppStoreSelector() {
+    const group = new THREE.Group();
+    group.userData.stationKey = 'post';
+
+    const W = 1024, H = 640;
+    const cvs = document.createElement('canvas');
+    cvs.width = W;
+    cvs.height = H;
+    this.storeSelectorCvs = cvs;
+    this.storeSelectorCtx = cvs.getContext('2d');
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    this.storeSelectorTex = tex;
+
+    // Outer cyber card glass backing
+    const cardW = 12.0;
+    const cardH = 7.5;
+    const cardGeo = new THREE.PlaneGeometry(cardW, cardH);
+    const cardMat = new THREE.MeshBasicMaterial({
+      map: tex,
+      transparent: true,
+      side: THREE.DoubleSide
+    });
+    const cardMesh = new THREE.Mesh(cardGeo, cardMat);
+    group.add(cardMesh);
+
+    // Glowing cyan/blue border trim
+    const frameGeo = new THREE.BoxGeometry(cardW + 0.15, cardH + 0.15, 0.2);
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0x070e1e,
+      metalness: 0.9,
+      roughness: 0.2
+    });
+    const frameMesh = new THREE.Mesh(frameGeo, frameMat);
+    frameMesh.position.z = -0.12;
+    frameMesh.add(new THREE.LineSegments(
+      new THREE.EdgesGeometry(frameGeo),
+      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 })
+    ));
+    group.add(frameMesh);
+
+    // Subtle beacon point light
+    this.storeSelectorLight = new THREE.PointLight(0x38bdf8, 2.2, 28);
+    this.storeSelectorLight.position.set(0, 0, 3.0);
+    group.add(this.storeSelectorLight);
+
+    // Initial draw
+    this.updateAppStoreSelectorCanvas(0, false);
+
+    group.position.set(POS.post.x, 22.0, POS.post.z + 5.0);
+    group.visible = false;
+    this.normalGroup.add(group);
+    this.storeGameSelector = group;
+  }
+
+  updateAppStoreSelectorCanvas(progress = 0, selected = false) {
+    if (!this.storeSelectorCtx) return;
+    const ctx = this.storeSelectorCtx;
+    const W = 1024, H = 640;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // 1. Semi-translucent dark cyber glass background
+    const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0, 'rgba(10, 18, 38, 0.94)');
+    bgGrad.addColorStop(1, 'rgba(4, 8, 20, 0.96)');
+    ctx.fillStyle = bgGrad;
+    ctx.beginPath();
+    ctx.roundRect(16, 16, W - 32, H - 32, 28);
+    ctx.fill();
+
+    // 2. Cyan neon edge stroke
+    ctx.strokeStyle = selected ? '#38bdf8' : 'rgba(56, 189, 248, 0.45)';
+    ctx.lineWidth = selected ? 6 : 3;
+    ctx.stroke();
+
+    // 3. Top App Store Header
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '700 24px "Space Grotesk", sans-serif';
+    ctx.fillText(' APP STORE  ·  🤖 GOOGLE PLAY', 48, 68);
+
+    // Live status badge on top right
+    const statusText = selected ? '● GAME CONFIRMED' : '● SELECTING APPLICATION';
+    ctx.fillStyle = selected ? '#34d399' : '#38bdf8';
+    ctx.font = '700 20px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(statusText, W - 48, 68);
+    ctx.textAlign = 'left';
+
+    // 4. Search input bar
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
+    ctx.roundRect(48, 92, W - 96, 64, 16);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = '500 26px "Space Grotesk", sans-serif';
+    const query = 'Bejeweled Blitz';
+    const charCount = Math.min(query.length, Math.floor(progress * (query.length + 4)));
+    const typedQuery = query.slice(0, charCount);
+    const cursor = (Math.floor(Date.now() / 400) % 2 === 0) ? '|' : '';
+    ctx.fillText(`🔍  ${typedQuery}${charCount < query.length ? cursor : ''}`, 68, 134);
+
+    // 5. Featured Game Listing Card
+    const cardY = 180;
+    const cardH = 390;
+    ctx.fillStyle = selected ? 'rgba(14, 165, 233, 0.12)' : 'rgba(30, 41, 59, 0.6)';
+    ctx.beginPath();
+    ctx.roundRect(48, cardY, W - 96, cardH, 24);
+    ctx.fill();
+    ctx.strokeStyle = selected ? '#38bdf8' : 'rgba(56, 189, 248, 0.35)';
+    ctx.lineWidth = selected ? 4 : 2;
+    ctx.stroke();
+
+    // 6. Glowing Game App Icon (Bejeweled Diamond Badge)
+    const iconX = 84, iconY = cardY + 44, iconS = 140;
+    const iconGrad = ctx.createLinearGradient(iconX, iconY, iconX + iconS, iconY + iconS);
+    iconGrad.addColorStop(0, '#0284c7');
+    iconGrad.addColorStop(0.5, '#38bdf8');
+    iconGrad.addColorStop(1, '#a855f7');
+    ctx.fillStyle = iconGrad;
+    ctx.beginPath();
+    ctx.roundRect(iconX, iconY, iconS, iconS, 32);
+    ctx.fill();
+
+    // Faceted diamond drawing inside icon
+    ctx.save();
+    ctx.translate(iconX + iconS / 2, iconY + iconS / 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.moveTo(0, -42);
+    ctx.lineTo(42, -6);
+    ctx.lineTo(0, 46);
+    ctx.lineTo(-42, -6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(56, 189, 248, 0.7)';
+    ctx.beginPath();
+    ctx.moveTo(0, -42);
+    ctx.lineTo(18, -6);
+    ctx.lineTo(0, 46);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // 7. Title, Developer & Rating
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 40px "Space Grotesk", sans-serif';
+    ctx.fillText('Bejeweled Blitz', 256, cardY + 90);
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '500 24px "Space Grotesk", sans-serif';
+    ctx.fillText('PopCap Games · Electronic Arts', 256, cardY + 132);
+
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = '700 22px "JetBrains Mono", monospace';
+    ctx.fillText('★★★★★  4.8 · #1 Puzzle Action Game', 256, cardY + 172);
+
+    // 8. Interactive Animated "GET / INSTALL" Button
+    const btnX = 256, btnY = cardY + 214, btnW = 320, btnH = 68;
+    const btnGrad = ctx.createLinearGradient(btnX, btnY, btnX + btnW, btnY);
+    if (selected) {
+      btnGrad.addColorStop(0, '#10b981');
+      btnGrad.addColorStop(1, '#059669');
+    } else {
+      btnGrad.addColorStop(0, '#0284c7');
+      btnGrad.addColorStop(1, '#38bdf8');
+    }
+    ctx.fillStyle = btnGrad;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btnY, btnW, btnH, 34);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '700 26px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'center';
+    const btnLabel = selected ? '✓ SELECTED · GET' : (progress > 0.65 ? 'SELECTING...' : 'GET / INSTALL');
+    ctx.fillText(btnLabel, btnX + btnW / 2, btnY + 44);
+    ctx.textAlign = 'left';
+
+    // Animated finger pointer clicking the button
+    if (!selected && progress > 0.45) {
+      const curX = btnX + btnW / 2 + Math.sin(progress * 12) * 10;
+      const curY = btnY + btnH / 2 + 15;
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '36px sans-serif';
+      ctx.fillText('👆', curX, curY);
+    }
+
+    // 9. Bottom Info Footnote
+    ctx.fillStyle = '#64748b';
+    ctx.font = '500 20px "JetBrains Mono", monospace';
+    ctx.fillText('PUSH SERVICE: Apple APNs + Google FCM Payload Channels Enabled', 48, H - 42);
+
+    this.storeSelectorTex.needsUpdate = true;
+  }
+
   initMovers() {
+    // 0. App Store Selection Showcase Hologram at Apple & Google station
+    this.createAppStoreSelector();
+
     // 1. Bejeweled app travelling App Stores -> Phone
     this.appOrb = this.createBejeweledCluster(1.2);
     this.normalGroup.add(this.appOrb);
@@ -3570,7 +3805,7 @@ class PushnotOrbit {
       m.userData.stationKey = 'swat';
 
       // Cut out large surrounding property (outer terrain, municipal streets, trees, parking lots, distant annexes)
-      // Keep strictly the RCMP Headquarters building footprint and entrance
+      // Keep strictly the RCMP Headquarters building footprint and entrance (zero grass, zero terrain)
       const excludeKeywords = [
         'adjacent',
         'parking',
@@ -3591,14 +3826,25 @@ class PushnotOrbit {
         'flagpole',
         'median',
         'marking',
-        'timbers way'
+        'timbers way',
+        'floor',
+        'forest',
+        'meadow',
+        'sedum',
+        'asphalt',
+        'footway'
       ];
 
       const toRemove = [];
       m.traverse(c => {
         if (!c.isMesh) return;
-        const nameLower = (c.name || '').toLowerCase();
-        const isExcluded = excludeKeywords.some(k => nameLower.includes(k));
+        const names = [
+          c.name || '',
+          (c.parent ? c.parent.name : '') || '',
+          (c.material ? c.material.name : '') || ''
+        ].map(s => s.toLowerCase());
+
+        const isExcluded = excludeKeywords.some(k => names.some(n => n.includes(k)));
         if (isExcluded) {
           toRemove.push(c);
         } else {
@@ -3895,12 +4141,11 @@ class PushnotOrbit {
   /* ---- Director's Camera Rig Editor Mode (Live Coordinates, Step Lock & Export) ---- */
   initDirectorMode() {
     this.directorMode = false;
-    this.directorRigs = {};
+    this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      this.directorRigs = JSON.parse(localStorage.getItem('pushnot_director_rigs') || '{}');
-    } catch (e) {
-      this.directorRigs = {};
-    }
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs') || '{}');
+      Object.assign(this.directorRigs, saved);
+    } catch (e) {}
 
     const panel = document.getElementById('director-panel');
     const btnToggle = document.getElementById('btn-director');
@@ -3963,11 +4208,15 @@ class PushnotOrbit {
       btnReset.onclick = () => {
         const stepIdx = this.getCurrentStepIndex();
         const key = `${this.mode}_step_${stepIdx}`;
-        delete this.directorRigs[key];
+        if (DEFAULT_DIRECTOR_RIGS[key]) {
+          this.directorRigs[key] = Object.assign({}, DEFAULT_DIRECTOR_RIGS[key]);
+        } else {
+          delete this.directorRigs[key];
+        }
         try {
           localStorage.setItem('pushnot_director_rigs', JSON.stringify(this.directorRigs));
         } catch (e) {}
-        showToast(`Reset ${key} to default!`);
+        showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
       };
     }
@@ -3985,10 +4234,10 @@ class PushnotOrbit {
 
     if (btnClear) {
       btnClear.onclick = () => {
-        if (confirm('Clear all locked director rigs?')) {
-          this.directorRigs = {};
+        if (confirm('Clear custom overrides and restore locked director presets?')) {
+          this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
           localStorage.removeItem('pushnot_director_rigs');
-          showToast('Cleared all custom rigs!');
+          showToast('Restored locked director presets!');
           this.updateDirectorHUD();
         }
       };
@@ -4211,6 +4460,7 @@ class PushnotOrbit {
     if (this.leoSubscriberBundle) this.leoSubscriberBundle.visible = false;
     if (this.rejectShieldBubble) this.rejectShieldBubble.visible = false;
     if (this.phoneEmojiBadge) this.phoneEmojiBadge.visible = false;
+    if (this.storeGameSelector) this.storeGameSelector.visible = false;
 
     const isLeo = this.mode === 'leo';
     const L = this.leoPos;
@@ -4226,7 +4476,7 @@ class PushnotOrbit {
     }
 
     // Bejeweled gemstones stay visibly installed on the phone ONLY in Mode 1 (after install) & Mode 2 (Bejeweled push) — hidden during Mode 3 multi-app push stream!
-    this.installedApp.visible = !isLeo && (this.mode === 'push' || (this.mode === 'setup' && t >= 0.24));
+    this.installedApp.visible = !isLeo && (this.mode === 'push' || (this.mode === 'setup' && t >= 0.30));
     // Fingerprint stays persistently stored on the server once registered!
     this.storedKey.visible = !isLeo && (this.mode === 'push' || this.mode === 'world' || t >= 0.92);
 
@@ -4251,26 +4501,61 @@ class PushnotOrbit {
     if (this.mode === 'setup') {
       // Normal phone screen during install/setup (zero wake-up or sleeping badges here)
       this.updatePhoneScreenCanvas('home', 0);
-      if (t < 0.24) {
-        const p = this.arcStoreToPhone.getPoint(seg(t, 0, 0.24));
+
+      if (t < 0.08) {
+        // Step 0: Google / Apple selecting the game animation!
+        if (this.storeGameSelector) {
+          this.storeGameSelector.visible = true;
+          this.storeGameSelector.lookAt(this.camera.position);
+          this.updateAppStoreSelectorCanvas(clamp01(t / 0.08), false);
+        }
+        this.appOrb.visible = false;
+        moverPos = new THREE.Vector3(POS.post.x, 30.0, POS.post.z + 5.0);
+        moverText = ' App Store & 🤖 Google Play · Selecting "Bejeweled Blitz"';
+        moverCls = 'cyan';
+      } else if (t < 0.18) {
+        // Step 1: Game selected! Jewel GLB appears & materializes above Apple & Google!
+        if (this.storeGameSelector) {
+          this.storeGameSelector.visible = true;
+          this.storeGameSelector.lookAt(this.camera.position);
+          this.updateAppStoreSelectorCanvas(1.0, true);
+        }
         this.appOrb.visible = true;
-        this.appOrb.position.copy(p);
-        moverPos = p;
-        moverText = this.currentOS === 'ios' ? ' App Store · Bejeweled Blitz' : '🤖 Google Play · Bejeweled Blitz';
+        const appearU = clamp01((t - 0.08) / 0.06);
+        this.appOrb.position.set(POS.post.x, 26.0, POS.post.z + 10.0);
+        this.appOrb.scale.setScalar(1.2 * appearU);
+        this.appOrb.rotation.y += dt * 2.2;
+        moverPos = new THREE.Vector3(POS.post.x, 33.0, POS.post.z + 10.0);
+        moverText = '💎 Bejeweled Blitz Selected · 3D Gemstones Packaged';
         moverCls = 'cyan';
       } else if (t < 0.30) {
-        showInstall = true;
+        // Step 2: Jewel flies along arc from Apple & Google to Phone
+        if (this.storeGameSelector) this.storeGameSelector.visible = false;
+        const p = this.arcStoreToPhone.getPoint(seg(t, 0.18, 0.30));
+        this.appOrb.visible = true;
+        this.appOrb.scale.setScalar(1.2);
+        this.appOrb.position.copy(p);
+        moverPos = p;
+        moverText = this.currentOS === 'ios' ? ' App Store · Bejeweled Blitz Flying to Device' : '🤖 Google Play · Bejeweled Blitz Flying to Device';
+        moverCls = 'cyan';
       } else if (t < 0.38) {
-        // Explicit registration request from Phone -> Post Office before the Post Office prints the new Unique Key!
-        const p = this.arcPhoneToPost.getPoint(seg(t, 0.30, 0.38));
+        // Step 3: Installed on Phone
+        if (this.storeGameSelector) this.storeGameSelector.visible = false;
+        showInstall = true;
+        moverPos = new THREE.Vector3(POS.phone.x, this.tops.phone + 14, POS.phone.z);
+        moverText = '📱 Bejeweled Blitz Installed · Needs Push Token';
+        moverCls = 'cyan';
+      } else if (t < 0.48) {
+        // Step 4: Phone requests token from Apple & Google
+        const p = this.arcPhoneToPost.getPoint(seg(t, 0.38, 0.48));
         this.triggerBolt.visible = true;
         this.triggerBolt.position.copy(p);
         moverPos = p;
         moverText = this.currentOS === 'ios' ? '📲 Request APNs Token' : '📲 Request FCM Token';
         moverCls = 'cyan';
-      } else if (t < 0.52) {
-        // High-Precision CNC Fiber Laser Key Fabrication (No HUD clutter, pure laser cut!)
-        const mp = seg(t, 0.38, 0.52);
+      } else if (t < 0.60) {
+        // Step 5: High-Precision CNC Fiber Laser Key Fabrication (No HUD clutter, pure laser cut!)
+        const mp = seg(t, 0.48, 0.60);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
         this.keyForge.position.copy(forgePos);
@@ -4385,26 +4670,31 @@ class PushnotOrbit {
         moverPos = forgePos.clone().add(new THREE.Vector3(0, 6.2, 0));
         moverText = 'NEW TOKEN CREATED';
         moverCls = 'cyan';
-      } else if (t < 0.62) {
-        const p = this.arcPostToPhone.getPoint(seg(t, 0.52, 0.62));
+      } else if (t < 0.70) {
+        // Step 6: Token returns to Phone
+        const p = this.arcPostToPhone.getPoint(seg(t, 0.60, 0.70));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
         moverText = this.currentOS === 'ios' ? '🔑 APNs Token → iPhone' : '🔑 FCM Token → Android';
-      } else if (t < 0.76) {
-        // Dedicated beat on Phone showing the Unique Gold Key on the Phone
-        this.tokenKey.visible = true;
-        this.tokenKey.position.set(POS.phone.x, this.tops.phone + 12.5, POS.phone.z);
-        this.tokenKey.scale.setScalar(1.45);
-        showToken = true;
-      } else if (t < 0.92) {
-        const p = this.arcPhoneToServer.getPoint(seg(t, 0.76, 0.92));
+      } else if (t < 0.82) {
+        // Step 7: Dedicated beat on Phone showing the Unique Gold Key on the Phone + registration
+        const p = this.arcPhoneToServer.getPoint(seg(t, 0.70, 0.82));
         this.tokenKey.visible = true;
         this.tokenKey.position.copy(p);
         moverPos = p;
         moverText = '🔑 Register Token with Server';
+      } else if (t < 0.92) {
+        // Step 8: Server verifies token
+        this.tokenKey.visible = true;
+        this.tokenKey.position.set(POS.server.x + 12, 24, POS.server.z + 12);
+        moverPos = new THREE.Vector3(POS.server.x, this.tops.server + 10, POS.server.z);
+        moverText = '🔒 App Server Verifies & Binds Token to User Socket';
       } else {
+        // Step 9: Push token securely stored on Server
         showSaved = true;
+        moverPos = new THREE.Vector3(POS.server.x, this.tops.server + 10, POS.server.z);
+        moverText = '💾 Push Token Saved in App Database';
       }
     } else if (this.mode === 'push') {
       if (t < 0.90) {
@@ -4703,7 +4993,11 @@ class PushnotOrbit {
     let customCineCam = null;
 
     if (this.mode === 'setup') {
-      if (t >= 0.38 && t < 0.52) {
+      if (t < 0.18) {
+        // App Selection & Jewel Appearance at Apple & Google
+        focusLocal = new THREE.Vector3(POS.post.x, 22, POS.post.z);
+        customCineCam = new THREE.Vector3(POS.post.x + 18, 30, POS.post.z + 32);
+      } else if (t >= 0.48 && t < 0.60) {
         // Isometric close-up of CNC Laser Key Fabrication at Apple/Google HQ
         focusLocal = new THREE.Vector3(POS.post.x, 24, POS.post.z);
         customCineCam = new THREE.Vector3(POS.post.x + 16, 36, POS.post.z + 26);

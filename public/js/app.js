@@ -38,28 +38,45 @@ const MODE_STEPS = {
   leo:   [0.05, 0.18, 0.32, 0.48, 0.62, 0.76, 0.88, 0.96]
 };
 
-// Default Director's Camera Rigs (Preset & Locked by Director)
+// Default Director's Camera Rigs (Completely framed from scratch with ample vertical headroom)
 const DEFAULT_DIRECTOR_RIGS = {
-  "setup_step_1": {
-    "cam": { "x": 80.64, "y": 31.38, "z": 73.45 },
-    "target": { "x": 13.15, "y": 15.87, "z": -6.34 }
-  },
-  "setup_step_3": {
-    "cam": { "x": -6.46, "y": 39.16, "z": -126.4 },
-    "target": { "x": 13.14, "y": 15.88, "z": -6.36 }
-  },
-  "setup_step_4": {
-    "cam": { "x": 44.65, "y": 125.02, "z": -55.67 },
-    "target": { "x": 13.14, "y": 15.88, "z": -6.36 }
-  },
-  "setup_step_5": {
-    "cam": { "x": 81.55, "y": 55.21, "z": 81.97 },
-    "target": { "x": 32.35, "y": 15.18, "z": 27.56 }
-  },
-  "setup_step_7": {
-    "cam": { "x": -43.6, "y": 47.74, "z": 98.63 },
-    "target": { "x": -32.44, "y": 12.5, "z": 32.53 }
-  }
+  // Mode 1: Setup (10 steps) — Zero top crop, generous headroom for banners & icons
+  "setup_step_0": { cam: { x: 26.0, y: 38.0, z: 8.0 },   target: { x: 0.0, y: 20.0, z: -43.0 } },
+  "setup_step_1": { cam: { x: 28.0, y: 36.0, z: 12.0 },  target: { x: 0.0, y: 22.0, z: -40.0 } },
+  "setup_step_2": { cam: { x: 74.0, y: 52.0, z: 32.0 },  target: { x: 16.0, y: 18.0, z: -4.0 } },
+  "setup_step_3": { cam: { x: 68.0, y: 32.0, z: 68.0 },  target: { x: 32.5, y: 16.0, z: 32.5 } },
+  "setup_step_4": { cam: { x: 76.0, y: 58.0, z: 42.0 },  target: { x: 16.0, y: 18.0, z: -6.0 } },
+  "setup_step_5": { cam: { x: 28.0, y: 56.0, z: -10.0 }, target: { x: 0.0, y: 36.0, z: -46.0 } },
+  "setup_step_6": { cam: { x: 68.0, y: 48.0, z: 38.0 },  target: { x: 20.0, y: 20.0, z: 4.0 } },
+  "setup_step_7": { cam: { x: 0.0,  y: 42.0, z: 92.0 },  target: { x: 0.0, y: 16.0, z: 32.5 } },
+  "setup_step_8": { cam: { x: -68.0, y: 36.0, z: 68.0 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
+  "setup_step_9": { cam: { x: 52.0, y: 64.0, z: 112.0 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
+
+  // Mode 2: Push (6 steps) — Framing server, flight path, and smartphone wake-up cleanly
+  "push_step_0": { cam: { x: -66.0, y: 40.0, z: 70.0 }, target: { x: -32.5, y: 22.0, z: 32.5 } },
+  "push_step_1": { cam: { x: 48.0,  y: 54.0, z: 52.0 }, target: { x: -16.0, y: 20.0, z: -8.0 } },
+  "push_step_2": { cam: { x: 26.0,  y: 38.0, z: 8.0 },  target: { x: 0.0, y: 20.0, z: -44.0 } },
+  "push_step_3": { cam: { x: 68.0,  y: 48.0, z: 34.0 }, target: { x: 18.0, y: 18.0, z: -6.0 } },
+  "push_step_4": { cam: { x: 64.0,  y: 30.0, z: 64.0 }, target: { x: 32.5, y: 16.0, z: 32.5 } },
+  "push_step_5": { cam: { x: 52.0,  y: 62.0, z: 108.0 }, target: { x: 0.0, y: 16.0, z: 0.0 } },
+
+  // Mode 3: World (6 steps) — Smooth elevated orbital progression around Earth GLB
+  "world_step_0": { cam: { x: 68.0,  y: 64.0, z: 96.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_1": { cam: { x: 98.0,  y: 58.0, z: 42.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_2": { cam: { x: 62.0,  y: 68.0, z: -78.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_3": { cam: { x: -56.0, y: 64.0, z: -82.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_4": { cam: { x: -88.0, y: 58.0, z: 44.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_5": { cam: { x: -38.0, y: 68.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+
+  // Mode 4: Law Enforcement (8 steps) — Imposing angles with zero top crop
+  "leo_step_0": { cam: { x: 56.0,  y: 24.0, z: 54.0 },  target: { x: 32.5, y: 12.0, z: 32.5 } },
+  "leo_step_1": { cam: { x: -12.0, y: 22.0, z: 66.0 },  target: { x: -31.0, y: 6.0, z: 34.0 } },
+  "leo_step_2": { cam: { x: -14.0, y: 34.0, z: -2.0 },  target: { x: -32.5, y: 20.0, z: -32.5 } },
+  "leo_step_3": { cam: { x: -24.0, y: 30.0, z: 38.0 },  target: { x: 0.0, y: 15.0, z: 4.0 } },
+  "leo_step_4": { cam: { x: 0.0,   y: 24.0, z: 44.0 },  target: { x: 0.0, y: 18.0, z: 14.0 } },
+  "leo_step_5": { cam: { x: 14.0,  y: 34.0, z: -2.0 },  target: { x: 32.5, y: 20.0, z: -32.5 } },
+  "leo_step_6": { cam: { x: 32.0,  y: 46.0, z: 52.0 },  target: { x: -6.0, y: 20.0, z: 14.0 } },
+  "leo_step_7": { cam: { x: 58.0,  y: 26.0, z: 56.0 },  target: { x: 32.5, y: 14.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -3907,27 +3924,7 @@ class PushnotOrbit {
       this.rcmpDaylightGroup.add(spotLight);
       this.rcmpDaylightGroup.add(spotLight.target);
 
-      // Sleek Dark Architectural Base Plinth (Enlarged to match menacing building footprint, zero grass)
-      const plinthW = 60.0;
-      const plinthD = 36.0;
-      const plinthH = 0.5;
-      const plinthGeo = new THREE.BoxGeometry(plinthW, plinthH, plinthD);
-      const plinthMat = new THREE.MeshStandardMaterial({
-        color: 0x070c16, // Deep menacing black-navy architectural slate
-        roughness: 0.85,
-        metalness: 0.20
-      });
-      const plinthMesh = new THREE.Mesh(plinthGeo, plinthMat);
-      plinthMesh.position.set(this.leoPos.swat.x, plinthH * 0.5, this.leoPos.swat.z);
-      plinthMesh.rotation.y = Math.PI * 0.22;
-      plinthMesh.receiveShadow = true;
-      plinthMesh.userData.stationKey = 'swat';
-      plinthMesh.add(new THREE.LineSegments(
-        new THREE.EdgesGeometry(plinthGeo),
-        new THREE.LineBasicMaterial({ color: 0x0284c7, transparent: true, opacity: 0.75 })
-      ));
-      this.rcmpDaylightGroup.add(plinthMesh);
-
+      // Building footprint stands directly on ground plane with zero plinth / zero base slab
       this.leoGroup.add(this.rcmpDaylightGroup);
       done();
     }, undefined, done);
@@ -4159,7 +4156,7 @@ class PushnotOrbit {
     this.directorMode = false;
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v3') || '{}');
       Object.assign(this.directorRigs, saved);
     } catch (e) {}
 
@@ -4213,7 +4210,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v3', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4230,7 +4227,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v3', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4252,6 +4249,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v3');
           localStorage.removeItem('pushnot_director_rigs');
           showToast('Restored locked director presets!');
           this.updateDirectorHUD();
@@ -5233,32 +5231,49 @@ class PushnotOrbit {
         this.focusCamPos = null;
       }
     } else if (this.playing || this.cinematicFollow) {
-      // Check if Director's Custom Rig is locked for this narrative step!
-      const stepIdx = this.getCurrentStepIndex();
-      const rigKey = `${this.mode}_step_${stepIdx}`;
-      const customRig = this.directorRigs && this.directorRigs[rigKey];
+      const stops = MODE_STEPS[this.mode] || [0];
+      const N = stops.length;
+      let i = 0;
+      for (let j = 0; j < N; j++) {
+        if (this.t >= stops[j] - 0.001) i = j;
+      }
+      const nextI = Math.min(N - 1, i + 1);
+      const rigKeyCurr = `${this.mode}_step_${i}`;
+      const rigKeyNext = `${this.mode}_step_${nextI}`;
 
-      if (customRig) {
-        const camLerp = Math.min(1, dt * 4.5);
-        const tgtLerp = Math.min(1, dt * 5.0);
-        const rigCam = new THREE.Vector3(customRig.cam.x, customRig.cam.y, customRig.cam.z);
-        const rigTgt = new THREE.Vector3(customRig.target.x, customRig.target.y, customRig.target.z);
-        this.camera.position.lerp(rigCam, camLerp);
-        this.controls.target.lerp(rigTgt, tgtLerp);
-        this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-        if (!this.playing && this.camera.position.distanceTo(rigCam) < 0.6) {
-          this.cinematicFollow = false;
-        }
+      const rigCurr = (this.directorRigs && this.directorRigs[rigKeyCurr]) || DEFAULT_DIRECTOR_RIGS[rigKeyCurr];
+      const rigNext = (this.directorRigs && this.directorRigs[rigKeyNext]) || DEFAULT_DIRECTOR_RIGS[rigKeyNext] || rigCurr;
+
+      let targetCam, targetTgt;
+      if (rigCurr && rigNext && i !== nextI && this.playing) {
+        // Smoothly interpolate between current step and next step based on timeline progress!
+        const u = seg(this.t, stops[i], stops[nextI]);
+        const s = u * u * (3 - 2 * u); // Smooth Hermite curve
+        targetCam = new THREE.Vector3().lerpVectors(
+          new THREE.Vector3(rigCurr.cam.x, rigCurr.cam.y, rigCurr.cam.z),
+          new THREE.Vector3(rigNext.cam.x, rigNext.cam.y, rigNext.cam.z),
+          s
+        );
+        targetTgt = new THREE.Vector3().lerpVectors(
+          new THREE.Vector3(rigCurr.target.x, rigCurr.target.y, rigCurr.target.z),
+          new THREE.Vector3(rigNext.target.x, rigNext.target.y, rigNext.target.z),
+          s
+        );
+      } else if (rigCurr) {
+        targetCam = new THREE.Vector3(rigCurr.cam.x, rigCurr.cam.y, rigCurr.cam.z);
+        targetTgt = new THREE.Vector3(rigCurr.target.x, rigCurr.target.y, rigCurr.target.z);
       } else {
-        // Video-Game Cinematic Step-by-Step Camera: smoothly dolly & pan onto the active packet / node!
-        const camLerp = Math.min(1, dt * 3.8);
-        const tgtLerp = Math.min(1, dt * 5.0);
-        this.camera.position.lerp(this.cineCamPos, camLerp);
-        this.controls.target.lerp(this.cineLookAt, tgtLerp);
-        this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-        if (!this.playing && this.camera.position.distanceTo(this.cineCamPos) < 0.6) {
-          this.cinematicFollow = false;
-        }
+        targetCam = this.cineCamPos;
+        targetTgt = this.cineLookAt;
+      }
+
+      const camLerp = Math.min(1, dt * 4.2);
+      const tgtLerp = Math.min(1, dt * 4.8);
+      this.camera.position.lerp(targetCam, camLerp);
+      this.controls.target.lerp(targetTgt, tgtLerp);
+      this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
+      if (!this.playing && this.camera.position.distanceTo(targetCam) < 0.6) {
+        this.cinematicFollow = false;
       }
     } else if (this.autoOrbit) {
       this.orbitAngle += dt * 0.12;

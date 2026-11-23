@@ -3918,11 +3918,11 @@ class PushnotOrbit {
     this.storeGroup.add(signLight);
 
     const cyanGlow = new THREE.PointLight(0x38bdf8, 2.0, 35);
-    cyanGlow.position.set(-6.8, 8, 4);
+    cyanGlow.position.set(-7.5, 8, 4);
     this.storeGroup.add(cyanGlow);
 
     const amberGlow = new THREE.PointLight(0xf59e0b, 2.0, 35);
-    amberGlow.position.set(6.8, 8, 4);
+    amberGlow.position.set(7.5, 8, 4);
     this.storeGroup.add(amberGlow);
 
     this.tops.post  = 18;
@@ -3980,8 +3980,8 @@ class PushnotOrbit {
       }, undefined, checkClone);
     };
 
-    mountLogo('models/apple_logo.glb', -6.8, true);
-    mountLogo('models/google_logo.glb',  6.8, false);
+    mountLogo('models/apple_logo.glb', -7.5, true);
+    mountLogo('models/google_logo.glb',  7.5, false);
   }
 
   centerAndScale(obj, size) {

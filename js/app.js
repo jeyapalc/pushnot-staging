@@ -3906,27 +3906,23 @@ class PushnotOrbit {
     ring.position.y = 1.22;
     this.storeGroup.add(ring);
 
-    // Front-facing and back-facing logo mount group for Apple and Google signs (Coin layout)
+    // Front-facing logo mount group for Apple and Google signs
     this.frontLogosGroup = new THREE.Group();
     this.frontLogosGroup.userData.stationKey = 'post';
     this.frontLogosGroup.position.set(0, 10.5, 0);
     this.storeGroup.add(this.frontLogosGroup);
 
-    // Illumination for both faces of the coin (Front: Apple, Back: Google)
-    const signLightFront = new THREE.PointLight(0xffffff, 2.8, 60);
-    signLightFront.position.set(0, 14, 12);
-    this.storeGroup.add(signLightFront);
+    // Illumination for the signs
+    const signLight = new THREE.PointLight(0xffffff, 2.8, 60);
+    signLight.position.set(0, 14, 12);
+    this.storeGroup.add(signLight);
 
-    const signLightBack = new THREE.PointLight(0xffffff, 2.8, 60);
-    signLightBack.position.set(0, 14, -12);
-    this.storeGroup.add(signLightBack);
-
-    const cyanGlow = new THREE.PointLight(0x38bdf8, 2.2, 35);
-    cyanGlow.position.set(0, 8, 7);
+    const cyanGlow = new THREE.PointLight(0x38bdf8, 2.0, 35);
+    cyanGlow.position.set(-6.8, 8, 4);
     this.storeGroup.add(cyanGlow);
 
-    const amberGlow = new THREE.PointLight(0xf59e0b, 2.2, 35);
-    amberGlow.position.set(0, 8, -7);
+    const amberGlow = new THREE.PointLight(0xf59e0b, 2.0, 35);
+    amberGlow.position.set(6.8, 8, 4);
     this.storeGroup.add(amberGlow);
 
     this.tops.post  = 18;
@@ -3945,8 +3941,8 @@ class PushnotOrbit {
       done();
     };
 
-    // Mount Apple Logo and Google Logo back-to-back like a two-sided coin (centered at x=0, air gap along z, no touching)
-    const mountLogo = (path, zOffset, yRot, isApple) => {
+    // Mount Apple Logo (left) and Google Logo (right) - Identical scale and matching finish
+    const mountLogo = (path, xOffset, isApple) => {
       this.loader.load(path, (gltf) => {
         const logo = gltf.scene;
         logo.traverse((ch) => {
@@ -3973,9 +3969,7 @@ class PushnotOrbit {
         const wrap = new THREE.Group();
         logo.position.set(-c.x, -c.y, -c.z);
         wrap.add(logo);
-        // Positioned at x=0, separated along z with opposite rotations like a two-sided coin
-        wrap.position.set(0, 0, zOffset);
-        wrap.rotation.y = yRot;
+        wrap.position.set(xOffset, 0, 0);
 
         if (isApple) this.appleLogoMesh = wrap;
         else this.googleLogoMesh = wrap;
@@ -3986,9 +3980,8 @@ class PushnotOrbit {
       }, undefined, checkClone);
     };
 
-    // Apple facing front (+Z), Google facing back (-Z) back-to-back with a clean air gap
-    mountLogo('models/apple_logo.glb',  1.6, 0, true);
-    mountLogo('models/google_logo.glb', -1.6, Math.PI, false);
+    mountLogo('models/apple_logo.glb', -6.8, true);
+    mountLogo('models/google_logo.glb',  6.8, false);
   }
 
   centerAndScale(obj, size) {
@@ -5312,6 +5305,12 @@ class PushnotOrbit {
     if (this.ufoGroup) {
       this.ufoGroup.rotation.y += dt * 0.7;
       this.ufoGroup.position.y = POS.ufo.y + Math.sin(now * 0.0025) * 1.4;
+    }
+    if (this.storeGroup && this.camera) {
+      // Always keep the Apple & Google logos facing directly towards the camera during orbit!
+      const dx = this.camera.position.x - POS.post.x;
+      const dz = this.camera.position.z - POS.post.z;
+      this.storeGroup.rotation.y = Math.atan2(dx, dz);
     }
 
     this.appOrb.rotation.y += dt * 1.4;

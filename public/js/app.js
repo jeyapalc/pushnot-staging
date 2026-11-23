@@ -68,15 +68,15 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track above LEO floor (LEO floor at world Y = 29.0, cam.y = 55.0, target.y = 45.0)
-  "leo_step_0": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: 64.0 },  target: { x: 32.5, y: 45.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.18, radius: 90.0, cam: { x: -16.1, y: 55.0, z: 88.5 },  target: { x: -32.5, y: 42.0, z: 32.5 } },
-  "leo_step_2": { angle: -2.05, radius: 90.0, cam: { x: -79.9, y: 55.0, z: -41.5 }, target: { x: -32.5, y: 46.0, z: -32.5 } },
-  "leo_step_3": { angle: -2.05, radius: 90.0, cam: { x: -72.0, y: 55.0, z: -35.0 }, target: { x: -30.0, y: 46.0, z: -30.0 } },
+  // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track above LEO floor (LEO floor at world Y = 29.0, cam.y = 55.0, target.y = 44.0)
+  "leo_step_0": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: 64.0 },  target: { x: 32.5, y: 44.0, z: 32.5 } },
+  "leo_step_1": { angle: -0.78, radius: 90.0, cam: { x: -63.3, y: 55.0, z: 64.0 },  target: { x: -32.5, y: 42.0, z: 32.5 } },
+  "leo_step_2": { angle: -2.35, radius: 90.0, cam: { x: -63.3, y: 55.0, z: -64.0 }, target: { x: -32.5, y: 45.0, z: -32.5 } },
+  "leo_step_3": { angle: -2.35, radius: 90.0, cam: { x: -63.3, y: 55.0, z: -64.0 }, target: { x: -32.5, y: 45.0, z: -32.5 } },
   "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
-  "leo_step_5": { angle: 0.42,  radius: 90.0, cam: { x: 36.7,  y: 55.0, z: 82.2 },  target: { x: 0.0,  y: 44.0, z: 4.0 } },
-  "leo_step_6": { angle: 2.05,  radius: 90.0, cam: { x: 79.9,  y: 55.0, z: -41.5 }, target: { x: 32.5, y: 48.0, z: -32.5 } },
-  "leo_step_7": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 54.0, z: 64.0 },  target: { x: 32.5, y: 46.0, z: 32.5 } }
+  "leo_step_5": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
+  "leo_step_6": { angle: 2.35,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: -64.0 }, target: { x: 32.5, y: 46.0, z: -32.5 } },
+  "leo_step_7": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 54.0, z: 64.0 },  target: { x: 32.5, y: 44.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -1779,11 +1779,6 @@ class PushnotOrbit {
       // Apple & Google HQ in LEO mode.
       target = new THREE.Vector3(this.leoPos.ag.x, 20.0, this.leoPos.ag.z);
       camPos = new THREE.Vector3(this.leoPos.ag.x + 22, 22.0, this.leoPos.ag.z + 28);
-    }
-
-    if (this.mode === 'leo' && target && camPos) {
-      target.y += 29.0;
-      camPos.y += 29.0;
     }
 
     if (!target || !camPos) return;
@@ -3829,21 +3824,24 @@ class PushnotOrbit {
     this.leoTops.ag = 20;
 
     // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
-    // pSwat anchored cleanly ABOVE and IN FRONT of the RCMP entrance wooden awning so paper bottom is completely above awning!
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 8.8, 8.2));
-    const pProton      = L.proton.clone().add(new THREE.Vector3(0, 8.5, 3.0));
-    const pBot         = L.bot.clone().add(new THREE.Vector3(0, 8.0, 2.5));
-    const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 8.0, 3.5));
-    const pAg          = L.ag.clone().setY(10.0);
+    // pSwat anchored cleanly ABOVE and IN FRONT of the RCMP entrance wooden awning so paper bottom is completely above and in front of the awning!
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(1.5, 13.0, 14.0));
+    const pProton      = L.proton.clone().add(new THREE.Vector3(0, 10.0, 3.0));
+    const pBot         = L.bot.clone().add(new THREE.Vector3(0, 9.0, 2.5));
+    const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 9.0, 3.5));
+    const pAg          = L.ag.clone().setY(12.0);
+    const pHacker      = L.bandit.clone().add(new THREE.Vector3(0, 9.5, 0));
 
     // High mortar trajectory arcs: curving dramatically up and over buildings like high-angle artillery mortar shells!
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((-D - D) * 0.5 - 6, 42.0, 0), pProton);
-    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.bot.x) * 0.5, 38.0, (L.swat.z + L.bot.z) * 0.5), pBot);
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3((L.swat.x + L.bot.x) * 0.5, 42.0, (L.swat.z + L.bot.z) * 0.5 + 4), pSwat);
-    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 46.0, 0),      pAg);
-    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 48.0, 10),     pSwat);
+    this.arcLeoThreat  = new THREE.QuadraticBezierCurve3(pHacker, new THREE.Vector3(0, 78.0, (L.bandit.z + L.swat.z) * 0.5 + 8), pSwat);
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((-D - D) * 0.5 - 10, 68.0, 0), pProton);
+    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 - 4, 72.0, (L.swat.z + L.bot.z) * 0.5 + 4), pBot);
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 + 4, 74.0, (L.swat.z + L.bot.z) * 0.5 + 8), pSwat);
+    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 84.0, 0),      pAg);
+    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 86.0, 12),     pSwat);
 
     this.leoLines = [
+      this.addArc(this.arcLeoThreat, 0xf43f5e, 0.45, this.leoGroup),
       this.addArc(this.arcLeoProton, 0xf43f5e, 0.45, this.leoGroup),
       this.addArc(this.arcLeoToMeta, 0xfbbf24, 0.50, this.leoGroup),
       this.addArc(this.arcLeoTokens, 0xfbbf24, 0.50, this.leoGroup),
@@ -4487,6 +4485,8 @@ class PushnotOrbit {
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
       // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
+      localStorage.removeItem('pushnot_director_rigs_v13');
+      localStorage.removeItem('pushnot_director_rigs_v12');
       localStorage.removeItem('pushnot_director_rigs_v11');
       localStorage.removeItem('pushnot_director_rigs_v10');
       localStorage.removeItem('pushnot_director_rigs_v9');
@@ -4497,8 +4497,11 @@ class PushnotOrbit {
       localStorage.removeItem('pushnot_director_rigs_v4');
       localStorage.removeItem('pushnot_director_rigs_v3');
       localStorage.removeItem('pushnot_director_rigs');
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v12') || '{}');
-      Object.assign(this.directorRigs, saved);
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v14') || '{}');
+      for (const k of Object.keys(saved)) {
+        if (k.startsWith('leo_') && saved[k].cam && saved[k].cam.y < 45.0) continue;
+        this.directorRigs[k] = saved[k];
+      }
     } catch (e) {}
 
     const panel = document.getElementById('director-panel');
@@ -4552,7 +4555,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v12', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v14', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4569,7 +4572,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v12', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v14', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4591,6 +4594,8 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v14');
+          localStorage.removeItem('pushnot_director_rigs_v13');
           localStorage.removeItem('pushnot_director_rigs_v12');
           localStorage.removeItem('pushnot_director_rigs_v11');
           localStorage.removeItem('pushnot_director_rigs_v10');
@@ -5196,7 +5201,9 @@ class PushnotOrbit {
           if (this.exigentDemand) {
             this.exigentDemand.visible = true;
             this.exigentDemand.position.copy(p);
-            this.exigentDemand.lookAt(this.camera.position);
+            // Orient vertically (pitch = 0, roll = 0) facing camera horizontally, so bottom never pitches into the building awning!
+            const camDir = this.camera.position.clone().sub(p);
+            this.exigentDemand.rotation.set(0, Math.atan2(camDir.x, camDir.z), 0);
             this.exigentDemand.scale.setScalar(0.95);
           }
           moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
@@ -5216,7 +5223,8 @@ class PushnotOrbit {
         if (this.exigentDemand) {
           this.exigentDemand.visible = true;
           this.exigentDemand.position.copy(p);
-          this.exigentDemand.lookAt(this.camera.position);
+          const camDir = this.camera.position.clone().sub(p);
+          this.exigentDemand.rotation.set(0, Math.atan2(camDir.x, camDir.z), 0);
           this.exigentDemand.scale.setScalar(0.95);
         }
         moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
@@ -5644,6 +5652,11 @@ class PushnotOrbit {
       } else {
         targetCam = this.cineCamPos;
         targetTgt = this.cineLookAt;
+      }
+
+      if (this.mode === 'leo') {
+        if (targetCam) targetCam.y = Math.max(50.0, targetCam.y);
+        if (targetTgt) targetTgt.y = Math.max(40.0, targetTgt.y);
       }
 
       // Smooth cinema dolly rolling speed along the rails (eliminates any jerky snap zoom/snap dolly)

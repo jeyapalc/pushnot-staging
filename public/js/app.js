@@ -76,7 +76,7 @@ const DEFAULT_DIRECTOR_RIGS = {
   "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
   "leo_step_5": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
   "leo_step_6": { angle: 2.35,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: -64.0 }, target: { x: 32.5, y: 46.0, z: -32.5 } },
-  "leo_step_7": { angle: 0.45,  radius: 90.0, cam: { x: 39.0,  y: 55.0, z: 81.0 },  target: { x: 32.5, y: 49.0, z: 32.5 } }
+  "leo_step_7": { angle: 0.40,  radius: 90.0, cam: { x: 35.0,  y: 55.0, z: 83.0 },  target: { x: 32.5, y: 50.0, z: 32.5 } }
 };
 
 const WORLD_APPS = [
@@ -166,6 +166,7 @@ class PushnotOrbit {
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.18;
+    this.renderer.localClippingEnabled = true;
     this.container.appendChild(this.renderer.domElement);
 
     // Unified Studio IBL Environment Map for cohesive metallic & satin reflections
@@ -2751,16 +2752,16 @@ class PushnotOrbit {
     tex.colorSpace = THREE.SRGBColorSpace;
 
     const board = new THREE.Mesh(
-      new THREE.BoxGeometry(4.2, 1.3, 0.12),
+      new THREE.BoxGeometry(3.5, 1.1, 0.10),
       new THREE.MeshStandardMaterial({ map: tex, metalness: 0.2, roughness: 0.3 })
     );
-    board.position.y = 1.0;
+    board.position.y = 0.55;
 
     const postMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.8, roughness: 0.3 });
-    const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 12), postMat);
-    postL.position.set(-1.6, 0.5, 0);
-    const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 12), postMat);
-    postR.position.set(1.6, 0.5, 0);
+    const postL = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.55, 12), postMat);
+    postL.position.set(-1.4, 0.275, 0);
+    const postR = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.55, 12), postMat);
+    postR.position.set(1.4, 0.275, 0);
 
     group.add(board, postL, postR);
     return group;
@@ -2794,10 +2795,11 @@ class PushnotOrbit {
     homeWrap.rotation.set(0, 0, 0);
     group.add(homeWrap);
 
-    // Front yard address plaque standing on front-right side of lawn
-    // (So walkway, front door, lawn, and tree are 100% visible!)
+    // Front yard address plaque standing on front-right curb of driveway
+    // (Walkway, front door, lawn, and white-blossomed tree are 100% visible and unobstructed!)
     const addrPlaque = this.createHouseAddressPlaque();
-    addrPlaque.position.set(10.2, 0, 5.2);
+    addrPlaque.position.set(14.2, 0, 4.6);
+    addrPlaque.rotation.set(0, -0.18, 0);
     group.add(addrPlaque);
 
     // Dedicated high-intensity architectural lighting rig on the home
@@ -3874,20 +3876,25 @@ class PushnotOrbit {
     try {
       const bust = new THREE.Group();
       const hx = 108.0, hy = 258.0, hz = 83.0;
+      // Neck clipping plane: strictly cuts off all body/torso/legs/shoes below Y = 236 in model space!
+      const neckPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -236.0);
 
       hacker.traverse(c => {
         if (!c.isMesh) return;
         const mName = c.material ? (c.material.name || '') : '';
         const cName = c.name || '';
-        // Skip screen and detached eyewear
+        // Skip screen, glasses, clothes, torso, pants, shoes
         if (mName.includes('blinn4') || cName.includes('blinn4')) return;
         if (mName.includes('Eyewear') || cName.includes('Eyewear')) return;
-        if (mName.includes('Bodymat') || mName.includes('Hairmat') || mName.includes('Topmat') || mName.includes('Ch01_body')) {
+        if (mName.includes('Topmat') || mName.includes('Bottommat') || mName.includes('Material') || mName.includes('Ch01_body')) return;
+        if (mName.includes('Bodymat') || mName.includes('Hairmat')) {
           const mClone = c.clone(true);
           if (mClone.material) {
             mClone.material = mClone.material.clone();
-            mClone.material.roughness = 0.45;
+            mClone.material.roughness = 0.42;
             mClone.material.metalness = 0.05;
+            mClone.material.clippingPlanes = [neckPlane];
+            mClone.material.clipShadows = true;
             if (c.userData && c.userData.origColor) {
               mClone.material.color.copy(c.userData.origColor);
             }
@@ -3901,8 +3908,8 @@ class PushnotOrbit {
 
       const bustRoot = new THREE.Group();
       bustRoot.add(bust);
-      // Scale down to fit neatly in portrait frame (target height ≈ 2.4 units)
-      const scaleBust = 2.4 / 45.0;
+      // Scale down to fit neatly in portrait frame (target height ≈ 2.2 units)
+      const scaleBust = 2.2 / 45.0;
       bustRoot.scale.setScalar(scaleBust);
       // Face in hack.glb faces -X: rotate by +PI/2 around Y so face points directly forward (+Z) toward user!
       bustRoot.rotation.y = Math.PI * 0.5;
@@ -5446,7 +5453,7 @@ class PushnotOrbit {
       } else {
         // Suspect unmasked & seized with 3 objects (Credit Card, Photo ID, Home) hovering above his desk!
         focusLocal = new THREE.Vector3(L.bandit.x, 21.5, L.bandit.z);
-        customCineCam = new THREE.Vector3(L.bandit.x + 12.0, 27.0, L.bandit.z + 36.0);
+        customCineCam = new THREE.Vector3(L.bandit.x + 8.0, 27.0, L.bandit.z + 38.0);
       }
     }
 

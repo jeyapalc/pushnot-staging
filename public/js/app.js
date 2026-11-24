@@ -76,7 +76,7 @@ const DEFAULT_DIRECTOR_RIGS = {
   "leo_step_4": { angle: -2.08, radius: 85.2, cam: { x: -74.2, y: 55.0, z: -41.7 }, target: { x: -16.2, y: 44.0, z: 16.2 } },  // Transit: App Server -> RCMP Tokens (origin, dest & arc)
   "leo_step_5": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: RCMP -> Apple/Google HQ (origin, dest & arc)
   "leo_step_6": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: Apple/Google -> RCMP Record (origin, dest & arc)
-  "leo_step_7": { angle: 1.07,  radius: 25.1, cam: { x: 22.1,  y: 45.0, z: 12.0 },  target: { x: 32.5, y: 44.0, z: 32.5 } }  // Suspect unmasked facing camera head-on with front illumination
+  "leo_step_7": { angle: 1.57,  radius: 16.0, cam: { x: 16.0,  y: 47.0, z: 0.0 },   target: { x: 32.5, y: 46.0, z: 32.5 } }  // Suspect unmasked facing camera head-on with front illumination and full scene framing
 };
 
 const WORLD_APPS = [
@@ -4158,6 +4158,7 @@ class PushnotOrbit {
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
       // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
+      localStorage.removeItem('pushnot_director_rigs_v16');
       localStorage.removeItem('pushnot_director_rigs_v15');
       localStorage.removeItem('pushnot_director_rigs_v14');
       localStorage.removeItem('pushnot_director_rigs_v13');
@@ -4172,7 +4173,7 @@ class PushnotOrbit {
       localStorage.removeItem('pushnot_director_rigs_v4');
       localStorage.removeItem('pushnot_director_rigs_v3');
       localStorage.removeItem('pushnot_director_rigs');
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v16') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v17') || '{}');
       for (const k of Object.keys(saved)) {
         if (k.startsWith('leo_') && saved[k].cam && saved[k].cam.y < 45.0) continue;
         this.directorRigs[k] = saved[k];
@@ -4230,7 +4231,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v16', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v17', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4247,7 +4248,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v16', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v17', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4994,7 +4995,7 @@ class PushnotOrbit {
           // Angle so Subscriber ID card and House face directly toward front reveal camera
           this.leoSubscriberBundle.rotation.set(0, -Math.PI * 0.85, 0);
         }
-        moverPos = new THREE.Vector3(L.bandit.x, 32.0, L.bandit.z);
+        moverPos = new THREE.Vector3(L.bandit.x, 34.5, L.bandit.z);
         moverText = '🚨 Suspect Identified';
         moverCls = 'red';
         showLeoId = true;

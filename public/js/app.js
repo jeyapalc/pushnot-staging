@@ -416,7 +416,6 @@ class PushnotOrbit {
     this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 4, 18, -6), pPhone);
     this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 8),  pServer);
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
-    this.arcUfoToServer   = new THREE.LineCurve3(POS.ufo.clone().setY(44), POS.server.clone().setY(26));
     this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
       POS.ufo.clone().setY(72.5),
       new THREE.Vector3(-D * 0.5, 46, -D * 0.3),
@@ -679,102 +678,6 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- 3D Biometric Fingerprint Token representing the Device Push Token ---- */
-  createFingerprintTexture(colorHex = '#38bdf8') {
-    const cvs = document.createElement('canvas');
-    cvs.width = 1024; cvs.height = 1024;
-    const ctx = cvs.getContext('2d');
-
-    // Deep biometric dark glass background
-    const bg = ctx.createRadialGradient(512, 512, 60, 512, 512, 500);
-    bg.addColorStop(0, '#0c1e33');
-    bg.addColorStop(0.7, '#081220');
-    bg.addColorStop(1, '#030712');
-    ctx.fillStyle = bg;
-    ctx.beginPath();
-    ctx.roundRect(32, 32, 960, 960, 120);
-    ctx.fill();
-
-    // Biometric glowing border
-    ctx.strokeStyle = colorHex;
-    ctx.lineWidth = 16;
-    ctx.stroke();
-
-    // Corner targeting brackets
-    const bLen = 80;
-    ctx.lineWidth = 10;
-    ctx.strokeStyle = '#ffffff';
-    // Top-left
-    ctx.beginPath(); ctx.moveTo(70, 70 + bLen); ctx.lineTo(70, 70); ctx.lineTo(70 + bLen, 70); ctx.stroke();
-    // Top-right
-    ctx.beginPath(); ctx.moveTo(954 - bLen, 70); ctx.lineTo(954, 70); ctx.lineTo(954, 70 + bLen); ctx.stroke();
-    // Bottom-left
-    ctx.beginPath(); ctx.moveTo(70, 954 - bLen); ctx.lineTo(70, 954); ctx.lineTo(70 + bLen, 954); ctx.stroke();
-    // Bottom-right
-    ctx.beginPath(); ctx.moveTo(954 - bLen, 954); ctx.lineTo(954, 954); ctx.lineTo(954 - bLen, 954); ctx.stroke();
-
-    // Header badge
-    ctx.fillStyle = colorHex;
-    ctx.font = 'bold 44px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('DEVICE FINGERPRINT', 512, 128);
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '28px monospace';
-    ctx.fillText('SHA-256 #7A9F-2B4C-8E1D', 512, 172);
-
-    // Realistic concentric fingerprint friction ridges (whorls & loops)
-    ctx.save();
-    ctx.translate(512, 560);
-    ctx.strokeStyle = colorHex;
-    ctx.lineCap = 'round';
-    ctx.shadowColor = colorHex;
-    ctx.shadowBlur = 14;
-
-    const numRidges = 15;
-    for (let i = 1; i <= numRidges; i++) {
-      const rx = i * 24;
-      const ry = i * 30;
-      ctx.lineWidth = 9;
-      ctx.beginPath();
-      const startA = (i % 3 === 0) ? 0.35 : 0.08;
-      const endA = (i % 2 === 0) ? Math.PI * 1.84 : Math.PI * 1.94;
-      ctx.ellipse(0, 0, rx, ry, 0, startA, endA);
-      ctx.stroke();
-
-      if (i % 4 === 0) {
-        // Delta arch bifurcation
-        ctx.beginPath();
-        ctx.ellipse(i * 3, i * -4, rx * 0.72, ry * 0.72, 0.22, 0.45, Math.PI * 1.6);
-        ctx.stroke();
-      }
-    }
-
-    // Core central loop
-    ctx.beginPath();
-    ctx.ellipse(0, 0, 20, 30, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.restore();
-
-    // Horizontal scanning laser line
-    const grad = ctx.createLinearGradient(80, 560, 944, 560);
-    grad.addColorStop(0, 'rgba(56, 189, 248, 0)');
-    grad.addColorStop(0.5, '#ffffff');
-    grad.addColorStop(1, 'rgba(56, 189, 248, 0)');
-    ctx.strokeStyle = grad;
-    ctx.lineWidth = 8;
-    ctx.beginPath();
-    ctx.moveTo(80, 560); ctx.lineTo(944, 560);
-    ctx.stroke();
-
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
-    tex.generateMipmaps = false;
-    return tex;
-  }
-
   /* ---- Metallic 3D Key representing the Device Token (distinct from gems!) ---- */
   createTokenKey(scale = 1) {
     const group = new THREE.Group();
@@ -795,95 +698,6 @@ class PushnotOrbit {
     t2.position.set(2.2, -0.8, 0);
 
     group.add(bow, shaft, t1, t2, new THREE.PointLight(0xfbbf24, 2.5, 24));
-    group.scale.setScalar(scale);
-    return group;
-  }
-
-  createFingerprintToken(scale = 1) {
-    return this.createTokenKey(scale);
-  }
-
-  /* ---- Unique Branded 3D App Push Token Keys (Meta, Instagram, X) ---- */
-  createBrandedKey(brand, hexColor, label, token, scale = 1) {
-    const group = new THREE.Group();
-    const colorInt = parseInt(hexColor.replace('#', '0x'), 16);
-    const mat = new THREE.MeshStandardMaterial({
-      color: colorInt,
-      emissive: colorInt,
-      emissiveIntensity: 0.50,
-      metalness: 0.85,
-      roughness: 0.22
-    });
-
-    // 1. Key bow (circular ring handle at TOP)
-    const bow = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.28, 12, 28), mat);
-    bow.position.set(0, 1.0, 0);
-
-    // 2. Center disc inside bow with brand glyph
-    const discCvs = document.createElement('canvas');
-    discCvs.width = 256; discCvs.height = 256;
-    const dctx = discCvs.getContext('2d');
-    dctx.fillStyle = hexColor;
-    dctx.beginPath(); dctx.arc(128, 128, 124, 0, Math.PI * 2); dctx.fill();
-    dctx.strokeStyle = '#ffffff'; dctx.lineWidth = 8; dctx.stroke();
-    dctx.fillStyle = '#ffffff';
-    dctx.textAlign = 'center'; dctx.textBaseline = 'middle';
-    if (brand === 'meta') {
-      dctx.font = 'bold 140px sans-serif';
-      dctx.fillText('f', 134, 134);
-    } else if (brand === 'instagram') {
-      dctx.font = '115px sans-serif';
-      dctx.fillText('📸', 128, 130);
-    } else {
-      dctx.font = '900 125px sans-serif';
-      dctx.fillText('𝕏', 128, 130);
-    }
-    const discTex = new THREE.CanvasTexture(discCvs);
-    const discMat = new THREE.MeshBasicMaterial({ map: discTex, side: THREE.DoubleSide });
-    const disc = new THREE.Mesh(new THREE.CircleGeometry(0.85, 24), discMat);
-    disc.position.set(0, 1.0, 0.16);
-
-    // 3. Key blade shaft extending DOWNWARDS
-    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.40, 2.3, 0.30), mat);
-    shaft.position.set(0, -0.65, 0);
-
-    // 4. Distinct tooth profile per brand branching to the right
-    const tGroup = new THREE.Group();
-    if (brand === 'meta') {
-      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.35, 0.30), mat); t1.position.set(0.55, -0.65, 0);
-      const t2 = new THREE.Mesh(new THREE.BoxGeometry(1.10, 0.35, 0.30), mat); t2.position.set(0.68, -1.35, 0);
-      tGroup.add(t1, t2);
-    } else if (brand === 'instagram') {
-      const t1 = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.32, 0.30), mat); t1.position.set(0.60, -0.45, 0);
-      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.32, 0.30), mat); t2.position.set(0.45, -0.95, 0);
-      const t3 = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.32, 0.30), mat); t3.position.set(0.70, -1.45, 0);
-      tGroup.add(t1, t2, t3);
-    } else {
-      const t1 = new THREE.Mesh(new THREE.BoxGeometry(1.10, 0.35, 0.30), mat); t1.position.set(0.68, -0.75, 0);
-      const t2 = new THREE.Mesh(new THREE.BoxGeometry(0.80, 0.35, 0.30), mat); t2.position.set(0.52, -1.35, 0);
-      tGroup.add(t1, t2);
-    }
-
-    // 5. Horizontal micro-tag with token ID right above the bow (completely horizontal & legible)
-    const tagCvs = document.createElement('canvas');
-    tagCvs.width = 384; tagCvs.height = 96;
-    const tctx = tagCvs.getContext('2d');
-    tctx.fillStyle = '#060c18';
-    tctx.fillRect(0, 0, 384, 96);
-    tctx.strokeStyle = hexColor; tctx.lineWidth = 6;
-    tctx.strokeRect(4, 4, 376, 88);
-    tctx.fillStyle = '#ffffff';
-    tctx.font = 'bold 42px monospace';
-    tctx.textAlign = 'center'; tctx.textBaseline = 'middle';
-    tctx.fillText(token, 192, 48);
-    const tagTex = new THREE.CanvasTexture(tagCvs);
-    const tagMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.5, 0.62),
-      new THREE.MeshBasicMaterial({ map: tagTex, side: THREE.DoubleSide })
-    );
-    tagMesh.position.set(0, 2.38, 0.16);
-
-    group.add(bow, disc, shaft, tGroup, tagMesh);
     group.scale.setScalar(scale);
     return group;
   }
@@ -1943,10 +1757,10 @@ class PushnotOrbit {
     const aspect = (this.camera && this.camera.aspect) || (window.innerWidth / window.innerHeight);
     const halfW = halfH * aspect;
 
-    // Shift look-target horizontally so station projects to 1/3 or 2/3 of screen width
+    // Shift look-target horizontally & vertically so station projects along 1/3 or 2/3 Rule-of-Thirds guidelines
     const sign = isLeftSide ? 1 : -1;
     const offsetX = sign * (halfW * 0.333);
-    const offsetY = -halfH * 0.08;
+    const offsetY = -halfH * 0.22;
 
     const target = stationPos.clone()
       .addScaledVector(right, offsetX)
@@ -2662,104 +2476,6 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- Adorable Tiny 3D Modern Residential Townhouse (Subscriber's Residence) ---- */
-  createTiny3DHome(scale = 1) {
-    const group = new THREE.Group();
-
-    // 1. Landscaped lawn plinth (compact & elegant)
-    const lawnGeo = new THREE.CylinderGeometry(3.2, 3.5, 0.45, 24);
-    const lawnMat = new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85, metalness: 0.05 });
-    const lawn = new THREE.Mesh(lawnGeo, lawnMat);
-    lawn.position.y = -0.22;
-    group.add(lawn);
-
-    // 2. Main house walls (crisp modern white/slate siding)
-    const houseGeo = new THREE.BoxGeometry(3.6, 2.8, 3.2);
-    const houseMat = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.5, metalness: 0.1 });
-    const house = new THREE.Mesh(houseGeo, houseMat);
-    house.position.y = 1.4;
-    group.add(house);
-
-    // 3. Dark architectural pitched roof
-    const roofShape = new THREE.Shape();
-    roofShape.moveTo(-2.1, 0);
-    roofShape.lineTo(0, 1.6);
-    roofShape.lineTo(2.1, 0);
-    roofShape.closePath();
-    const roofGeo = new THREE.ExtrudeGeometry(roofShape, { depth: 3.6, bevelEnabled: false });
-    roofGeo.center();
-    const roofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.4, metalness: 0.3 });
-    const roof = new THREE.Mesh(roofGeo, roofMat);
-    roof.position.set(0, 3.5, 0);
-    group.add(roof);
-
-    // 4. Red brick chimney
-    const chimGeo = new THREE.BoxGeometry(0.6, 1.5, 0.6);
-    const chimMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.9, metalness: 0.05 });
-    const chim = new THREE.Mesh(chimGeo, chimMat);
-    chim.position.set(1.0, 3.9, -0.4);
-    group.add(chim);
-
-    // 5. Front door (warm mahogany wood)
-    const doorGeo = new THREE.BoxGeometry(0.9, 1.6, 0.1);
-    const doorMat = new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.4, metalness: 0.2 });
-    const door = new THREE.Mesh(doorGeo, doorMat);
-    door.position.set(0, 0.8, 1.66);
-    // Golden brass doorknob
-    const knob = new THREE.Mesh(
-      new THREE.SphereGeometry(0.08, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.9, roughness: 0.1 })
-    );
-    knob.position.set(0.32, 0.8, 1.72);
-    group.add(door, knob);
-
-    // 6. Two glowing warm amber windows
-    const winGeo = new THREE.PlaneGeometry(0.75, 0.85);
-    const winMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide });
-    const winL = new THREE.Mesh(winGeo, winMat);
-    winL.position.set(-1.15, 1.7, 1.62);
-    const winR = new THREE.Mesh(winGeo, winMat);
-    winR.position.set(1.15, 1.7, 1.62);
-    group.add(winL, winR);
-
-    // Warm ambient glow cast from windows
-    const homeLight = new THREE.PointLight(0xf59e0b, 2.0, 12);
-    homeLight.position.set(0, 1.4, 2.2);
-    group.add(homeLight);
-
-    // 7. Street address post & sign plaque in front yard
-    const signCvs = document.createElement('canvas');
-    signCvs.width = 384; signCvs.height = 128;
-    const sctx = signCvs.getContext('2d');
-    sctx.fillStyle = '#0f172a';
-    sctx.fillRect(0, 0, 384, 128);
-    sctx.strokeStyle = '#38bdf8'; sctx.lineWidth = 6;
-    sctx.strokeRect(4, 4, 376, 120);
-    sctx.fillStyle = '#ffffff';
-    sctx.font = 'bold 38px "Space Grotesk", sans-serif';
-    sctx.textAlign = 'center'; sctx.textBaseline = 'middle';
-    sctx.fillText('📍 1042 ROBSON ST', 192, 48);
-    sctx.fillStyle = '#94a3b8';
-    sctx.font = 'bold 24px monospace';
-    sctx.fillText('VANCOUVER, BC', 192, 92);
-
-    const signTex = new THREE.CanvasTexture(signCvs);
-    const signBoard = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.8, 0.6),
-      new THREE.MeshBasicMaterial({ map: signTex, side: THREE.DoubleSide })
-    );
-    signBoard.position.set(1.3, 0.8, 2.3);
-    const signPost = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.06, 0.06, 0.9, 8),
-      new THREE.MeshStandardMaterial({ color: 0x475569 })
-    );
-    signPost.position.set(1.3, 0.45, 2.3);
-    group.add(signBoard, signPost);
-
-    group.scale.setScalar(scale);
-    return group;
-  }
-
   /* ---- 3D Sleek Titanium Credit Card (Object 1 of 3 for Suspect ID Reveal) ---- */
   create3DCreditCard(scale = 1) {
     const group = new THREE.Group();
@@ -3100,408 +2816,6 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- Authentic RCMP ERT Tactical Uniform Patches (Solid Ranger Green & Subdued Insignia) ---- */
-  createPoliceChestPatchTexture() {
-    const cvs = document.createElement('canvas');
-    cvs.width = 1024;
-    cvs.height = 320;
-    const ctx = cvs.getContext('2d');
-
-    // Solid Ranger Green background (#48563f) matching Canadian RCMP ERT uniform
-    ctx.fillStyle = '#48563f';
-    ctx.fillRect(0, 0, cvs.width, cvs.height);
-
-    // Dark tactical embroidered outer border
-    ctx.strokeStyle = '#1b2318';
-    ctx.lineWidth = 18;
-    ctx.strokeRect(9, 9, cvs.width - 18, cvs.height - 18);
-
-    // Subtle inner stitched thread border
-    ctx.setLineDash([16, 12]);
-    ctx.strokeStyle = '#2d3726';
-    ctx.lineWidth = 5;
-    ctx.strokeRect(28, 28, cvs.width - 56, cvs.height - 56);
-    ctx.setLineDash([]);
-
-    // Bold solid black block "POLICE" in all caps
-    ctx.fillStyle = '#0a0a0a';
-    ctx.font = '900 180px "Impact", "Arial Black", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('POLICE', cvs.width / 2, cvs.height / 2 + 4);
-
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }
-
-  createRcmpBackPatchTexture() {
-    const cvs = document.createElement('canvas');
-    cvs.width = 1024;
-    cvs.height = 480;
-    const ctx = cvs.getContext('2d');
-
-    // Solid Ranger Green background (#48563f)
-    ctx.fillStyle = '#48563f';
-    ctx.fillRect(0, 0, cvs.width, cvs.height);
-
-    // Dark tactical embroidered outer border
-    ctx.strokeStyle = '#1b2318';
-    ctx.lineWidth = 22;
-    ctx.strokeRect(11, 11, cvs.width - 22, cvs.height - 22);
-
-    // Inner stitching
-    ctx.setLineDash([18, 12]);
-    ctx.strokeStyle = '#2d3726';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(32, 32, cvs.width - 64, cvs.height - 64);
-    ctx.setLineDash([]);
-
-    // Prominent bold solid black "RCMP" on back panel
-    ctx.fillStyle = '#0a0a0a';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = '900 190px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('RCMP', cvs.width / 2, 156);
-
-    // Bold solid black "POLICE" on back panel
-    ctx.font = '900 136px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('POLICE', cvs.width / 2, 336);
-
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }
-
-  createRcmpSubduedShoulderFlashTexture() {
-    const cvs = document.createElement('canvas');
-    cvs.width = 768;
-    cvs.height = 960;
-    const ctx = cvs.getContext('2d');
-
-    // Shield path (Canadian police shoulder flash shape)
-    function drawShieldPath(pad = 0) {
-      ctx.beginPath();
-      const w = cvs.width - pad * 2;
-      const h = cvs.height - pad * 2;
-      const x0 = pad;
-      const y0 = pad;
-      const r = 48;
-      ctx.moveTo(x0 + r, y0);
-      ctx.lineTo(x0 + w - r, y0);
-      ctx.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + r);
-      ctx.lineTo(x0 + w, y0 + h * 0.62);
-      ctx.bezierCurveTo(x0 + w, y0 + h * 0.86, x0 + w * 0.65, y0 + h * 0.96, x0 + w * 0.5, y0 + h);
-      ctx.bezierCurveTo(x0 + w * 0.35, y0 + h * 0.96, x0, y0 + h * 0.86, x0, y0 + h * 0.62);
-      ctx.lineTo(x0, y0 + r);
-      ctx.quadraticCurveTo(x0, y0, x0 + r, y0);
-      ctx.closePath();
-    }
-
-    // Solid Ranger Green base fill
-    drawShieldPath(8);
-    ctx.fillStyle = '#48563f';
-    ctx.fill();
-
-    // Dark embroidered outer border
-    ctx.strokeStyle = '#1b2318';
-    ctx.lineWidth = 26;
-    ctx.stroke();
-
-    // Inner stitching
-    drawShieldPath(36);
-    ctx.setLineDash([16, 12]);
-    ctx.strokeStyle = '#2d3726';
-    ctx.lineWidth = 6;
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    // Arched banner at top: "ROYAL CANADIAN MOUNTED POLICE"
-    ctx.fillStyle = '#111710';
-    ctx.font = '900 48px "Impact", "Arial Black", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('ROYAL CANADIAN', 384, 108);
-    ctx.font = '900 44px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('MOUNTED POLICE', 384, 164);
-
-    // Subdued Crown at top center of crest
-    ctx.beginPath();
-    ctx.arc(384, 276, 24, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillRect(320, 296, 128, 16);
-    ctx.fillRect(336, 264, 96, 28);
-
-    // Circular garter ring
-    ctx.beginPath();
-    ctx.arc(384, 470, 124, 0, Math.PI * 2);
-    ctx.lineWidth = 24;
-    ctx.strokeStyle = '#111710';
-    ctx.stroke();
-
-    // Subdued Bison / Buffalo head silhouette in center
-    ctx.beginPath();
-    ctx.arc(384, 444, 56, 0, Math.PI * 2);
-    ctx.arc(384, 496, 36, 0, Math.PI * 2);
-    ctx.fill();
-    // Horns
-    ctx.beginPath();
-    ctx.arc(324, 412, 24, 0, Math.PI * 1.5);
-    ctx.arc(444, 412, 24, Math.PI * 1.5, Math.PI * 3);
-    ctx.lineWidth = 12;
-    ctx.strokeStyle = '#111710';
-    ctx.stroke();
-
-    // Scroll at bottom: "MAINTIENS LE DROIT"
-    ctx.fillStyle = '#111710';
-    ctx.font = '900 36px "Impact", "Arial Black", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('MAINTIENS LE DROIT', 384, 670);
-
-    // Subdued tactical unit badge: "RCMP · ERT"
-    ctx.font = '900 64px "Impact", "Arial Black", sans-serif';
-    ctx.fillText('RCMP · ERT', 384, 776);
-
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }
-
-  /* ---- 3D RCMP OSINT Laptop (`personal_computer.glb`) with Live Kali Linux Recon Terminal Animation! ---- */
-  makeRcmpLaptopScreenTexture() {
-    const cvs = document.createElement('canvas');
-    cvs.width = 2048;
-    cvs.height = 2048;
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.flipY = false;
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
-    tex.generateMipmaps = false;
-
-    this.rcmpCvs = cvs;
-    this.rcmpScreenTex = tex;
-
-    const bannerImg = new Image();
-    const crestImg  = new Image();
-    this.rcmpBannerImg = bannerImg;
-    this.rcmpCrestImg = crestImg;
-
-    let loaded = 0;
-    const onImg = () => {
-      loaded++;
-      this.updateRcmpLaptopScreen(0.35);
-    };
-    bannerImg.onload = onImg;
-    crestImg.onload  = onImg;
-    bannerImg.src = 'models/leo/rcmp_banner_white.png?v=33';
-    crestImg.src  = 'models/leo/rcmp_crest_white.png?v=33';
-
-    this.updateRcmpLaptopScreen(0);
-    return tex;
-  }
-
-  updateRcmpLaptopScreen(t) {
-    if (!this.rcmpCvs) return;
-    const ctx = this.rcmpCvs.getContext('2d');
-    ctx.save();
-    // Correct mapping for monitor screen UVs (upright Y, normal left-to-right X) rendered at native 2048x2048
-    ctx.translate(0, 2048);
-    ctx.scale(2, -2);
-
-    // Deep tactical RCMP navy screen background
-    const grad = ctx.createLinearGradient(0, 0, 0, 1024);
-    grad.addColorStop(0, '#040914');
-    grad.addColorStop(0.5, '#071124');
-    grad.addColorStop(1, '#030712');
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, 1024, 1024);
-
-    // Top RCMP Scarlet & Gold header bar
-    ctx.fillStyle = '#be123c'; ctx.fillRect(0, 0, 1024, 24);
-    ctx.fillStyle = '#fbbf24'; ctx.fillRect(0, 24, 1024, 8);
-
-    // Outer screen frame
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(12, 36, 1000, 976);
-
-    // Official RCMP Crest + Bilingual Wordmark Banner at top of laptop screen
-    if (this.rcmpBannerImg && this.rcmpBannerImg.complete && this.rcmpBannerImg.naturalWidth > 0) {
-      ctx.drawImage(this.rcmpBannerImg, 44, 48, 936, 170);
-    }
-    if (this.rcmpCrestImg && this.rcmpCrestImg.complete && this.rcmpCrestImg.naturalWidth > 0) {
-      // Subtle glowing gold shield halo behind the RCMP Crest
-      const halo = ctx.createRadialGradient(180, 390, 20, 180, 390, 150);
-      halo.addColorStop(0, 'rgba(251, 191, 36, 0.28)');
-      halo.addColorStop(1, 'rgba(251, 191, 36, 0.0)');
-      ctx.fillStyle = halo;
-      ctx.fillRect(40, 230, 280, 320);
-      ctx.drawImage(this.rcmpCrestImg, 65, 235, 230, 290);
-    }
-
-    // Terminal container (Kali Linux OSINT Recon Workflow)
-    ctx.fillStyle = '#081426';
-    ctx.fillRect(320, 236, 660, 310);
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(320, 236, 660, 310);
-
-    // Terminal header bar
-    ctx.fillStyle = '#0e2646';
-    ctx.fillRect(320, 236, 660, 42);
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 20px "JetBrains Mono", monospace';
-    ctx.fillText('⚡ KALI LINUX · RCMP CYBER OSINT RECON', 338, 265);
-
-    // Live reconnaissance progression based on timeline `t`:
-    // Beat 1 (t: 0.20 - 0.32): Google Search & Sherlock reconnaissance on the ProtonMail address
-    // Beat 2 (t: 0.32 - 0.44): Sherlock connects Meta, Instagram, X profiles & detects 3 Push Tokens
-    // Beat 3 (t: 0.44 - 0.60): Police serve emergency data demands (s. 487.014) to demand the 3 Push Tokens!
-    const p1 = clamp01(seg(t, 0.20, 0.32));
-    const p2 = clamp01(seg(t, 0.32, 0.44));
-    const p3 = clamp01(seg(t, 0.44, 0.60));
-
-    ctx.font = 'bold 20px "JetBrains Mono", monospace';
-    ctx.fillStyle = '#fbbf24';
-    ctx.fillText('root@rcmp-cyber:~# sherlock badguy@proton.me', 338, 316);
-
-    const scanStr = '🔍 Google Search: "badguy@proton.me" across platforms…';
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '18px "JetBrains Mono", monospace';
-    ctx.fillText(scanStr.slice(0, Math.floor(scanStr.length * Math.min(1, p1 * 1.4 + 0.1))), 338, 354);
-
-    if (p1 >= 0.7) {
-      ctx.fillStyle = '#34d399';
-      ctx.fillText('[✓] 3 Connected Social Accounts Found via Proton ID', 338, 392);
-    }
-    if (p2 > 0) {
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillText('► PUSH TOKENS DETECTED: Meta (APNs) · IG (FCM) · X (APNs)', 338, 432);
-    }
-    if (p3 > 0) {
-      ctx.fillStyle = '#fda4af';
-      ctx.font = 'bold 20px "JetBrains Mono", monospace';
-      ctx.fillText('⚖ EMERGENCY DEMAND (s. 487.014): Preserving 3 Push Tokens!', 338, 474);
-      ctx.fillStyle = '#fbbf24';
-      ctx.fillText('➔ Production Orders Dispatched to Apple & Google', 338, 510);
-    }
-
-    // 4 Live Platform Cards below the terminal showing the 3 Keys and the Legal Demand
-    const cards = [
-      {
-        x: 42, y: 566, w: 450, h: 180,
-        title: 'f  FACEBOOK (META)', user: 'fb.com/badguy.yvr',
-        token: '🔑 TOKEN: #META-9182',
-        active: p2 > 0.15, color: '#3b82f6'
-      },
-      {
-        x: 530, y: 566, w: 450, h: 180,
-        title: '📸 INSTAGRAM (META)', user: '@badguy_604',
-        token: '🔑 TOKEN: #INSTA-4401',
-        active: p2 > 0.45, color: '#ec4899'
-      },
-      {
-        x: 42, y: 770, w: 450, h: 180,
-        title: '𝕏  X (TWITTER)', user: '@badguy_van',
-        token: '🔑 TOKEN: #XTWT-8832',
-        active: p2 > 0.75, color: '#38bdf8'
-      },
-      {
-        x: 530, y: 770, w: 450, h: 180,
-        title: '⚖ EXIGENT PRODUCTION', user: '3 PUSH TOKENS MATCHED',
-        token: p3 > 0.4 ? '✓ 3 SUBSCRIBER IDENTITIES UNMASKED' : 'Awaiting Apple/Google Decryption…',
-        active: p3 > 0.15, color: '#10b981'
-      }
-    ];
-
-    for (const c of cards) {
-      ctx.fillStyle = c.active ? '#0a1d35' : '#050c18';
-      ctx.fillRect(c.x, c.y, c.w, c.h);
-      ctx.fillStyle = c.active ? c.color : '#334155';
-      ctx.fillRect(c.x, c.y, c.w, 12);
-      ctx.strokeStyle = c.active ? c.color : '#1e293b';
-      ctx.lineWidth = c.active ? 3 : 1;
-      ctx.strokeRect(c.x, c.y, c.w, c.h);
-
-      ctx.fillStyle = c.active ? '#ffffff' : '#64748b';
-      ctx.font = 'bold 26px "JetBrains Mono", monospace';
-      ctx.fillText(c.title, c.x + 20, c.y + 60);
-
-      ctx.fillStyle = c.active ? '#bae6fd' : '#475569';
-      ctx.font = 'bold 22px "JetBrains Mono", monospace';
-      ctx.fillText(c.user, c.x + 20, c.y + 104);
-
-      ctx.fillStyle = c.active ? '#fbbf24' : '#475569';
-      ctx.font = 'bold 20px "JetBrains Mono", monospace';
-      ctx.fillText(c.token, c.x + 20, c.y + 148);
-    }
-
-    ctx.restore();
-    if (this.rcmpScreenTex) this.rcmpScreenTex.needsUpdate = true;
-  }
-
-  createRcmpOsintLaptop(done) {
-    const group = new THREE.Group();
-    const screenTex = this.makeRcmpLaptopScreenTexture();
-
-    // Grounded tactical workstation desk (sits at ground level y = 0, behind the armed Cop)
-    const floorY = 0.5;
-    const deskH = 9.2;
-    const deskW = 12.0;
-    const deskD = 8.5;
-
-    const deskMat = new THREE.MeshStandardMaterial({
-      color: 0x161e2e, metalness: 0.75, roughness: 0.35
-    });
-    const desk = new THREE.Mesh(new THREE.BoxGeometry(deskW, deskH, deskD), deskMat);
-    desk.position.set(0, floorY + deskH / 2, 0);
-    desk.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(desk.geometry),
-      new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 })
-    ));
-    group.add(desk);
-
-    // Desktop plinth trim
-    const topTrim = new THREE.Mesh(
-      new THREE.BoxGeometry(deskW + 0.8, 0.45, deskD + 0.8),
-      new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.2 })
-    );
-    topTrim.position.set(0, floorY + deskH + 0.22, 0);
-    group.add(topTrim);
-
-    this.loader.load('models/leo/personal_computer.glb?v=33', (gltf) => {
-      const laptop = gltf.scene;
-      this.harmonizeAsset(laptop, { minRough: 0.24, maxRough: 0.58, maxMetal: 0.65, envIntensity: 0.95, liftDark: true });
-
-      // Replace the laptop's internal screen mesh with our crisp RCMP Logo & SpiderFoot display
-      const screenMat = new THREE.MeshBasicMaterial({ map: screenTex });
-      laptop.traverse((ch) => {
-        if (ch.isMesh && (ch.name.includes('Screen') || ch.material?.name === 'Screen')) {
-          ch.material = screenMat;
-        }
-      });
-
-      // Center and scale the PC so it sits naturally on top of the workstation desk at cop eye level with zero air gap
-      // Screen turns to face the back of the cop (back-to-back cop & PC setup)
-      const rotAngle = Math.atan2(9.6, -0.5); // 1.62 rad, faces directly into the unoccluded OSINT camera
-      laptop.rotation.set(0, rotAngle, 0);
-      let box = new THREE.Box3().setFromObject(laptop);
-      const dim = box.getSize(new THREE.Vector3());
-      const s = 11.5 / Math.max(dim.x, dim.y, dim.z);
-      laptop.scale.setScalar(s);
-      laptop.updateMatrixWorld(true);
-      box = new THREE.Box3().setFromObject(laptop);
-      const c = box.getCenter(new THREE.Vector3());
-      const deskTopY = floorY + deskH + 0.45;
-      laptop.position.set(-c.x, deskTopY - box.min.y, -c.z);
-
-      group.add(laptop, new THREE.PointLight(0x38bdf8, 3.2, 36));
-      if (done) done();
-    }, undefined, () => { if (done) done(); });
-
-    return group;
-  }
-
   /* ---- 3D Hacker Laptop Screen: ProtonMail Encrypted Threat Email ---- */
   createHackerEmailScreenTexture() {
     const cvs = document.createElement('canvas');
@@ -3767,29 +3081,6 @@ class PushnotOrbit {
     if (this.hackerScreenTex) this.hackerScreenTex.needsUpdate = true;
   }
 
-  animateWickSparks(nowMs) {
-    if (!this.wickSparks) return;
-    const t = nowMs * 0.004;
-    for (const s of this.wickSparks) {
-      const u = (t * s.speed + s.phase) % 1.0;
-      const dist = u * 2.2;
-      s.mesh.position.set(
-        s.dir.x * dist,
-        s.dir.y * dist - u * u * 0.65,
-        s.dir.z * dist
-      );
-      s.mesh.scale.setScalar(1.15 * (1.0 - u * 0.75));
-      s.mesh.rotation.x += 0.2;
-      s.mesh.rotation.y += 0.25;
-    }
-    if (this.wickEmberHalo) {
-      this.wickEmberHalo.scale.setScalar(0.85 + Math.sin(nowMs * 0.035) * 0.35);
-    }
-    if (this.wickLight) {
-      this.wickLight.intensity = 4.0 + Math.sin(nowMs * 0.045) * 1.8;
-    }
-  }
-
   /* ---- 3D Official EXIGENT DEMAND Warrant Paper with Rotating Emergency Siren Beacon ---- */
   createExigentDemandWithSiren() {
     const group = new THREE.Group();
@@ -4015,14 +3306,6 @@ class PushnotOrbit {
       this.addArc(this.arcLeoToAg,   0x38bdf8, 0.45, this.leoGroup),
       this.addArc(this.arcLeoFromAg, 0x34d399, 0.50, this.leoGroup)
     ];
-
-    // LEO moving packets (demand/query/token/ID)
-    this.leoPacketMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xbe123c, emissiveIntensity: 0.9, metalness: 0.4, roughness: 0.25 });
-    this.leoPacket = new THREE.Mesh(new THREE.BoxGeometry(4.4, 2.8, 0.8), this.leoPacketMat);
-    this.leoPacketLight = new THREE.PointLight(0xf43f5e, 3.5, 30);
-    this.leoPacket.add(this.leoPacketLight);
-    this.leoPacket.visible = false;
-    this.leoGroup.add(this.leoPacket);
 
     // Trio of 3 unique branded token keys (Meta blue, IG pink, X silver)
     this.leoUniqueKeysGroup = this.createUniqueTokenTrio(1.2);
@@ -4662,8 +3945,6 @@ class PushnotOrbit {
     if (this.worldStimGroup) this.worldStimGroup.visible = isWorld;
 
     document.body.classList.toggle('leo-mode', isLeo);
-    const btnLeoTop = document.getElementById('btn-leo');
-    if (btnLeoTop) btnLeoTop.classList.toggle('active', isLeo);
     const btnLeoMode = document.getElementById('mode-leo');
     if (btnLeoMode) btnLeoMode.classList.toggle('active', isLeo);
     document.getElementById('mode-setup').classList.toggle('active', mode === 'setup');
@@ -4927,12 +4208,6 @@ class PushnotOrbit {
     if (btnWorld) btnWorld.addEventListener('click', () => this.setMode('world'));
     const btnLeoDock = document.getElementById('mode-leo');
     if (btnLeoDock) btnLeoDock.addEventListener('click', () => this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo'));
-    const btnLeoTop = document.getElementById('btn-leo');
-    if (btnLeoTop) {
-      btnLeoTop.addEventListener('click', () => {
-        this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
-      });
-    }
     document.getElementById('btn-flip').addEventListener('click', () => {
       const order = ['setup', 'push', 'world'];
       const next = order[(order.indexOf(this.mode) + 1) % order.length];
@@ -5092,7 +4367,6 @@ class PushnotOrbit {
     this.pushOrb.visible = false;
     this.triggerBolt.visible = false;
     this.brainGroup.visible = false;
-    this.leoPacket.visible = false;
     if (this.exigentDemand) this.exigentDemand.visible = false;
     if (this.leoUniqueKeysGroup) this.leoUniqueKeysGroup.visible = false;
     if (this.leoSubscriberBundle) this.leoSubscriberBundle.visible = false;
@@ -5132,7 +4406,6 @@ class PushnotOrbit {
 
     let showLeoThreat = false;
     let showLeoDenied = false;
-    let showLeoOsint  = false;
     let showLeoTokens = false;
     let showLeoId     = false;
 
@@ -5660,20 +4933,23 @@ class PushnotOrbit {
   /* ---- Active Node Transit Detection (Origin Node, Destination Node, and Transit Arc) ---- */
   getActiveTransit(mode, t) {
     if (mode === 'setup') {
-      if (t >= 0.04 && t <= 0.34) {
+      if (t >= 0.18 && t <= 0.30) {
         return { origin: POS.post, dest: POS.phone, arc: this.arcStoreToPhone, name: 'storeToPhone' };
       }
-      if (t >= 0.45 && t <= 0.65) {
+      if (t >= 0.38 && t <= 0.48) {
         return { origin: POS.phone, dest: POS.post, arc: this.arcPhoneToPost, name: 'phoneToPost' };
       }
-      if (t >= 0.65 && t <= 0.85) {
-        return { origin: POS.post, dest: POS.server, arc: this.arcPostToServer, name: 'postToServer' };
+      if (t >= 0.60 && t <= 0.70) {
+        return { origin: POS.post, dest: POS.phone, arc: this.arcPostToPhone, name: 'postToPhone' };
+      }
+      if (t >= 0.70 && t <= 0.82) {
+        return { origin: POS.phone, dest: POS.server, arc: this.arcPhoneToServer, name: 'phoneToServer' };
       }
     } else if (mode === 'push') {
-      if (t >= 0.08 && t <= 0.36) {
-        return { origin: POS.server, dest: POS.post, arc: this.arcServerToPost, name: 'serverToPost' };
+      if (t >= 0.28 && t <= 0.56) {
+        return { origin: POS.ufo, dest: POS.post, arc: this.arcPushWorldToPost, name: 'worldToPost' };
       }
-      if (t >= 0.50 && t <= 0.80) {
+      if (t >= 0.78 && t <= 0.94) {
         return { origin: POS.post, dest: POS.phone, arc: this.arcPostToPhone, name: 'postToPhone' };
       }
     } else if (mode === 'leo') {
@@ -5705,11 +4981,13 @@ class PushnotOrbit {
   computeTransitRig(origin, dest, arc, isLeo) {
     if (!origin || !dest) return null;
     const mid = new THREE.Vector3().addVectors(origin, dest).multiplyScalar(0.5);
-    let peakY = Math.max(origin.y, dest.y) + 20.0;
+
+    // Sample arc peak so origin, destination, and the entire transit trajectory arc are framed simultaneously
+    let peakLocalY = Math.max(origin.y, dest.y) + 15.0;
     if (arc && typeof arc.getPoint === 'function') {
       const midPoint = arc.getPoint(0.5);
       if (midPoint && midPoint.y !== undefined) {
-        peakY = Math.max(peakY, midPoint.y);
+        peakLocalY = Math.max(peakLocalY, midPoint.y);
       }
     }
 
@@ -5724,11 +5002,21 @@ class PushnotOrbit {
     // Orient camera looking inward toward mid from the outside
     if (perp.dot(new THREE.Vector3(mid.x, 0, mid.z)) < 0) perp.negate();
 
-    const targetY = isLeo ? 44.0 : 18.0;
-    const target = new THREE.Vector3(mid.x, targetY, mid.z);
+    // In LEO mode, worldPivot rotation (PI) places underside stage at world Y = 29.0
+    const worldYOffset = isLeo ? 29.0 : 0.0;
+    const worldMinY = worldYOffset + Math.min(origin.y, dest.y);
+    const worldMaxY = worldYOffset + peakLocalY;
+    const targetY = (worldMinY + worldMaxY) * 0.5;
+    const vertH = Math.max(18.0, worldMaxY - worldYOffset);
 
-    const camDist = Math.max(span * 1.35, isLeo ? 84.0 : 88.0);
-    const camY = isLeo ? 55.0 : 26.0;
+    const tanHalfFov = Math.tan((42 * Math.PI) / 360);
+    const aspect = (this.camera && this.camera.aspect) || (window.innerWidth / window.innerHeight);
+    const reqDistH = (span * 1.35) / (2 * tanHalfFov * aspect);
+    const reqDistV = (vertH * 1.35) / (2 * tanHalfFov);
+    const camDist = Math.max(reqDistH, reqDistV, isLeo ? 84.0 : 88.0);
+    const camY = Math.max(isLeo ? 55.0 : 26.0, targetY + 6.0);
+
+    const target = new THREE.Vector3(mid.x, targetY, mid.z);
     const cam = new THREE.Vector3(
       mid.x + perp.x * camDist,
       camY,
@@ -5794,7 +5082,6 @@ class PushnotOrbit {
       this.leoAgSubscriberMesh.rotation.y -= dt * 0.6;
       this.leoAgSubscriberMesh.position.y = 16.0 + Math.sin(now * 0.003) * 0.4;
     }
-    if (this.osintBot) this.osintBot.rotation.y += dt * 0.55;
     if (this.leoUniqueKeysGroup && this.leoUniqueKeysGroup.visible) {
       this.leoUniqueKeysGroup.lookAt(this.camera.position);
     }

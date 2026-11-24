@@ -4004,10 +4004,10 @@ class PushnotOrbit {
       treeRow.userData.stationKey = 'swat';
 
       const treeCoords = [
-        { x:  8.5, z:  7.5, rot: 0.1,  s: 1.00 },
-        { x: 10.0, z: 12.0, rot: 1.2,  s: 0.95 },
-        { x: 11.5, z: 16.5, rot: 2.3,  s: 1.05 },
-        { x: 13.0, z: 21.0, rot: 3.5,  s: 0.98 }
+        { x:  6.5, z:  5.0, rot: 0.2,  s: 1.00 },
+        { x: 10.0, z:  2.0, rot: 1.4,  s: 0.95 },
+        { x: 13.5, z: -1.0, rot: 2.6,  s: 1.05 },
+        { x: 17.0, z: -4.0, rot: 3.8,  s: 0.98 }
       ];
 
       for (let i = 0; i < treeCoords.length; i++) {
@@ -4254,6 +4254,31 @@ class PushnotOrbit {
     }
   }
 
+  stepGlide(dir) {
+    // Glide smoothly to the next or previous narrative beat along the slider
+    if (this.playing) this.setPlaying(false);
+    this.resetFocus();
+    if (!this.cameraUnlocked) {
+      this.cinematicFollow = true;
+    } else {
+      this.cinematicFollow = false;
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
+    }
+    const stops = MODE_STEPS[this.mode] || [0];
+    const eps = 0.005;
+    if (dir > 0) {
+      const next = stops.find((s) => s > this.targetT + eps);
+      this.targetT = next !== undefined ? next : stops[stops.length - 1];
+    } else {
+      const prev = [...stops].reverse().find((s) => s < this.targetT - eps);
+      this.targetT = prev !== undefined ? prev : stops[0];
+    }
+    if (this.mode === 'world') {
+      this.worldStepTime = performance.now();
+    }
+  }
+
   setScrollMode(mode) {
     this.scrollMode = mode === 'zoom' ? 'zoom' : 'glide';
     const btn = document.getElementById('btn-wheel-mode');
@@ -4271,6 +4296,12 @@ class PushnotOrbit {
       }
     }
     this.controls.enableZoom = (this.scrollMode === 'zoom');
+    if (this.scrollMode === 'zoom') {
+      this.cinematicFollow = false;
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
+      if (this.cameraRig) this.cameraRig.disengage();
+    }
   }
 
   toggleScrollMode() {
@@ -4343,17 +4374,26 @@ class PushnotOrbit {
     this.renderer.domElement.addEventListener('pointerdown', (e) => {
       downX = e.clientX;
       downY = e.clientY;
+      if (e.button === 1) {
+        e.preventDefault();
+      }
     });
 
     this.renderer.domElement.addEventListener('pointerup', (e) => {
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > 8) return; // user dragged/orbited
 
-      // Clicking changes scroll wheel function (from step slider glide to zoom and vice versa)
-      this.toggleScrollMode();
+      if (e.button === 1) {
+        // Wheel click (middle click) -> Toggle scroll wheel function (Glide / Zoom)
+        e.preventDefault();
+        this.toggleScrollMode();
+        return;
+      }
+
+      if (e.button !== 0) return; // only left click handled below
 
       if (this.cameraUnlocked) {
         // UNLOCKED CAMERA MODE:
-        // Clicking again and again will just step forward without the camera snap!
+        // Clicking steps forward without the camera snap
         this.stepCycle(1);
         return;
       }
@@ -4366,8 +4406,8 @@ class PushnotOrbit {
       const activeGroup = this.mode === 'leo' ? this.leoGroup : this.normalGroup;
       const hits = raycaster.intersectObjects(activeGroup.children, true);
 
+      let nodeKey = null;
       if (hits.length > 0) {
-        let nodeKey = null;
         for (const hit of hits) {
           let curr = hit.object;
           while (curr && curr !== activeGroup) {
@@ -4416,27 +4456,38 @@ class PushnotOrbit {
             }
           }
         }
+      }
 
-        if (nodeKey) {
-          this.snapFocusToNode(nodeKey);
-        } else {
-          this.resetFocus();
-        }
+      if (nodeKey) {
+        // Station clicked -> snap camera focus to node
+        this.snapFocusToNode(nodeKey);
       } else {
+        // Empty canvas clicked -> change scroll wheel function (from step slider to zoom and vice versa)
+        this.toggleScrollMode();
         this.resetFocus();
       }
     });
 
     // Scroll wheel handler: Step slider glide vs. Zoom
+    let wheelDeltaAccum = 0;
+    let lastWheelTime = 0;
+
     this.renderer.domElement.addEventListener('wheel', (e) => {
       if (this.scrollMode === 'glide') {
         e.preventDefault();
         this.setPlaying(false);
         this.cinematicFollow = true;
 
-        // Smooth slider-type glide for nodes and transmissions
-        const delta = Math.sign(e.deltaY) * 0.04;
-        this.targetT = Math.max(0, Math.min(1, (this.targetT !== undefined ? this.targetT : this.t) + delta));
+        const now = performance.now();
+        wheelDeltaAccum += e.deltaY;
+
+        // Step through stops with smooth slider-type glide for nodes and transmissions
+        if (Math.abs(wheelDeltaAccum) >= 40 && now - lastWheelTime > 110) {
+          const dir = Math.sign(wheelDeltaAccum);
+          wheelDeltaAccum = 0;
+          lastWheelTime = now;
+          this.stepGlide(dir);
+        }
       } else {
         // Zoom mode: free OrbitControls camera zoom
         this.cinematicFollow = false;
@@ -4961,7 +5012,7 @@ class PushnotOrbit {
           this.leoSubscriberBundle.rotation.y = Math.atan2(camDir.x, camDir.z);
         }
         moverPos = p.clone().add(new THREE.Vector3(0, 6.5, 0));
-        moverText = '🪪 Subscriber Record';
+        moverText = '🪪 BC Driver\'s Licence';
         moverCls = 'push';
       } else {
         // Step 8: BAD GUY'S IDENTITY REVEALED // POLICE SEIZURE!
@@ -4974,7 +5025,7 @@ class PushnotOrbit {
           this.leoSubscriberBundle.rotation.set(0, -Math.PI * 0.85, 0);
         }
         moverPos = new THREE.Vector3(L.bandit.x, 34.5, L.bandit.z);
-        moverText = '🚨 Suspect Identified';
+        moverText = '🚨 Suspect Identified: Kali Linux';
         moverCls = 'red';
         showLeoId = true;
       }
@@ -5117,7 +5168,7 @@ class PushnotOrbit {
             '🚨 Production Order Served on App Servers',
             '🔑 Push Tokens Disclosed by App Server',
             '🇨🇦 Production Order Served on Apple & Google',
-            '🪪 Hardware-Matched Subscriber Identity Disclosed: Kali Linux'
+            '🪪 BC Driver\'s Licence Disclosed: Kali Linux'
           ];
           caption = stepNames[stepIdx] || 'Reverse Trace Investigation';
         }

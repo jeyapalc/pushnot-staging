@@ -4326,9 +4326,10 @@ class PushnotOrbit {
       roughness: 0.12
     });
     const mourningMat = new THREE.MeshStandardMaterial({
-      color: 0x0a0c10,
-      roughness: 0.88,
-      metalness: 0.04,
+      color: 0x1e2229,
+      emissive: 0x0c0f14,
+      roughness: 0.72,
+      metalness: 0.15,
       side: THREE.DoubleSide
     });
 
@@ -4354,15 +4355,17 @@ class PushnotOrbit {
       finial.position.y = 11.6;
       poleGroup.add(finial);
 
-      // Black mourning flag flying at half-mast
-      const flagGeo = new THREE.PlaneGeometry(2.4, 1.45, 12, 8);
+      // Black mourning flag flying at half-mast (angled and sized for clear visibility against dark building)
+      const flagGeo = new THREE.PlaneGeometry(3.2, 1.9, 16, 10);
       const flagMesh = new THREE.Mesh(flagGeo, mourningMat);
-      flagMesh.position.set(1.22, 6.8, 0);
+      flagMesh.position.set(1.62, 7.2, 0);
+      flagMesh.rotation.y = Math.PI * 0.28;
       poleGroup.add(flagMesh);
 
       // Black mourning streamer from finial
-      const streamer = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 2.0), mourningMat);
-      streamer.position.set(0.15, 10.4, 0);
+      const streamer = new THREE.Mesh(new THREE.PlaneGeometry(0.35, 2.8), mourningMat);
+      streamer.position.set(0.18, 10.2, 0);
+      streamer.rotation.y = Math.PI * 0.28;
       poleGroup.add(streamer);
 
       this.memorialFlags.push({ mesh: flagMesh, basePos: Float32Array.from(flagGeo.attributes.position.array) });
@@ -5909,8 +5912,8 @@ class PushnotOrbit {
         for (let i = 0; i < pos.count; i++) {
           const bx = base[i * 3];
           const by = base[i * 3 + 1];
-          const pinFactor = clamp01((bx + 1.2) / 2.4);
-          const wave = Math.sin(bx * 2.2 - tW) * 0.22 + Math.cos(by * 1.8 - tW * 0.7) * 0.08;
+          const pinFactor = clamp01((bx + 1.6) / 3.2);
+          const wave = Math.sin(bx * 2.0 - tW) * 0.32 + Math.cos(by * 1.5 - tW * 0.7) * 0.12;
           pos.setZ(i, wave * pinFactor);
         }
         pos.needsUpdate = true;

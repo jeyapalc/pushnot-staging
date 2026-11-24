@@ -2916,7 +2916,7 @@ class PushnotOrbit {
 
     drawField(140, 'TO:',      clip('911@POJ.CA', 0.0, 0.25),        '#38bdf8');
     drawField(215, 'FROM:',    clip('BADGUY@PROTON.ME', 0.20, 0.45),  '#c4b5fd');
-    drawField(290, 'SUBJECT:', clip('TIMES UP!', 0.45, 0.65),         '#fb7185');
+    drawField(290, 'SUBJECT:', clip('BOMB THREAT: IMMEDIATE ACTION', 0.45, 0.65), '#fb7185');
 
     // Message Body Area
     const bodyY = 350;
@@ -2927,55 +2927,30 @@ class PushnotOrbit {
     ctx.lineWidth = 2;
     ctx.strokeRect(winX + 30, winY + bodyY, winW - 60, bodyH);
 
-    // Menacing Threat Text & Low Digital Pixelated Skulls
-    if (progress >= 0.50) {
-      const bodyAlpha = clamp01((progress - 0.50) / 0.25);
+    // Large Flashing BOMB and below THREAT text
+    if (progress >= 0.40) {
+      const now = performance.now();
+      const isFlash = Math.floor(now * 0.005) % 2 === 0;
+
       ctx.save();
-      ctx.globalAlpha = bodyAlpha;
+      ctx.textAlign = 'center';
 
-      // GOOD LUCK FINDING THE BOMB!
-      const threatText = clip('GOOD LUCK FINDING THE BOMB!', 0.50, 0.80);
-      ctx.fillStyle = '#ef4444';
-      ctx.font = '900 38px "JetBrains Mono", monospace';
-      ctx.fillText(threatText, winX + 55, winY + bodyY + 75);
+      // Flashing alert banner border
+      ctx.strokeStyle = isFlash ? '#ff0038' : '#f59e0b';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(winX + 45, winY + bodyY + 25, winW - 90, bodyH - 50);
 
-      // Authentic low digital pixelated skulls
-      const drawPixelSkull = (sx, sy, px, color) => {
-        const map = [
-          "  ████████  ",
-          " ██████████ ",
-          "████████████",
-          "██  ████  ██",
-          "██  ████  ██",
-          "████    ████",
-          " ██████████ ",
-          "  ████████  ",
-          "  █ █  █ █  ",
-          "  ████████  ",
-          "  █ █  █ █  ",
-          "   ██████   "
-        ];
-        ctx.fillStyle = color;
-        for (let r = 0; r < map.length; r++) {
-          const row = map[r];
-          for (let c = 0; c < row.length; c++) {
-            if (row[c] === '█') {
-              ctx.fillRect(sx + c * px, sy + r * px, px, px);
-            }
-          }
-        }
-      };
+      // Warning glow
+      ctx.shadowColor = isFlash ? '#ff0038' : '#ffffff';
+      ctx.shadowBlur = isFlash ? 40 : 18;
+      ctx.fillStyle = isFlash ? '#ff0038' : '#ffffff';
 
-      const pxSize = 8;
-      const skullW = 12 * pxSize; // 96px
-      const skullY = winY + bodyY + 130;
-      const skullSpacing = 160;
-      const startSkullX = winX + Math.floor((winW - (2 * skullSpacing + skullW)) / 2);
+      // Line 1: BOMB (HUGE & BOLD)
+      ctx.font = '900 135px "Space Grotesk", "JetBrains Mono", sans-serif';
+      ctx.fillText('BOMB', winX + winW * 0.5, winY + bodyY + 185);
 
-      // Draw 3 pixelated skull icons in digital crimson
-      for (let s = 0; s < 3; s++) {
-        drawPixelSkull(startSkullX + s * skullSpacing, skullY, pxSize, '#f43f5e');
-      }
+      // Line 2: THREAT (HUGE & BOLD)
+      ctx.fillText('THREAT', winX + winW * 0.5, winY + bodyY + 345);
 
       ctx.restore();
     }
@@ -3079,6 +3054,85 @@ class PushnotOrbit {
 
     ctx.restore();
     if (this.hackerScreenTex) this.hackerScreenTex.needsUpdate = true;
+  }
+
+  /* ---- 3D Official Bomb Threat Message Packet with Flashing Danger Beacon ---- */
+  createBombThreatMessagePacket() {
+    const group = new THREE.Group();
+
+    // High-resolution canvas texture for bomb threat dispatch card (640x400)
+    const cvs = document.createElement('canvas');
+    cvs.width = 640;
+    cvs.height = 400;
+    const ctx = cvs.getContext('2d');
+
+    // Deep dark alert background
+    ctx.fillStyle = '#120508';
+    ctx.fillRect(0, 0, 640, 400);
+
+    // Hazard striped border
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 10;
+    ctx.strokeRect(10, 10, 620, 380);
+
+    // Flashing Crimson Header
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(20, 20, 600, 70);
+
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 32px "Space Grotesk", sans-serif';
+    ctx.fillText('💣 INCOMING EMERGENCY DISPATCH', 320, 66);
+
+    // Message Body Header
+    ctx.fillStyle = '#f87171';
+    ctx.font = '700 22px "JetBrains Mono", monospace';
+    ctx.fillText('FROM: badguy@proton.me  →  TO: 911@poj.ca', 320, 130);
+
+    // BOMB THREAT (Huge bold warning)
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 58px "Space Grotesk", "JetBrains Mono", sans-serif';
+    ctx.fillText('BOMB THREAT', 320, 210);
+
+    ctx.fillStyle = '#fca5a5';
+    ctx.font = '700 24px "JetBrains Mono", monospace';
+    ctx.fillText('VANCOUVER / SURREY CORRIDOR · ACTIVE ALERT', 320, 260);
+
+    // Footer
+    ctx.fillStyle = '#991b1b';
+    ctx.fillRect(20, 310, 600, 65);
+    ctx.fillStyle = '#fee2e2';
+    ctx.font = '800 22px "JetBrains Mono", monospace';
+    ctx.fillText('PRIORITY 1 TRANSMISSION · TRACE REQUIRED', 320, 350);
+
+    const tex = new THREE.CanvasTexture(cvs);
+    tex.colorSpace = THREE.SRGBColorSpace;
+
+    const mat = new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.25,
+      metalness: 0.35,
+      side: THREE.DoubleSide
+    });
+
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 5.3), mat);
+    card.castShadow = true;
+    group.add(card);
+
+    // Flashing red emergency beacon light atop the threat packet
+    const beacon = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.35, 0.45, 0.6, 16),
+      new THREE.MeshStandardMaterial({ color: 0xff0033, emissive: 0xff0033, emissiveIntensity: 2.5, roughness: 0.1 })
+    );
+    beacon.position.set(0, 2.9, 0);
+    group.add(beacon);
+
+    const pointLight = new THREE.PointLight(0xff1133, 5.0, 35, 1.2);
+    pointLight.position.set(0, 3.2, 0);
+    group.add(pointLight);
+
+    group.userData = { beacon, pointLight };
+    return group;
   }
 
   /* ---- 3D Official EXIGENT DEMAND Warrant Paper with Rotating Emergency Siren Beacon ---- */
@@ -3273,6 +3327,11 @@ class PushnotOrbit {
     this.leoAgSubscriberMesh.position.set(0, 16.0, 0);
     this.leoAgSubscriberMesh.visible = false;
     this.leoAgGroup.add(this.leoAgSubscriberMesh);
+
+    // 3D Official Bomb Threat Message Packet transmitted from Hacker to RCMP HQ
+    this.threatPacket = this.createBombThreatMessagePacket();
+    this.threatPacket.visible = false;
+    this.leoGroup.add(this.threatPacket);
 
     // Official EXIGENT DEMAND Legal Warrant Document with Rotating Emergency Siren
     this.exigentDemand = this.createExigentDemandWithSiren();
@@ -3478,111 +3537,25 @@ class PushnotOrbit {
           c.material = screenMat;
           this.hackerScreenMesh = c;
         } else if (mName.includes('Eyewear') || cName.includes('Eyewear')) {
-          // Hide original detached eyewear mesh and mount custom thin-armed anime reflective white glasses at its exact bounds (zero clipping!)
-          c.visible = false;
-          c.geometry.computeBoundingBox();
-          const bb = c.geometry.boundingBox;
-          if (bb && !this.hackerGlassesMesh) {
-            const frontX = bb.min.x - 1.4; // slightly forward of face (-X) so lenses never clip brow/nose
-            const backX = bb.max.x;
-            const centerY = (bb.min.y + bb.max.y) * 0.5 + 1.0;
-            const centerZ = (bb.min.z + bb.max.z) * 0.5;
-            const totalW = bb.max.z - bb.min.z; // width along Z (face looks along -X)
-            const lensW = totalW * 0.42;
-            const lensH = (bb.max.y - bb.min.y) * 0.58;
-            const halfSep = totalW * 0.26;
-            const armLen = Math.max(8, backX - frontX);
-
-            // Signature anime bright-white reflective lens texture with crisp diagonal shine
-            const gCvs = document.createElement('canvas');
-            gCvs.width = 256; gCvs.height = 128;
-            const gCtx = gCvs.getContext('2d');
-            const grad = gCtx.createLinearGradient(0, 0, 256, 128);
-            grad.addColorStop(0.00, '#ffffff');
-            grad.addColorStop(0.35, '#e2e8f0');
-            grad.addColorStop(0.50, '#ffffff');
-            grad.addColorStop(0.62, '#cbd5e1');
-            grad.addColorStop(1.00, '#f8fafc');
-            gCtx.fillStyle = grad;
-            gCtx.fillRect(0, 0, 256, 128);
-            // Bright diagonal anime specular flash bands
-            gCtx.fillStyle = 'rgba(255, 255, 255, 0.98)';
-            gCtx.beginPath();
-            gCtx.moveTo(42, 0); gCtx.lineTo(108, 0); gCtx.lineTo(54, 128); gCtx.lineTo(-12, 128);
-            gCtx.closePath();
-            gCtx.fill();
-            gCtx.beginPath();
-            gCtx.moveTo(132, 0); gCtx.lineTo(156, 0); gCtx.lineTo(102, 128); gCtx.lineTo(78, 128);
-            gCtx.closePath();
-            gCtx.fill();
-
-            const lensTex = new THREE.CanvasTexture(gCvs);
-            lensTex.colorSpace = THREE.SRGBColorSpace;
-            const lensMat = new THREE.MeshStandardMaterial({
-              color: 0xffffff,
-              map: lensTex,
-              emissive: 0xffffff,
-              emissiveMap: lensTex,
-              emissiveIntensity: 2.0,
-              roughness: 0.06,
-              metalness: 0.25
-            });
-            const frameMat = new THREE.MeshStandardMaterial({
-              color: 0x0a0a0f,
-              roughness: 0.25,
-              metalness: 0.85
-            });
-
-            const glassesGroup = new THREE.Group();
-            glassesGroup.userData.stationKey = 'bandit';
-
-            // Left & right bright white reflective lenses (facing -X)
-            const lensGeo = new THREE.BoxGeometry(0.65, lensH, lensW);
-            const leftLens = new THREE.Mesh(lensGeo, lensMat);
-            leftLens.position.set(frontX, centerY, centerZ - halfSep);
-            const rightLens = new THREE.Mesh(lensGeo, lensMat);
-            rightLens.position.set(frontX, centerY, centerZ + halfSep);
-
-            // Thin black rim frames around each lens
-            const rimThick = 0.75;
-            const topBarGeo = new THREE.BoxGeometry(0.85, rimThick, lensW + rimThick * 1.4);
-            const sideBarGeo = new THREE.BoxGeometry(0.85, lensH + rimThick, rimThick);
-            for (const zOff of [-halfSep, halfSep]) {
-              const topRim = new THREE.Mesh(topBarGeo, frameMat);
-              topRim.position.set(frontX, centerY + lensH * 0.5, centerZ + zOff);
-              const botRim = new THREE.Mesh(topBarGeo, frameMat);
-              botRim.position.set(frontX, centerY - lensH * 0.5, centerZ + zOff);
-              const outRim = new THREE.Mesh(sideBarGeo, frameMat);
-              outRim.position.set(frontX, centerY, centerZ + zOff + (zOff < 0 ? -lensW * 0.5 : lensW * 0.5));
-              const inRim = new THREE.Mesh(sideBarGeo, frameMat);
-              inRim.position.set(frontX, centerY, centerZ + zOff + (zOff < 0 ? lensW * 0.5 : -lensW * 0.5));
-              glassesGroup.add(topRim, botRim, outRim, inRim);
-            }
-
-            // Thin nose bridge
-            const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, totalW * 0.14), frameMat);
-            bridge.position.set(frontX, centerY + lensH * 0.14, centerZ);
-
-            // Thin temple arms placed just outside the head/hair width so they never clip hack.glb
-            const armGeo = new THREE.BoxGeometry(armLen, 0.7, 0.55);
-            const leftArm = new THREE.Mesh(armGeo, frameMat);
-            leftArm.position.set(frontX + armLen * 0.5, centerY + lensH * 0.22, bb.min.z - 0.9);
-            const rightArm = new THREE.Mesh(armGeo, frameMat);
-            rightArm.position.set(frontX + armLen * 0.5, centerY + lensH * 0.22, bb.max.z + 0.9);
-
-            glassesGroup.add(leftLens, rightLens, bridge, leftArm, rightArm);
-            glassesGroup.traverse(g => { g.userData.stationKey = 'bandit'; });
-            if (c.parent) c.parent.add(glassesGroup);
-            this.hackerGlassesMesh = leftLens; // shares lensMat with rightLens for emissiveIntensity animation
-          }
-        } else if (mName.includes('Topmat') || mName.includes('Hairmat') || mName.includes('Bodymat') || mName.includes('Bottommat')) {
-          // Cloaked in menacing jet-black shadow until ID'ed so bright white anime glasses pop!
+          // Authentic model eyewear with sleek bright white glint
+          c.visible = true;
           if (c.material) {
             c.material = c.material.clone();
-            c.material.roughness = 0.92;
-            c.material.metalness = 0.05;
+            c.material.color = new THREE.Color(0xffffff);
+            c.material.emissive = new THREE.Color(0xffffff);
+            c.material.emissiveIntensity = 1.6;
+            c.material.roughness = 0.12;
+            c.material.metalness = 0.85;
+          }
+          this.hackerGlassesMesh = c;
+        } else if (mName.includes('Topmat') || mName.includes('Hairmat') || mName.includes('Bodymat') || mName.includes('Bottommat')) {
+          // Cloaked in menacing deep dark shadow until ID'ed
+          if (c.material) {
+            c.material = c.material.clone();
+            c.material.roughness = 0.85;
+            c.material.metalness = 0.1;
             c.userData.origColor = c.material.color.clone();
-            c.material.color.setHex(0x050508);
+            c.material.color.setHex(0x1a1a1f);
           }
           this.hackerBodyMeshes.push(c);
         } else {
@@ -4367,6 +4340,7 @@ class PushnotOrbit {
     this.pushOrb.visible = false;
     this.triggerBolt.visible = false;
     this.brainGroup.visible = false;
+    if (this.threatPacket) this.threatPacket.visible = false;
     if (this.exigentDemand) this.exigentDemand.visible = false;
     if (this.leoUniqueKeysGroup) this.leoUniqueKeysGroup.visible = false;
     if (this.leoSubscriberBundle) this.leoSubscriberBundle.visible = false;
@@ -4722,11 +4696,30 @@ class PushnotOrbit {
 
       if (t < 0.18) {
         // Step 1: Bad guy types ProtonMail threat email directly on his laptop screen
-        const tp = seg(t, 0, 0.16);
+        // and sends the Bomb Threat message over arcLeoThreat to central RCMP HQ!
+        const tp = seg(t, 0, 0.12);
         this.updateHackerEmailScreen(tp);
-        moverPos = null;
-        moverText = '';
-        moverCls = '';
+
+        if (t >= 0.06) {
+          // Send the bomb threat message over the pathway line to destination (RCMP HQ)!
+          const u = seg(t, 0.06, 0.18);
+          const p = this.arcLeoThreat.getPoint(u);
+          if (this.threatPacket) {
+            this.threatPacket.visible = true;
+            this.threatPacket.position.copy(p);
+            const camDir = this.camera.position.clone().sub(p);
+            this.threatPacket.rotation.set(0, Math.atan2(camDir.x, camDir.z), 0);
+            this.threatPacket.scale.setScalar(0.95);
+          }
+          moverPos = p.clone().add(new THREE.Vector3(0, 5.0, 0));
+          moverText = '💣 Bomb Threat Transmitted → RCMP "E" Division HQ';
+          moverCls = 'red';
+        } else {
+          if (this.threatPacket) this.threatPacket.visible = false;
+          moverPos = null;
+          moverText = '';
+          moverCls = '';
+        }
       } else if (t < 0.32) {
         // Step 2 & 3: RCMP serves Emergency Order to Proton -> Proton Rejects
         const showDemand = t < 0.26;
@@ -4770,7 +4763,8 @@ class PushnotOrbit {
         moverCls = 'cyan';
       } else if (t < 0.62) {
         // Step 5: App Server discloses unique Push Token Key
-        if (this.exigentDemand) this.exigentDemand.visible = false;
+        if (this.threatPacket) this.threatPacket.visible = false;
+    if (this.exigentDemand) this.exigentDemand.visible = false;
         const p = this.arcLeoTokens.getPoint(seg(t, 0.48, 0.60));
         if (this.leoUniqueKeysGroup) {
           this.leoUniqueKeysGroup.visible = true;
@@ -4840,7 +4834,7 @@ class PushnotOrbit {
           if (this.hackerBodyMeshes) {
             for (const bm of this.hackerBodyMeshes) {
               if (bm.userData && bm.userData.origColor) {
-                bm.material.color.lerpColors(new THREE.Color(0x050508), bm.userData.origColor, idProg);
+                bm.material.color.lerpColors(new THREE.Color(0x1a1a1f), bm.userData.origColor, idProg);
               }
             }
           }
@@ -4851,7 +4845,7 @@ class PushnotOrbit {
           }
           if (this.hackerBodyMeshes) {
             for (const bm of this.hackerBodyMeshes) {
-              bm.material.color.setHex(0x050508);
+              bm.material.color.setHex(0x1a1a1f);
             }
           }
         }
@@ -5295,12 +5289,23 @@ class PushnotOrbit {
       }
     }
 
+    // Bomb threat message beacon: flashing emergency red warning light
+    if (this.threatPacket && this.threatPacket.visible && this.threatPacket.userData) {
+      const uData = this.threatPacket.userData;
+      if (uData.pointLight) uData.pointLight.intensity = 4.0 + Math.sin(now * 0.025) * 3.0;
+    }
+
     // Emergency siren beacon: high-speed rotation and dual red/blue emergency strobe flashing
     if (this.exigentDemand && this.exigentDemand.visible && this.exigentDemand.userData) {
       const uData = this.exigentDemand.userData;
       if (uData.rotor) uData.rotor.rotation.y += dt * 16.0;
       if (uData.redLight) uData.redLight.intensity = 3.5 + Math.sin(now * 0.022) * 2.5;
       if (uData.blueLight) uData.blueLight.intensity = 3.5 + Math.cos(now * 0.022) * 2.5;
+    }
+
+    // Live real-time flashing on hacker computer screen during Step 1
+    if (this.mode === 'leo' && this.t < 0.22 && this.hackerScreenTex) {
+      this.updateHackerEmailScreen(seg(this.t, 0, 0.12));
     }
 
     // Gently rotate ONLY the 3D Brain mesh when active above the Apple & Google Skyscraper HQ

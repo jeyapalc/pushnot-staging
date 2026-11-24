@@ -68,15 +68,15 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track above LEO floor (LEO floor at world Y = 29.0, cam.y = 55.0, target.y = 44.0)
-  "leo_step_0": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: 64.0 },  target: { x: 32.5, y: 44.0, z: 32.5 } },
-  "leo_step_1": { angle: 0.00,  radius: 74.0, cam: { x: 0.0,   y: 56.0, z: 74.0 },  target: { x: 0.0,  y: 44.0, z: 6.0 } },
-  "leo_step_2": { angle: -2.35, radius: 90.0, cam: { x: -63.3, y: 55.0, z: -64.0 }, target: { x: -32.5, y: 45.0, z: -32.5 } },
-  "leo_step_3": { angle: -2.35, radius: 90.0, cam: { x: -63.3, y: 55.0, z: -64.0 }, target: { x: -32.5, y: 45.0, z: -32.5 } },
-  "leo_step_4": { angle: -0.78, radius: 90.0, cam: { x: -63.3, y: 55.0, z: 64.0 },  target: { x: -32.5, y: 43.0, z: 32.5 } },
-  "leo_step_5": { angle: -0.78, radius: 90.0, cam: { x: -63.3, y: 55.0, z: 64.0 },  target: { x: -32.5, y: 43.0, z: 32.5 } },
-  "leo_step_6": { angle: 2.35,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: -64.0 }, target: { x: 32.5, y: 46.0, z: -32.5 } },
-  "leo_step_7": { angle: 0.40,  radius: 90.0, cam: { x: 35.0,  y: 55.0, z: 83.0 },  target: { x: 32.5, y: 50.0, z: 32.5 } }
+  // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track framing origin, destination & transit arcs
+  "leo_step_0": { angle: 0.87,  radius: 65.3, cam: { x: 50.0,  y: 55.0, z: 42.0 },  target: { x: 26.0, y: 45.0, z: 26.0 } }, // Suspect on Rule of Thirds
+  "leo_step_1": { angle: 0.00,  radius: 76.0, cam: { x: 0.0,   y: 56.0, z: 76.0 },  target: { x: 6.0,  y: 44.0, z: 6.0 } },  // Central RCMP Green Timbers HQ
+  "leo_step_2": { angle: 2.63,  radius: 85.2, cam: { x: 41.7,  y: 55.0, z: -74.2 }, target: { x: -16.2, y: 44.0, z: -16.2 } }, // Transit: RCMP -> Swiss Proton (origin, dest & arc)
+  "leo_step_3": { angle: -2.08, radius: 85.2, cam: { x: -74.2, y: 55.0, z: -41.7 }, target: { x: -16.2, y: 44.0, z: 16.2 } },  // Transit: RCMP -> App Server (origin, dest & arc)
+  "leo_step_4": { angle: -2.08, radius: 85.2, cam: { x: -74.2, y: 55.0, z: -41.7 }, target: { x: -16.2, y: 44.0, z: 16.2 } },  // Transit: App Server -> RCMP Tokens (origin, dest & arc)
+  "leo_step_5": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: RCMP -> Apple/Google HQ (origin, dest & arc)
+  "leo_step_6": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: Apple/Google -> RCMP Record (origin, dest & arc)
+  "leo_step_7": { angle: 0.87,  radius: 65.3, cam: { x: 50.0,  y: 55.0, z: 42.0 },  target: { x: 26.0, y: 48.0, z: 26.0 } }  // Suspect unmasked on Rule of Thirds
 };
 
 const WORLD_APPS = [
@@ -1883,50 +1883,74 @@ class PushnotOrbit {
     if (this.phoneTex) this.phoneTex.needsUpdate = true;
   }
 
-  /* ---- Interactive Camera Snap & Shallow Depth of Field Focus on Node Click ---- */
+  /* ---- Interactive Camera Snap & Rule-of-Thirds Composition on GLB Click ---- */
   snapFocusToNode(key) {
-    let target = null;
+    let stationPos = null;
     let camPos = null;
 
     if (key === 'phone') {
       // Phone is at POS.phone (D, 0, D), rotated -45 deg. Screen faces into room.
-      target = new THREE.Vector3(POS.phone.x, 12.0, POS.phone.z);
+      stationPos = new THREE.Vector3(POS.phone.x, 12.0, POS.phone.z);
       camPos = new THREE.Vector3(POS.phone.x + 20, 13.5, POS.phone.z + 20);
     } else if (key === 'server') {
       // Datacentre server rack is at POS.server (-D, 0, D), rotated +45 deg.
-      target = new THREE.Vector3(POS.server.x, 12.5, POS.server.z);
+      stationPos = new THREE.Vector3(POS.server.x, 12.5, POS.server.z);
       camPos = new THREE.Vector3(POS.server.x + 22, 14.5, POS.server.z + 22);
     } else if (key === 'post' || key === 'store') {
       // Apple and Google platform is at POS.post (0, 0, -R).
-      target = new THREE.Vector3(POS.post.x, 12.0, POS.post.z);
+      stationPos = new THREE.Vector3(POS.post.x, 12.0, POS.post.z);
       camPos = new THREE.Vector3(POS.post.x, 15.0, POS.post.z + 32);
     } else if (key === 'world' || key === 'ufo') {
       // Planet Earth hovering above at POS.ufo (-D, 50, D).
-      target = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
+      stationPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
       camPos = new THREE.Vector3(POS.ufo.x + 22, POS.ufo.y + 4, POS.ufo.z + 36);
     } else if (key === 'bandit') {
-      // Natural cinematic eye-level framing on suspect at laptop
-      target = new THREE.Vector3(31.5, 18.0, 30.5);
-      camPos = new THREE.Vector3(50.0, 26.0, 42.0);
+      // Eye-level Rule-of-Thirds framing on suspect at laptop
+      stationPos = new THREE.Vector3(this.leoPos.bandit.x, 18.0, this.leoPos.bandit.z);
+      camPos = new THREE.Vector3(this.leoPos.bandit.x + 18.0, 24.0, this.leoPos.bandit.z + 12.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
-      // RCMP "E" Division Headquarters at Green Timbers Front Entrance Threshold (center)
-      target = new THREE.Vector3(this.leoPos.swat.x, 5.0, this.leoPos.swat.z + 8.0);
+      // RCMP "E" Division Headquarters centerpiece at Green Timbers Front Entrance Threshold
+      stationPos = new THREE.Vector3(this.leoPos.swat.x, 7.5, this.leoPos.swat.z + 8.5);
       camPos = new THREE.Vector3(this.leoPos.swat.x + 22, 18.0, this.leoPos.swat.z + 32);
     } else if (key === 'proton') {
-      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5), facing outward (-X, -Z). Eye-level view of illuminated front & waving flag!
-      target = new THREE.Vector3(this.leoPos.proton.x, 18.0, this.leoPos.proton.z);
-      camPos = new THREE.Vector3(this.leoPos.proton.x - 31.0, 22.0, this.leoPos.proton.z - 31.0);
+      // Swiss Server & waving Swiss flag facing outward (-X, -Z). Eye-level view of illuminated front & waving flag from outside!
+      stationPos = new THREE.Vector3(this.leoPos.proton.x, 18.0, this.leoPos.proton.z);
+      camPos = new THREE.Vector3(this.leoPos.proton.x - 30.0, 22.0, this.leoPos.proton.z - 30.0);
     } else if (key === 'facebook' || key === 'bot') {
-      // App Servers at (0, 0, 4) in LEO mode.
-      target = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
+      // App Servers in LEO mode
+      stationPos = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
       camPos = new THREE.Vector3(this.leoPos.bot.x - 22, 15.0, this.leoPos.bot.z + 22);
     } else if (key === 'ag') {
-      // Apple & Google HQ in LEO mode.
-      target = new THREE.Vector3(this.leoPos.ag.x, 20.0, this.leoPos.ag.z);
+      // Apple & Google HQ in LEO mode
+      stationPos = new THREE.Vector3(this.leoPos.ag.x, 20.0, this.leoPos.ag.z);
       camPos = new THREE.Vector3(this.leoPos.ag.x + 22, 22.0, this.leoPos.ag.z + 28);
     }
 
-    if (!target || !camPos) return;
+    if (!stationPos || !camPos) return;
+
+    // Rule of Thirds camera composition:
+    // Offset camera look target horizontally so target station sits along x = 1/3 or 2/3 line in the viewport
+    const isLeftSide = stationPos.x < 0;
+    const viewDir = stationPos.clone().sub(camPos);
+    const dist = viewDir.length();
+    const forward = viewDir.clone().normalize();
+    const worldUp = new THREE.Vector3(0, 1, 0);
+    const right = new THREE.Vector3().crossVectors(forward, worldUp).normalize();
+    const camUp = new THREE.Vector3().crossVectors(right, forward).normalize();
+
+    const tanHalfFov = Math.tan((42 * Math.PI) / 360);
+    const halfH = dist * tanHalfFov;
+    const aspect = (this.camera && this.camera.aspect) || (window.innerWidth / window.innerHeight);
+    const halfW = halfH * aspect;
+
+    // Shift look-target horizontally so station projects to 1/3 or 2/3 of screen width
+    const sign = isLeftSide ? 1 : -1;
+    const offsetX = sign * (halfW * 0.333);
+    const offsetY = -halfH * 0.08;
+
+    const target = stationPos.clone()
+      .addScaledVector(right, offsetX)
+      .addScaledVector(camUp, offsetY);
 
     this.focusedNode = key;
     this.setPlaying(false); // Pause auto-playback so camera stays cleanly locked on clicked station!
@@ -3965,10 +3989,11 @@ class PushnotOrbit {
     this.leoGroup.add(this.exigentDemand);
     this.leoTops.ag = 20;
 
-    // LEO investigative arcs (Central RCMP HQ -> Proton, App Servers, Apple/Google HQ)
-    // pSwat anchored cleanly ABOVE and IN FRONT of the larger central RCMP entrance wooden awning
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(2.0, 16.5, 18.0));
-    const pProton      = L.proton.clone().add(new THREE.Vector3(0, 10.0, 3.0));
+    // LEO investigative arcs radiating from the central RCMP Green Timbers HQ
+    // pSwat anchored cleanly above the entrance canopy and illuminated crest
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 16.5, 14.0));
+    // pProton lands cleanly at the front entrance of the outward-facing Swiss server
+    const pProton      = L.proton.clone().add(new THREE.Vector3(-3.4, 14.0, -3.4));
     const pBot         = L.bot.clone().add(new THREE.Vector3(0, 9.0, 2.5));
     const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 9.0, 3.5));
     const pAg          = L.ag.clone().setY(12.0);
@@ -3976,7 +4001,7 @@ class PushnotOrbit {
 
     // High mortar trajectory arcs radiating cleanly from central RCMP HQ to each outer station
     this.arcLeoThreat  = new THREE.QuadraticBezierCurve3(pHacker, new THREE.Vector3((L.bandit.x + L.swat.x) * 0.5 + 4, 78.0, (L.bandit.z + L.swat.z) * 0.5 + 10), pSwat);
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.proton.x) * 0.5 - 8, 72.0, (L.swat.z + L.proton.z) * 0.5), pProton);
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.proton.x) * 0.5 - 8, 72.0, (L.swat.z + L.proton.z) * 0.5 - 4), pProton);
     this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 - 6, 72.0, (L.swat.z + L.bot.z) * 0.5 + 4), pBot);
     this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 + 6, 74.0, (L.swat.z + L.bot.z) * 0.5 + 10), pSwat);
     this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.ag.x) * 0.5 + 4, 84.0, (L.swat.z + L.ag.z) * 0.5 - 4), pAg);
@@ -4003,8 +4028,6 @@ class PushnotOrbit {
     this.leoUniqueKeysGroup = this.createUniqueTokenTrio(1.2);
     this.leoUniqueKeysGroup.visible = false;
     this.leoGroup.add(this.leoUniqueKeysGroup);
-
-    this.leoBomb = null;
 
     // Combined 3D Photo ID + Tiny 3D Home (Subscriber Record)
     this.leoSubscriberBundle = this.createSubscriberBundle(1.25);
@@ -4399,10 +4422,10 @@ class PushnotOrbit {
         }
       });
 
-      // Ground and angle the RCMP Green Timbers Headquarters building footprint at center
-      // Scaled up to 72.0 for a commanding, imposing central centerpiece!
+      // Ground and angle the RCMP Green Timbers Headquarters building footprint at center (0, 0, 0)
+      // Scaled up to 76.0 for a commanding, larger centerpiece in LEO mode!
       m.rotation.y = Math.PI * 0.22;
-      this.leoTops.swat = this.ground(m, 72.0, this.leoPos.swat);
+      this.leoTops.swat = this.ground(m, 76.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
       // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
@@ -4542,6 +4565,8 @@ class PushnotOrbit {
         if (this.leoAgBag) this.leoAgGroup.remove(this.leoAgBag);
         this.leoAgBag = this.storeGroup.clone(true);
         this.leoAgBag.position.set(0, 0, 0);
+        this.leoAgBag.userData.stationKey = 'ag';
+        this.leoAgBag.traverse(c => { if (c.isMesh) c.userData.stationKey = 'ag'; });
         this.leoAgGroup.add(this.leoAgBag);
       }
       done();
@@ -4637,7 +4662,8 @@ class PushnotOrbit {
     if (this.worldStimGroup) this.worldStimGroup.visible = isWorld;
 
     document.body.classList.toggle('leo-mode', isLeo);
-    document.getElementById('btn-leo').classList.toggle('active', isLeo);
+    const btnLeoTop = document.getElementById('btn-leo');
+    if (btnLeoTop) btnLeoTop.classList.toggle('active', isLeo);
     const btnLeoMode = document.getElementById('mode-leo');
     if (btnLeoMode) btnLeoMode.classList.toggle('active', isLeo);
     document.getElementById('mode-setup').classList.toggle('active', mode === 'setup');
@@ -4901,9 +4927,12 @@ class PushnotOrbit {
     if (btnWorld) btnWorld.addEventListener('click', () => this.setMode('world'));
     const btnLeoDock = document.getElementById('mode-leo');
     if (btnLeoDock) btnLeoDock.addEventListener('click', () => this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo'));
-    document.getElementById('btn-leo').addEventListener('click', () => {
-      this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
-    });
+    const btnLeoTop = document.getElementById('btn-leo');
+    if (btnLeoTop) {
+      btnLeoTop.addEventListener('click', () => {
+        this.setMode(this.mode === 'leo' ? this.prevNormalMode : 'leo');
+      });
+    }
     document.getElementById('btn-flip').addEventListener('click', () => {
       const order = ['setup', 'push', 'world'];
       const next = order[(order.indexOf(this.mode) + 1) % order.length];
@@ -4981,16 +5010,19 @@ class PushnotOrbit {
             const wSwat   = this.leoPos.swat.clone().applyMatrix4(activeGroup.matrixWorld);
             const wProton = this.leoPos.proton.clone().applyMatrix4(activeGroup.matrixWorld);
             const wBot    = this.leoPos.bot.clone().applyMatrix4(activeGroup.matrixWorld);
+            const wAg     = this.leoPos.ag.clone().applyMatrix4(activeGroup.matrixWorld);
             const d1 = hp.distanceTo(wBandit);
             const d2 = hp.distanceTo(wSwat);
             const d3 = hp.distanceTo(wProton);
             const d4 = hp.distanceTo(wBot);
-            const minD = Math.min(d1, d2, d3, d4);
+            const d5 = hp.distanceTo(wAg);
+            const minD = Math.min(d1, d2, d3, d4, d5);
             if (minD < 24) {
               if (minD === d1) nodeKey = 'bandit';
               else if (minD === d2) nodeKey = 'swat';
               else if (minD === d3) nodeKey = 'proton';
-              else nodeKey = 'facebook';
+              else if (minD === d4) nodeKey = 'facebook';
+              else nodeKey = 'ag';
             }
           } else {
             const d1 = hp.distanceTo(POS.phone);
@@ -5062,8 +5094,6 @@ class PushnotOrbit {
     this.brainGroup.visible = false;
     this.leoPacket.visible = false;
     if (this.exigentDemand) this.exigentDemand.visible = false;
-    if (this.leoBomb) this.leoBomb.visible = false;
-    if (this.leoKey) this.leoKey.visible = false;
     if (this.leoUniqueKeysGroup) this.leoUniqueKeysGroup.visible = false;
     if (this.leoSubscriberBundle) this.leoSubscriberBundle.visible = false;
     if (this.rejectShieldBubble) this.rejectShieldBubble.visible = false;
@@ -5627,6 +5657,92 @@ class PushnotOrbit {
     el.style.top = `${y}px`;
   }
 
+  /* ---- Active Node Transit Detection (Origin Node, Destination Node, and Transit Arc) ---- */
+  getActiveTransit(mode, t) {
+    if (mode === 'setup') {
+      if (t >= 0.04 && t <= 0.34) {
+        return { origin: POS.post, dest: POS.phone, arc: this.arcStoreToPhone, name: 'storeToPhone' };
+      }
+      if (t >= 0.45 && t <= 0.65) {
+        return { origin: POS.phone, dest: POS.post, arc: this.arcPhoneToPost, name: 'phoneToPost' };
+      }
+      if (t >= 0.65 && t <= 0.85) {
+        return { origin: POS.post, dest: POS.server, arc: this.arcPostToServer, name: 'postToServer' };
+      }
+    } else if (mode === 'push') {
+      if (t >= 0.08 && t <= 0.36) {
+        return { origin: POS.server, dest: POS.post, arc: this.arcServerToPost, name: 'serverToPost' };
+      }
+      if (t >= 0.50 && t <= 0.80) {
+        return { origin: POS.post, dest: POS.phone, arc: this.arcPostToPhone, name: 'postToPhone' };
+      }
+    } else if (mode === 'leo') {
+      const L = this.leoPos;
+      if (!L) return null;
+      if (t >= 0.09 && t <= 0.19) {
+        return { origin: L.bandit, dest: L.swat, arc: this.arcLeoThreat, name: 'threatToRcmp' };
+      }
+      if (t >= 0.19 && t <= 0.28) {
+        return { origin: L.swat, dest: L.proton, arc: this.arcLeoProton, name: 'rcmpToProton' };
+      }
+      if (t >= 0.32 && t <= 0.48) {
+        return { origin: L.swat, dest: L.bot, arc: this.arcLeoToMeta, name: 'rcmpToMeta' };
+      }
+      if (t >= 0.48 && t <= 0.62) {
+        return { origin: L.bot, dest: L.swat, arc: this.arcLeoTokens, name: 'metaToRcmp' };
+      }
+      if (t >= 0.62 && t <= 0.76) {
+        return { origin: L.swat, dest: L.ag, arc: this.arcLeoToAg, name: 'rcmpToAg' };
+      }
+      if (t >= 0.76 && t <= 0.88) {
+        return { origin: L.ag, dest: L.swat, arc: this.arcLeoFromAg, name: 'agToRcmp' };
+      }
+    }
+    return null;
+  }
+
+  /* ---- Compute 3-Element Transit Framing (Origin Node, Destination Node, and Transit Arc) ---- */
+  computeTransitRig(origin, dest, arc, isLeo) {
+    if (!origin || !dest) return null;
+    const mid = new THREE.Vector3().addVectors(origin, dest).multiplyScalar(0.5);
+    let peakY = Math.max(origin.y, dest.y) + 20.0;
+    if (arc && typeof arc.getPoint === 'function') {
+      const midPoint = arc.getPoint(0.5);
+      if (midPoint && midPoint.y !== undefined) {
+        peakY = Math.max(peakY, midPoint.y);
+      }
+    }
+
+    const chord = new THREE.Vector3().subVectors(dest, origin);
+    const span = Math.hypot(chord.x, chord.z);
+    let perp = new THREE.Vector3(-chord.z, 0, chord.x);
+    if (perp.lengthSq() > 0.0001) {
+      perp.normalize();
+    } else {
+      perp.set(0, 0, 1);
+    }
+    // Orient camera looking inward toward mid from the outside
+    if (perp.dot(new THREE.Vector3(mid.x, 0, mid.z)) < 0) perp.negate();
+
+    const targetY = isLeo ? 44.0 : 18.0;
+    const target = new THREE.Vector3(mid.x, targetY, mid.z);
+
+    const camDist = Math.max(span * 1.35, isLeo ? 84.0 : 88.0);
+    const camY = isLeo ? 55.0 : 26.0;
+    const cam = new THREE.Vector3(
+      mid.x + perp.x * camDist,
+      camY,
+      mid.z + perp.z * camDist
+    );
+
+    return {
+      angle: Math.atan2(cam.x, cam.z),
+      radius: Math.hypot(cam.x, cam.z),
+      cam,
+      target
+    };
+  }
+
   animate() {
     requestAnimationFrame(() => this.animate());
     const now = performance.now();
@@ -5812,6 +5928,18 @@ class PushnotOrbit {
         targetRadius = this.cameraRig.radius;
         targetY = this.cameraRig.y;
         targetLook = this.controls.target.clone();
+      }
+
+      // Check for active node transit movement: automatically frame origin, destination, and transit arc!
+      const transit = this.getActiveTransit(this.mode, this.t);
+      if (transit && !this.directorMode) {
+        const transitRig = this.computeTransitRig(transit.origin, transit.dest, transit.arc, this.mode === 'leo');
+        if (transitRig) {
+          targetTheta = transitRig.angle;
+          targetRadius = transitRig.radius;
+          targetY = transitRig.cam.y;
+          targetLook = transitRig.target;
+        }
       }
 
       if (this.mode === 'leo') {

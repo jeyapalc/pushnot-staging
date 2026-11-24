@@ -3867,11 +3867,23 @@ class PushnotOrbit {
           c.material.envMapIntensity = 0.0;
           const matName = (c.material.name || '').toLowerCase();
           const meshName = (c.name || '').toLowerCase();
-          const isEntrance = meshName.includes('crest') || meshName.includes('canopy') || meshName.includes('bison') ||
-                             meshName.includes('sign') || matName.includes('bison') || matName.includes('canopy') ||
-                             matName.includes('sign') || matName.includes('crest');
-          if (isEntrance) {
-            // Entrance and bison logo pop brightly under the dramatic spotlight!
+          const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
+                               matName.includes('bison') || matName.includes('crest');
+          const isWoodWall = matName.includes('wood') || meshName.includes('wood');
+          const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
+                                   matName.includes('canopy') || matName.includes('sign');
+
+          if (isBisonCrest) {
+            // White etched RCMP bison crest pops brightly on the glass atrium
+            if (c.material.color) c.material.color.setHex(0xffffff);
+            c.material.roughness = 0.25;
+            c.material.metalness = 0.50;
+          } else if (isWoodWall) {
+            // Warm rich natural wood panel wall at the entrance foyer (matching reference photo)
+            if (c.material.color) c.material.color.setHex(0x8a532b);
+            c.material.roughness = 0.65;
+            c.material.metalness = 0.05;
+          } else if (isEntranceAccent) {
             if (c.material.color) c.material.color.setHex(0xffffff);
             c.material.roughness = 0.25;
             c.material.metalness = 0.50;
@@ -3897,30 +3909,30 @@ class PushnotOrbit {
       this.rcmpDaylightGroup = new THREE.Group();
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
-      // Bright dramatic spotlight directly lighting the entrance canopy and RCMP crest
-      const spotLight = new THREE.SpotLight(0xfffae0, 110.0, 240, Math.PI / 3.8, 0.4, 1.1);
-      spotLight.position.set(this.leoPos.swat.x + 8.0, 58.0, this.leoPos.swat.z + 28.0);
-      spotLight.target.position.set(this.leoPos.swat.x, 5.5, this.leoPos.swat.z + 6.0);
+      // Bright dramatic spotlight directly lighting the entrance canopy, wooden wall, RCMP crest, and courtyard
+      const spotLight = new THREE.SpotLight(0xfffae0, 110.0, 240, Math.PI / 3.2, 0.45, 1.1);
+      spotLight.position.set(this.leoPos.swat.x + 12.0, 58.0, this.leoPos.swat.z + 32.0);
+      spotLight.target.position.set(this.leoPos.swat.x + 14.0, 6.5, this.leoPos.swat.z + 8.0);
       spotLight.castShadow = true;
       this.rcmpDaylightGroup.add(spotLight);
       this.rcmpDaylightGroup.add(spotLight.target);
 
       // Warm entrance illumination pool highlighting canopy and silver RCMP crest
-      const entranceLight = new THREE.PointLight(0xfffaea, 22.0, 52, 1.2);
-      entranceLight.position.set(this.leoPos.swat.x, 9.5, this.leoPos.swat.z + 8.5);
+      const entranceLight = new THREE.PointLight(0xfffaea, 25.0, 52, 1.2);
+      entranceLight.position.set(this.leoPos.swat.x + 8.0, 10.5, this.leoPos.swat.z + 10.0);
       this.rcmpDaylightGroup.add(entranceLight);
 
-      // Bright ground light pool in front of the entrance doors
-      const poolGeo = new THREE.CircleGeometry(8.5, 32);
+      // Warm courtyard ground light pool in front of the entrance doors and trees
+      const poolGeo = new THREE.CircleGeometry(12.0, 32);
       const poolMat = new THREE.MeshBasicMaterial({
         color: 0xfff5dd,
         transparent: true,
-        opacity: 0.35,
+        opacity: 0.18,
         blending: THREE.AdditiveBlending
       });
       const poolMesh = new THREE.Mesh(poolGeo, poolMat);
       poolMesh.rotation.x = -Math.PI / 2;
-      poolMesh.position.set(this.leoPos.swat.x, 0.08, this.leoPos.swat.z + 8.5);
+      poolMesh.position.set(this.leoPos.swat.x + 14.0, 0.08, this.leoPos.swat.z + 10.0);
       this.rcmpDaylightGroup.add(poolMesh);
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
@@ -3980,18 +3992,27 @@ class PushnotOrbit {
           c.receiveShadow = true;
           if (c.material) {
             c.material = c.material.clone();
-            c.material.roughness = 0.65;
-            c.material.metalness = 0.05;
+            const matName = (c.material.name || '').toLowerCase();
+            const meshName = (c.name || '').toLowerCase();
+            if (matName.includes('leaf') || meshName.includes('leaf')) {
+              // Tint leaves to lush natural summer green matching real trees in photo (#2e7d32)
+              c.material.color.set('#2e7d32');
+              c.material.roughness = 0.52;
+            } else {
+              // Trunk and branches
+              c.material.roughness = 0.85;
+            }
+            c.material.metalness = 0.04;
             c.material.needsUpdate = true;
           }
         }
       });
 
-      // Target tree height: about half the height of the RCMP building (~6.2 units)
+      // Target tree height: about half the height of the RCMP building (~10.5 units)
       const box = new THREE.Box3().setFromObject(treeModel);
       const size = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
-      const targetHeight = 6.2;
+      const targetHeight = 10.5;
       const s = targetHeight / (size.y || 1);
       treeModel.scale.setScalar(s);
       treeModel.position.set(-center.x * s, -box.min.y * s, -center.z * s);
@@ -3999,15 +4020,16 @@ class PushnotOrbit {
       const treeBase = new THREE.Group();
       treeBase.add(treeModel);
 
-      // Plant 4 real trees lined up opposite the wooden entrance wall
+      // Plant 4 real trees lined up cleanly in front of the entrance on the opposite side
+      // (to the right of the wooden entrance foyer in the open courtyard/plaza with positive Z values)
       const treeRow = new THREE.Group();
       treeRow.userData.stationKey = 'swat';
 
       const treeCoords = [
-        { x:  6.5, z:  5.0, rot: 0.2,  s: 1.00 },
-        { x: 10.0, z:  2.0, rot: 1.4,  s: 0.95 },
-        { x: 13.5, z: -1.0, rot: 2.6,  s: 1.05 },
-        { x: 17.0, z: -4.0, rot: 3.8,  s: 0.98 }
+        { x: 19.5, z: 14.5, rot: 0.2,  s: 1.00 },
+        { x: 22.5, z: 14.0, rot: 1.4,  s: 0.95 },
+        { x: 25.5, z: 13.5, rot: 2.6,  s: 1.05 },
+        { x: 28.5, z: 13.0, rot: 3.8,  s: 0.98 }
       ];
 
       for (let i = 0; i < treeCoords.length; i++) {
@@ -5686,4 +5708,4 @@ class PushnotOrbit {
   }
 }
 
-addEventListener('DOMContentLoaded', () => new PushnotOrbit());
+addEventListener('DOMContentLoaded', () => { window.orbit = new PushnotOrbit(); });

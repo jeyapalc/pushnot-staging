@@ -76,7 +76,7 @@ const DEFAULT_DIRECTOR_RIGS = {
   "leo_step_4": { angle: -2.08, radius: 85.2, cam: { x: -74.2, y: 55.0, z: -41.7 }, target: { x: -16.2, y: 44.0, z: 16.2 } },  // Transit: App Server -> RCMP Tokens (origin, dest & arc)
   "leo_step_5": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: RCMP -> Apple/Google HQ (origin, dest & arc)
   "leo_step_6": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: Apple/Google -> RCMP Record (origin, dest & arc)
-  "leo_step_7": { angle: 0.87,  radius: 65.3, cam: { x: 50.0,  y: 55.0, z: 42.0 },  target: { x: 26.0, y: 48.0, z: 26.0 } }  // Suspect unmasked on Rule of Thirds
+  "leo_step_7": { angle: 1.07,  radius: 25.1, cam: { x: 22.1,  y: 45.0, z: 12.0 },  target: { x: 32.5, y: 44.0, z: 32.5 } }  // Suspect unmasked facing camera head-on with front illumination
 };
 
 const WORLD_APPS = [
@@ -1719,9 +1719,9 @@ class PushnotOrbit {
       stationPos = new THREE.Vector3(POS.ufo.x, POS.ufo.y, POS.ufo.z);
       camPos = new THREE.Vector3(POS.ufo.x + 22, POS.ufo.y + 4, POS.ufo.z + 36);
     } else if (key === 'bandit') {
-      // Eye-level Rule-of-Thirds framing on suspect at laptop
+      // Eye-level Rule-of-Thirds framing on suspect at laptop from the front
       stationPos = new THREE.Vector3(this.leoPos.bandit.x, 18.0, this.leoPos.bandit.z);
-      camPos = new THREE.Vector3(this.leoPos.bandit.x + 18.0, 24.0, this.leoPos.bandit.z + 12.0);
+      camPos = new THREE.Vector3(this.leoPos.bandit.x - 10.0, 16.0, this.leoPos.bandit.z - 18.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
       // RCMP "E" Division Headquarters centerpiece at Green Timbers Front Entrance Threshold
       stationPos = new THREE.Vector3(this.leoPos.swat.x, 7.5, this.leoPos.swat.z + 8.5);
@@ -2369,50 +2369,18 @@ class PushnotOrbit {
     ctx.fillStyle = '#060a14';
     ctx.fillRect(px, py, pw, ph);
 
-    // Draw authentic Hacker Mugshot
-    ctx.save();
-    const cx = px + pw / 2;
-    // Dark hoodie drape over shoulders
-    ctx.fillStyle = '#1e293b';
-    ctx.beginPath();
-    ctx.arc(cx, py + 180, 60, Math.PI, 0);
-    ctx.fill();
-
-    // Dark hoodie hood arch around head
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.ellipse(cx, py + 72, 40, 52, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Suspect face within hood
-    ctx.fillStyle = '#d4a373';
-    ctx.beginPath();
-    ctx.ellipse(cx, py + 76, 26, 34, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Messy dark hair bangs protruding from hood
-    ctx.fillStyle = '#18181b';
-    ctx.beginPath();
-    ctx.moveTo(cx - 24, py + 56);
-    ctx.lineTo(cx - 10, py + 68);
-    ctx.lineTo(cx + 2, py + 58);
-    ctx.lineTo(cx + 14, py + 69);
-    ctx.lineTo(cx + 24, py + 58);
-    ctx.lineTo(cx + 20, py + 50);
-    ctx.lineTo(cx - 20, py + 50);
-    ctx.closePath();
-    ctx.fill();
-
-    // Natural facial features matching hacker model (clean dark silhouette / mugshot)
-    ctx.fillStyle = '#1e293b';
-    // Brow & Eyes
-    ctx.fillRect(cx - 18, py + 72, 10, 4);
-    ctx.fillRect(cx + 8, py + 72, 10, 4);
-    // Nose bridge
-    ctx.fillRect(cx - 2, py + 74, 4, 12);
-    // Mouth
-    ctx.fillRect(cx - 10, py + 92, 20, 3);
-    ctx.restore();
+    // Subtle forensic photo placeholder badge before 3D model mugshot renders
+    ctx.fillStyle = '#0b1329';
+    ctx.fillRect(px + 8, py + 8, pw - 16, ph - 16);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('RCMP FORENSIC', px + pw / 2, py + 75);
+    ctx.fillText('PHOTO RECORD', px + pw / 2, py + 92);
+    ctx.fillStyle = '#64748b';
+    ctx.font = '9px monospace';
+    ctx.fillText('SECURE ARCHIVE', px + pw / 2, py + 110);
+    ctx.textAlign = 'left';
 
     // Portrait frame cyan border
     ctx.strokeStyle = '#38bdf8';
@@ -2466,11 +2434,13 @@ class PushnotOrbit {
     group.name = 'idCard';
     group.add(mesh);
 
-    // 3D Miniature Headshot Bust anchor for Hacker's Head from hack.glb
-    const headBustWrap = new THREE.Group();
-    headBustWrap.name = 'headBustWrap';
-    headBustWrap.position.set(-3.20, 0.10, 0.18);
-    group.add(headBustWrap);
+    // Store canvas and texture handles so captureHackerMugshot can dynamically paint the 3D model mugshot
+    group.userData.idContext = ctx;
+    group.userData.idTexture = tex;
+    group.userData.idCoords = { px, py, pw, ph };
+    mesh.userData.idContext = ctx;
+    mesh.userData.idTexture = tex;
+    mesh.userData.idCoords = { px, py, pw, ph };
 
     group.scale.setScalar(scale);
     return group;
@@ -3417,61 +3387,138 @@ class PushnotOrbit {
     this.leoGroup.visible = false;
   }
 
-  /* ---- Attach 3D Miniature Relief Bust of Hacker Head on ID Card ---- */
-  attachHacker3DBust(hacker) {
+  /* ---- Capture Offscreen 3D Still Photographic Mugshot of Hacker GLB Head ---- */
+  captureHackerMugshot(hacker) {
     try {
-      const bust = new THREE.Group();
-      const hx = 108.0, hy = 258.0, hz = 83.0;
-      // Neck clipping plane: strictly cuts off all body/torso/legs/shoes below Y = 236 in model space!
-      const neckPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -236.0);
+      if (!this.renderer) return;
 
+      const portraitScene = new THREE.Scene();
+      portraitScene.background = new THREE.Color(0x0a101d); // professional studio dark obsidian background
+
+      const headGroup = new THREE.Group();
       hacker.traverse(c => {
         if (!c.isMesh) return;
         const mName = c.material ? (c.material.name || '') : '';
         const cName = c.name || '';
-        // Skip screen, glasses, clothes, torso, pants, shoes
         if (mName.includes('blinn4') || cName.includes('blinn4')) return;
-        if (mName.includes('Eyewear') || cName.includes('Eyewear')) return;
-        if (mName.includes('Topmat') || mName.includes('Bottommat') || mName.includes('Material') || mName.includes('Ch01_body')) return;
-        if (mName.includes('Bodymat') || mName.includes('Hairmat')) {
+        if (mName.includes('Bottommat') || mName.includes('Material #38') || mName.includes('Ch01_body') || mName.includes('Material #3')) return;
+        if (mName.includes('Bodymat') || mName.includes('Hairmat') || mName.includes('Eyewear') || mName.includes('Topmat')) {
           const mClone = c.clone(true);
           if (mClone.material) {
             mClone.material = mClone.material.clone();
-            mClone.material.roughness = 0.42;
-            mClone.material.metalness = 0.05;
-            mClone.material.clippingPlanes = [neckPlane];
-            mClone.material.clipShadows = true;
+            mClone.material.transparent = false;
+            mClone.material.depthWrite = true;
+            mClone.material.depthTest = true;
+            mClone.material.side = THREE.FrontSide;
             if (c.userData && c.userData.origColor) {
               mClone.material.color.copy(c.userData.origColor);
             }
           }
-          bust.add(mClone);
+          const lensChild = mClone.getObjectByName('hackerGlassesLens');
+          if (lensChild && lensChild.material) {
+            lensChild.material = new THREE.MeshStandardMaterial({
+              color: 0x93c5fd,
+              roughness: 0.15,
+              metalness: 0.1,
+              transparent: true,
+              opacity: 0.35
+            });
+          }
+          headGroup.add(mClone);
         }
       });
 
-      // Center around hacker head (hx, hy, hz)
-      bust.position.set(-hx, -hy, -hz);
+      // In hack.glb model space:
+      // Head center is around (X = 105.0, Y = 246.0, Z = 82.5)
+      // Face looks toward -X
+      const targetLook = new THREE.Vector3(105.0, 246.0, 82.5);
+      const camPos = new THREE.Vector3(-60.0, 246.0, 82.5);
 
-      const bustRoot = new THREE.Group();
-      bustRoot.add(bust);
-      // Scale down to fit neatly in portrait frame (target height ≈ 2.2 units)
-      const scaleBust = 2.2 / 45.0;
-      bustRoot.scale.setScalar(scaleBust);
-      // Face in hack.glb faces -X: rotate by +PI/2 around Y so face points directly forward (+Z) toward user!
-      bustRoot.rotation.y = Math.PI * 0.5;
+      const portraitCam = new THREE.PerspectiveCamera(28, 260 / 330, 1.0, 500.0);
+      portraitCam.position.copy(camPos);
+      portraitCam.lookAt(targetLook);
 
-      const attach = (bundle) => {
-        if (!bundle) return;
-        const hw = bundle.getObjectByName('headBustWrap');
-        if (hw) {
-          hw.clear();
-          hw.add(bustRoot.clone(true));
+      // Studio 3-point portrait lighting:
+      const keyLight = new THREE.DirectionalLight(0xfff7ed, 3.2);
+      keyLight.position.set(-40, 310, 140);
+      keyLight.target.position.set(105, 246, 82.5);
+      portraitScene.add(keyLight);
+      portraitScene.add(keyLight.target);
+
+      const fillLight = new THREE.DirectionalLight(0xe0f2fe, 1.8);
+      fillLight.position.set(-40, 260, 20);
+      fillLight.target.position.set(105, 246, 82.5);
+      portraitScene.add(fillLight);
+      portraitScene.add(fillLight.target);
+
+      const rimLight = new THREE.DirectionalLight(0x38bdf8, 2.8);
+      rimLight.position.set(220, 290, 82.5);
+      rimLight.target.position.set(105, 246, 82.5);
+      portraitScene.add(rimLight);
+      portraitScene.add(rimLight.target);
+
+      const amb = new THREE.AmbientLight(0xffffff, 1.4);
+      portraitScene.add(amb);
+
+      portraitScene.add(headGroup);
+
+      // Render to offscreen WebGLRenderTarget
+      const rt = new THREE.WebGLRenderTarget(260, 330, {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBAFormat,
+        colorSpace: THREE.SRGBColorSpace
+      });
+
+      const prevRT = this.renderer.getRenderTarget();
+      this.renderer.setRenderTarget(rt);
+      this.renderer.render(portraitScene, portraitCam);
+      this.renderer.setRenderTarget(prevRT);
+
+      const pixelBuffer = new Uint8Array(260 * 330 * 4);
+      this.renderer.readRenderTargetPixels(rt, 0, 0, 260, 330, pixelBuffer);
+      rt.dispose();
+
+      const imgData = new ImageData(260, 330);
+      for (let y = 0; y < 330; y++) {
+        const srcY = 329 - y;
+        for (let x = 0; x < 260; x++) {
+          const srcIdx = (srcY * 260 + x) * 4;
+          const dstIdx = (y * 260 + x) * 4;
+          imgData.data[dstIdx]     = pixelBuffer[srcIdx];
+          imgData.data[dstIdx + 1] = pixelBuffer[srcIdx + 1];
+          imgData.data[dstIdx + 2] = pixelBuffer[srcIdx + 2];
+          imgData.data[dstIdx + 3] = 255;
         }
-      };
-      attach(this.leoSubscriberBundle);
-      attach(this.leoAgSubscriberMesh);
+      }
+
+      const pCvs = document.createElement('canvas');
+      pCvs.width = 260;
+      pCvs.height = 330;
+      pCvs.getContext('2d').putImageData(imgData, 0, 0);
+
+      this.cachedHackerMugshotCanvas = pCvs;
+      this.applyMugshotToCards(pCvs);
     } catch (e) {
-      console.warn('attachHacker3DBust fallback:', e);
+      console.warn('captureHackerMugshot failed:', e);
+    }
+  }
+
+  applyMugshotToCards(photoCanvas) {
+    if (!photoCanvas) return;
+    const cards = [this.leoSubscriberBundle, this.leoAgSubscriberMesh];
+    for (const bundle of cards) {
+      if (!bundle) continue;
+      bundle.traverse(c => {
+        if (c.userData && c.userData.idContext && c.userData.idTexture && c.userData.idCoords) {
+          const { px, py, pw, ph } = c.userData.idCoords;
+          c.userData.idContext.drawImage(photoCanvas, px, py, pw, ph);
+          c.userData.idContext.strokeStyle = '#38bdf8';
+          c.userData.idContext.lineWidth = 3;
+          c.userData.idContext.strokeRect(px, py, pw, ph);
+          c.userData.idTexture.needsUpdate = true;
+        }
+      });
     }
   }
 
@@ -3569,6 +3616,19 @@ class PushnotOrbit {
       hacker.traverse(c => {
         if (!c.isMesh) return;
         c.userData.stationKey = 'bandit';
+
+        // Force all hacker materials to render in opaque queue with hardware depth write and frontface culling
+        // This permanently eliminates polygon clipping, missing skin shells, and transparent sorting holes
+        if (c.material) {
+          const mats = Array.isArray(c.material) ? c.material : [c.material];
+          for (const m of mats) {
+            m.transparent = false;
+            m.depthWrite = true;
+            m.depthTest = true;
+            m.side = THREE.FrontSide;
+          }
+        }
+
         const mName = c.material ? (c.material.name || '') : '';
         const cName = c.name || '';
         if (mName.includes('blinn4') || cName.includes('blinn4')) {
@@ -3642,6 +3702,10 @@ class PushnotOrbit {
             c.material = c.material.clone();
             c.material.roughness = 0.85;
             c.material.metalness = 0.1;
+            c.material.transparent = false;
+            c.material.depthWrite = true;
+            c.material.depthTest = true;
+            c.material.side = THREE.FrontSide;
             c.userData.origColor = c.material.color.clone();
             c.material.color.setHex(0x1a1a1f);
           }
@@ -3651,6 +3715,10 @@ class PushnotOrbit {
           if (c.material) {
             c.material = c.material.clone();
             c.material.roughness = 0.35;
+            c.material.transparent = false;
+            c.material.depthWrite = true;
+            c.material.depthTest = true;
+            c.material.side = THREE.FrontSide;
           }
         }
       });
@@ -3665,16 +3733,21 @@ class PushnotOrbit {
       this.hackerScreenGlow.position.set(0, 11, 4.0);
       hacker.add(this.hackerScreenGlow);
 
-      // Bright Police interrogation spotlight overhead (OFF until suspect is ID'ed!)
-      this.hackerSpotlight = new THREE.SpotLight(0xfff5ea, 0, 85, Math.PI / 4.2, 0.3, 1.2);
-      this.hackerSpotlight.position.set(this.leoPos.bandit.x, 36, this.leoPos.bandit.z);
-      this.hackerSpotlight.target.position.set(this.leoPos.bandit.x, 10, this.leoPos.bandit.z);
+      // Front interrogation spotlight aiming directly into hacker's face (OFF until suspect is ID'ed!)
+      this.hackerSpotlight = new THREE.SpotLight(0xfff5ea, 0, 75, Math.PI / 3.8, 0.35, 1.2);
+      this.hackerSpotlight.position.set(this.leoPos.bandit.x - 12.0, 26.0, this.leoPos.bandit.z - 16.0);
+      this.hackerSpotlight.target.position.set(this.leoPos.bandit.x, 12.5, this.leoPos.bandit.z);
       this.leoGroup.add(this.hackerSpotlight);
       this.leoGroup.add(this.hackerSpotlight.target);
 
+      // Dedicated warm face fill light directly in front of the hacker's face (OFF until suspect is ID'ed!)
+      this.hackerFaceLight = new THREE.PointLight(0xffedd5, 0, 18, 1.0);
+      this.hackerFaceLight.position.set(this.leoPos.bandit.x - 6.0, 14.5, this.leoPos.bandit.z - 9.0);
+      this.leoGroup.add(this.hackerFaceLight);
+
       this.leoTops.bandit = this.ground(hacker, 28, this.leoPos.bandit);
       this.leoGroup.add(hacker);
-      this.attachHacker3DBust(hacker);
+      this.captureHackerMugshot(hacker);
       done();
     }, undefined, done);
 
@@ -4085,6 +4158,7 @@ class PushnotOrbit {
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
       // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
+      localStorage.removeItem('pushnot_director_rigs_v15');
       localStorage.removeItem('pushnot_director_rigs_v14');
       localStorage.removeItem('pushnot_director_rigs_v13');
       localStorage.removeItem('pushnot_director_rigs_v12');
@@ -4098,7 +4172,7 @@ class PushnotOrbit {
       localStorage.removeItem('pushnot_director_rigs_v4');
       localStorage.removeItem('pushnot_director_rigs_v3');
       localStorage.removeItem('pushnot_director_rigs');
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v15') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v16') || '{}');
       for (const k of Object.keys(saved)) {
         if (k.startsWith('leo_') && saved[k].cam && saved[k].cam.y < 45.0) continue;
         this.directorRigs[k] = saved[k];
@@ -4156,7 +4230,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v15', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v16', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4173,7 +4247,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v15', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v16', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4917,8 +4991,8 @@ class PushnotOrbit {
           this.leoSubscriberBundle.visible = true;
           // Floating above his computer desk (showing 3 objects: Credit Card + Photo ID + Architectural Home)
           this.leoSubscriberBundle.position.set(L.bandit.x - 1.5, 21.5, L.bandit.z - 1.0);
-          // Remove rotate: front yard with tree faces forward toward user, level with ground!
-          this.leoSubscriberBundle.rotation.set(0, 0, 0);
+          // Angle so Subscriber ID card and House face directly toward front reveal camera
+          this.leoSubscriberBundle.rotation.set(0, -Math.PI * 0.85, 0);
         }
         moverPos = new THREE.Vector3(L.bandit.x, 32.0, L.bandit.z);
         moverText = '🚨 Suspect Identified';
@@ -4928,11 +5002,14 @@ class PushnotOrbit {
 
       // Suspect illumination:
       // Until ID'ed (t < 0.88): Menacing dark lighting, only hands, keyboard, and glasses shine!
-      // Once ID'ed (t >= 0.88): Overhead interrogation spotlight turns ON brightly!
+      // Once ID'ed (t >= 0.88): Front interrogation spotlight & warm face fill light turn ON brightly!
       if (this.hackerSpotlight) {
         if (t >= 0.88) {
           const idProg = clamp01((t - 0.88) / 0.04);
-          this.hackerSpotlight.intensity = 6.5 * idProg;
+          this.hackerSpotlight.intensity = 8.5 * idProg;
+          if (this.hackerFaceLight) {
+            this.hackerFaceLight.intensity = 5.2 * idProg;
+          }
           if (this.hackerGlassesMesh && this.hackerGlassesMesh.material) {
             this.hackerGlassesMesh.material.emissiveIntensity = 2.0 - 1.2 * idProg;
           }
@@ -4945,6 +5022,9 @@ class PushnotOrbit {
           }
         } else {
           this.hackerSpotlight.intensity = 0;
+          if (this.hackerFaceLight) {
+            this.hackerFaceLight.intensity = 0;
+          }
           if (this.hackerGlassesMesh && this.hackerGlassesMesh.material) {
             this.hackerGlassesMesh.material.emissiveIntensity = 2.0;
           }
@@ -4957,8 +5037,9 @@ class PushnotOrbit {
       }
     }
 
-    if (!isLeo && this.hackerSpotlight) {
-      this.hackerSpotlight.intensity = 0;
+    if (!isLeo) {
+      if (this.hackerSpotlight) this.hackerSpotlight.intensity = 0;
+      if (this.hackerFaceLight) this.hackerFaceLight.intensity = 0;
     }
 
     // Normal mode station labels (3 Unified Ground Nodes + World above Datacentre; hidden when flipped to Law Enforcement)

@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=113" />
+  <link rel="stylesheet" href="css/style.css?v=114" />
   <script type="importmap">
     { "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -19,12 +19,15 @@
   <div id="canvas-container"></div>
   <div id="load-status" class="load-status">Loading 3D models…</div>
 
-  <!-- Authentic Mobile Push Notification Permission Prompt (Replaces simple top-left project title) -->
-  <div class="push-permission-dialog" id="push-permission-dialog" role="dialog" aria-label="Notification Permission">
+  <!-- Startup Blur Backdrop Overlay -->
+  <div id="start-blur-backdrop" class="start-blur-backdrop"></div>
+
+  <!-- Authentic Mobile Push Notification Permission Prompt (Initial Centered Focus) -->
+  <div class="push-permission-dialog initial-focus" id="push-permission-dialog" role="dialog" aria-label="Notification Permission">
     <div class="perm-body">
       <div class="perm-icon" id="perm-icon">🔔</div>
       <div class="perm-text-wrap">
-        <div class="perm-title" id="perm-title">“Pushnot” Would Like to Send You Notifications</div>
+        <div class="perm-title" id="perm-title">“Candy Crush Saga” Would Like to Send You Notifications</div>
         <div class="perm-message" id="perm-message">Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.</div>
       </div>
     </div>
@@ -210,6 +213,6 @@
     </div>
   </nav>
 
-  <script type="module" src="js/app.js?v=131"></script>
+  <script type="module" src="js/app.js?v=132"></script>
 </body>
 </html>

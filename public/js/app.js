@@ -20,14 +20,14 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
      'push'  (↻): UFO Event Trigger -> App Server (uses stored Key) -> Post Office -> Phone
    ===================================================================== */
 
-const R = 46;
+const R = 34;
 const D = Math.SQRT1_2 * R;
 const POS = {
   store:  new THREE.Vector3( 0, 0, -R),
   phone:  new THREE.Vector3( D, 0,  D),
   server: new THREE.Vector3(-D, 0,  D),
   post:   new THREE.Vector3( 0, 0, -R),
-  ufo:    new THREE.Vector3( 0, 50, -R)
+  ufo:    new THREE.Vector3(-D, 40,  D)
 };
 
 const MODE_SECONDS = { setup: 15, push: 11, world: 12, leo: 18 };
@@ -40,25 +40,25 @@ const MODE_STEPS = {
 
 // Default Director's Camera Rigs (Eye-level circular carousel track orbiting at natural eye level Y ≈ 26, constant R = 90)
 const DEFAULT_DIRECTOR_RIGS = {
-  // Mode 1: Setup (10 steps) — Eye-level Circular Track Carousel at constant R = 90.0, cam.y = 26.0, target.y = 18.0
-  "setup_step_0": { angle: 0.43,  radius: 57.3, cam: { x: 24.0,  y: 30.0, z: 52.0 }, target: { x: 0.0,  y: 14.0, z: -46.0 } },
-  "setup_step_1": { angle: 0.45,  radius: 90.0, cam: { x: 39.1,  y: 26.0, z: 81.0 }, target: { x: 24.0, y: 18.0, z: -20.0 } },
-  "setup_step_2": { angle: 0.65,  radius: 90.0, cam: { x: 54.5,  y: 26.0, z: 71.6 }, target: { x: 28.0, y: 18.0, z: 8.0 } },
-  "setup_step_3": { angle: 0.82,  radius: 90.0, cam: { x: 65.8,  y: 26.0, z: 61.4 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
-  "setup_step_4": { angle: 0.60,  radius: 90.0, cam: { x: 50.8,  y: 26.0, z: 74.3 }, target: { x: 22.0, y: 18.0, z: -4.0 } },
-  "setup_step_5": { angle: 0.35,  radius: 90.0, cam: { x: 30.9,  y: 26.0, z: 84.5 }, target: { x: 18.0, y: 18.0, z: -28.0 } },
-  "setup_step_6": { angle: 0.70,  radius: 90.0, cam: { x: 58.0,  y: 26.0, z: 68.8 }, target: { x: 26.0, y: 18.0, z: 16.0 } },
-  "setup_step_7": { angle: 0.82,  radius: 90.0, cam: { x: 65.8,  y: 26.0, z: 61.4 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
-  "setup_step_8": { angle: -0.82, radius: 90.0, cam: { x: -65.8, y: 26.0, z: 61.4 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
-  "setup_step_9": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 26.0, z: 90.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  // Mode 1: Setup (10 steps) — Tightened Eye-level Circular Track Carousel at constant R = 76.0
+  "setup_step_0": { angle: 0.43,  radius: 52.0, cam: { x: 20.0,  y: 28.0, z: 46.0 }, target: { x: 0.0,  y: 14.0, z: -34.0 } },
+  "setup_step_1": { angle: 0.45,  radius: 76.0, cam: { x: 33.0,  y: 25.0, z: 68.0 }, target: { x: 18.0, y: 16.0, z: -16.0 } },
+  "setup_step_2": { angle: 0.65,  radius: 76.0, cam: { x: 46.0,  y: 25.0, z: 60.0 }, target: { x: 22.0, y: 16.0, z: 6.0 } },
+  "setup_step_3": { angle: 0.82,  radius: 76.0, cam: { x: 55.0,  y: 25.0, z: 52.0 }, target: { x: 24.0, y: 16.0, z: 24.0 } },
+  "setup_step_4": { angle: 0.60,  radius: 76.0, cam: { x: 43.0,  y: 25.0, z: 63.0 }, target: { x: 16.0, y: 16.0, z: -4.0 } },
+  "setup_step_5": { angle: 0.35,  radius: 76.0, cam: { x: 26.0,  y: 25.0, z: 71.0 }, target: { x: 14.0, y: 16.0, z: -22.0 } },
+  "setup_step_6": { angle: 0.70,  radius: 76.0, cam: { x: 49.0,  y: 25.0, z: 58.0 }, target: { x: 20.0, y: 16.0, z: 12.0 } },
+  "setup_step_7": { angle: 0.82,  radius: 76.0, cam: { x: 55.0,  y: 25.0, z: 52.0 }, target: { x: 24.0, y: 16.0, z: 24.0 } },
+  "setup_step_8": { angle: -0.82, radius: 76.0, cam: { x: -55.0, y: 25.0, z: 52.0 }, target: { x: -24.0, y: 16.0, z: 24.0 } },
+  "setup_step_9": { angle: 0.00,  radius: 76.0, cam: { x: 0.0,   y: 25.0, z: 76.0 }, target: { x: 0.0,  y: 16.0, z: 0.0 } },
 
-  // Mode 2: Push (6 steps) — Eye-level Circular Track Carousel at constant R = 90.0, cam.y = 26.0, target.y = 18.0
-  "push_step_0": { angle: -0.82, radius: 90.0, cam: { x: -65.8, y: 26.0, z: 61.4 }, target: { x: -32.5, y: 18.0, z: 32.5 } },
-  "push_step_1": { angle: -0.40, radius: 90.0, cam: { x: -35.0, y: 26.0, z: 82.9 }, target: { x: -16.0, y: 18.0, z: -8.0 } },
-  "push_step_2": { angle: 0.35,  radius: 90.0, cam: { x: 30.9,  y: 26.0, z: 84.5 }, target: { x: 18.0, y: 18.0, z: -26.0 } },
-  "push_step_3": { angle: 0.65,  radius: 90.0, cam: { x: 54.5,  y: 26.0, z: 71.6 }, target: { x: 26.0, y: 18.0, z: 14.0 } },
-  "push_step_4": { angle: 0.82,  radius: 90.0, cam: { x: 65.8,  y: 26.0, z: 61.4 }, target: { x: 32.5, y: 18.0, z: 32.5 } },
-  "push_step_5": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 26.0, z: 90.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  // Mode 2: Push (6 steps) — Tightened Eye-level Circular Track Carousel at constant R = 76.0
+  "push_step_0": { angle: -0.82, radius: 76.0, cam: { x: -55.0, y: 25.0, z: 52.0 }, target: { x: -24.0, y: 16.0, z: 24.0 } },
+  "push_step_1": { angle: -0.40, radius: 76.0, cam: { x: -30.0, y: 25.0, z: 70.0 }, target: { x: -12.0, y: 16.0, z: -6.0 } },
+  "push_step_2": { angle: 0.35,  radius: 76.0, cam: { x: 26.0,  y: 25.0, z: 71.0 }, target: { x: 14.0, y: 16.0, z: -20.0 } },
+  "push_step_3": { angle: 0.65,  radius: 76.0, cam: { x: 46.0,  y: 25.0, z: 60.0 }, target: { x: 20.0, y: 16.0, z: 10.0 } },
+  "push_step_4": { angle: 0.82,  radius: 76.0, cam: { x: 55.0,  y: 25.0, z: 52.0 }, target: { x: 24.0, y: 16.0, z: 24.0 } },
+  "push_step_5": { angle: 0.00,  radius: 76.0, cam: { x: 0.0,   y: 25.0, z: 76.0 }, target: { x: 0.0,  y: 16.0, z: 0.0 } },
 
   // Mode 3: World (6 steps) — Continuous 360° orbital dolly sweep around Earth
   "world_step_0": { angle: 0.60, radius: 108.0, cam: { x: 61.0, y: 56.0, z: 89.0 },   target: { x: 0.0, y: 32.0, z: 0.0 } },
@@ -410,15 +410,15 @@ class PushnotOrbit {
     const pPost   = POS.post.clone().setY(10.5); // centered right between Apple and Google signs
     const pServer = POS.server.clone().setY(15);
 
-    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 4, 18, -6), pPhone);
-    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(10, 19, -6),    pPost);
-    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 4, 18, -6), pPhone);
-    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 8),  pServer);
-    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
+    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 3, 17, -4), pPhone);
+    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(8, 18, -4),    pPost);
+    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 3, 17, -4), pPhone);
+    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 6),  pServer);
+    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 3, 17, -4), pPost);
     this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
-      POS.ufo.clone().setY(68.0),
-      new THREE.Vector3(POS.post.x + 5.0, 42.0, POS.post.z + 5.0),
-      pPost.clone().setY(22.0)
+      POS.ufo.clone().setY(42.0),
+      new THREE.Vector3((POS.ufo.x + POS.post.x) * 0.5, 32.0, (POS.ufo.z + POS.post.z) * 0.5),
+      pPost.clone().setY(20.0)
     );
 
     this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
@@ -1346,8 +1346,8 @@ class PushnotOrbit {
     }
     if (permTitle) {
       permTitle.textContent = os === 'android'
-        ? 'Allow Pushnot to send you notifications?'
-        : '“Pushnot” Would Like to Send You Notifications';
+        ? 'Allow Candy Crush Saga to send you notifications?'
+        : '“Candy Crush Saga” Would Like to Send You Notifications';
     }
     if (permMessage) {
       permMessage.textContent = os === 'android'
@@ -3088,82 +3088,81 @@ class PushnotOrbit {
     if (this.hackerScreenTex) this.hackerScreenTex.needsUpdate = true;
   }
 
-  /* ---- 3D Official Bomb Threat Message Packet with Flashing Danger Beacon ---- */
+  /* ---- 3D Sleek Email Icon with Bomb Logo for Node-to-Node Travel (Uncluttered) ---- */
   createBombThreatMessagePacket() {
     const group = new THREE.Group();
 
-    // High-resolution canvas texture for bomb threat dispatch card (640x400)
+    // High-resolution canvas texture for crisp email envelope with bomb logo (512x340)
     const cvs = document.createElement('canvas');
-    cvs.width = 640;
-    cvs.height = 400;
+    cvs.width = 512;
+    cvs.height = 340;
     const ctx = cvs.getContext('2d');
 
-    // Deep dark alert background
-    ctx.fillStyle = '#120508';
-    ctx.fillRect(0, 0, 640, 400);
+    // Crisp modern white/platinum envelope
+    ctx.fillStyle = '#f8fafc';
+    ctx.beginPath();
+    ctx.roundRect(8, 8, 496, 324, 24);
+    ctx.fill();
 
-    // Hazard striped border
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 10;
-    ctx.strokeRect(10, 10, 620, 380);
+    // Subtle dark border
+    ctx.strokeStyle = '#475569';
+    ctx.lineWidth = 8;
+    ctx.stroke();
 
-    // Flashing Crimson Header
-    ctx.fillStyle = '#dc2626';
-    ctx.fillRect(20, 20, 600, 70);
+    // Envelope fold line / V-flap
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(12, 12);
+    ctx.lineTo(256, 175);
+    ctx.lineTo(500, 12);
+    ctx.stroke();
 
+    // Bottom fold creases
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(12, 328);
+    ctx.lineTo(195, 145);
+    ctx.moveTo(500, 328);
+    ctx.lineTo(317, 145);
+    ctx.stroke();
+
+    // Clean Bomb Emblem Badge in the center
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(256, 195, 76, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Large crisp 💣 Bomb emoji / icon
+    ctx.font = '84px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 32px "Space Grotesk", sans-serif';
-    ctx.fillText('💣 INCOMING EMERGENCY DISPATCH', 320, 66);
-
-    // Message Body Header
-    ctx.fillStyle = '#f87171';
-    ctx.font = '700 22px "JetBrains Mono", monospace';
-    ctx.fillText('FROM: badguy@proton.me  →  TO: 911@poj.ca', 320, 130);
-
-    // BOMB THREAT (Huge bold warning)
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 58px "Space Grotesk", "JetBrains Mono", sans-serif';
-    ctx.fillText('BOMB THREAT', 320, 210);
-
-    ctx.fillStyle = '#fca5a5';
-    ctx.font = '700 24px "JetBrains Mono", monospace';
-    ctx.fillText('VANCOUVER / SURREY CORRIDOR · ACTIVE ALERT', 320, 260);
-
-    // Footer
-    ctx.fillStyle = '#991b1b';
-    ctx.fillRect(20, 310, 600, 65);
-    ctx.fillStyle = '#fee2e2';
-    ctx.font = '800 22px "JetBrains Mono", monospace';
-    ctx.fillText('PRIORITY 1 TRANSMISSION · TRACE REQUIRED', 320, 350);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('💣', 256, 198);
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
 
     const mat = new THREE.MeshStandardMaterial({
       map: tex,
-      roughness: 0.25,
-      metalness: 0.35,
+      roughness: 0.35,
+      metalness: 0.15,
       side: THREE.DoubleSide
     });
 
-    const card = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 5.3), mat);
-    card.castShadow = true;
-    group.add(card);
+    const envelopeMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 3.4), mat);
+    envelopeMesh.castShadow = true;
+    group.add(envelopeMesh);
 
-    // Flashing red emergency beacon light atop the threat packet
-    const beacon = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.35, 0.45, 0.6, 16),
-      new THREE.MeshStandardMaterial({ color: 0xff0033, emissive: 0xff0033, emissiveIntensity: 2.5, roughness: 0.1 })
-    );
-    beacon.position.set(0, 2.9, 0);
-    group.add(beacon);
-
-    const pointLight = new THREE.PointLight(0xff1133, 5.0, 35, 1.2);
-    pointLight.position.set(0, 3.2, 0);
+    // Subtle alert glow point light
+    const pointLight = new THREE.PointLight(0xef4444, 2.2, 16, 1.2);
+    pointLight.position.set(0, 0, 0.8);
     group.add(pointLight);
 
-    group.userData = { beacon, pointLight };
+    group.userData = { pointLight };
     return group;
   }
 
@@ -3344,11 +3343,6 @@ class PushnotOrbit {
     this.protonGroup.userData.stationKey = 'proton';
     this.protonGroup.traverse(c => { c.userData.stationKey = 'proton'; });
     this.leoGroup.add(this.protonGroup);
-
-    // 3D Swiss Shield Icon + Speech Bubble from Proton Server ("PROTON DOES NOT PROVIDE USER DATA TO NON-SWISS AUTHORITIES")
-    this.rejectShieldBubble = this.createSwissRejectionShieldAndBubble();
-    this.rejectShieldBubble.visible = false;
-    this.protonGroup.add(this.rejectShieldBubble);
 
     // 3D Swiss Proton Server Laughing Video Billboard (JJ Laugh with Chromakey Alpha)
     this.initSwissVideoBillboard();
@@ -3657,28 +3651,6 @@ class PushnotOrbit {
       this.harmonizeAsset(earth, { minRough: 0.34, maxRough: 0.72, maxMetal: 0.25, envIntensity: 0.9, liftDark: false });
       this.centerAndScale(earth, 26);
       this.ufoGroup.add(earth);
-
-      // Cyber anchor conduit anchoring Earth directly down to Apple & Google node
-      const anchorConduit = new THREE.Group();
-      const beamGeo = new THREE.CylinderGeometry(0.8, 1.4, 28, 24);
-      const beamMat = new THREE.MeshBasicMaterial({
-        color: 0x38bdf8,
-        transparent: true,
-        opacity: 0.30
-      });
-      const beam = new THREE.Mesh(beamGeo, beamMat);
-      beam.position.set(0, -22, 0);
-      anchorConduit.add(beam);
-
-      for (let r = 0; r < 3; r++) {
-        const ringGeo = new THREE.TorusGeometry(2.4 + r * 0.9, 0.12, 12, 32);
-        const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 - r * 0.15 });
-        const ring = new THREE.Mesh(ringGeo, ringMat);
-        ring.rotation.x = Math.PI * 0.5;
-        ring.position.set(0, -9 - r * 7, 0);
-        anchorConduit.add(ring);
-      }
-      this.ufoGroup.add(anchorConduit);
 
       this.ufoGroup.position.copy(POS.ufo);
       this.normalGroup.add(this.ufoGroup);
@@ -4039,21 +4011,12 @@ class PushnotOrbit {
             c.material = c.material.clone();
             const matName = (c.material.name || '').toLowerCase();
             const meshName = (c.name || '').toLowerCase();
-            if (matName.includes('leaf') || meshName.includes('leaf')) {
-              // Darken leaves to deep grounded forest green, killing bright highlights (#1b3820)
-              c.material.color.set('#1b3820');
-              c.material.roughness = 0.85;
-              c.material.metalness = 0.05;
-              if (c.material.emissive) c.material.emissive.set('#000000');
-              c.material.emissiveIntensity = 0;
-            } else {
-              // Dark tactical trunk and branches
-              c.material.color.set('#1a1c18');
-              c.material.roughness = 0.88;
-              c.material.metalness = 0.04;
-              if (c.material.emissive) c.material.emissive.set('#000000');
-              c.material.emissiveIntensity = 0;
-            }
+            // Black out the trees completely (pitch black tactical silhouette per user request)
+            c.material.color.set('#040507');
+            c.material.roughness = 0.95;
+            c.material.metalness = 0.0;
+            if (c.material.emissive) c.material.emissive.set('#000000');
+            c.material.emissiveIntensity = 0;
             c.material.needsUpdate = true;
           }
         }
@@ -4071,16 +4034,15 @@ class PushnotOrbit {
       const treeBase = new THREE.Group();
       treeBase.add(treeModel);
 
-      // Plant 4 real trees lined up cleanly in front of the entrance on the opposite side
-      // (to the right of the wooden entrance foyer in the open courtyard/plaza with positive Z values)
+      // Plant 4 real trees running parallel with the wooden sign near the entrance (exact restored alignment)
       const treeRow = new THREE.Group();
       treeRow.userData.stationKey = 'swat';
 
       const treeCoords = [
-        { x: 19.5, z: 14.5, rot: 0.2,  s: 1.00 },
-        { x: 22.5, z: 14.0, rot: 1.4,  s: 0.95 },
-        { x: 25.5, z: 13.5, rot: 2.6,  s: 1.05 },
-        { x: 28.5, z: 13.0, rot: 3.8,  s: 0.98 }
+        { x:  8.5, z:  7.5, rot: 0.1,  s: 1.00 },
+        { x: 10.0, z: 12.0, rot: 1.2,  s: 0.95 },
+        { x: 11.5, z: 16.5, rot: 2.3,  s: 1.05 },
+        { x: 13.0, z: 21.0, rot: 3.5,  s: 0.98 }
       ];
 
       for (let i = 0; i < treeCoords.length; i++) {
@@ -4095,11 +4057,7 @@ class PushnotOrbit {
       }
 
       this.leoGroup.add(treeRow);
-
-      // Surrey Fallen Peace Officers Memorial Monument (Cenotaph, RCMP Crest, Bronze Statue, Black Mourning Flags)
-      this.surreyMemorial = this.createSurreyMemorialMonument();
-      this.surreyMemorial.position.set(15.5, 0, 15.5);
-      this.leoGroup.add(this.surreyMemorial);
+      this.memorialFlags = [];
 
       done();
     }, undefined, done);
@@ -4508,10 +4466,10 @@ class PushnotOrbit {
       depthWrite: false
     });
 
-    // 9:16 portrait video plane
-    const videoGeo = new THREE.PlaneGeometry(9.6, 17.0);
+    // 9:16 portrait video plane standing free outside/above the Proton server node
+    const videoGeo = new THREE.PlaneGeometry(10.5, 18.5);
     this.swissVideoMesh = new THREE.Mesh(videoGeo, chromakeyMat);
-    this.swissVideoMesh.position.set(this.leoPos.proton.x, 23.5, this.leoPos.proton.z);
+    this.swissVideoMesh.position.set(this.leoPos.proton.x + 3.0, 31.0, this.leoPos.proton.z + 4.5);
     this.swissVideoMesh.visible = false;
     this.swissVideoMesh.userData.stationKey = 'proton';
     this.leoGroup.add(this.swissVideoMesh);
@@ -4878,23 +4836,29 @@ class PushnotOrbit {
     const btnAllow = document.getElementById('perm-btn-allow');
     const btnDeny = document.getElementById('perm-btn-deny');
     const permDialog = document.getElementById('push-permission-dialog');
+    const blurBackdrop = document.getElementById('start-blur-backdrop');
+
+    const dismissPermissionPrompt = (granted) => {
+      if (permDialog) {
+        if (granted) permDialog.classList.add('granted');
+        // Move notification up and off screen smoothly!
+        permDialog.classList.add('off-screen');
+      }
+      if (blurBackdrop) {
+        blurBackdrop.classList.add('dismissed');
+        setTimeout(() => { blurBackdrop.style.display = 'none'; }, 700);
+      }
+      // If paused at start, start playback!
+      if (!this.playing) {
+        this.setPlaying(true);
+      }
+    };
+
     if (btnAllow) {
-      btnAllow.addEventListener('click', () => {
-        if (permDialog) permDialog.classList.add('granted');
-        btnAllow.textContent = 'Allowed ✓';
-        setTimeout(() => {
-          btnAllow.textContent = 'Allow';
-        }, 1800);
-      });
+      btnAllow.addEventListener('click', () => dismissPermissionPrompt(true));
     }
     if (btnDeny) {
-      btnDeny.addEventListener('click', () => {
-        if (permDialog) permDialog.classList.remove('granted');
-        btnDeny.textContent = 'Denied ✕';
-        setTimeout(() => {
-          btnDeny.textContent = 'Don’t Allow';
-        }, 1800);
-      });
+      btnDeny.addEventListener('click', () => dismissPermissionPrompt(false));
     }
     this.renderSliderTicks();
 
@@ -5514,16 +5478,17 @@ class PushnotOrbit {
           moverText = '🚨 Emergency Order';
           moverCls = 'red';
         } else {
-          // Rejection Swiss Shield Icon + Speech Bubble
-          if (this.rejectShieldBubble) this.rejectShieldBubble.visible = true;
-          showLeoDenied = true;
-          moverPos = new THREE.Vector3(L.proton.x, 26.5, L.proton.z);
-          moverText = '⛔ Proton: Request Denied';
-          moverCls = 'red';
+          // Rejection Swiss Shield Icon + Speech Bubble REMOVED per user request
+          if (this.rejectShieldBubble) this.rejectShieldBubble.visible = false;
+          showLeoDenied = false;
+          moverPos = new THREE.Vector3(L.proton.x, 32.0, L.proton.z);
+          moverText = '🇨🇭 Proton AG';
+          moverCls = 'cyan';
 
-          // Step 3 (Swiss Proton server receives order): Play laughing video in 3D facing camera!
+          // Step 3 (Swiss Proton server receives order): Play laughing video in 3D facing camera, standing free above server!
           if (this.swissVideoMesh) {
             this.swissVideoMesh.visible = true;
+            this.swissVideoMesh.position.set(L.proton.x + 2.5, 31.0, L.proton.z + 4.5);
             this.swissVideoMesh.lookAt(this.camera.position);
           }
           if (this.swissVideoEl && this.swissVideoEl.paused) {

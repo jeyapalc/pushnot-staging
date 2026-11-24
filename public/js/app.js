@@ -3615,24 +3615,17 @@ class PushnotOrbit {
             vertexColors: true,
             side: THREE.DoubleSide
           });
-          glassesMat.customProgramCacheKey = () => 'hacker_glasses_shader_v1';
+          glassesMat.customProgramCacheKey = () => 'hacker_glasses_shader_v2';
           glassesMat.onBeforeCompile = (shader) => {
             shader.fragmentShader = shader.fragmentShader.replace(
-              '#include <color_fragment>',
-              `#include <color_fragment>
-               // Strictly ensure only front-facing outer lens surfaces glow white;
-               // all inside surfaces, inner rims, and back faces are matte jet black!
-               bool isFrontGlint = gl_FrontFacing && (vColor.r > 0.5);
-               if (isFrontGlint) {
-                 diffuseColor.rgb = vec3(1.0, 1.0, 1.0);
-               } else {
-                 diffuseColor.rgb = vec3(0.04, 0.04, 0.05);
-               }
-              `
+              'vec3 totalEmissiveRadiance = emissive;',
+              `bool isFrontGlint = gl_FrontFacing && (vColor.r > 0.5);
+               vec3 totalEmissiveRadiance = isFrontGlint ? (emissive * 1.8) : vec3(0.0);
+               diffuseColor.rgb = isFrontGlint ? vec3(1.0, 1.0, 1.0) : vec3(0.04, 0.04, 0.05);`
             );
             shader.fragmentShader = shader.fragmentShader.replace(
-              'vec3 totalEmissiveRadiance = emissive;',
-              `vec3 totalEmissiveRadiance = isFrontGlint ? (emissive * 1.8) : vec3(0.0);`
+              '#include <color_fragment>',
+              '/* color applied in totalEmissiveRadiance */'
             );
           };
           c.material = glassesMat;

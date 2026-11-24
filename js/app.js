@@ -69,14 +69,14 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
   // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track framing origin, destination & transit arcs
-  "leo_step_0": { angle: 0.87,  radius: 65.3, cam: { x: 50.0,  y: 55.0, z: 42.0 },  target: { x: 26.0, y: 45.0, z: 26.0 } }, // Suspect on Rule of Thirds
-  "leo_step_1": { angle: 0.00,  radius: 76.0, cam: { x: 0.0,   y: 56.0, z: 76.0 },  target: { x: 6.0,  y: 44.0, z: 6.0 } },  // Central RCMP Green Timbers HQ
-  "leo_step_2": { angle: 2.63,  radius: 85.2, cam: { x: 41.7,  y: 55.0, z: -74.2 }, target: { x: -16.2, y: 44.0, z: -16.2 } }, // Transit: RCMP -> Swiss Proton (origin, dest & arc)
-  "leo_step_3": { angle: -2.08, radius: 85.2, cam: { x: -74.2, y: 55.0, z: -41.7 }, target: { x: -16.2, y: 44.0, z: 16.2 } },  // Transit: RCMP -> App Server (origin, dest & arc)
-  "leo_step_4": { angle: -2.08, radius: 85.2, cam: { x: -74.2, y: 55.0, z: -41.7 }, target: { x: -16.2, y: 44.0, z: 16.2 } },  // Transit: App Server -> RCMP Tokens (origin, dest & arc)
-  "leo_step_5": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: RCMP -> Apple/Google HQ (origin, dest & arc)
-  "leo_step_6": { angle: 1.06,  radius: 85.2, cam: { x: 74.2,  y: 55.0, z: 41.7 },  target: { x: 16.2,  y: 44.0, z: -16.2 } }, // Transit: Apple/Google -> RCMP Record (origin, dest & arc)
-  "leo_step_7": { angle: 1.57,  radius: 16.0, cam: { x: 16.0,  y: 47.0, z: 0.0 },   target: { x: 32.5, y: 46.0, z: 32.5 } }  // Suspect unmasked facing camera head-on with front illumination and full scene framing
+  "leo_step_0": { angle: 0.87,  radius: 88.0, cam: { x: 74.0,  y: 55.0, z: 66.0 },  target: { x: 50.0, y: 45.0, z: 50.0 } }, // Suspect on Rule of Thirds
+  "leo_step_1": { angle: 0.00,  radius: 82.0, cam: { x: 0.0,   y: 56.0, z: 82.0 },  target: { x: 0.0,  y: 44.0, z: 8.5 } },  // Central RCMP Green Timbers HQ
+  "leo_step_2": { angle: 2.63,  radius: 96.0, cam: { x: 48.0,  y: 55.0, z: -84.0 }, target: { x: -28.0, y: 44.0, z: -28.0 } }, // Transit: RCMP -> Swiss Proton (origin, dest & arc)
+  "leo_step_3": { angle: -2.08, radius: 96.0, cam: { x: -84.0, y: 55.0, z: -48.0 }, target: { x: -28.0, y: 44.0, z: 28.0 } },  // Transit: RCMP -> App Server (origin, dest & arc)
+  "leo_step_4": { angle: -2.08, radius: 96.0, cam: { x: -84.0, y: 55.0, z: -48.0 }, target: { x: -28.0, y: 44.0, z: 28.0 } },  // Transit: App Server -> RCMP Tokens (origin, dest & arc)
+  "leo_step_5": { angle: 1.06,  radius: 96.0, cam: { x: 84.0,  y: 55.0, z: 48.0 },  target: { x: 28.0,  y: 44.0, z: -28.0 } }, // Transit: RCMP -> Apple/Google HQ (origin, dest & arc)
+  "leo_step_6": { angle: 1.06,  radius: 96.0, cam: { x: 84.0,  y: 55.0, z: 48.0 },  target: { x: 28.0,  y: 44.0, z: -28.0 } }, // Transit: Apple/Google -> RCMP Record (origin, dest & arc)
+  "leo_step_7": { angle: 1.57,  radius: 20.0, cam: { x: 42.0,  y: 48.0, z: 32.0 },  target: { x: 58.0, y: 46.0, z: 58.0 } }  // Suspect unmasked facing camera head-on with front illumination and full scene framing
 };
 
 const WORLD_APPS = [
@@ -257,6 +257,8 @@ class PushnotOrbit {
     this.playing = false;
     this.autoOrbit = false;
     this.cinematicFollow = false;
+    this.scrollMode = 'glide'; // 'glide' (step slider glide) | 'zoom' (camera zoom)
+    this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     this.orbitAngle = 0.35;
     this.flipRoll = 0;
     this.flipTarget = 0;
@@ -272,7 +274,7 @@ class PushnotOrbit {
     this.initLeoStage();
     this.loadModels();
     this.initUI();
-    this.initDirectorMode();
+    this.setScrollMode('glide');
     this.setMode('setup', false);
     this.animate();
   }
@@ -330,9 +332,6 @@ class PushnotOrbit {
       this.focusCamPos = null;
       this.focusTargetPos = null;
       if (this.cameraRig) this.cameraRig.disengage();
-    });
-    this.controls.addEventListener('change', () => {
-      if (this.directorMode) this.updateDirectorHUD();
     });
 
     addEventListener('resize', () => {
@@ -2337,94 +2336,141 @@ class PushnotOrbit {
   }
 
   create3DPhotoIdCard(scale = 1) {
-    // High-res Canadian Law Enforcement Hardware-Matched Photo ID Record
+    // Authentic British Columbia Driver's Licence (Generic ID)
     const cvs = document.createElement('canvas');
     cvs.width = 512; cvs.height = 320;
     const ctx = cvs.getContext('2d');
 
-    // Card base gradient
+    // 1. Card base with authentic subtle security wave pattern & gradient
     const bg = ctx.createLinearGradient(0, 0, 512, 320);
-    bg.addColorStop(0, '#0f172a');
-    bg.addColorStop(0.5, '#1e293b');
-    bg.addColorStop(1, '#0f172a');
+    bg.addColorStop(0, '#e8f0f8');
+    bg.addColorStop(0.5, '#f4f8fb');
+    bg.addColorStop(1, '#dce7f2');
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, 512, 320);
 
-    // Top header band (Royal Canadian Mounted Police / Gov of Canada Identity Record)
+    // Subtle security micro-lines
+    ctx.strokeStyle = 'rgba(147, 197, 253, 0.35)';
+    ctx.lineWidth = 1;
+    for (let i = -100; i < 600; i += 22) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0);
+      ctx.bezierCurveTo(i + 60, 100, i - 60, 220, i + 80, 320);
+      ctx.stroke();
+    }
+
+    // 2. Distinctive British Columbia Header Band
     const hGrad = ctx.createLinearGradient(0, 0, 512, 0);
-    hGrad.addColorStop(0, '#1e3a8a');
-    hGrad.addColorStop(0.6, '#0284c7');
-    hGrad.addColorStop(1, '#1e3a8a');
+    hGrad.addColorStop(0, '#002f6c'); // Deep BC Flag Blue
+    hGrad.addColorStop(0.7, '#0284c7');
+    hGrad.addColorStop(1, '#002f6c');
     ctx.fillStyle = hGrad;
-    ctx.fillRect(0, 0, 512, 56);
-    ctx.fillStyle = '#ef4444';
-    ctx.fillRect(0, 52, 512, 4);
+    ctx.fillRect(0, 0, 512, 54);
+
+    // Gold trim line below header
+    ctx.fillStyle = '#f59e0b';
+    ctx.fillRect(0, 50, 512, 4);
+
+    // Header Text
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 18px "Space Grotesk", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('BRITISH COLUMBIA', 18, 30);
+
+    ctx.fillStyle = '#bae6fd';
+    ctx.font = '700 11px "Space Grotesk", sans-serif';
+    ctx.fillText("DRIVER'S LICENCE", 18, 44);
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 18px "Space Grotesk", sans-serif';
-    ctx.fillText('🇨🇦 CANADA · SUBSCRIBER IDENTITY RECORD', 16, 35);
+    ctx.font = 'bold 12px "JetBrains Mono", monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('CANADA', 494, 34);
+    ctx.textAlign = 'left';
 
-    // Portrait frame background
-    const px = 20, py = 72, pw = 130, ph = 165;
-    ctx.fillStyle = '#060a14';
+    // 3. Portrait frame (coordinates stored for dynamic 3D head mugshot rendering)
+    const px = 20, py = 68, pw = 132, ph = 168;
+    ctx.fillStyle = '#0a101d';
     ctx.fillRect(px, py, pw, ph);
 
-    // Subtle forensic photo placeholder badge before 3D model mugshot renders
-    ctx.fillStyle = '#0b1329';
-    ctx.fillRect(px + 8, py + 8, pw - 16, ph - 16);
+    // Initial portrait placeholder before dynamic capture
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(px + 4, py + 4, pw - 8, ph - 8);
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 10px "JetBrains Mono", monospace';
+    ctx.font = 'bold 11px "JetBrains Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('RCMP FORENSIC', px + pw / 2, py + 75);
-    ctx.fillText('PHOTO RECORD', px + pw / 2, py + 92);
-    ctx.fillStyle = '#64748b';
-    ctx.font = '9px monospace';
-    ctx.fillText('SECURE ARCHIVE', px + pw / 2, py + 110);
+    ctx.fillText('BC DL PHOTO', px + pw / 2, py + 80);
+    ctx.fillText('STUDIO CAPTURE', px + pw / 2, py + 98);
     ctx.textAlign = 'left';
 
-    // Portrait frame cyan border
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#0284c7';
+    ctx.lineWidth = 2;
     ctx.strokeRect(px, py, pw, ph);
 
-    // Subscriber details
+    // 4. Standard Driver's Licence Data Fields
+    const tx = 168;
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#34d399';
-    ctx.font = 'bold 15px "JetBrains Mono", monospace';
-    ctx.fillText('HARDWARE MATCH CONFIRMED (100%)', 168, 88);
 
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 24px "Space Grotesk", sans-serif';
-    ctx.fillText('MALONE, CONNOR J.', 168, 118);
+    // 4d. Class
+    ctx.fillStyle = '#0369a1';
+    ctx.font = '700 11px "JetBrains Mono", monospace';
+    ctx.fillText('4d CLASS', tx, 78);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 16px "Space Grotesk", sans-serif';
+    ctx.fillText('5', tx + 62, 78);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '700 14px "JetBrains Mono", monospace';
-    ctx.fillText('DOB:   1996-08-14 (AGE 30)', 168, 142);
-    ctx.fillText('ALIAS: badguy@proton.me', 168, 164);
-
-    ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 14px "JetBrains Mono", monospace';
-    ctx.fillText('ADDR:  1042 ROBSON ST, VANCOUVER BC', 168, 188);
-
-    ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 13px "JetBrains Mono", monospace';
-    ctx.fillText('DEVICE: iPhone 15 Pro & Pixel 8', 168, 210);
-    ctx.fillText('TOKENS: APNs #7A9F-FB01 / FCM #3E1B', 168, 230);
-
-    // Verification barcode at bottom
-    ctx.fillStyle = '#ffffff';
-    for (let x = 20; x < 492; x += 5) {
-      const w = ((x * 17) % 4) + 1;
-      ctx.fillRect(x, 260, w, 38);
-    }
+    // 1. Surname
     ctx.fillStyle = '#64748b';
-    ctx.font = '11px monospace';
-    ctx.fillText('RCMP FORENSIC TOKEN VERIFICATION · PRODUCTION ORDER APNs/FCM-2026', 20, 310);
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    ctx.fillText('1 SURNAME', tx, 98);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 22px "Space Grotesk", sans-serif';
+    ctx.fillText('LINUX', tx, 120);
+
+    // 2. Given Names
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    ctx.fillText('2 GIVEN NAME', tx, 138);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '900 18px "Space Grotesk", sans-serif';
+    ctx.fillText('KALI', tx, 156);
+
+    // 3. DOB & 4b. EXP
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    ctx.fillText('3 DOB', tx, 175);
+    ctx.fillText('4b EXP', tx + 140, 175);
+    ctx.fillStyle = '#0f172a';
+    ctx.font = '700 13px "JetBrains Mono", monospace';
+    ctx.fillText('1994-07-16', tx, 191);
+    ctx.fillText('2028-07-16', tx + 140, 191);
+
+    // 4a. Licence Number
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    ctx.fillText('4a LICENCE NO.', tx, 208);
+    ctx.fillStyle = '#0369a1';
+    ctx.font = '900 14px "JetBrains Mono", monospace';
+    ctx.fillText('0849215', tx + 100, 208);
+
+    // 8. Address
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 10px "JetBrains Mono", monospace';
+    ctx.fillText('8 ADDRESS', tx, 224);
+    ctx.fillStyle = '#1e293b';
+    ctx.font = '700 12px "JetBrains Mono", monospace';
+    ctx.fillText('1042 ROBSON ST, VANCOUVER BC  V6Z 2E7', tx, 238);
+
+    // 5. Authentic Barcode & Magnetic Stripe at Bottom
+    ctx.fillStyle = '#0f172a';
+    for (let x = 20; x < 492; x += 4) {
+      const w = ((x * 19) % 3) + 1;
+      ctx.fillRect(x, 256, w, 44);
+    }
 
     const tex = new THREE.CanvasTexture(cvs);
     tex.colorSpace = THREE.SRGBColorSpace;
-    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.85, roughness: 0.2 });
-    const faceMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.22, metalness: 0.15, clearcoat: 1.0 });
+    const edgeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.3, roughness: 0.4 });
+    const faceMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.3, metalness: 0.1, clearcoat: 0.8 });
     const mesh = new THREE.Mesh(
       new THREE.BoxGeometry(9.6, 6.0, 0.3),
       [edgeMat, edgeMat, edgeMat, edgeMat, faceMat, faceMat]
@@ -2537,7 +2583,7 @@ class PushnotOrbit {
     // Cardholder Name (Matching suspect and ID card!)
     ctx.font = '900 18px "Space Grotesk", sans-serif';
     ctx.fillStyle = '#ffffff';
-    ctx.fillText('CONNOR J. MALONE', 40, 268);
+    ctx.fillText('KALI LINUX', 40, 268);
 
     // Visa / Mastercard Holographic Logo in bottom-right corner
     ctx.beginPath();
@@ -2980,7 +3026,7 @@ class PushnotOrbit {
 
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 46px "Space Grotesk", sans-serif';
-    ctx.fillText('CONNOR J. MALONE', winX + 50, winY + 225);
+    ctx.fillText('KALI LINUX', winX + 50, winY + 225);
 
     ctx.fillStyle = '#94a3b8';
     ctx.font = '700 28px "JetBrains Mono", monospace';
@@ -3262,12 +3308,14 @@ class PushnotOrbit {
 
   initLeoStage() {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
+    // Spaced out radial distance so central RCMP Green Timbers centerpiece has ample courtyard breathing room
+    const D_LEO = 58;
     const L = {
-      bandit:      new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@proton.me)
-      swat:        new THREE.Vector3( 0, 0,  0), // center:      Canadian Police / RCMP Green Timbers HQ (larger centerpiece)
-      proton:      new THREE.Vector3(-D, 0, -D), // back-left:   Switzerland Illuminated Server Station (waving flag on top!)
-      ag:          new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Skyscraper HQ
-      bot:         new THREE.Vector3(-D, 0,  D)  // front-left:  Single Animated App Server Tower
+      bandit:      new THREE.Vector3( D_LEO, 0,  D_LEO), // front-right: Suspect (Kali Linux)
+      swat:        new THREE.Vector3( 0, 0,  0),         // center:      Canadian Police / RCMP Green Timbers HQ
+      proton:      new THREE.Vector3(-D_LEO, 0, -D_LEO), // back-left:   Switzerland Illuminated Server Station
+      ag:          new THREE.Vector3( D_LEO, 0, -D_LEO), // back-right:  Apple & Google Skyscraper HQ
+      bot:         new THREE.Vector3(-D_LEO, 0,  D_LEO)  // front-left:  Single Animated App Server Tower
     };
     this.leoPos = L;
     this.leoTops = { bandit: 26, swat: 32, bot: 26, proton: 26, ag: 26 };
@@ -3524,7 +3572,7 @@ class PushnotOrbit {
 
   loadModels() {
     const status = document.getElementById('load-status');
-    let left = 8; // single server tower + phone + apple + google + earth + bandit + swat + home
+    let left = 9; // single server tower + phone + apple + google + earth + bandit + swat + home + maple trees
     const done = () => { if (--left <= 0) status.style.display = 'none'; };
 
     // 1. Datacentre Cluster (front-left)
@@ -3922,6 +3970,60 @@ class PushnotOrbit {
       attachHouse(this.leoAgSubscriberMesh);
       done();
     }, undefined, done);
+
+    // 8. Real Nikko Maple Trees opposite the wooden entrance wall of RCMP Headquarters
+    this.loader.load('models/leo/nikko_maple.glb', (gltf) => {
+      const treeModel = gltf.scene;
+      treeModel.traverse((c) => {
+        if (c.isMesh) {
+          c.castShadow = true;
+          c.receiveShadow = true;
+          if (c.material) {
+            c.material = c.material.clone();
+            c.material.roughness = 0.65;
+            c.material.metalness = 0.05;
+            c.material.needsUpdate = true;
+          }
+        }
+      });
+
+      // Target tree height: about half the height of the RCMP building (~6.2 units)
+      const box = new THREE.Box3().setFromObject(treeModel);
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
+      const targetHeight = 6.2;
+      const s = targetHeight / (size.y || 1);
+      treeModel.scale.setScalar(s);
+      treeModel.position.set(-center.x * s, -box.min.y * s, -center.z * s);
+
+      const treeBase = new THREE.Group();
+      treeBase.add(treeModel);
+
+      // Plant 4 real trees lined up opposite the wooden entrance wall
+      const treeRow = new THREE.Group();
+      treeRow.userData.stationKey = 'swat';
+
+      const treeCoords = [
+        { x:  8.5, z:  7.5, rot: 0.1,  s: 1.00 },
+        { x: 10.0, z: 12.0, rot: 1.2,  s: 0.95 },
+        { x: 11.5, z: 16.5, rot: 2.3,  s: 1.05 },
+        { x: 13.0, z: 21.0, rot: 3.5,  s: 0.98 }
+      ];
+
+      for (let i = 0; i < treeCoords.length; i++) {
+        const tc = treeCoords[i];
+        const inst = treeBase.clone(true);
+        inst.position.set(tc.x, 0, tc.z);
+        inst.rotation.y = tc.rot;
+        inst.scale.multiplyScalar(tc.s);
+        inst.userData.stationKey = 'swat';
+        inst.traverse(c => { if (c.isMesh) c.userData.stationKey = 'swat'; });
+        treeRow.add(inst);
+      }
+
+      this.leoGroup.add(treeRow);
+      done();
+    }, undefined, done);
   }
 
   initAppleGoogleSkyscraper(done) {
@@ -4120,8 +4222,8 @@ class PushnotOrbit {
     } else {
       this.cinematicFollow = false;
     }
-    // Always allow 100% free zoom on mouse wheel and trackpad pinch
-    this.controls.enableZoom = true;
+    // Allow free zoom in zoom mode, glide in glide mode
+    this.controls.enableZoom = (this.scrollMode === 'zoom');
     const btn = document.getElementById('btn-play');
     btn.textContent = auto ? '❚❚' : '▶';
     btn.classList.toggle('manual', !auto);
@@ -4152,143 +4254,27 @@ class PushnotOrbit {
     }
   }
 
-  /* ---- Director's Camera Rig Editor Mode (Live Coordinates, Step Lock & Export) ---- */
-  initDirectorMode() {
-    this.directorMode = false;
-    this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
-    try {
-      // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
-      localStorage.removeItem('pushnot_director_rigs_v16');
-      localStorage.removeItem('pushnot_director_rigs_v15');
-      localStorage.removeItem('pushnot_director_rigs_v14');
-      localStorage.removeItem('pushnot_director_rigs_v13');
-      localStorage.removeItem('pushnot_director_rigs_v12');
-      localStorage.removeItem('pushnot_director_rigs_v11');
-      localStorage.removeItem('pushnot_director_rigs_v10');
-      localStorage.removeItem('pushnot_director_rigs_v9');
-      localStorage.removeItem('pushnot_director_rigs_v8');
-      localStorage.removeItem('pushnot_director_rigs_v7');
-      localStorage.removeItem('pushnot_director_rigs_v6');
-      localStorage.removeItem('pushnot_director_rigs_v5');
-      localStorage.removeItem('pushnot_director_rigs_v4');
-      localStorage.removeItem('pushnot_director_rigs_v3');
-      localStorage.removeItem('pushnot_director_rigs');
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v17') || '{}');
-      for (const k of Object.keys(saved)) {
-        if (k.startsWith('leo_') && saved[k].cam && saved[k].cam.y < 45.0) continue;
-        this.directorRigs[k] = saved[k];
+  setScrollMode(mode) {
+    this.scrollMode = mode === 'zoom' ? 'zoom' : 'glide';
+    const btn = document.getElementById('btn-wheel-mode');
+    if (btn) {
+      if (this.scrollMode === 'glide') {
+        btn.textContent = '🖱️ Glide';
+        btn.title = 'Scroll Wheel: Step & Slider Glide (Click canvas or button to switch to Zoom)';
+        btn.classList.add('active');
+        btn.classList.remove('zoom-mode');
+      } else {
+        btn.textContent = '🔍 Zoom';
+        btn.title = 'Scroll Wheel: Camera Zoom (Click canvas or button to switch to Glide)';
+        btn.classList.remove('active');
+        btn.classList.add('zoom-mode');
       }
-    } catch (e) {}
-
-    const panel = document.getElementById('director-panel');
-    const btnToggle = document.getElementById('btn-director');
-    const btnClose = document.getElementById('dp-btn-close');
-    const btnLock = document.getElementById('dp-btn-lock');
-    const btnReset = document.getElementById('dp-btn-reset');
-    const btnCopy = document.getElementById('dp-btn-copy');
-    const btnClear = document.getElementById('dp-btn-clear');
-    const toast = document.getElementById('dp-toast');
-
-    const showToast = (msg) => {
-      if (!toast) return;
-      toast.textContent = msg;
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 2600);
-    };
-
-    const togglePanel = (force) => {
-      this.directorMode = force !== undefined ? force : !this.directorMode;
-      if (panel) panel.classList.toggle('hidden', !this.directorMode);
-      if (btnToggle) btnToggle.classList.toggle('active', this.directorMode);
-      if (this.directorMode) this.updateDirectorHUD();
-    };
-
-    if (btnToggle) btnToggle.onclick = () => togglePanel();
-    if (btnClose) btnClose.onclick = () => togglePanel(false);
-
-    window.addEventListener('keydown', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-      if (e.key === 'd' || e.key === 'D') {
-        togglePanel();
-      }
-    });
-
-    if (btnLock) {
-      btnLock.onclick = () => {
-        const stepIdx = this.getCurrentStepIndex();
-        const key = `${this.mode}_step_${stepIdx}`;
-        const cx = +this.camera.position.x.toFixed(2);
-        const cy = +this.camera.position.y.toFixed(2);
-        const cz = +this.camera.position.z.toFixed(2);
-        this.directorRigs[key] = {
-          angle: +Math.atan2(cx, cz).toFixed(3),
-          radius: +Math.hypot(cx, cz).toFixed(2),
-          cam: { x: cx, y: cy, z: cz },
-          target: {
-            x: +this.controls.target.x.toFixed(2),
-            y: +this.controls.target.y.toFixed(2),
-            z: +this.controls.target.z.toFixed(2)
-          }
-        };
-        try {
-          localStorage.setItem('pushnot_director_rigs_v17', JSON.stringify(this.directorRigs));
-        } catch (e) {}
-        showToast(`Locked ${key}!`);
-        this.updateDirectorHUD();
-      };
     }
+    this.controls.enableZoom = (this.scrollMode === 'zoom');
+  }
 
-    if (btnReset) {
-      btnReset.onclick = () => {
-        const stepIdx = this.getCurrentStepIndex();
-        const key = `${this.mode}_step_${stepIdx}`;
-        if (DEFAULT_DIRECTOR_RIGS[key]) {
-          this.directorRigs[key] = Object.assign({}, DEFAULT_DIRECTOR_RIGS[key]);
-        } else {
-          delete this.directorRigs[key];
-        }
-        try {
-          localStorage.setItem('pushnot_director_rigs_v17', JSON.stringify(this.directorRigs));
-        } catch (e) {}
-        showToast(`Reset ${key} to locked preset!`);
-        this.updateDirectorHUD();
-      };
-    }
-
-    if (btnCopy) {
-      btnCopy.onclick = () => {
-        const json = JSON.stringify(this.directorRigs, null, 2);
-        navigator.clipboard.writeText(json).then(() => {
-          showToast('Copied JSON to clipboard!');
-        }).catch(() => {
-          showToast('Clipboard access denied');
-        });
-      };
-    }
-
-    if (btnClear) {
-      btnClear.onclick = () => {
-        if (confirm('Clear custom overrides and restore locked director presets?')) {
-          this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
-          localStorage.removeItem('pushnot_director_rigs_v15');
-          localStorage.removeItem('pushnot_director_rigs_v14');
-          localStorage.removeItem('pushnot_director_rigs_v13');
-          localStorage.removeItem('pushnot_director_rigs_v12');
-          localStorage.removeItem('pushnot_director_rigs_v11');
-          localStorage.removeItem('pushnot_director_rigs_v10');
-          localStorage.removeItem('pushnot_director_rigs_v9');
-          localStorage.removeItem('pushnot_director_rigs_v8');
-          localStorage.removeItem('pushnot_director_rigs_v7');
-          localStorage.removeItem('pushnot_director_rigs_v6');
-          localStorage.removeItem('pushnot_director_rigs_v5');
-          localStorage.removeItem('pushnot_director_rigs_v4');
-          localStorage.removeItem('pushnot_director_rigs_v3');
-          localStorage.removeItem('pushnot_director_rigs');
-          showToast('Restored locked director presets!');
-          this.updateDirectorHUD();
-        }
-      };
-    }
+  toggleScrollMode() {
+    this.setScrollMode(this.scrollMode === 'glide' ? 'zoom' : 'glide');
   }
 
   getCurrentStepIndex() {
@@ -4298,35 +4284,6 @@ class PushnotOrbit {
       if (this.t >= stops[i] - 0.02) idx = i;
     }
     return idx;
-  }
-
-  updateDirectorHUD() {
-    if (!this.directorMode) return;
-    const modeEl = document.getElementById('dp-mode');
-    const stepEl = document.getElementById('dp-step');
-    const camEl = document.getElementById('dp-campos');
-    const tgtEl = document.getElementById('dp-target');
-    const statEl = document.getElementById('dp-status');
-
-    const stepIdx = this.getCurrentStepIndex();
-    const totalSteps = (MODE_STEPS[this.mode] || []).length;
-    const key = `${this.mode}_step_${stepIdx}`;
-    const hasCustom = !!(this.directorRigs && this.directorRigs[key]);
-
-    if (modeEl) modeEl.textContent = this.mode.toUpperCase();
-    if (stepEl) stepEl.textContent = `${stepIdx + 1} / ${totalSteps} (t: ${this.t.toFixed(2)})`;
-    if (camEl) camEl.textContent = `${this.camera.position.x.toFixed(1)}, ${this.camera.position.y.toFixed(1)}, ${this.camera.position.z.toFixed(1)}`;
-    if (tgtEl) tgtEl.textContent = `${this.controls.target.x.toFixed(1)}, ${this.controls.target.y.toFixed(1)}, ${this.controls.target.z.toFixed(1)}`;
-
-    if (statEl) {
-      if (hasCustom) {
-        statEl.textContent = 'LOCKED RIG';
-        statEl.className = 'dp-tag-locked';
-      } else {
-        statEl.textContent = 'DEFAULT';
-        statEl.className = 'dp-tag-default';
-      }
-    }
   }
 
   initUI() {
@@ -4366,6 +4323,13 @@ class PushnotOrbit {
     });
     const btnCamLock = document.getElementById('btn-cam-lock');
     if (btnCamLock) btnCamLock.addEventListener('click', () => this.toggleCameraLock());
+    const btnWheelMode = document.getElementById('btn-wheel-mode');
+    if (btnWheelMode) {
+      btnWheelMode.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.toggleScrollMode();
+      });
+    }
     document.getElementById('btn-fullscreen').addEventListener('click', () => {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen();
       else document.exitFullscreen();
@@ -4383,6 +4347,9 @@ class PushnotOrbit {
 
     this.renderer.domElement.addEventListener('pointerup', (e) => {
       if (Math.hypot(e.clientX - downX, e.clientY - downY) > 8) return; // user dragged/orbited
+
+      // Clicking changes scroll wheel function (from step slider glide to zoom and vice versa)
+      this.toggleScrollMode();
 
       if (this.cameraUnlocked) {
         // UNLOCKED CAMERA MODE:
@@ -4428,7 +4395,7 @@ class PushnotOrbit {
             const d4 = hp.distanceTo(wBot);
             const d5 = hp.distanceTo(wAg);
             const minD = Math.min(d1, d2, d3, d4, d5);
-            if (minD < 24) {
+            if (minD < 36) {
               if (minD === d1) nodeKey = 'bandit';
               else if (minD === d2) nodeKey = 'swat';
               else if (minD === d3) nodeKey = 'proton';
@@ -4441,7 +4408,7 @@ class PushnotOrbit {
             const d3 = hp.distanceTo(POS.post);
             const d4 = hp.distanceTo(POS.ufo);
             const minD = Math.min(d1, d2, d3, d4);
-            if (minD < 24) {
+            if (minD < 36) {
               if (minD === d1) nodeKey = 'phone';
               else if (minD === d2) nodeKey = 'server';
               else if (minD === d3) nodeKey = 'post';
@@ -4460,13 +4427,24 @@ class PushnotOrbit {
       }
     });
 
-    // Wheel zoom releases cinematic follow and focus lock so user has instant free zoom
-    this.renderer.domElement.addEventListener('wheel', () => {
-      this.cinematicFollow = false;
-      this.focusCamPos = null;
-      this.focusTargetPos = null;
-      if (this.cameraRig) this.cameraRig.disengage();
-    }, { passive: true });
+    // Scroll wheel handler: Step slider glide vs. Zoom
+    this.renderer.domElement.addEventListener('wheel', (e) => {
+      if (this.scrollMode === 'glide') {
+        e.preventDefault();
+        this.setPlaying(false);
+        this.cinematicFollow = true;
+
+        // Smooth slider-type glide for nodes and transmissions
+        const delta = Math.sign(e.deltaY) * 0.04;
+        this.targetT = Math.max(0, Math.min(1, (this.targetT !== undefined ? this.targetT : this.t) + delta));
+      } else {
+        // Zoom mode: free OrbitControls camera zoom
+        this.cinematicFollow = false;
+        this.focusCamPos = null;
+        this.focusTargetPos = null;
+        if (this.cameraRig) this.cameraRig.disengage();
+      }
+    }, { passive: false });
 
     addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT') return;
@@ -5061,37 +5039,134 @@ class PushnotOrbit {
       }
     }
 
-    // Law Enforcement station labels (visible when flipped upside down!)
-    const showLeoPins = isLeo && this.flipRoll > Math.PI * 0.55;
-    // Hacker node has zero floating HUD labels (sole focus is the 3D computer screen)
-    this.place('pin-leo-bandit',      null, false);
-    this.place('pin-leo-swat',        new THREE.Vector3(L.swat.x,   -1.5, L.swat.z + 10),  showLeoPins, this.leoGroup);
-    this.place('pin-leo-bot',         new THREE.Vector3(L.bot.x,    -1.5, L.bot.z + 8),    showLeoPins, this.leoGroup);
-    this.place('pin-leo-proton',      new THREE.Vector3(L.proton.x, this.leoTops.proton + 2, L.proton.z), showLeoPins, this.leoGroup);
-    this.place('pin-leo-ag',          new THREE.Vector3(L.ag.x,     this.leoTops.ag + 2, L.ag.z), showLeoPins, this.leoGroup);
-
-    // Normal contextual callouts (genuine push banner sits right on top of the Phone screen!)
-    const phoneTop  = new THREE.Vector3(POS.phone.x,  this.tops.phone + 11, POS.phone.z);
-    const phoneFace = new THREE.Vector3(POS.phone.x,  this.tops.phone + 3,  POS.phone.z + 2);
-    const serverTop = new THREE.Vector3(POS.server.x, this.tops.server + 4, POS.server.z);
-    const blockTop  = new THREE.Vector3(0, 29, POS.phone.z);
-    this.place('pin-install',   phoneTop,  showNorm && showInstall);
-    this.place('pin-token',     phoneTop,  showNorm && showToken);
-    this.place('pin-no-direct', blockTop,  showNorm && showNoDirect);
-    this.place('pin-saved',     serverTop, showNorm && showSaved);
-    this.place('pin-push',      phoneFace, showNorm && showPush);
-    this.place('pin-ledger',    new THREE.Vector3(POS.post.x, 54, POS.post.z), showNorm && showLedger);
-
-    // Law Enforcement contextual callouts disabled to eliminate HUD creep
+    // All floating 2D labels and movers in 3D viewport canvas are disabled to eliminate clutter
+    this.place('pin-store',  null, false);
+    this.place('pin-post',   null, false);
+    this.place('pin-phone',  null, false);
+    this.place('pin-phone-os', null, false);
+    this.place('pin-server', null, false);
+    this.place('pin-ufo',    null, false);
+    this.place('pin-leo-bandit', null, false);
+    this.place('pin-leo-swat',   null, false);
+    this.place('pin-leo-bot',    null, false);
+    this.place('pin-leo-proton', null, false);
+    this.place('pin-leo-ag',     null, false);
+    this.place('pin-install',   null, false);
+    this.place('pin-token',     null, false);
+    this.place('pin-no-direct', null, false);
+    this.place('pin-saved',     null, false);
+    this.place('pin-push',      null, false);
+    this.place('pin-ledger',    null, false);
     this.place('pin-leo-threat', null, false);
     this.place('pin-leo-denied', null, false);
     this.place('pin-leo-tokens', null, false);
     this.place('pin-leo-id',     null, false);
+    this.place('pin-mover',      null, false);
 
-    const mv = document.getElementById('pin-mover');
-    mv.className = 'pin-mover' + (moverCls ? ' ' + moverCls : '');
-    mv.textContent = moverText;
-    this.place('pin-mover', moverPos ? moverPos.clone() : null, !!moverPos, moverParent);
+    // Update Permanent HUD Action & Station Caption Banner
+    const hudBanner = document.getElementById('hud-banner');
+    const hudBadge = document.getElementById('hud-badge');
+    const hudCaption = document.getElementById('hud-caption');
+    const hudStation = document.getElementById('hud-station');
+
+    if (hudBanner && hudCaption) {
+      const stepIdx = this.getCurrentStepIndex();
+      const totalSteps = (MODE_STEPS[this.mode] || []).length;
+      hudBanner.className = 'hud-banner ' + this.mode;
+
+      if (hudBadge) {
+        hudBadge.textContent = this.mode === 'leo'
+          ? `LEO // STEP ${stepIdx + 1}/${totalSteps}`
+          : `${this.mode.toUpperCase()} // STEP ${stepIdx + 1}/${totalSteps}`;
+      }
+
+      let caption = moverText;
+      if (!caption) {
+        if (this.mode === 'setup') {
+          const stepNames = [
+            'App Store Initialized',
+            'Candy Crush Saga · App Installed on Phone',
+            'Request APNs / FCM Push Token',
+            'APNs / FCM Gateway Processes Device Request',
+            'Generate Unique Cryptographic Token',
+            'Deliver Token Key to Phone',
+            'Register Unique Push Token with App Server',
+            'App Server Binds Token to User Socket',
+            'Push Token Saved in App Database',
+            'Push Channel Operational'
+          ];
+          caption = stepNames[stepIdx] || 'Setup In Progress';
+        } else if (this.mode === 'push') {
+          const stepNames = [
+            'Background Stimulus Event Triggered',
+            'App Server Prepares Notification Payload',
+            'Dispatch Push Payload + Token Key to Gateway',
+            'Gateway Extracts Token & Matches Phone Socket',
+            'Deliver APNs / FCM Push Packet to Device',
+            'Push Notification Displayed on Lock Screen'
+          ];
+          caption = stepNames[stepIdx] || 'Push Notification Flow';
+        } else if (this.mode === 'world') {
+          caption = 'Multi-App Background Push Stream Active';
+        } else if (this.mode === 'leo') {
+          const stepNames = [
+            '💣 Bomb Threat Transmitted → RCMP HQ',
+            '🏛️ RCMP "E" Division Opens Emergency Investigation',
+            '🇨🇭 Emergency Mutual Legal Assistance Request to Proton',
+            '🛡️ Swiss Refusal: Non-Swiss Warrants Inapplicable',
+            '🚨 Production Order Served on App Servers',
+            '🔑 Push Tokens Disclosed by App Server',
+            '🇨🇦 Production Order Served on Apple & Google',
+            '🪪 Hardware-Matched Subscriber Identity Disclosed: Kali Linux'
+          ];
+          caption = stepNames[stepIdx] || 'Reverse Trace Investigation';
+        }
+      }
+      hudCaption.textContent = caption;
+
+      if (hudStation) {
+        let stationLabel = '';
+        if (this.mode === 'leo') {
+          if (stepIdx === 0) stationLabel = 'SUSPECT → RCMP GREEN TIMBERS HQ';
+          else if (stepIdx === 1) stationLabel = '🇨🇦 RCMP GREEN TIMBERS HQ';
+          else if (stepIdx === 2 || stepIdx === 3) stationLabel = 'RCMP HQ ⇄ 🇨🇭 PROTON';
+          else if (stepIdx === 4 || stepIdx === 5) stationLabel = 'RCMP HQ ⇄ APP SERVERS';
+          else if (stepIdx === 6) stationLabel = 'RCMP HQ ⇄ APPLE & GOOGLE';
+          else stationLabel = 'SUSPECT: KALI LINUX (VANCOUVER BC)';
+        } else {
+          if (this.currentOS === 'ios') {
+            const normStations = [
+              'APPLE APP STORE',
+              'IPHONE (iOS)',
+              'IPHONE → APPLE APNs',
+              'APPLE APNs GATEWAY',
+              'APPLE APNs GATEWAY',
+              'APNs → IPHONE',
+              'IPHONE → APP SERVER',
+              'APP SERVER',
+              'APP SERVER DATABASE',
+              'PIPELINE READY'
+            ];
+            stationLabel = normStations[stepIdx] || 'IPHONE (iOS)';
+          } else {
+            const normStations = [
+              'GOOGLE PLAY STORE',
+              'ANDROID PHONE',
+              'ANDROID → GOOGLE FCM',
+              'GOOGLE FCM GATEWAY',
+              'GOOGLE FCM GATEWAY',
+              'FCM → ANDROID',
+              'ANDROID → APP SERVER',
+              'APP SERVER',
+              'APP SERVER DATABASE',
+              'PIPELINE READY'
+            ];
+            stationLabel = normStations[stepIdx] || 'ANDROID PHONE';
+          }
+        }
+        hudStation.textContent = stationLabel;
+      }
+    }
   }
 
   place(id, localPos, show, parentGroup = this.worldGroup) {
@@ -5400,7 +5475,7 @@ class PushnotOrbit {
 
       // Check for active node transit movement: automatically frame origin, destination, and transit arc!
       const transit = this.getActiveTransit(this.mode, this.t);
-      if (transit && !this.directorMode) {
+      if (transit) {
         const transitRig = this.computeTransitRig(transit.origin, transit.dest, transit.arc, this.mode === 'leo');
         if (transitRig) {
           targetTheta = transitRig.angle;
@@ -5556,7 +5631,6 @@ class PushnotOrbit {
       this.controls.update();
     }
     this.updateState(dt);
-    this.updateDirectorHUD();
     this.renderer.render(this.scene, this.camera);
   }
 }

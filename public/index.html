@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=110" />
+  <link rel="stylesheet" href="css/style.css?v=111" />
   <script type="importmap">
     { "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -168,6 +168,13 @@
   <!-- Moving packet pill -->
   <div class="pin-mover" id="pin-mover"></div>
 
+  <!-- Permanent HUD Action & Station Caption Banner -->
+  <div class="hud-banner" id="hud-banner">
+    <div class="hud-badge" id="hud-badge">STEP 1</div>
+    <div class="hud-caption" id="hud-caption">Candy Crush Saga Installed</div>
+    <div class="hud-station" id="hud-station">IPHONE (iOS)</div>
+  </div>
+
   <!-- Ultra-clean single-row presentation dock -->
   <nav class="orbit-dock">
     <div class="polarity-switch" role="group" aria-label="Flow Polarity">
@@ -186,42 +193,10 @@
       <button class="ctl" id="btn-step-next" title="Next Step (→)">▶</button>
       <button class="ctl orbit-toggle" id="btn-orbit" title="Auto-orbit camera">⟳</button>
       <button class="ctl cam-lock-btn locked" id="btn-cam-lock" title="Toggle Camera Snap / Unlock (C)">🔒 Snap</button>
-      <button class="ctl director-toggle" id="btn-director" title="Director's Editor Mode (Press D)">🎬 Rig</button>
+      <button class="ctl wheel-mode-btn active" id="btn-wheel-mode" title="Click to toggle Scroll Wheel mode (Glide / Zoom)">🖱️ Glide</button>
     </div>
   </nav>
 
-  <!-- Floating Director's Editor Mode Camera Rig Panel -->
-  <div class="director-panel hidden" id="director-panel">
-    <div class="dp-header">
-      <div class="dp-title">🎬 Director Camera Rig</div>
-      <button class="dp-close" id="dp-btn-close">✕</button>
-    </div>
-    <div class="dp-body">
-      <div class="dp-row">
-        <span class="dp-label">Mode:</span>
-        <span class="dp-val" id="dp-mode">push</span>
-      </div>
-      <div class="dp-row">
-        <span class="dp-label">Step:</span>
-        <span class="dp-val" id="dp-step">1 / 5 (t: 0.10)</span>
-      </div>
-      <div class="dp-coords">
-        <div class="dp-line"><b>Cam:</b> <span id="dp-campos">0.0, 0.0, 0.0</span></div>
-        <div class="dp-line"><b>Target:</b> <span id="dp-target">0.0, 0.0, 0.0</span></div>
-        <div class="dp-line"><b>Rig:</b> <span class="dp-tag-default" id="dp-status">DEFAULT</span></div>
-      </div>
-      <div class="dp-actions">
-        <button class="dp-btn dp-btn-primary" id="dp-btn-lock">💾 Lock Camera for this Step</button>
-        <button class="dp-btn" id="dp-btn-reset">↺ Reset Step</button>
-      </div>
-      <div class="dp-footer-actions">
-        <button class="dp-btn-sm" id="dp-btn-copy">📋 Copy All Rigs (JSON)</button>
-        <button class="dp-btn-sm dp-btn-danger" id="dp-btn-clear">🗑️ Clear All</button>
-      </div>
-      <div class="dp-toast hidden" id="dp-toast"></div>
-    </div>
-  </div>
-
-  <script type="module" src="js/app.js?v=126"></script>
+  <script type="module" src="js/app.js?v=127"></script>
 </body>
 </html>

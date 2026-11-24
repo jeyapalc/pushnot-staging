@@ -3915,10 +3915,14 @@ class PushnotOrbit {
                                    matName.includes('canopy') || matName.includes('sign');
 
           if (isBisonCrest) {
-            // White etched RCMP bison crest pops brightly on the glass atrium
+            // White etched RCMP bison crest pops brightly on the glass atrium (Image 1 reference)
             if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.25;
-            c.material.metalness = 0.50;
+            c.material.roughness = 0.20;
+            c.material.metalness = 0.40;
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0xffffff);
+              c.material.emissiveIntensity = 0.70;
+            }
           } else if (isWoodWall) {
             // Warm rich natural wood panel wall at the entrance foyer (matching reference photo)
             if (c.material.color) c.material.color.setHex(0x8a532b);
@@ -4126,9 +4130,9 @@ class PushnotOrbit {
     plazaInner.userData.stationKey = 'swat';
     group.add(plazaInner);
 
-    // 2. Dark Granite Cenotaph with Split Peak and Silver RCMP Crest in the gap
+    // 2. Dark Granite Cenotaph on the LEFT (Matching Surrey Memorial reference photo)
     const cenotaphGroup = new THREE.Group();
-    cenotaphGroup.position.set(0, 0.38, 0);
+    cenotaphGroup.position.set(-2.2, 0.38, -0.2);
 
     const graniteMat = new THREE.MeshStandardMaterial({
       color: 0x111317,
@@ -4136,52 +4140,55 @@ class PushnotOrbit {
       metalness: 0.15
     });
 
-    // Tier 1 Base Plinth
-    const base1 = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.45, 3.2), graniteMat);
-    base1.position.y = 0.225;
+    // Tier 1 Base Plinth with extended lower step on left
+    const base1 = new THREE.Mesh(new THREE.BoxGeometry(7.2, 0.45, 3.4), graniteMat);
+    base1.position.set(-0.3, 0.225, 0);
     base1.castShadow = true;
     cenotaphGroup.add(base1);
 
     // Tier 2 Plinth with front memorial inscription
-    const base2 = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.40, 2.6), graniteMat);
-    base2.position.y = 0.65;
+    const base2 = new THREE.Mesh(new THREE.BoxGeometry(6.0, 0.40, 2.7), graniteMat);
+    base2.position.set(0, 0.65, 0);
     base2.castShadow = true;
     cenotaphGroup.add(base2);
 
-    // Inscription Plaque on front face
+    // Inscription Plaque on front face (English & French bilingual dedication)
     const inscrCvs = document.createElement('canvas');
-    inscrCvs.width = 512; inscrCvs.height = 96;
+    inscrCvs.width = 512; inscrCvs.height = 110;
     const iCtx = inscrCvs.getContext('2d');
     iCtx.fillStyle = '#0a0c10';
-    iCtx.fillRect(0, 0, 512, 96);
-    iCtx.strokeStyle = '#94a3b8';
-    iCtx.lineWidth = 4;
-    iCtx.strokeRect(4, 4, 504, 88);
+    iCtx.fillRect(0, 0, 512, 110);
+    iCtx.strokeStyle = '#cbd5e1';
+    iCtx.lineWidth = 3;
+    iCtx.strokeRect(4, 4, 504, 102);
     iCtx.fillStyle = '#f8fafc';
-    iCtx.font = 'bold 24px "Space Grotesk", sans-serif';
+    iCtx.font = 'bold 20px "Space Grotesk", sans-serif';
     iCtx.textAlign = 'center';
-    iCtx.fillText('SURREY FALLEN PEACE OFFICERS MEMORIAL', 256, 38);
-    iCtx.font = '600 18px "Space Grotesk", sans-serif';
+    iCtx.fillText('SURREY FALLEN PEACE OFFICERS MEMORIAL', 256, 32);
+    iCtx.font = '600 14px "Space Grotesk", sans-serif';
     iCtx.fillStyle = '#94a3b8';
-    iCtx.fillText('IN HONOUR OF THOSE WHO GAVE THEIR LIVES', 256, 70);
+    iCtx.fillText('DEDICATED TO THE OFFICERS WHO GAVE THEIR LIVES', 256, 58);
+    iCtx.font = 'italic 12px "Space Grotesk", sans-serif';
+    iCtx.fillStyle = '#64748b';
+    iCtx.fillText('À LA MÉMOIRE DES MEMBRES QUI ONT DONNÉ LEUR VIE', 256, 82);
 
     const inscrTex = new THREE.CanvasTexture(inscrCvs);
     const inscrMat = new THREE.MeshBasicMaterial({ map: inscrTex });
-    const inscrMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 0.36), inscrMat);
-    inscrMesh.position.set(0, 0.65, 1.32);
+    const inscrMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.2, 0.38), inscrMat);
+    inscrMesh.position.set(0, 0.65, 1.37);
     cenotaphGroup.add(inscrMesh);
 
-    // Split Peak Twin Granite Towers
+    // Split Peak Granite Monoliths (Left slab angled outwards, right slab narrower with bevel)
     const towerH = 6.8;
-    const towerW = 2.1;
+    const towerW = 2.2;
     const towerD = 1.6;
-    const gap = 1.4;
+    const gap = 1.3;
 
     const leftShape = new THREE.Shape();
     leftShape.moveTo(-towerW * 0.5, 0);
     leftShape.lineTo(towerW * 0.5, 0);
     leftShape.lineTo(towerW * 0.5, towerH);
-    leftShape.lineTo(-towerW * 0.5, towerH - 1.1); // split slope
+    leftShape.lineTo(-towerW * 0.5, towerH - 1.2); // angled slope matching photo
     leftShape.closePath();
 
     const extrudeLeft = new THREE.ExtrudeGeometry(leftShape, { depth: towerD, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08 });
@@ -4191,22 +4198,50 @@ class PushnotOrbit {
     leftPillar.castShadow = true;
     cenotaphGroup.add(leftPillar);
 
-    // Right Pillar: mirror split slope
+    // Right Pillar: narrower with beveled upper top
     const rightShape = new THREE.Shape();
-    rightShape.moveTo(-towerW * 0.5, 0);
-    rightShape.lineTo(towerW * 0.5, 0);
-    rightShape.lineTo(towerW * 0.5, towerH - 1.1);
-    rightShape.lineTo(-towerW * 0.5, towerH);
+    rightShape.moveTo(-towerW * 0.45, 0);
+    rightShape.lineTo(towerW * 0.45, 0);
+    rightShape.lineTo(towerW * 0.45, towerH - 1.0);
+    rightShape.lineTo(-towerW * 0.45, towerH * 0.94);
     rightShape.closePath();
 
     const extrudeRight = new THREE.ExtrudeGeometry(rightShape, { depth: towerD, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08 });
     extrudeRight.center();
     const rightPillar = new THREE.Mesh(extrudeRight, graniteMat);
-    rightPillar.position.set((towerW * 0.5 + gap * 0.5), 0.85 + towerH * 0.5, 0);
+    rightPillar.position.set((towerW * 0.45 + gap * 0.5), 0.85 + towerH * 0.5, 0);
     rightPillar.castShadow = true;
     cenotaphGroup.add(rightPillar);
 
-    // Silver RCMP Crest in the gap between the twin split towers
+    // Bronze Stetson Hat and Gloves resting on the lower left granite step (Image 4 exact detail!)
+    const bronzeMat = new THREE.MeshStandardMaterial({
+      color: 0x6e4b2d,
+      roughness: 0.36,
+      metalness: 0.82
+    });
+
+    const stepRelicGroup = new THREE.Group();
+    stepRelicGroup.position.set(-3.1, 0.46, 1.25);
+    stepRelicGroup.rotation.y = 0.35;
+
+    // Resting Stetson hat (brim + pinched crown)
+    const relicHatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.04, 20), bronzeMat);
+    const relicHatCrown = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.32, 0.36, 14), bronzeMat);
+    relicHatCrown.position.y = 0.18;
+    stepRelicGroup.add(relicHatBrim, relicHatCrown);
+
+    // Resting bronze ceremonial gauntlets/gloves beside the hat
+    const relicGlove1 = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 0.52), bronzeMat);
+    relicGlove1.position.set(0.55, 0.03, 0.05);
+    relicGlove1.rotation.y = -0.2;
+    const relicGlove2 = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.06, 0.52), bronzeMat);
+    relicGlove2.position.set(0.72, 0.03, -0.08);
+    relicGlove2.rotation.y = 0.15;
+    stepRelicGroup.add(relicGlove1, relicGlove2);
+
+    cenotaphGroup.add(stepRelicGroup);
+
+    // Silver RCMP Crest in the gap bridging the monoliths
     const crestLoader = new THREE.TextureLoader();
     const crestTex = crestLoader.load('textures/rcmp_crest.webp');
     crestTex.colorSpace = THREE.SRGBColorSpace;
@@ -4230,24 +4265,34 @@ class PushnotOrbit {
     cenotaphGroup.add(medallion, crestFaceFront, crestFaceBack);
     group.add(cenotaphGroup);
 
-    // 3. Bronze Statue of RCMP Officer on Circular Stone Plinth
+    // 3. Bronze Statue of RCMP Officer on Circular Stone Plinth on the RIGHT (Image 4 exact layout)
     const statueGroup = new THREE.Group();
-    statueGroup.position.set(-4.4, 0.38, 1.0);
+    statueGroup.position.set(3.4, 0.38, 0.5);
 
-    // Circular Plinth
+    // Outer Crushed Stone / Planting Ring around the statue
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.85, metalness: 0.05 });
+    const ringMesh = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.45, 0.12, 28), ringMat);
+    ringMesh.position.y = 0.06;
+    statueGroup.add(ringMesh);
+
+    // Circular Stone Plinth
     const plinthMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.65, metalness: 0.15 });
-    const statPlinth1 = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.65, 0.45, 24), plinthMat);
+    const statPlinth1 = new THREE.Mesh(new THREE.CylinderGeometry(1.4, 1.55, 0.45, 24), plinthMat);
     statPlinth1.position.y = 0.225;
-    const statPlinth2 = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.45, 24), plinthMat);
+    const statPlinth2 = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.25, 0.45, 24), plinthMat);
     statPlinth2.position.y = 0.675;
     statueGroup.add(statPlinth1, statPlinth2);
 
-    // Bronze Officer Figure in Ceremonial Red Serge / Parade Rest Vigil
-    const bronzeMat = new THREE.MeshStandardMaterial({
-      color: 0x6e4b2d,
-      roughness: 0.36,
-      metalness: 0.82
-    });
+    // 6 In-ground solemn uplights around the plinth base
+    for (let u = 0; u < 6; u++) {
+      const ang = (u / 6) * Math.PI * 2;
+      const upLightMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.12, 0.14, 0.05, 12),
+        new THREE.MeshBasicMaterial({ color: 0xffedd5 })
+      );
+      upLightMesh.position.set(Math.cos(ang) * 1.85, 0.14, Math.sin(ang) * 1.85);
+      statueGroup.add(upLightMesh);
+    }
 
     const officer = new THREE.Group();
     officer.position.y = 0.90;
@@ -4276,20 +4321,30 @@ class PushnotOrbit {
     belt.position.set(0, 2.85, 0);
     officer.add(belt);
 
-    // Arms crossed respectfully at waist in ceremonial vigil
-    const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.4, 10), bronzeMat);
-    armL.position.set(-0.7, 3.4, 0.15);
-    armL.rotation.z = -0.3;
-    armL.rotation.x = 0.4;
-    const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.4, 10), bronzeMat);
-    armR.position.set(0.7, 3.4, 0.15);
-    armR.rotation.z = 0.3;
-    armR.rotation.x = 0.4;
-    const hands = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 12), bronzeMat);
-    hands.position.set(0, 2.8, 0.4);
-    officer.add(armL, armR, hands);
+    // Hands clasped behind the back at the waist in solemn parade rest vigil (Image 4 exact posture)
+    const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.3, 10), bronzeMat);
+    armL.position.set(-0.62, 3.3, -0.12);
+    armL.rotation.z = -0.18;
+    armL.rotation.x = -0.32;
+    const foreArmL = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 1.1, 10), bronzeMat);
+    foreArmL.position.set(-0.32, 2.7, -0.32);
+    foreArmL.rotation.z = -0.65;
+    foreArmL.rotation.x = -0.22;
 
-    // Head Bowed in Solemn Mourning
+    const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.3, 10), bronzeMat);
+    armR.position.set(0.62, 3.3, -0.12);
+    armR.rotation.z = 0.18;
+    armR.rotation.x = -0.32;
+    const foreArmR = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.14, 1.1, 10), bronzeMat);
+    foreArmR.position.set(0.32, 2.7, -0.32);
+    foreArmR.rotation.z = 0.65;
+    foreArmR.rotation.x = -0.22;
+
+    const handsBehind = new THREE.Mesh(new THREE.SphereGeometry(0.24, 12, 12), bronzeMat);
+    handsBehind.position.set(0, 2.65, -0.38);
+    officer.add(armL, foreArmL, armR, foreArmR, handsBehind);
+
+    // Head Bowed in Solemn Contemplation
     const headGroup = new THREE.Group();
     headGroup.position.set(0, 4.45, 0.1);
     headGroup.rotation.x = 0.38; // head bowed down
@@ -4315,11 +4370,11 @@ class PushnotOrbit {
     headGroup.add(stetsonGroup);
 
     officer.add(headGroup);
-    officer.rotation.y = 0.25; // angled toward the cenotaph and plaza
+    officer.rotation.y = -0.15; // angled slightly toward plaza center
     statueGroup.add(officer);
     group.add(statueGroup);
 
-    // 4. Silver Flagpoles with Black Mourning Flags (Half-Mast)
+    // 4. Silver Flagpoles with Black Mourning Flags (Half-Mast) behind the monument
     const chromeMat = new THREE.MeshStandardMaterial({
       color: 0xf1f5f9,
       metalness: 0.95,
@@ -4334,7 +4389,7 @@ class PushnotOrbit {
     });
 
     this.memorialFlags = [];
-    const poleX = [-3.0, 3.0];
+    const poleX = [-3.8, -0.6];
     for (let i = 0; i < poleX.length; i++) {
       const poleGroup = new THREE.Group();
       poleGroup.position.set(poleX[i], 0.38, -2.4);

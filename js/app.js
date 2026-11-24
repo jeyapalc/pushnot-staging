@@ -3575,61 +3575,67 @@ class PushnotOrbit {
           c.material = screenMat;
           this.hackerScreenMesh = c;
         } else if (mName.includes('Eyewear') || cName.includes('Eyewear')) {
-          // Authentic model eyewear: reflective white glint on outer front lenses,
-          // matte black on inside rims, bridge, temples, and rear-facing surfaces!
+          // Authentic model eyewear:
+          // 1. Base frame mesh: inner rims, frame borders, bridge, temples, and back surfaces rendered in matte black
           c.visible = true;
+          const frameMat = new THREE.MeshStandardMaterial({
+            color: 0x050508,
+            emissive: 0x000000,
+            roughness: 0.85,
+            metalness: 0.15,
+            side: THREE.DoubleSide
+          });
+          c.material = frameMat;
+
+          // 2. Front reflective lens overlay: outer front lens surfaces rendered with FrontSide culling!
+          // When viewed from behind/overhead, FrontSide culls it completely, revealing only the black inner frames!
           if (c.geometry) {
             c.geometry.computeVertexNormals();
             const pos = c.geometry.attributes.position;
             const norm = c.geometry.attributes.normal;
-            const count = pos.count;
-            const colors = new Float32Array(count * 3);
+            const idx = c.geometry.index;
 
-            // In hack.glb model space:
-            // Face points along -X. Bounding box X is [87.61, 115.75].
-            // Front lenses are at X in [87.6, 92.5] with normals facing forward (nx < -0.15).
-            // Inside surfaces facing hacker eyes have nx > 0. Rims and temples have nx >= -0.15 or x > 92.5.
-            for (let i = 0; i < count; i++) {
-              const x = pos.getX(i);
-              const nx = norm ? norm.getX(i) : 0;
-              const isFrontLens = (x <= 92.5 && nx < -0.15);
-              if (isFrontLens) {
-                colors[i * 3]     = 1.0;
-                colors[i * 3 + 1] = 1.0;
-                colors[i * 3 + 2] = 1.0;
-              } else {
-                colors[i * 3]     = 0.04;
-                colors[i * 3 + 1] = 0.04;
-                colors[i * 3 + 2] = 0.05;
+            const lensIndices = [];
+            const frameIndices = [];
+
+            if (idx) {
+              const arr = idx.array;
+              for (let i = 0; i < arr.length; i += 3) {
+                const a = arr[i], b = arr[i + 1], cIdx = arr[i + 2];
+                const avgX = (pos.getX(a) + pos.getX(b) + pos.getX(cIdx)) / 3;
+                const avgNx = norm ? (norm.getX(a) + norm.getX(b) + norm.getX(cIdx)) / 3 : -1;
+                // Face faces -X in hack.glb. Front lenses are at X in [87.6, 92.5] with normals facing -X
+                if (avgX <= 92.5 && avgNx < -0.15) {
+                  lensIndices.push(a, b, cIdx);
+                } else {
+                  frameIndices.push(a, b, cIdx);
+                }
               }
             }
-            c.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-          }
 
-          const glassesMat = new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            emissive: 0xffffff,
-            emissiveIntensity: 1.8,
-            roughness: 0.15,
-            metalness: 0.85,
-            vertexColors: true,
-            side: THREE.DoubleSide
-          });
-          glassesMat.customProgramCacheKey = () => 'hacker_glasses_shader_v2';
-          glassesMat.onBeforeCompile = (shader) => {
-            shader.fragmentShader = shader.fragmentShader.replace(
-              'vec3 totalEmissiveRadiance = emissive;',
-              `bool isFrontGlint = gl_FrontFacing && (vColor.r > 0.5);
-               vec3 totalEmissiveRadiance = isFrontGlint ? (emissive * 1.8) : vec3(0.0);
-               diffuseColor.rgb = isFrontGlint ? vec3(1.0, 1.0, 1.0) : vec3(0.04, 0.04, 0.05);`
-            );
-            shader.fragmentShader = shader.fragmentShader.replace(
-              '#include <color_fragment>',
-              '/* color applied in totalEmissiveRadiance */'
-            );
-          };
-          c.material = glassesMat;
-          this.hackerGlassesMesh = c;
+            if (lensIndices.length > 0) {
+              const lensGeom = c.geometry.clone();
+              lensGeom.setIndex(lensIndices);
+              const lensMat = new THREE.MeshStandardMaterial({
+                color: 0xffffff,
+                emissive: 0xffffff,
+                emissiveIntensity: 1.8,
+                roughness: 0.12,
+                metalness: 0.85,
+                side: THREE.FrontSide,
+                polygonOffset: true,
+                polygonOffsetFactor: -1,
+                polygonOffsetUnits: -1
+              });
+              const lensMesh = new THREE.Mesh(lensGeom, lensMat);
+              lensMesh.name = 'hackerGlassesLens';
+              lensMesh.position.x -= 0.05; // slight forward nudge along -X (face forward direction)
+              c.add(lensMesh);
+              this.hackerGlassesMesh = lensMesh;
+            } else {
+              this.hackerGlassesMesh = c;
+            }
+          }
         } else if (mName.includes('Topmat') || mName.includes('Hairmat') || mName.includes('Bodymat') || mName.includes('Bottommat')) {
           // Cloaked in menacing deep dark shadow until ID'ed
           if (c.material) {

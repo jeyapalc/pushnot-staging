@@ -98,17 +98,6 @@ html, body {
   box-shadow: 0 0 16px rgba(52, 211, 153, 0.5);
 }
 
-.btn-leo {
-  height: 36px; padding: 0 14px; border-radius: 10px; cursor: pointer;
-  background: rgba(244, 63, 94, 0.14); border: 1px solid rgba(244, 63, 94, 0.5);
-  color: #fda4af; font-family: var(--sans); font-size: .8rem; font-weight: 700;
-  letter-spacing: .4px; backdrop-filter: blur(12px); transition: all .25s;
-}
-.btn-leo:hover { background: rgba(244, 63, 94, 0.28); color: #fff; }
-.btn-leo.active {
-  background: linear-gradient(135deg, #e11d48, #2563eb); border-color: #fb7185; color: #fff;
-  box-shadow: 0 0 22px rgba(225, 29, 72, 0.55);
-}
 
 .btn-fs {
   width: 36px; height: 36px; border-radius: 10px; cursor: pointer;

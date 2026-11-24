@@ -27,7 +27,7 @@ const POS = {
   phone:  new THREE.Vector3( D, 0,  D),
   server: new THREE.Vector3(-D, 0,  D),
   post:   new THREE.Vector3( 0, 0, -R),
-  ufo:    new THREE.Vector3(-D, 50, D)
+  ufo:    new THREE.Vector3( 0, 50, -R)
 };
 
 const MODE_SECONDS = { setup: 15, push: 11, world: 12, leo: 18 };
@@ -416,9 +416,9 @@ class PushnotOrbit {
     this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 8),  pServer);
     this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 4, 18, -6), pPost);
     this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
-      POS.ufo.clone().setY(72.5),
-      new THREE.Vector3(-D * 0.5, 46, -D * 0.3),
-      pPost.clone().setY(20)
+      POS.ufo.clone().setY(68.0),
+      new THREE.Vector3(POS.post.x + 5.0, 42.0, POS.post.z + 5.0),
+      pPost.clone().setY(22.0)
     );
 
     this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
@@ -745,30 +745,10 @@ class PushnotOrbit {
     const bit2 = new THREE.Mesh(bitGeo2, goldMat);
     bit2.position.set(0.8, -0.6, 0);
 
-    // Sleek cryptographic token hash plaque floating below the key
-    const cvs = document.createElement('canvas');
-    cvs.width = 384; cvs.height = 96;
-    const ctx = cvs.getContext('2d');
-    ctx.fillStyle = '#0f172a';
-    ctx.fillRect(0, 0, 384, 96);
-    ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, 380, 92);
-    ctx.fillStyle = '#f59e0b';
-    ctx.font = 'bold 36px monospace';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('🔑 PUSH TOKEN #7A9F', 192, 48);
-
-    const plaqueTex = new THREE.CanvasTexture(cvs);
-    const plaqueMat = new THREE.MeshBasicMaterial({ map: plaqueTex, side: THREE.DoubleSide, transparent: true, opacity: 0.95 });
-    const plaque = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 0.9), plaqueMat);
-    plaque.position.set(0, -1.8, 0);
-
     const glow = new THREE.PointLight(0xf59e0b, 2.2, 20);
     glow.position.set(0, 1.5, 1.5);
 
-    group.add(bow, core, shaft, bit1, bit2, plaque, glow);
+    group.add(bow, core, shaft, bit1, bit2, glow);
     group.scale.setScalar(scale);
     return group;
   }
@@ -1357,6 +1337,24 @@ class PushnotOrbit {
     const pinPost = document.getElementById('pin-post');
     if (pinPost) pinPost.textContent = os === 'ios' ? 'APPLE APNs (iTUNES / APP STORE)' : 'GOOGLE FCM (GOOGLE PLAY STORE)';
 
+    // Update push notification permission dialog replica (iOS vs Android)
+    const permDialog = document.getElementById('push-permission-dialog');
+    const permTitle = document.getElementById('perm-title');
+    const permMessage = document.getElementById('perm-message');
+    if (permDialog) {
+      permDialog.classList.toggle('android', os === 'android');
+    }
+    if (permTitle) {
+      permTitle.textContent = os === 'android'
+        ? 'Allow Pushnot to send you notifications?'
+        : '“Pushnot” Would Like to Send You Notifications';
+    }
+    if (permMessage) {
+      permMessage.textContent = os === 'android'
+        ? 'Stay informed with real-time push events and alerts.'
+        : 'Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.';
+    }
+
     // Update Apple & Google logo prominence on the San Francisco headquarters
     this.updateLogoHighlight();
 
@@ -1891,60 +1889,78 @@ class PushnotOrbit {
     this.emojiTex.needsUpdate = true;
   }
 
-  /* ---- Sleek Glassmorphic 3D Push Notification Payload Card with Docked Token Key (Zero Noise / No Clutter) ---- */
+  /* ---- Pure 3D Golden Bell (Notification Alert Icon) ---- */
+  create3DBell(scale = 1) {
+    const bellGroup = new THREE.Group();
+    const goldMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      emissive: 0xb45309,
+      emissiveIntensity: 0.45,
+      metalness: 0.92,
+      roughness: 0.18
+    });
+
+    // Elegant flared bell body via LatheGeometry
+    const points = [];
+    points.push(new THREE.Vector2(0.0, 3.4));
+    points.push(new THREE.Vector2(0.6, 3.3));
+    points.push(new THREE.Vector2(1.1, 3.0));
+    points.push(new THREE.Vector2(1.3, 2.4));
+    points.push(new THREE.Vector2(1.4, 1.6));
+    points.push(new THREE.Vector2(1.6, 0.9));
+    points.push(new THREE.Vector2(2.1, 0.3));
+    points.push(new THREE.Vector2(2.7, -0.1));
+    points.push(new THREE.Vector2(2.8, -0.4));
+    points.push(new THREE.Vector2(2.5, -0.5));
+    points.push(new THREE.Vector2(2.1, -0.3));
+
+    const bellGeo = new THREE.LatheGeometry(points, 32);
+    const bellMesh = new THREE.Mesh(bellGeo, goldMat);
+    bellMesh.castShadow = true;
+    bellGroup.add(bellMesh);
+
+    // Crown loop on top
+    const loopGeo = new THREE.TorusGeometry(0.65, 0.20, 16, 24);
+    const loopMesh = new THREE.Mesh(loopGeo, goldMat);
+    loopMesh.position.set(0, 3.8, 0);
+    bellGroup.add(loopMesh);
+
+    // Clapper suspended underneath
+    const clapperMat = new THREE.MeshStandardMaterial({
+      color: 0xd97706,
+      metalness: 0.85,
+      roughness: 0.25
+    });
+    const clapperRod = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.10, 2.2, 12), clapperMat);
+    clapperRod.position.set(0, 0.8, 0);
+    const clapperBall = new THREE.Mesh(new THREE.SphereGeometry(0.65, 16, 16), goldMat);
+    clapperBall.position.set(0, -0.4, 0);
+    bellGroup.add(clapperRod, clapperBall);
+
+    // Warm golden radiant glow
+    const glowLight = new THREE.PointLight(0xfbbf24, 2.8, 25);
+    glowLight.position.set(0, 1.5, 0);
+    bellGroup.add(glowLight);
+
+    bellGroup.scale.setScalar(scale);
+    return bellGroup;
+  }
+
+  /* ---- Pure 3D Physical Notification Alert & Token Icons (Zero Rectangular Boxes) ---- */
   createPushNotificationPayload() {
     const group = new THREE.Group();
 
-    // 1. Sleek glassmorphic payload card (translucent dark chassis with glowing emerald border)
-    const cardW = 6.4, cardH = 3.4, cardD = 0.38;
-    const cardGeo = new THREE.BoxGeometry(cardW, cardH, cardD);
-    const cardMat = new THREE.MeshPhysicalMaterial({
-      color: 0x090d16,
-      metalness: 0.85,
-      roughness: 0.18,
-      transparent: true,
-      opacity: 0.92,
-      clearcoat: 1.0,
-      clearcoatRoughness: 0.05
-    });
-    const card = new THREE.Mesh(cardGeo, cardMat);
-    card.add(new THREE.LineSegments(
-      new THREE.EdgesGeometry(cardGeo),
-      new THREE.LineBasicMaterial({ color: 0x34d399, transparent: true, opacity: 0.9 })
-    ));
-    group.add(card);
+    // 1. Pure 3D Golden Bell for notification alerts
+    this.pushBell = this.create3DBell(1.15);
+    group.add(this.pushBell);
 
-    // 2. High-res dynamic canvas texture on front face of the payload (1024x512, zero mipmap blur)
-    this.payloadCvs = document.createElement('canvas');
-    this.payloadCvs.width = 1024;
-    this.payloadCvs.height = 512;
-    this.payloadTex = new THREE.CanvasTexture(this.payloadCvs);
-    this.payloadTex.colorSpace = THREE.SRGBColorSpace;
-    this.payloadTex.minFilter = THREE.LinearFilter;
-    this.payloadTex.magFilter = THREE.LinearFilter;
-    this.payloadTex.generateMipmaps = false;
-    this.updatePayloadCanvas();
-
-    const faceGeo = new THREE.PlaneGeometry(cardW * 0.96, cardH * 0.94);
-    const faceMat = new THREE.MeshBasicMaterial({
-      map: this.payloadTex,
-      transparent: true,
-      side: THREE.DoubleSide
-    });
-    const face = new THREE.Mesh(faceGeo, faceMat);
-    face.position.z = cardD / 2 + 0.03;
-    const faceBack = face.clone();
-    faceBack.position.z = -(cardD / 2 + 0.03);
-    faceBack.rotation.y = Math.PI;
-    group.add(face, faceBack);
-
-    // 3. Single sleek Golden Device Token Key docked cleanly beside the payload card
-    this.pushOrbKey = this.createTokenKey(0.72);
-    this.pushOrbKey.position.set(-cardW * 0.5 - 2.8, 0, 0);
-    this.pushOrbKey.rotation.z = Math.PI * 0.5;
+    // 2. Pure 3D Metallic Key docked cleanly beside bell for push token disclosure
+    this.pushOrbKey = this.createTokenKey(0.85);
+    this.pushOrbKey.position.set(2.8, 0.4, 0);
+    this.pushOrbKey.rotation.z = Math.PI * 0.4;
     group.add(this.pushOrbKey);
 
-    group.add(new THREE.PointLight(0x34d399, 3.0, 28));
+    group.add(new THREE.PointLight(0xfbbf24, 3.0, 28));
     return group;
   }
 
@@ -3334,6 +3350,9 @@ class PushnotOrbit {
     this.rejectShieldBubble.visible = false;
     this.protonGroup.add(this.rejectShieldBubble);
 
+    // 3D Swiss Proton Server Laughing Video Billboard (JJ Laugh with Chromakey Alpha)
+    this.initSwissVideoBillboard();
+
     // Apple & Google Subscriber Vault (cloned Skyscraper HQ mounts here once logos finish loading,
     // topped with the glowing Subscriber Identity Record!)
     this.leoAgGroup = new THREE.Group();
@@ -3638,6 +3657,28 @@ class PushnotOrbit {
       this.harmonizeAsset(earth, { minRough: 0.34, maxRough: 0.72, maxMetal: 0.25, envIntensity: 0.9, liftDark: false });
       this.centerAndScale(earth, 26);
       this.ufoGroup.add(earth);
+
+      // Cyber anchor conduit anchoring Earth directly down to Apple & Google node
+      const anchorConduit = new THREE.Group();
+      const beamGeo = new THREE.CylinderGeometry(0.8, 1.4, 28, 24);
+      const beamMat = new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        transparent: true,
+        opacity: 0.30
+      });
+      const beam = new THREE.Mesh(beamGeo, beamMat);
+      beam.position.set(0, -22, 0);
+      anchorConduit.add(beam);
+
+      for (let r = 0; r < 3; r++) {
+        const ringGeo = new THREE.TorusGeometry(2.4 + r * 0.9, 0.12, 12, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.65 - r * 0.15 });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = Math.PI * 0.5;
+        ring.position.set(0, -9 - r * 7, 0);
+        anchorConduit.add(ring);
+      }
+      this.ufoGroup.add(anchorConduit);
 
       this.ufoGroup.position.copy(POS.ufo);
       this.normalGroup.add(this.ufoGroup);
@@ -3995,14 +4036,20 @@ class PushnotOrbit {
             const matName = (c.material.name || '').toLowerCase();
             const meshName = (c.name || '').toLowerCase();
             if (matName.includes('leaf') || meshName.includes('leaf')) {
-              // Tint leaves to lush natural summer green matching real trees in photo (#2e7d32)
-              c.material.color.set('#2e7d32');
-              c.material.roughness = 0.52;
-            } else {
-              // Trunk and branches
+              // Darken leaves to deep grounded forest green, killing bright highlights (#1b3820)
+              c.material.color.set('#1b3820');
               c.material.roughness = 0.85;
+              c.material.metalness = 0.05;
+              if (c.material.emissive) c.material.emissive.set('#000000');
+              c.material.emissiveIntensity = 0;
+            } else {
+              // Dark tactical trunk and branches
+              c.material.color.set('#1a1c18');
+              c.material.roughness = 0.88;
+              c.material.metalness = 0.04;
+              if (c.material.emissive) c.material.emissive.set('#000000');
+              c.material.emissiveIntensity = 0;
             }
-            c.material.metalness = 0.04;
             c.material.needsUpdate = true;
           }
         }
@@ -4044,8 +4091,372 @@ class PushnotOrbit {
       }
 
       this.leoGroup.add(treeRow);
+
+      // Surrey Fallen Peace Officers Memorial Monument (Cenotaph, RCMP Crest, Bronze Statue, Black Mourning Flags)
+      this.surreyMemorial = this.createSurreyMemorialMonument();
+      this.surreyMemorial.position.set(15.5, 0, 15.5);
+      this.leoGroup.add(this.surreyMemorial);
+
       done();
     }, undefined, done);
+  }
+
+  /* ---- Surrey Fallen Peace Officers Memorial Monument (Green Timbers) ---- */
+  createSurreyMemorialMonument() {
+    const group = new THREE.Group();
+    group.userData.stationKey = 'swat';
+
+    // 1. Plaza Base: Stepped dark granite paving terrace in front of entrance
+    const plazaMat = new THREE.MeshStandardMaterial({
+      color: 0x1e2229,
+      roughness: 0.72,
+      metalness: 0.12
+    });
+    const plazaBase = new THREE.Mesh(new THREE.CylinderGeometry(8.2, 8.8, 0.35, 32), plazaMat);
+    plazaBase.position.y = 0.175;
+    plazaBase.receiveShadow = true;
+    plazaBase.userData.stationKey = 'swat';
+    group.add(plazaBase);
+
+    // Inner circular walkway band
+    const bandMat = new THREE.MeshStandardMaterial({ color: 0x0f131a, roughness: 0.6, metalness: 0.2 });
+    const plazaInner = new THREE.Mesh(new THREE.CylinderGeometry(7.2, 7.2, 0.38, 32), bandMat);
+    plazaInner.position.y = 0.19;
+    plazaInner.receiveShadow = true;
+    plazaInner.userData.stationKey = 'swat';
+    group.add(plazaInner);
+
+    // 2. Dark Granite Cenotaph with Split Peak and Silver RCMP Crest in the gap
+    const cenotaphGroup = new THREE.Group();
+    cenotaphGroup.position.set(0, 0.38, 0);
+
+    const graniteMat = new THREE.MeshStandardMaterial({
+      color: 0x111317,
+      roughness: 0.18,
+      metalness: 0.15
+    });
+
+    // Tier 1 Base Plinth
+    const base1 = new THREE.Mesh(new THREE.BoxGeometry(6.6, 0.45, 3.2), graniteMat);
+    base1.position.y = 0.225;
+    base1.castShadow = true;
+    cenotaphGroup.add(base1);
+
+    // Tier 2 Plinth with front memorial inscription
+    const base2 = new THREE.Mesh(new THREE.BoxGeometry(5.8, 0.40, 2.6), graniteMat);
+    base2.position.y = 0.65;
+    base2.castShadow = true;
+    cenotaphGroup.add(base2);
+
+    // Inscription Plaque on front face
+    const inscrCvs = document.createElement('canvas');
+    inscrCvs.width = 512; inscrCvs.height = 96;
+    const iCtx = inscrCvs.getContext('2d');
+    iCtx.fillStyle = '#0a0c10';
+    iCtx.fillRect(0, 0, 512, 96);
+    iCtx.strokeStyle = '#94a3b8';
+    iCtx.lineWidth = 4;
+    iCtx.strokeRect(4, 4, 504, 88);
+    iCtx.fillStyle = '#f8fafc';
+    iCtx.font = 'bold 24px "Space Grotesk", sans-serif';
+    iCtx.textAlign = 'center';
+    iCtx.fillText('SURREY FALLEN PEACE OFFICERS MEMORIAL', 256, 38);
+    iCtx.font = '600 18px "Space Grotesk", sans-serif';
+    iCtx.fillStyle = '#94a3b8';
+    iCtx.fillText('IN HONOUR OF THOSE WHO GAVE THEIR LIVES', 256, 70);
+
+    const inscrTex = new THREE.CanvasTexture(inscrCvs);
+    const inscrMat = new THREE.MeshBasicMaterial({ map: inscrTex });
+    const inscrMesh = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 0.36), inscrMat);
+    inscrMesh.position.set(0, 0.65, 1.32);
+    cenotaphGroup.add(inscrMesh);
+
+    // Split Peak Twin Granite Towers
+    const towerH = 6.8;
+    const towerW = 2.1;
+    const towerD = 1.6;
+    const gap = 1.4;
+
+    const leftShape = new THREE.Shape();
+    leftShape.moveTo(-towerW * 0.5, 0);
+    leftShape.lineTo(towerW * 0.5, 0);
+    leftShape.lineTo(towerW * 0.5, towerH);
+    leftShape.lineTo(-towerW * 0.5, towerH - 1.1); // split slope
+    leftShape.closePath();
+
+    const extrudeLeft = new THREE.ExtrudeGeometry(leftShape, { depth: towerD, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08 });
+    extrudeLeft.center();
+    const leftPillar = new THREE.Mesh(extrudeLeft, graniteMat);
+    leftPillar.position.set(-(towerW * 0.5 + gap * 0.5), 0.85 + towerH * 0.5, 0);
+    leftPillar.castShadow = true;
+    cenotaphGroup.add(leftPillar);
+
+    // Right Pillar: mirror split slope
+    const rightShape = new THREE.Shape();
+    rightShape.moveTo(-towerW * 0.5, 0);
+    rightShape.lineTo(towerW * 0.5, 0);
+    rightShape.lineTo(towerW * 0.5, towerH - 1.1);
+    rightShape.lineTo(-towerW * 0.5, towerH);
+    rightShape.closePath();
+
+    const extrudeRight = new THREE.ExtrudeGeometry(rightShape, { depth: towerD, bevelEnabled: true, bevelSize: 0.08, bevelThickness: 0.08 });
+    extrudeRight.center();
+    const rightPillar = new THREE.Mesh(extrudeRight, graniteMat);
+    rightPillar.position.set((towerW * 0.5 + gap * 0.5), 0.85 + towerH * 0.5, 0);
+    rightPillar.castShadow = true;
+    cenotaphGroup.add(rightPillar);
+
+    // Silver RCMP Crest in the gap between the twin split towers
+    const crestLoader = new THREE.TextureLoader();
+    const crestTex = crestLoader.load('textures/rcmp_crest.webp');
+    crestTex.colorSpace = THREE.SRGBColorSpace;
+
+    const medallionMat = new THREE.MeshStandardMaterial({
+      color: 0xd1d5db,
+      metalness: 0.88,
+      roughness: 0.22
+    });
+    const medallion = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 0.18, 32), medallionMat);
+    medallion.rotation.x = Math.PI * 0.5;
+    medallion.position.set(0, 4.8, 0);
+
+    const crestFaceMat = new THREE.MeshBasicMaterial({ map: crestTex, transparent: true });
+    const crestFaceFront = new THREE.Mesh(new THREE.PlaneGeometry(1.85, 1.85), crestFaceMat);
+    crestFaceFront.position.set(0, 4.8, 0.11);
+    const crestFaceBack = crestFaceFront.clone();
+    crestFaceBack.position.set(0, 4.8, -0.11);
+    crestFaceBack.rotation.y = Math.PI;
+
+    cenotaphGroup.add(medallion, crestFaceFront, crestFaceBack);
+    group.add(cenotaphGroup);
+
+    // 3. Bronze Statue of RCMP Officer on Circular Stone Plinth
+    const statueGroup = new THREE.Group();
+    statueGroup.position.set(-4.4, 0.38, 1.0);
+
+    // Circular Plinth
+    const plinthMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.65, metalness: 0.15 });
+    const statPlinth1 = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.65, 0.45, 24), plinthMat);
+    statPlinth1.position.y = 0.225;
+    const statPlinth2 = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.35, 0.45, 24), plinthMat);
+    statPlinth2.position.y = 0.675;
+    statueGroup.add(statPlinth1, statPlinth2);
+
+    // Bronze Officer Figure in Ceremonial Red Serge / Parade Rest Vigil
+    const bronzeMat = new THREE.MeshStandardMaterial({
+      color: 0x6e4b2d,
+      roughness: 0.36,
+      metalness: 0.82
+    });
+
+    const officer = new THREE.Group();
+    officer.position.y = 0.90;
+
+    // Cavalry Boots
+    const bootL = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 1.5, 12), bronzeMat);
+    bootL.position.set(-0.35, 0.75, 0);
+    const bootR = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.26, 1.5, 12), bronzeMat);
+    bootR.position.set(0.35, 0.75, 0);
+    officer.add(bootL, bootR);
+
+    // Breeches / Riding Trousers
+    const legL = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 1.4, 12), bronzeMat);
+    legL.position.set(-0.32, 2.1, 0);
+    const legR = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.24, 1.4, 12), bronzeMat);
+    legR.position.set(0.32, 2.1, 0);
+    officer.add(legL, legR);
+
+    // Torso / Tunic
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(1.25, 1.6, 0.8), bronzeMat);
+    torso.position.set(0, 3.5, 0);
+    officer.add(torso);
+
+    // Cross-strap belt
+    const belt = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 0.22, 16), bronzeMat);
+    belt.position.set(0, 2.85, 0);
+    officer.add(belt);
+
+    // Arms crossed respectfully at waist in ceremonial vigil
+    const armL = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.4, 10), bronzeMat);
+    armL.position.set(-0.7, 3.4, 0.15);
+    armL.rotation.z = -0.3;
+    armL.rotation.x = 0.4;
+    const armR = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.16, 1.4, 10), bronzeMat);
+    armR.position.set(0.7, 3.4, 0.15);
+    armR.rotation.z = 0.3;
+    armR.rotation.x = 0.4;
+    const hands = new THREE.Mesh(new THREE.SphereGeometry(0.26, 12, 12), bronzeMat);
+    hands.position.set(0, 2.8, 0.4);
+    officer.add(armL, armR, hands);
+
+    // Head Bowed in Solemn Mourning
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 4.45, 0.1);
+    headGroup.rotation.x = 0.38; // head bowed down
+
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.20, 0.35, 12), bronzeMat);
+    neck.position.set(0, 0.15, 0);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), bronzeMat);
+    head.position.set(0, 0.45, 0);
+    headGroup.add(neck, head);
+
+    // Classic RCMP Stetson Campaign Hat
+    const stetsonGroup = new THREE.Group();
+    stetsonGroup.position.set(0, 0.65, 0);
+
+    // Broad Brim
+    const brim = new THREE.Mesh(new THREE.CylinderGeometry(0.92, 0.92, 0.06, 24), bronzeMat);
+    // Pinched 4-dent campaign crown
+    const crown = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.42, 0.48, 16), bronzeMat);
+    crown.position.set(0, 0.25, 0);
+    const hatBand = new THREE.Mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.08, 16), bronzeMat);
+    hatBand.position.set(0, 0.08, 0);
+    stetsonGroup.add(brim, crown, hatBand);
+    headGroup.add(stetsonGroup);
+
+    officer.add(headGroup);
+    officer.rotation.y = 0.25; // angled toward the cenotaph and plaza
+    statueGroup.add(officer);
+    group.add(statueGroup);
+
+    // 4. Silver Flagpoles with Black Mourning Flags (Half-Mast)
+    const chromeMat = new THREE.MeshStandardMaterial({
+      color: 0xf1f5f9,
+      metalness: 0.95,
+      roughness: 0.12
+    });
+    const mourningMat = new THREE.MeshStandardMaterial({
+      color: 0x0a0c10,
+      roughness: 0.88,
+      metalness: 0.04,
+      side: THREE.DoubleSide
+    });
+
+    this.memorialFlags = [];
+    const poleX = [-3.0, 3.0];
+    for (let i = 0; i < poleX.length; i++) {
+      const poleGroup = new THREE.Group();
+      poleGroup.position.set(poleX[i], 0.38, -2.4);
+
+      // Silver base collar
+      const poleBase = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.45, 0.5, 16), chromeMat);
+      poleBase.position.y = 0.25;
+      poleGroup.add(poleBase);
+
+      // Silver pole
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.13, 11.5, 16), chromeMat);
+      pole.position.y = 5.75;
+      pole.castShadow = true;
+      poleGroup.add(pole);
+
+      // Finial ball
+      const finial = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), chromeMat);
+      finial.position.y = 11.6;
+      poleGroup.add(finial);
+
+      // Black mourning flag flying at half-mast
+      const flagGeo = new THREE.PlaneGeometry(2.4, 1.45, 12, 8);
+      const flagMesh = new THREE.Mesh(flagGeo, mourningMat);
+      flagMesh.position.set(1.22, 6.8, 0);
+      poleGroup.add(flagMesh);
+
+      // Black mourning streamer from finial
+      const streamer = new THREE.Mesh(new THREE.PlaneGeometry(0.24, 2.0), mourningMat);
+      streamer.position.set(0.15, 10.4, 0);
+      poleGroup.add(streamer);
+
+      this.memorialFlags.push({ mesh: flagMesh, basePos: Float32Array.from(flagGeo.attributes.position.array) });
+      group.add(poleGroup);
+    }
+
+    // Warm solemn plaza ground lights
+    const solemnLight = new THREE.PointLight(0xffedd5, 2.2, 22);
+    solemnLight.position.set(0, 3.5, 3.5);
+    group.add(solemnLight);
+
+    group.traverse(c => {
+      c.userData.stationKey = 'swat';
+      if (c.isMesh) {
+        c.castShadow = true;
+        c.receiveShadow = true;
+      }
+    });
+
+    return group;
+  }
+
+  /* ---- Swiss Proton Server Laughing Video Billboard (JJ Laugh with Chromakey Alpha) ---- */
+  initSwissVideoBillboard() {
+    const vid = document.createElement('video');
+    vid.id = 'swiss-jj-video';
+    vid.crossOrigin = 'anonymous';
+    vid.playsInline = true;
+    vid.muted = true;
+    vid.loop = true;
+    vid.preload = 'auto';
+
+    const srcWebm = document.createElement('source');
+    srcWebm.src = 'videos/jj_laugh_transparent.webm';
+    srcWebm.type = 'video/webm';
+    vid.appendChild(srcWebm);
+
+    const srcMp4 = document.createElement('source');
+    srcMp4.src = 'videos/jj_laugh_h264.mp4';
+    srcMp4.type = 'video/mp4';
+    vid.appendChild(srcMp4);
+
+    vid.style.display = 'none';
+    document.body.appendChild(vid);
+    this.swissVideoEl = vid;
+
+    const videoTex = new THREE.VideoTexture(vid);
+    videoTex.colorSpace = THREE.SRGBColorSpace;
+    videoTex.minFilter = THREE.LinearFilter;
+    videoTex.magFilter = THREE.LinearFilter;
+    videoTex.generateMipmaps = false;
+
+    // Chromakey shader material: supports both transparent webm (alpha) and mp4 fallback (greenscreen)
+    const chromakeyMat = new THREE.ShaderMaterial({
+      uniforms: {
+        videoTexture: { value: videoTex },
+        keyColor:     { value: new THREE.Color(0.074, 1.0, 0.031) },
+        threshold:    { value: 0.38 },
+        smoothness:   { value: 0.12 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D videoTexture;
+        uniform vec3 keyColor;
+        uniform float threshold;
+        uniform float smoothness;
+        varying vec2 vUv;
+        void main() {
+          vec4 tex = texture2D(videoTexture, vUv);
+          float diff = distance(tex.rgb, keyColor);
+          float mask = smoothstep(threshold - smoothness, threshold + smoothness, diff);
+          float finalAlpha = tex.a * mask;
+          if (finalAlpha < 0.05) discard;
+          gl_FragColor = vec4(tex.rgb, finalAlpha);
+        }
+      `,
+      transparent: true,
+      side: THREE.DoubleSide,
+      depthWrite: false
+    });
+
+    // 9:16 portrait video plane
+    const videoGeo = new THREE.PlaneGeometry(9.6, 17.0);
+    this.swissVideoMesh = new THREE.Mesh(videoGeo, chromakeyMat);
+    this.swissVideoMesh.position.set(this.leoPos.proton.x, 23.5, this.leoPos.proton.z);
+    this.swissVideoMesh.visible = false;
+    this.swissVideoMesh.userData.stationKey = 'proton';
+    this.leoGroup.add(this.swissVideoMesh);
   }
 
   initAppleGoogleSkyscraper(done) {
@@ -4212,7 +4623,14 @@ class PushnotOrbit {
     document.getElementById('brand-dot').classList.toggle('push', isPush || isWorld);
     document.getElementById('brand-dot').classList.toggle('leo', isLeo);
     document.getElementById('btn-play').classList.toggle('push', isPush || isWorld);
-    document.getElementById('scrub').classList.toggle('push', isPush || isWorld);
+    document.getElementById('btn-play').classList.toggle('world', isWorld);
+    document.getElementById('btn-play').classList.toggle('leo', isLeo);
+
+    const scrub = document.getElementById('scrub');
+    if (scrub) {
+      scrub.className = mode;
+    }
+    this.renderSliderTicks();
 
     const banner = document.getElementById('polarity-banner');
     banner.classList.toggle('push', isPush || isWorld);
@@ -4339,6 +4757,44 @@ class PushnotOrbit {
     return idx;
   }
 
+  jumpToStep(index) {
+    if (this.playing) this.setPlaying(false);
+    this.resetFocus();
+    if (!this.cameraUnlocked) {
+      this.cinematicFollow = true;
+    } else {
+      this.cinematicFollow = false;
+      this.focusCamPos = null;
+      this.focusTargetPos = null;
+    }
+    const stops = MODE_STEPS[this.mode];
+    if (stops && stops[index] !== undefined) {
+      this.targetT = stops[index];
+    }
+  }
+
+  renderSliderTicks() {
+    const ticksContainer = document.getElementById('slider-ticks');
+    if (!ticksContainer) return;
+    ticksContainer.innerHTML = '';
+
+    const steps = MODE_STEPS[this.mode] || [];
+    const activeStep = this.getCurrentStepIndex();
+
+    for (let i = 0; i < steps.length; i++) {
+      const tick = document.createElement('span');
+      tick.className = 'slider-tick' + (i === activeStep ? ` active ${this.mode}` : '');
+      tick.textContent = `${i + 1}`;
+      tick.style.left = `${steps[i] * 100}%`;
+      tick.title = `Jump to Step ${i + 1}`;
+      tick.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.jumpToStep(i);
+      });
+      ticksContainer.appendChild(tick);
+    }
+  }
+
   initUI() {
     const btnIos = document.getElementById('btn-os-ios');
     const btnAndroid = document.getElementById('btn-os-android');
@@ -4359,6 +4815,30 @@ class PushnotOrbit {
       const next = order[(order.indexOf(this.mode) + 1) % order.length];
       this.setMode(next);
     });
+
+    // Push notification permission prompt actions (Allow / Don't Allow)
+    const btnAllow = document.getElementById('perm-btn-allow');
+    const btnDeny = document.getElementById('perm-btn-deny');
+    const permDialog = document.getElementById('push-permission-dialog');
+    if (btnAllow) {
+      btnAllow.addEventListener('click', () => {
+        if (permDialog) permDialog.classList.add('granted');
+        btnAllow.textContent = 'Allowed ✓';
+        setTimeout(() => {
+          btnAllow.textContent = 'Allow';
+        }, 1800);
+      });
+    }
+    if (btnDeny) {
+      btnDeny.addEventListener('click', () => {
+        if (permDialog) permDialog.classList.remove('granted');
+        btnDeny.textContent = 'Denied ✕';
+        setTimeout(() => {
+          btnDeny.textContent = 'Don’t Allow';
+        }, 1800);
+      });
+    }
+    this.renderSliderTicks();
 
     document.getElementById('scrub').addEventListener('input', (e) => {
       if (this.playing) this.setPlaying(false);
@@ -4561,6 +5041,10 @@ class PushnotOrbit {
     if (this.rejectShieldBubble) this.rejectShieldBubble.visible = false;
     if (this.phoneEmojiBadge) this.phoneEmojiBadge.visible = false;
     if (this.shoppingBag) this.shoppingBag.visible = false;
+    if (this.swissVideoMesh) this.swissVideoMesh.visible = false;
+    if (this.mode !== 'leo' || t < 0.26 || t >= 0.32) {
+      if (this.swissVideoEl && !this.swissVideoEl.paused) this.swissVideoEl.pause();
+    }
 
     const isLeo = this.mode === 'leo';
     const L = this.leoPos;
@@ -4978,6 +5462,15 @@ class PushnotOrbit {
           moverPos = new THREE.Vector3(L.proton.x, 26.5, L.proton.z);
           moverText = '⛔ Proton: Request Denied';
           moverCls = 'red';
+
+          // Step 3 (Swiss Proton server receives order): Play laughing video in 3D facing camera!
+          if (this.swissVideoMesh) {
+            this.swissVideoMesh.visible = true;
+            this.swissVideoMesh.lookAt(this.camera.position);
+          }
+          if (this.swissVideoEl && this.swissVideoEl.paused) {
+            this.swissVideoEl.play().catch(() => {});
+          }
         }
       } else if (t < 0.48) {
         // Step 4: Emergency Order served to App Servers (Meta, Instagram, 𝕏)
@@ -5146,6 +5639,18 @@ class PushnotOrbit {
       const stepIdx = this.getCurrentStepIndex();
       const totalSteps = (MODE_STEPS[this.mode] || []).length;
       hudBanner.className = 'hud-banner ' + this.mode;
+
+      const counterPill = document.getElementById('step-counter-pill');
+      if (counterPill) {
+        counterPill.textContent = `Step ${stepIdx + 1} / ${totalSteps}`;
+        counterPill.className = `step-counter-pill ${this.mode}`;
+      }
+
+      // Update active state on timeline slider tick markers
+      const ticks = document.querySelectorAll('.slider-tick');
+      ticks.forEach((tick, i) => {
+        tick.className = 'slider-tick' + (i === stepIdx ? ` active ${this.mode}` : '');
+      });
 
       if (hudBadge) {
         hudBadge.textContent = this.mode === 'leo'
@@ -5393,6 +5898,24 @@ class PushnotOrbit {
       }
       pos.needsUpdate = true;
       this.swissFlagMesh.geometry.computeVertexNormals();
+    }
+
+    // Real-time wind wave animation for the Black Mourning Flags at the Surrey Memorial
+    if (this.memorialFlags && this.leoGroup && this.leoGroup.visible) {
+      const tW = now * 0.0045;
+      for (const f of this.memorialFlags) {
+        const pos = f.mesh.geometry.attributes.position;
+        const base = f.basePos;
+        for (let i = 0; i < pos.count; i++) {
+          const bx = base[i * 3];
+          const by = base[i * 3 + 1];
+          const pinFactor = clamp01((bx + 1.2) / 2.4);
+          const wave = Math.sin(bx * 2.2 - tW) * 0.22 + Math.cos(by * 1.8 - tW * 0.7) * 0.08;
+          pos.setZ(i, wave * pinFactor);
+        }
+        pos.needsUpdate = true;
+        f.mesh.geometry.computeVertexNormals();
+      }
     }
 
     // Switzerland illuminated server blade LEDs and telemetry laser scan

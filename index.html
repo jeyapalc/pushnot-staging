@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=112" />
+  <link rel="stylesheet" href="css/style.css?v=113" />
   <script type="importmap">
     { "imports": {
         "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
@@ -19,10 +19,21 @@
   <div id="canvas-container"></div>
   <div id="load-status" class="load-status">Loading 3D models…</div>
 
-  <!-- Minimal top bar -->
-  <div class="top-brand">
-    <span class="dot" id="brand-dot"></span>
-    <span>PUSHNOT</span>
+  <!-- Authentic Mobile Push Notification Permission Prompt (Replaces simple top-left project title) -->
+  <div class="push-permission-dialog" id="push-permission-dialog" role="dialog" aria-label="Notification Permission">
+    <div class="perm-body">
+      <div class="perm-icon" id="perm-icon">🔔</div>
+      <div class="perm-text-wrap">
+        <div class="perm-title" id="perm-title">“Pushnot” Would Like to Send You Notifications</div>
+        <div class="perm-message" id="perm-message">Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.</div>
+      </div>
+    </div>
+    <div class="perm-actions">
+      <button class="perm-btn perm-deny" id="perm-btn-deny">Don’t Allow</button>
+      <button class="perm-btn perm-allow" id="perm-btn-allow">Allow</button>
+    </div>
+    <!-- Hidden brand-dot to keep compatibility with existing JS toggles -->
+    <span class="dot" id="brand-dot" style="display:none"></span>
   </div>
   <div class="top-right">
     <div class="os-toggle" id="os-toggle" title="Switch Operating System (iOS / Android)">
@@ -168,11 +179,9 @@
   <!-- Moving packet pill -->
   <div class="pin-mover" id="pin-mover"></div>
 
-  <!-- Permanent HUD Action & Station Caption Banner -->
+  <!-- Permanent HUD Action Caption Banner (Captions Only) -->
   <div class="hud-banner" id="hud-banner">
-    <div class="hud-badge" id="hud-badge">STEP 1</div>
     <div class="hud-caption" id="hud-caption">Candy Crush Saga Installed</div>
-    <div class="hud-station" id="hud-station">IPHONE (iOS)</div>
   </div>
 
   <!-- Ultra-clean single-row presentation dock -->
@@ -182,13 +191,17 @@
       <button class="pol-btn push" id="mode-push" data-mode="push">2 · Push</button>
       <button class="pol-btn world" id="mode-world" data-mode="world">3 · World</button>
       <button class="pol-btn leo" id="mode-leo" data-mode="leo">4 · LEO</button>
+      <div class="step-counter-pill" id="step-counter-pill">Step 1 / 10</div>
       <button class="pol-flip" id="btn-flip" title="Cycle Mode (Tab)" style="display:none">⇄</button>
     </div>
 
     <div class="controls">
       <button class="ctl" id="btn-step-prev" title="Previous Step (←)">◀</button>
       <button class="ctl play" id="btn-play" title="Auto / Manual Step (Space)">▶</button>
-      <input type="range" id="scrub" min="0" max="1000" value="0" />
+      <div class="slider-wrapper" id="slider-wrapper">
+        <input type="range" id="scrub" min="0" max="1000" value="0" />
+        <div class="slider-ticks" id="slider-ticks"></div>
+      </div>
       <span class="scrub-pct" id="scrub-pct" style="display:none">0%</span>
       <button class="ctl" id="btn-step-next" title="Next Step (→)">▶</button>
       <button class="ctl orbit-toggle" id="btn-orbit" title="Auto-orbit camera">⟳</button>
@@ -197,6 +210,6 @@
     </div>
   </nav>
 
-  <script type="module" src="js/app.js?v=128"></script>
+  <script type="module" src="js/app.js?v=129"></script>
 </body>
 </html>

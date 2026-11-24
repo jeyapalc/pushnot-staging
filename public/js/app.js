@@ -3340,30 +3340,68 @@ class PushnotOrbit {
     this.leoTops.ag = 20;
 
     // LEO investigative arcs radiating from the central RCMP Green Timbers HQ
-    // pSwat anchored cleanly above the entrance canopy and illuminated crest
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(0, 16.5, 14.0));
-    // pProton lands cleanly at the front entrance of the outward-facing Swiss server
+    // Courtyard entrance anchor for ground-level threats and returned warrants
+    const pSwatFront   = L.swat.clone().add(new THREE.Vector3(0, 14.5, 12.0));
+    // Rooftop / command deck anchor for outbound cyber warrants and subpoenas
+    const pSwatRoof    = L.swat.clone().add(new THREE.Vector3(0, 16.0, 2.0));
+    // Front entrance of outward-facing Swiss server
     const pProton      = L.proton.clone().add(new THREE.Vector3(-3.4, 14.0, -3.4));
-    const pBot         = L.bot.clone().add(new THREE.Vector3(0, 9.0, 2.5));
-    const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 9.0, 3.5));
-    const pAg          = L.ag.clone().setY(12.0);
+    const pBot         = L.bot.clone().add(new THREE.Vector3(0, 9.5, 2.5));
+    const pAg          = L.ag.clone().add(new THREE.Vector3(0, 14.0, 0));
     const pHacker      = L.bandit.clone().add(new THREE.Vector3(0, 9.5, 0));
 
-    // High mortar trajectory arcs radiating cleanly from central RCMP HQ to each outer station
-    this.arcLeoThreat  = new THREE.QuadraticBezierCurve3(pHacker, new THREE.Vector3((L.bandit.x + L.swat.x) * 0.5 + 4, 78.0, (L.bandit.z + L.swat.z) * 0.5 + 10), pSwat);
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.proton.x) * 0.5 - 8, 72.0, (L.swat.z + L.proton.z) * 0.5 - 4), pProton);
-    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 - 6, 72.0, (L.swat.z + L.bot.z) * 0.5 + 4), pBot);
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 + 6, 74.0, (L.swat.z + L.bot.z) * 0.5 + 10), pSwat);
-    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.ag.x) * 0.5 + 4, 84.0, (L.swat.z + L.ag.z) * 0.5 - 4), pAg);
-    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3((L.swat.x + L.ag.x) * 0.5 + 10, 86.0, (L.swat.z + L.ag.z) * 0.5 + 8), pSwat);
+    // Natural, elegant mortar trajectory arcs (height 32-35, control Y = 48-50)
+    // 1. Inbound bomb threat from hacker desk to RCMP front entrance
+    this.arcLeoThreat  = new THREE.QuadraticBezierCurve3(
+      pHacker,
+      new THREE.Vector3((pHacker.x + pSwatFront.x) * 0.5, 50.0, (pHacker.z + pSwatFront.z) * 0.5),
+      pSwatFront
+    );
+    // 2. Outbound emergency order from RCMP command to Swiss Proton server
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(
+      pSwatRoof,
+      new THREE.Vector3((pSwatRoof.x + pProton.x) * 0.5, 50.0, (pSwatRoof.z + pProton.z) * 0.5),
+      pProton
+    );
+    // 3. Outbound order from RCMP to App Servers (outbound lane offset +1.2)
+    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(
+      pSwatRoof,
+      new THREE.Vector3((pSwatRoof.x + pBot.x) * 0.5 + 1.2, 48.0, (pSwatRoof.z + pBot.z) * 0.5 + 1.2),
+      pBot
+    );
+    // 4. Inbound push tokens from App Servers to RCMP front entrance (inbound lane offset -1.2)
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(
+      pBot,
+      new THREE.Vector3((pBot.x + pSwatFront.x) * 0.5 - 1.2, 48.0, (pBot.z + pSwatFront.z) * 0.5 - 1.2),
+      pSwatFront
+    );
+    // 5. Outbound production order from RCMP to Apple & Google HQ (outbound lane offset +1.2)
+    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(
+      pSwatRoof,
+      new THREE.Vector3((pSwatRoof.x + pAg.x) * 0.5 + 1.2, 50.0, (pSwatRoof.z + pAg.z) * 0.5 + 1.2),
+      pAg
+    );
+    // 6. Inbound subscriber ID from Apple & Google to RCMP command (inbound lane offset -1.2)
+    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(
+      pAg,
+      new THREE.Vector3((pAg.x + pSwatRoof.x) * 0.5 - 1.2, 50.0, (pAg.z + pSwatRoof.z) * 0.5 - 1.2),
+      pSwatRoof
+    );
+
+    this.leoLineThreat = this.addArc(this.arcLeoThreat, 0xf43f5e, 0.55, this.leoGroup);
+    this.leoLineProton = this.addArc(this.arcLeoProton, 0xf43f5e, 0.55, this.leoGroup);
+    this.leoLineToMeta = this.addArc(this.arcLeoToMeta, 0xfbbf24, 0.55, this.leoGroup);
+    this.leoLineTokens = this.addArc(this.arcLeoTokens, 0xfbbf24, 0.55, this.leoGroup);
+    this.leoLineToAg   = this.addArc(this.arcLeoToAg,   0x38bdf8, 0.55, this.leoGroup);
+    this.leoLineFromAg = this.addArc(this.arcLeoFromAg, 0x34d399, 0.55, this.leoGroup);
 
     this.leoLines = [
-      this.addArc(this.arcLeoThreat, 0xf43f5e, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoProton, 0xf43f5e, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoToMeta, 0xfbbf24, 0.50, this.leoGroup),
-      this.addArc(this.arcLeoTokens, 0xfbbf24, 0.50, this.leoGroup),
-      this.addArc(this.arcLeoToAg,   0x38bdf8, 0.45, this.leoGroup),
-      this.addArc(this.arcLeoFromAg, 0x34d399, 0.50, this.leoGroup)
+      this.leoLineThreat,
+      this.leoLineProton,
+      this.leoLineToMeta,
+      this.leoLineTokens,
+      this.leoLineToAg,
+      this.leoLineFromAg
     ];
 
     // Trio of 3 unique branded token keys (Meta blue, IG pink, X silver)
@@ -3537,16 +3575,67 @@ class PushnotOrbit {
           c.material = screenMat;
           this.hackerScreenMesh = c;
         } else if (mName.includes('Eyewear') || cName.includes('Eyewear')) {
-          // Authentic model eyewear with sleek bright white glint
+          // Authentic model eyewear: reflective white glint on outer front lenses,
+          // matte black on inside rims, bridge, temples, and rear-facing surfaces!
           c.visible = true;
-          if (c.material) {
-            c.material = c.material.clone();
-            c.material.color = new THREE.Color(0xffffff);
-            c.material.emissive = new THREE.Color(0xffffff);
-            c.material.emissiveIntensity = 1.6;
-            c.material.roughness = 0.12;
-            c.material.metalness = 0.85;
+          if (c.geometry) {
+            c.geometry.computeVertexNormals();
+            const pos = c.geometry.attributes.position;
+            const norm = c.geometry.attributes.normal;
+            const count = pos.count;
+            const colors = new Float32Array(count * 3);
+
+            // In hack.glb model space:
+            // Face points along -X. Bounding box X is [87.61, 115.75].
+            // Front lenses are at X in [87.6, 92.5] with normals facing forward (nx < -0.15).
+            // Inside surfaces facing hacker eyes have nx > 0. Rims and temples have nx >= -0.15 or x > 92.5.
+            for (let i = 0; i < count; i++) {
+              const x = pos.getX(i);
+              const nx = norm ? norm.getX(i) : 0;
+              const isFrontLens = (x <= 92.5 && nx < -0.15);
+              if (isFrontLens) {
+                colors[i * 3]     = 1.0;
+                colors[i * 3 + 1] = 1.0;
+                colors[i * 3 + 2] = 1.0;
+              } else {
+                colors[i * 3]     = 0.04;
+                colors[i * 3 + 1] = 0.04;
+                colors[i * 3 + 2] = 0.05;
+              }
+            }
+            c.geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
           }
+
+          const glassesMat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            emissive: 0xffffff,
+            emissiveIntensity: 1.8,
+            roughness: 0.15,
+            metalness: 0.85,
+            vertexColors: true,
+            side: THREE.DoubleSide
+          });
+          glassesMat.customProgramCacheKey = () => 'hacker_glasses_shader_v1';
+          glassesMat.onBeforeCompile = (shader) => {
+            shader.fragmentShader = shader.fragmentShader.replace(
+              '#include <color_fragment>',
+              `#include <color_fragment>
+               // Strictly ensure only front-facing outer lens surfaces glow white;
+               // all inside surfaces, inner rims, and back faces are matte jet black!
+               bool isFrontGlint = gl_FrontFacing && (vColor.r > 0.5);
+               if (isFrontGlint) {
+                 diffuseColor.rgb = vec3(1.0, 1.0, 1.0);
+               } else {
+                 diffuseColor.rgb = vec3(0.04, 0.04, 0.05);
+               }
+              `
+            );
+            shader.fragmentShader = shader.fragmentShader.replace(
+              'vec3 totalEmissiveRadiance = emissive;',
+              `vec3 totalEmissiveRadiance = isFrontGlint ? (emissive * 1.8) : vec3(0.0);`
+            );
+          };
+          c.material = glassesMat;
           this.hackerGlassesMesh = c;
         } else if (mName.includes('Topmat') || mName.includes('Hairmat') || mName.includes('Bodymat') || mName.includes('Bottommat')) {
           // Cloaked in menacing deep dark shadow until ID'ed
@@ -3914,7 +4003,7 @@ class PushnotOrbit {
     this.setupLines.forEach((l) => (l.visible = mode === 'setup'));
     this.pushLines.forEach((l) => (l.visible = isPush));
     if (this.flowCones) this.flowCones.forEach((fc) => (fc.mesh.visible = false));
-    this.leoLines.forEach((l) => (l.visible = isLeo));
+    this.leoLines.forEach((l) => (l.visible = false));
     if (this.worldStimGroup) this.worldStimGroup.visible = isWorld;
 
     document.body.classList.toggle('leo-mode', isLeo);
@@ -4694,6 +4783,23 @@ class PushnotOrbit {
       moverParent = this.leoGroup;
       if (this.leoAgSubscriberMesh) this.leoAgSubscriberMesh.visible = (t >= 0.70 && t < 0.76);
 
+      // Progressive narrative trajectory line visibility:
+      // Active step line highlighted at opacity 0.85; completed prior lines subdued at 0.25; future lines hidden!
+      const setLine = (line, active, shown) => {
+        if (!line) return;
+        line.visible = shown;
+        if (line.material) {
+          line.material.opacity = active ? 0.85 : 0.25;
+        }
+      };
+
+      setLine(this.leoLineThreat, (t >= 0.05 && t < 0.18), (t >= 0.05));
+      setLine(this.leoLineProton, (t >= 0.18 && t < 0.32), (t >= 0.18));
+      setLine(this.leoLineToMeta, (t >= 0.32 && t < 0.48), (t >= 0.32));
+      setLine(this.leoLineTokens, (t >= 0.48 && t < 0.62), (t >= 0.48));
+      setLine(this.leoLineToAg,   (t >= 0.62 && t < 0.76), (t >= 0.62));
+      setLine(this.leoLineFromAg, (t >= 0.76),            (t >= 0.76));
+
       if (t < 0.18) {
         // Step 1: Bad guy types ProtonMail threat email directly on his laptop screen
         // and sends the Bomb Threat message over arcLeoThreat to central RCMP HQ!
@@ -5285,7 +5391,7 @@ class PushnotOrbit {
       }
     } else if (this.mode === 'leo' && this.leoLines) {
       for (const line of this.leoLines) {
-        if (line && line.material) line.material.dashOffset -= dashDelta;
+        if (line && line.material && line.visible) line.material.dashOffset -= dashDelta;
       }
     }
 

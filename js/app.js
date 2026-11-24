@@ -70,11 +70,11 @@ const DEFAULT_DIRECTOR_RIGS = {
 
   // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track above LEO floor (LEO floor at world Y = 29.0, cam.y = 55.0, target.y = 44.0)
   "leo_step_0": { angle: 0.78,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: 64.0 },  target: { x: 32.5, y: 44.0, z: 32.5 } },
-  "leo_step_1": { angle: -0.78, radius: 90.0, cam: { x: -63.3, y: 55.0, z: 64.0 },  target: { x: -32.5, y: 42.0, z: 32.5 } },
+  "leo_step_1": { angle: 0.00,  radius: 74.0, cam: { x: 0.0,   y: 56.0, z: 74.0 },  target: { x: 0.0,  y: 44.0, z: 6.0 } },
   "leo_step_2": { angle: -2.35, radius: 90.0, cam: { x: -63.3, y: 55.0, z: -64.0 }, target: { x: -32.5, y: 45.0, z: -32.5 } },
   "leo_step_3": { angle: -2.35, radius: 90.0, cam: { x: -63.3, y: 55.0, z: -64.0 }, target: { x: -32.5, y: 45.0, z: -32.5 } },
-  "leo_step_4": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
-  "leo_step_5": { angle: 0.00,  radius: 90.0, cam: { x: 0.0,   y: 55.0, z: 90.0 },  target: { x: 0.0,  y: 43.0, z: 4.0 } },
+  "leo_step_4": { angle: -0.78, radius: 90.0, cam: { x: -63.3, y: 55.0, z: 64.0 },  target: { x: -32.5, y: 43.0, z: 32.5 } },
+  "leo_step_5": { angle: -0.78, radius: 90.0, cam: { x: -63.3, y: 55.0, z: 64.0 },  target: { x: -32.5, y: 43.0, z: 32.5 } },
   "leo_step_6": { angle: 2.35,  radius: 90.0, cam: { x: 63.3,  y: 55.0, z: -64.0 }, target: { x: 32.5, y: 46.0, z: -32.5 } },
   "leo_step_7": { angle: 0.40,  radius: 90.0, cam: { x: 35.0,  y: 55.0, z: 83.0 },  target: { x: 32.5, y: 50.0, z: 32.5 } }
 };
@@ -90,6 +90,149 @@ const WORLD_APPS = [
 
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const seg = (t, a, b) => clamp01((t - a) / (b - a));
+
+function shortestAngleDiff(from, to) {
+  let diff = (to - from) % (Math.PI * 2);
+  if (diff > Math.PI) diff -= Math.PI * 2;
+  if (diff < -Math.PI) diff += Math.PI * 2;
+  return diff;
+}
+
+function smoothDamp(current, target, velRef, smoothTime, maxSpeed, dt) {
+  smoothTime = Math.max(0.0001, smoothTime);
+  const omega = 2.0 / smoothTime;
+  const x = omega * dt;
+  const exp = 1.0 / (1.0 + x + 0.48 * x * x + 0.235 * x * x * x);
+  let change = current - target;
+  const origTarget = target;
+  const maxChange = maxSpeed * smoothTime;
+  change = Math.max(-maxChange, Math.min(maxChange, change));
+  target = current - change;
+  const temp = (velRef.v + omega * change) * dt;
+  velRef.v = (velRef.v - omega * temp) * exp;
+  let output = target + (change + temp) * exp;
+  if ((origTarget - current > 0) === (output > origTarget)) {
+    output = origTarget;
+    velRef.v = 0;
+  }
+  return output;
+}
+
+function smoothDampAngle(current, target, velRef, smoothTime, maxSpeed, dt) {
+  const delta = shortestAngleDiff(current, target);
+  return smoothDamp(current, current + delta, velRef, smoothTime, maxSpeed, dt);
+}
+
+function catmullRom(p0, p1, p2, p3, u) {
+  const u2 = u * u;
+  const u3 = u2 * u;
+  return 0.5 * (
+    (2 * p1) +
+    (-p0 + p2) * u +
+    (2 * p0 - 5 * p1 + 4 * p2 - p3) * u2 +
+    (-p0 + 3 * p1 - 3 * p2 + p3) * u3
+  );
+}
+
+function catmullRomAngle(a0, a1, a2, a3, u) {
+  const b1 = a1;
+  const b0 = b1 + shortestAngleDiff(b1, a0);
+  const b2 = b1 + shortestAngleDiff(b1, a2);
+  const b3 = b2 + shortestAngleDiff(b2, a3);
+  return catmullRom(b0, b1, b2, b3, u);
+}
+
+class RoboticCameraRig {
+  constructor(camera, target) {
+    this.active = false;
+    this.theta = 0;
+    this.radius = 60;
+    this.y = 30;
+    this.tx = 0;
+    this.ty = 14;
+    this.tz = -46;
+    this.vTheta = { v: 0 };
+    this.vRadius = { v: 0 };
+    this.vY = { v: 0 };
+    this.vTx = { v: 0 };
+    this.vTy = { v: 0 };
+    this.vTz = { v: 0 };
+    if (camera && target) this.syncFromCamera(camera, target);
+  }
+
+  zeroVelocities() {
+    this.vTheta.v = 0;
+    this.vRadius.v = 0;
+    this.vY.v = 0;
+    this.vTx.v = 0;
+    this.vTy.v = 0;
+    this.vTz.v = 0;
+  }
+
+  syncFromCamera(camera, target) {
+    this.theta = Math.atan2(camera.position.x, camera.position.z);
+    this.radius = Math.hypot(camera.position.x, camera.position.z);
+    this.y = camera.position.y;
+    this.tx = target.x;
+    this.ty = target.y;
+    this.tz = target.z;
+    this.zeroVelocities();
+  }
+
+  engage(camera, target) {
+    if (!this.active) {
+      this.syncFromCamera(camera, target);
+      this.active = true;
+    }
+  }
+
+  disengage() {
+    if (this.active) {
+      this.active = false;
+      this.zeroVelocities();
+    }
+  }
+
+  stepToCylindrical(targetTheta, targetRadius, targetY, targetLook, smoothTime, dt, camera, controlsTarget) {
+    this.theta = smoothDampAngle(this.theta, targetTheta, this.vTheta, smoothTime, Infinity, dt);
+    this.radius = smoothDamp(this.radius, targetRadius, this.vRadius, smoothTime, Infinity, dt);
+    this.y = smoothDamp(this.y, targetY, this.vY, smoothTime, Infinity, dt);
+
+    this.tx = smoothDamp(this.tx, targetLook.x, this.vTx, smoothTime, Infinity, dt);
+    this.ty = smoothDamp(this.ty, targetLook.y, this.vTy, smoothTime, Infinity, dt);
+    this.tz = smoothDamp(this.tz, targetLook.z, this.vTz, smoothTime, Infinity, dt);
+
+    camera.position.set(
+      Math.sin(this.theta) * this.radius,
+      this.y,
+      Math.cos(this.theta) * this.radius
+    );
+    controlsTarget.set(this.tx, this.ty, this.tz);
+    camera.lookAt(controlsTarget);
+  }
+
+  stepToCartesian(targetCam, targetLook, smoothTime, dt, camera, controlsTarget) {
+    const targetTheta = Math.atan2(targetCam.x, targetCam.z);
+    const targetRadius = Math.hypot(targetCam.x, targetCam.z);
+    this.stepToCylindrical(targetTheta, targetRadius, targetCam.y, targetLook, smoothTime, dt, camera, controlsTarget);
+  }
+
+  isSettled(targetCam, targetLook, posEps = 0.02, velEps = 0.02) {
+    const cx = Math.sin(this.theta) * this.radius;
+    const cz = Math.cos(this.theta) * this.radius;
+    const camDist = Math.hypot(cx - targetCam.x, this.y - targetCam.y, cz - targetCam.z);
+    const tgtDist = Math.hypot(this.tx - targetLook.x, this.ty - targetLook.y, this.tz - targetLook.z);
+    const maxVel = Math.max(
+      Math.abs(this.vTheta.v * Math.max(1, this.radius)),
+      Math.abs(this.vRadius.v),
+      Math.abs(this.vY.v),
+      Math.abs(this.vTx.v),
+      Math.abs(this.vTy.v),
+      Math.abs(this.vTz.v)
+    );
+    return camDist < posEps && tgtDist < posEps && maxVel < velEps;
+  }
+}
 
 class PushnotOrbit {
   constructor() {
@@ -114,15 +257,15 @@ class PushnotOrbit {
     this.playing = false;
     this.autoOrbit = false;
     this.cinematicFollow = false;
-    this.cineLookAt = new THREE.Vector3(0.0, 14.0, -46.0);
-    this.cineCamPos = new THREE.Vector3(24.0, 30.0, 52.0);
     this.orbitAngle = 0.35;
     this.flipRoll = 0;
     this.flipTarget = 0;
+    this.flipRollVel = { v: 0 };
     this.lastFrame = performance.now();
     this.tops = { phone: 28, server: 34, post: 32, store: 28 };
 
     this.initScene();
+    this.cameraRig = new RoboticCameraRig(this.camera, this.controls.target);
     this.initLights();
     this.initOrbitRing();
     this.initMovers();
@@ -186,6 +329,7 @@ class PushnotOrbit {
       this.cinematicFollow = false;
       this.focusCamPos = null;
       this.focusTargetPos = null;
+      if (this.cameraRig) this.cameraRig.disengage();
     });
     this.controls.addEventListener('change', () => {
       if (this.directorMode) this.updateDirectorHUD();
@@ -1765,13 +1909,13 @@ class PushnotOrbit {
       target = new THREE.Vector3(31.5, 18.0, 30.5);
       camPos = new THREE.Vector3(50.0, 26.0, 42.0);
     } else if (key === 'swat' || key === 'police' || key === 'osint') {
-      // RCMP "E" Division Headquarters at Green Timbers Front Entrance Threshold (-32.5, 0, 32.5)
-      target = new THREE.Vector3(this.leoPos.swat.x, 3.6, this.leoPos.swat.z + 5.8);
-      camPos = new THREE.Vector3(this.leoPos.swat.x + 18, 14.0, this.leoPos.swat.z + 18);
+      // RCMP "E" Division Headquarters at Green Timbers Front Entrance Threshold (center)
+      target = new THREE.Vector3(this.leoPos.swat.x, 5.0, this.leoPos.swat.z + 8.0);
+      camPos = new THREE.Vector3(this.leoPos.swat.x + 22, 18.0, this.leoPos.swat.z + 32);
     } else if (key === 'proton') {
-      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5). Eye-level view of illuminated front & waving flag!
+      // Swiss Server & waving Swiss flag at (-32.5, 0, -32.5), facing outward (-X, -Z). Eye-level view of illuminated front & waving flag!
       target = new THREE.Vector3(this.leoPos.proton.x, 18.0, this.leoPos.proton.z);
-      camPos = new THREE.Vector3(this.leoPos.proton.x + 20.0, 22.0, this.leoPos.proton.z + 46.0);
+      camPos = new THREE.Vector3(this.leoPos.proton.x - 31.0, 22.0, this.leoPos.proton.z - 31.0);
     } else if (key === 'facebook' || key === 'bot') {
       // App Servers at (0, 0, 4) in LEO mode.
       target = new THREE.Vector3(this.leoPos.bot.x, 13.0, this.leoPos.bot.z);
@@ -1833,9 +1977,11 @@ class PushnotOrbit {
       this.focusCamPos = null;
       this.focusTargetPos = null;
       this.setAutoOrbit(false);
+      if (this.cameraRig) this.cameraRig.disengage();
       if (this.focusSpot) this.focusSpot.visible = false;
     } else {
       this.cinematicFollow = true;
+      if (this.cameraRig) this.cameraRig.engage(this.camera, this.controls.target);
     }
     const btn = document.getElementById('btn-cam-lock');
     if (btn) {
@@ -2350,10 +2496,6 @@ class PushnotOrbit {
     group.traverse(c => { if (c.isMesh) c.userData.stationKey = 'proton'; });
 
     return group;
-  }
-
-  createWindSwissFlag() {
-    return this.createSwissServerStation();
   }
 
   create3DPhotoIdCard(scale = 1) {
@@ -3783,18 +3925,19 @@ class PushnotOrbit {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     const L = {
       bandit:      new THREE.Vector3( D, 0,  D), // front-right: Suspect (badguy@proton.me)
-      swat:        new THREE.Vector3(-D, 0,  D), // front-left:  Canadian Police / RCMP / VPD
+      swat:        new THREE.Vector3( 0, 0,  0), // center:      Canadian Police / RCMP Green Timbers HQ (larger centerpiece)
       proton:      new THREE.Vector3(-D, 0, -D), // back-left:   Switzerland Illuminated Server Station (waving flag on top!)
       ag:          new THREE.Vector3( D, 0, -D), // back-right:  Apple & Google Skyscraper HQ
-      bot:         new THREE.Vector3( 0, 0,  4)  // center:      Single Animated App Server Tower
+      bot:         new THREE.Vector3(-D, 0,  D)  // front-left:  Single Animated App Server Tower
     };
     this.leoPos = L;
-    this.leoTops = { bandit: 26, swat: 26, bot: 26, proton: 26, ag: 26 };
+    this.leoTops = { bandit: 26, swat: 32, bot: 26, proton: 26, ag: 26 };
 
     // Dedicated Illuminated Switzerland Server Station with blinking blade LEDs and waving Swiss flag ON TOP
     this.protonGroup = this.createSwissServerStation();
     this.protonGroup.position.set(L.proton.x, 0, L.proton.z);
-    this.protonGroup.rotation.y = Math.PI * 0.2;
+    // Face outward (-X, -Z) toward the outside carousel camera so front glass, flashing LEDs, and Swiss deny logo are directly visible
+    this.protonGroup.rotation.y = -Math.PI * 0.75;
     this.protonGroup.userData.stationKey = 'proton';
     this.protonGroup.traverse(c => { c.userData.stationKey = 'proton'; });
     this.leoGroup.add(this.protonGroup);
@@ -3822,22 +3965,22 @@ class PushnotOrbit {
     this.leoGroup.add(this.exigentDemand);
     this.leoTops.ag = 20;
 
-    // LEO investigative arcs (Police queries Proton -> Exigent Demand to Meta/X -> Keys return -> Apple/Google HQ)
-    // pSwat anchored cleanly ABOVE and IN FRONT of the RCMP entrance wooden awning so paper bottom is completely above and in front of the awning!
-    const pSwat        = L.swat.clone().add(new THREE.Vector3(1.5, 13.0, 14.0));
+    // LEO investigative arcs (Central RCMP HQ -> Proton, App Servers, Apple/Google HQ)
+    // pSwat anchored cleanly ABOVE and IN FRONT of the larger central RCMP entrance wooden awning
+    const pSwat        = L.swat.clone().add(new THREE.Vector3(2.0, 16.5, 18.0));
     const pProton      = L.proton.clone().add(new THREE.Vector3(0, 10.0, 3.0));
     const pBot         = L.bot.clone().add(new THREE.Vector3(0, 9.0, 2.5));
     const pBotTokens   = L.bot.clone().add(new THREE.Vector3(0, 9.0, 3.5));
     const pAg          = L.ag.clone().setY(12.0);
     const pHacker      = L.bandit.clone().add(new THREE.Vector3(0, 9.5, 0));
 
-    // High mortar trajectory arcs: curving dramatically up and over buildings like high-angle artillery mortar shells!
-    this.arcLeoThreat  = new THREE.QuadraticBezierCurve3(pHacker, new THREE.Vector3(0, 78.0, (L.bandit.z + L.swat.z) * 0.5 + 8), pSwat);
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((-D - D) * 0.5 - 10, 68.0, 0), pProton);
-    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 - 4, 72.0, (L.swat.z + L.bot.z) * 0.5 + 4), pBot);
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 + 4, 74.0, (L.swat.z + L.bot.z) * 0.5 + 8), pSwat);
-    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3(0, 84.0, 0),      pAg);
-    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3(0, 86.0, 12),     pSwat);
+    // High mortar trajectory arcs radiating cleanly from central RCMP HQ to each outer station
+    this.arcLeoThreat  = new THREE.QuadraticBezierCurve3(pHacker, new THREE.Vector3((L.bandit.x + L.swat.x) * 0.5 + 4, 78.0, (L.bandit.z + L.swat.z) * 0.5 + 10), pSwat);
+    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.proton.x) * 0.5 - 8, 72.0, (L.swat.z + L.proton.z) * 0.5), pProton);
+    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 - 6, 72.0, (L.swat.z + L.bot.z) * 0.5 + 4), pBot);
+    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(pBotTokens,  new THREE.Vector3((L.swat.x + L.bot.x) * 0.5 + 6, 74.0, (L.swat.z + L.bot.z) * 0.5 + 10), pSwat);
+    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(pSwat, new THREE.Vector3((L.swat.x + L.ag.x) * 0.5 + 4, 84.0, (L.swat.z + L.ag.z) * 0.5 - 4), pAg);
+    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(pAg,   new THREE.Vector3((L.swat.x + L.ag.x) * 0.5 + 10, 86.0, (L.swat.z + L.ag.z) * 0.5 + 8), pSwat);
 
     this.leoLines = [
       this.addArc(this.arcLeoThreat, 0xf43f5e, 0.45, this.leoGroup),
@@ -4029,17 +4172,111 @@ class PushnotOrbit {
           c.material = screenMat;
           this.hackerScreenMesh = c;
         } else if (mName.includes('Eyewear') || cName.includes('Eyewear')) {
-          // Hide detached unskinned glasses from the hacker model so suspect has a clean, natural dark silhouette
+          // Hide original detached eyewear mesh and mount custom thin-armed anime reflective white glasses at its exact bounds (zero clipping!)
           c.visible = false;
-          this.hackerGlassesMesh = null;
+          c.geometry.computeBoundingBox();
+          const bb = c.geometry.boundingBox;
+          if (bb && !this.hackerGlassesMesh) {
+            const frontX = bb.min.x - 1.4; // slightly forward of face (-X) so lenses never clip brow/nose
+            const backX = bb.max.x;
+            const centerY = (bb.min.y + bb.max.y) * 0.5 + 1.0;
+            const centerZ = (bb.min.z + bb.max.z) * 0.5;
+            const totalW = bb.max.z - bb.min.z; // width along Z (face looks along -X)
+            const lensW = totalW * 0.42;
+            const lensH = (bb.max.y - bb.min.y) * 0.58;
+            const halfSep = totalW * 0.26;
+            const armLen = Math.max(8, backX - frontX);
+
+            // Signature anime bright-white reflective lens texture with crisp diagonal shine
+            const gCvs = document.createElement('canvas');
+            gCvs.width = 256; gCvs.height = 128;
+            const gCtx = gCvs.getContext('2d');
+            const grad = gCtx.createLinearGradient(0, 0, 256, 128);
+            grad.addColorStop(0.00, '#ffffff');
+            grad.addColorStop(0.35, '#e2e8f0');
+            grad.addColorStop(0.50, '#ffffff');
+            grad.addColorStop(0.62, '#cbd5e1');
+            grad.addColorStop(1.00, '#f8fafc');
+            gCtx.fillStyle = grad;
+            gCtx.fillRect(0, 0, 256, 128);
+            // Bright diagonal anime specular flash bands
+            gCtx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+            gCtx.beginPath();
+            gCtx.moveTo(42, 0); gCtx.lineTo(108, 0); gCtx.lineTo(54, 128); gCtx.lineTo(-12, 128);
+            gCtx.closePath();
+            gCtx.fill();
+            gCtx.beginPath();
+            gCtx.moveTo(132, 0); gCtx.lineTo(156, 0); gCtx.lineTo(102, 128); gCtx.lineTo(78, 128);
+            gCtx.closePath();
+            gCtx.fill();
+
+            const lensTex = new THREE.CanvasTexture(gCvs);
+            lensTex.colorSpace = THREE.SRGBColorSpace;
+            const lensMat = new THREE.MeshStandardMaterial({
+              color: 0xffffff,
+              map: lensTex,
+              emissive: 0xffffff,
+              emissiveMap: lensTex,
+              emissiveIntensity: 2.0,
+              roughness: 0.06,
+              metalness: 0.25
+            });
+            const frameMat = new THREE.MeshStandardMaterial({
+              color: 0x0a0a0f,
+              roughness: 0.25,
+              metalness: 0.85
+            });
+
+            const glassesGroup = new THREE.Group();
+            glassesGroup.userData.stationKey = 'bandit';
+
+            // Left & right bright white reflective lenses (facing -X)
+            const lensGeo = new THREE.BoxGeometry(0.65, lensH, lensW);
+            const leftLens = new THREE.Mesh(lensGeo, lensMat);
+            leftLens.position.set(frontX, centerY, centerZ - halfSep);
+            const rightLens = new THREE.Mesh(lensGeo, lensMat);
+            rightLens.position.set(frontX, centerY, centerZ + halfSep);
+
+            // Thin black rim frames around each lens
+            const rimThick = 0.75;
+            const topBarGeo = new THREE.BoxGeometry(0.85, rimThick, lensW + rimThick * 1.4);
+            const sideBarGeo = new THREE.BoxGeometry(0.85, lensH + rimThick, rimThick);
+            for (const zOff of [-halfSep, halfSep]) {
+              const topRim = new THREE.Mesh(topBarGeo, frameMat);
+              topRim.position.set(frontX, centerY + lensH * 0.5, centerZ + zOff);
+              const botRim = new THREE.Mesh(topBarGeo, frameMat);
+              botRim.position.set(frontX, centerY - lensH * 0.5, centerZ + zOff);
+              const outRim = new THREE.Mesh(sideBarGeo, frameMat);
+              outRim.position.set(frontX, centerY, centerZ + zOff + (zOff < 0 ? -lensW * 0.5 : lensW * 0.5));
+              const inRim = new THREE.Mesh(sideBarGeo, frameMat);
+              inRim.position.set(frontX, centerY, centerZ + zOff + (zOff < 0 ? lensW * 0.5 : -lensW * 0.5));
+              glassesGroup.add(topRim, botRim, outRim, inRim);
+            }
+
+            // Thin nose bridge
+            const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.7, totalW * 0.14), frameMat);
+            bridge.position.set(frontX, centerY + lensH * 0.14, centerZ);
+
+            // Thin temple arms placed just outside the head/hair width so they never clip hack.glb
+            const armGeo = new THREE.BoxGeometry(armLen, 0.7, 0.55);
+            const leftArm = new THREE.Mesh(armGeo, frameMat);
+            leftArm.position.set(frontX + armLen * 0.5, centerY + lensH * 0.22, bb.min.z - 0.9);
+            const rightArm = new THREE.Mesh(armGeo, frameMat);
+            rightArm.position.set(frontX + armLen * 0.5, centerY + lensH * 0.22, bb.max.z + 0.9);
+
+            glassesGroup.add(leftLens, rightLens, bridge, leftArm, rightArm);
+            glassesGroup.traverse(g => { g.userData.stationKey = 'bandit'; });
+            if (c.parent) c.parent.add(glassesGroup);
+            this.hackerGlassesMesh = leftLens; // shares lensMat with rightLens for emissiveIntensity animation
+          }
         } else if (mName.includes('Topmat') || mName.includes('Hairmat') || mName.includes('Bodymat') || mName.includes('Bottommat')) {
-          // Cloaked in menacing deep dark shadow until ID'ed
+          // Cloaked in menacing jet-black shadow until ID'ed so bright white anime glasses pop!
           if (c.material) {
             c.material = c.material.clone();
-            c.material.roughness = 0.85;
-            c.material.metalness = 0.1;
+            c.material.roughness = 0.92;
+            c.material.metalness = 0.05;
             c.userData.origColor = c.material.color.clone();
-            c.material.color.setHex(0x1a1a1f);
+            c.material.color.setHex(0x050508);
           }
           this.hackerBodyMeshes.push(c);
         } else {
@@ -4162,10 +4399,10 @@ class PushnotOrbit {
         }
       });
 
-      // Ground and angle the RCMP Green Timbers Headquarters building footprint
-      // Scaled up to 54.0 for a towering, imposing, menacing presence!
+      // Ground and angle the RCMP Green Timbers Headquarters building footprint at center
+      // Scaled up to 72.0 for a commanding, imposing central centerpiece!
       m.rotation.y = Math.PI * 0.22;
-      this.leoTops.swat = this.ground(m, 54.0, this.leoPos.swat);
+      this.leoTops.swat = this.ground(m, 72.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
       // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
@@ -4173,20 +4410,20 @@ class PushnotOrbit {
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
       // Bright dramatic spotlight directly lighting the entrance canopy and RCMP crest
-      const spotLight = new THREE.SpotLight(0xfffae0, 95.0, 200, Math.PI / 4.0, 0.4, 1.1);
-      spotLight.position.set(this.leoPos.swat.x + 6.0, 48.0, this.leoPos.swat.z + 22.0);
-      spotLight.target.position.set(this.leoPos.swat.x, 4.0, this.leoPos.swat.z + 4.0);
+      const spotLight = new THREE.SpotLight(0xfffae0, 110.0, 240, Math.PI / 3.8, 0.4, 1.1);
+      spotLight.position.set(this.leoPos.swat.x + 8.0, 58.0, this.leoPos.swat.z + 28.0);
+      spotLight.target.position.set(this.leoPos.swat.x, 5.5, this.leoPos.swat.z + 6.0);
       spotLight.castShadow = true;
       this.rcmpDaylightGroup.add(spotLight);
       this.rcmpDaylightGroup.add(spotLight.target);
 
       // Warm entrance illumination pool highlighting canopy and silver RCMP crest
-      const entranceLight = new THREE.PointLight(0xfffaea, 18.0, 42, 1.2);
-      entranceLight.position.set(this.leoPos.swat.x, 7.5, this.leoPos.swat.z + 6.0);
+      const entranceLight = new THREE.PointLight(0xfffaea, 22.0, 52, 1.2);
+      entranceLight.position.set(this.leoPos.swat.x, 9.5, this.leoPos.swat.z + 8.5);
       this.rcmpDaylightGroup.add(entranceLight);
 
       // Bright ground light pool in front of the entrance doors
-      const poolGeo = new THREE.CircleGeometry(6.5, 32);
+      const poolGeo = new THREE.CircleGeometry(8.5, 32);
       const poolMat = new THREE.MeshBasicMaterial({
         color: 0xfff5dd,
         transparent: true,
@@ -4195,7 +4432,7 @@ class PushnotOrbit {
       });
       const poolMesh = new THREE.Mesh(poolGeo, poolMat);
       poolMesh.rotation.x = -Math.PI / 2;
-      poolMesh.position.set(this.leoPos.swat.x, 0.08, this.leoPos.swat.z + 6.0);
+      poolMesh.position.set(this.leoPos.swat.x, 0.08, this.leoPos.swat.z + 8.5);
       this.rcmpDaylightGroup.add(poolMesh);
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
@@ -4452,6 +4689,7 @@ class PushnotOrbit {
   stepCycle(dir) {
     // Step cleanly to the next or previous narrative beat
     if (this.playing) this.setPlaying(false);
+    this.resetFocus();
     if (!this.cameraUnlocked) {
       this.cinematicFollow = true;
     } else {
@@ -4479,6 +4717,7 @@ class PushnotOrbit {
     this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
     try {
       // Purge legacy fallback keys so default eye-level carousel coordinates load cleanly
+      localStorage.removeItem('pushnot_director_rigs_v14');
       localStorage.removeItem('pushnot_director_rigs_v13');
       localStorage.removeItem('pushnot_director_rigs_v12');
       localStorage.removeItem('pushnot_director_rigs_v11');
@@ -4491,7 +4730,7 @@ class PushnotOrbit {
       localStorage.removeItem('pushnot_director_rigs_v4');
       localStorage.removeItem('pushnot_director_rigs_v3');
       localStorage.removeItem('pushnot_director_rigs');
-      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v14') || '{}');
+      const saved = JSON.parse(localStorage.getItem('pushnot_director_rigs_v15') || '{}');
       for (const k of Object.keys(saved)) {
         if (k.startsWith('leo_') && saved[k].cam && saved[k].cam.y < 45.0) continue;
         this.directorRigs[k] = saved[k];
@@ -4549,7 +4788,7 @@ class PushnotOrbit {
           }
         };
         try {
-          localStorage.setItem('pushnot_director_rigs_v14', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v15', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Locked ${key}!`);
         this.updateDirectorHUD();
@@ -4566,7 +4805,7 @@ class PushnotOrbit {
           delete this.directorRigs[key];
         }
         try {
-          localStorage.setItem('pushnot_director_rigs_v14', JSON.stringify(this.directorRigs));
+          localStorage.setItem('pushnot_director_rigs_v15', JSON.stringify(this.directorRigs));
         } catch (e) {}
         showToast(`Reset ${key} to locked preset!`);
         this.updateDirectorHUD();
@@ -4588,6 +4827,7 @@ class PushnotOrbit {
       btnClear.onclick = () => {
         if (confirm('Clear custom overrides and restore locked director presets?')) {
           this.directorRigs = Object.assign({}, DEFAULT_DIRECTOR_RIGS);
+          localStorage.removeItem('pushnot_director_rigs_v15');
           localStorage.removeItem('pushnot_director_rigs_v14');
           localStorage.removeItem('pushnot_director_rigs_v13');
           localStorage.removeItem('pushnot_director_rigs_v12');
@@ -4782,6 +5022,7 @@ class PushnotOrbit {
       this.cinematicFollow = false;
       this.focusCamPos = null;
       this.focusTargetPos = null;
+      if (this.cameraRig) this.cameraRig.disengage();
     }, { passive: true });
 
     addEventListener('keydown', (e) => {
@@ -5291,23 +5532,23 @@ class PushnotOrbit {
           const idProg = clamp01((t - 0.88) / 0.04);
           this.hackerSpotlight.intensity = 6.5 * idProg;
           if (this.hackerGlassesMesh && this.hackerGlassesMesh.material) {
-            this.hackerGlassesMesh.material.emissiveIntensity = 1.6 - 1.0 * idProg;
+            this.hackerGlassesMesh.material.emissiveIntensity = 2.0 - 1.2 * idProg;
           }
           if (this.hackerBodyMeshes) {
             for (const bm of this.hackerBodyMeshes) {
               if (bm.userData && bm.userData.origColor) {
-                bm.material.color.lerpColors(new THREE.Color(0x1a1a1f), bm.userData.origColor, idProg);
+                bm.material.color.lerpColors(new THREE.Color(0x050508), bm.userData.origColor, idProg);
               }
             }
           }
         } else {
           this.hackerSpotlight.intensity = 0;
           if (this.hackerGlassesMesh && this.hackerGlassesMesh.material) {
-            this.hackerGlassesMesh.material.emissiveIntensity = 1.6;
+            this.hackerGlassesMesh.material.emissiveIntensity = 2.0;
           }
           if (this.hackerBodyMeshes) {
             for (const bm of this.hackerBodyMeshes) {
-              bm.material.color.setHex(0x1a1a1f);
+              bm.material.color.setHex(0x050508);
             }
           }
         }
@@ -5367,115 +5608,6 @@ class PushnotOrbit {
     mv.className = 'pin-mover' + (moverCls ? ' ' + moverCls : '');
     mv.textContent = moverText;
     this.place('pin-mover', moverPos ? moverPos.clone() : null, !!moverPos, moverParent);
-
-    // Compute exact 3D world-space focus point for Cinematic Step-by-Step Camera!
-    let focusLocal = null;
-    let focusGroup = this.worldGroup;
-    let focusDist = 80;
-    let customCineCam = null;
-
-    if (this.mode === 'setup') {
-      if (t < 0.18) {
-        // App Selection & Candy Crush Appearance at Apple & Google (zoomed-out showing 2+ nodes)
-        focusLocal = new THREE.Vector3(POS.post.x, 14.0, POS.post.z);
-        customCineCam = new THREE.Vector3(24.0, 30.0, 52.0);
-      } else if (t >= 0.48 && t < 0.60) {
-        // Laser Key Fabrication at Apple/Google HQ
-        focusLocal = new THREE.Vector3(POS.post.x, 18.0, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x + 16, 26.0, POS.post.z + 26);
-      } else if (moverPos) {
-        focusLocal = moverPos.clone();
-        focusDist = 90.0;
-      } else if (showInstall || showToken) {
-        focusLocal = new THREE.Vector3(POS.phone.x, 18.0, POS.phone.z);
-        customCineCam = new THREE.Vector3(POS.phone.x + 20, 24.0, POS.phone.z + 20);
-      } else if (showSaved) {
-        focusLocal = new THREE.Vector3(POS.server.x, 18.0, POS.server.z);
-        customCineCam = new THREE.Vector3(POS.server.x + 22, 24.0, POS.server.z + 22);
-      }
-    } else if (this.mode === 'push') {
-      if (t < 0.28) {
-        // Eye-level cinematic framing of Push Notification banner
-        focusLocal = new THREE.Vector3(POS.ufo.x, 18.0, POS.ufo.z);
-        customCineCam = new THREE.Vector3(POS.ufo.x + 18, 26.0, POS.ufo.z + 24);
-      } else if (t < 0.56) {
-        // Following payload gliding to Google/Apple
-        focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(0, 18.0, 0);
-        focusDist = 90.0;
-      } else if (t < 0.78) {
-        // Google extracts Token Key & matches registered End-User socket
-        focusLocal = new THREE.Vector3(POS.post.x, 18.0, POS.post.z);
-        customCineCam = new THREE.Vector3(POS.post.x, 26.0, POS.post.z + 36);
-      } else {
-        // Delivered to Phone
-        focusLocal = new THREE.Vector3(POS.phone.x, 18.0, POS.phone.z);
-        customCineCam = new THREE.Vector3(POS.phone.x + 20, 24.0, POS.phone.z + 20);
-      }
-    } else if (this.mode === 'world') {
-      // Cinematic overview of all 6 live multi-stream global notification lines
-      focusLocal = new THREE.Vector3(-4, 22, 0);
-      customCineCam = new THREE.Vector3(68, 52, 68);
-    } else {
-      // LAW ENFORCEMENT STAGE (LEO):
-      focusGroup = this.leoGroup;
-      if (t < 0.20) {
-        // Suspect composing threat email on laptop screen
-        focusLocal = new THREE.Vector3(31.5, 18.0, 30.5);
-        customCineCam = new THREE.Vector3(50.0, 26.0, 42.0);
-      } else if (t < 0.36) {
-        if (t >= 0.25 && t < 0.31) {
-          // Emergency Order + Siren flying across from Police to Swiss server
-          focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
-          customCineCam = new THREE.Vector3(L.swat.x + 14, 20.0, L.swat.z + 30.0);
-        } else if (t >= 0.31 || showLeoDenied) {
-          // Switzerland illuminated server rack + waving Swiss flag on top + red rejection X!
-          focusLocal = new THREE.Vector3(L.proton.x, 18.0, L.proton.z);
-          customCineCam = new THREE.Vector3(L.proton.x + 20.0, 22.0, L.proton.z + 46.0);
-        } else {
-          // Police receive threat / send demand -> Facing RCMP Green Timbers front door threshold under natural daylight!
-          focusLocal = new THREE.Vector3(L.swat.x, 3.6, L.swat.z + 5.8);
-          customCineCam = new THREE.Vector3(L.swat.x + 18, 14.0, L.swat.z + 18);
-        }
-      } else if (t < 0.68) {
-        if (t < 0.52) {
-          // Emergency Order sent from Police to App Server Tower (Meta/X)
-          focusLocal = moverPos ? moverPos.clone() : new THREE.Vector3(L.bot.x, 13.0, L.bot.z);
-          customCineCam = new THREE.Vector3(L.bot.x - 22, 15.0, L.bot.z + 22);
-        } else {
-          // 3 Push Token Keys acquired by RCMP -> Above & in front of RCMP Green Timbers entrance!
-          focusLocal = new THREE.Vector3(L.swat.x, 8.8, L.swat.z + 8.2);
-          customCineCam = new THREE.Vector3(L.swat.x + 20, 16.0, L.swat.z + 24);
-        }
-      } else if (t < 0.88) {
-        // Production orders served to Apple & Google Skyscraper
-        focusLocal = new THREE.Vector3(L.ag.x, 20.0, L.ag.z);
-        customCineCam = new THREE.Vector3(L.ag.x + 22, 22.0, L.ag.z + 28);
-      } else {
-        // Suspect unmasked & seized with 3 objects (Credit Card, Photo ID, Home) hovering above his desk!
-        focusLocal = new THREE.Vector3(L.bandit.x, 21.5, L.bandit.z);
-        customCineCam = new THREE.Vector3(L.bandit.x + 8.0, 27.0, L.bandit.z + 38.0);
-      }
-    }
-
-    if (focusLocal) {
-      const worldFocus = focusLocal.clone().applyMatrix4(focusGroup.matrixWorld);
-      this.cineLookAt.copy(worldFocus);
-
-      if (customCineCam) {
-        const worldCam = customCineCam.clone().applyMatrix4(focusGroup.matrixWorld);
-        this.cineCamPos.copy(worldCam);
-      } else {
-        // Snap strictly to the OUTSIDE facing IN LATERALLY at eye level on constant circular carousel rail
-        const radial = new THREE.Vector3(worldFocus.x, 0, worldFocus.z);
-        if (radial.lengthSq() < 1) radial.set(0, 0, 1);
-        radial.normalize();
-
-        this.cineCamPos
-          .copy(worldFocus)
-          .addScaledVector(radial, 90.0);
-        this.cineCamPos.y = 26.0; // Lateral eye-level!
-      }
-    }
   }
 
   place(id, localPos, show, parentGroup = this.worldGroup) {
@@ -5498,12 +5630,15 @@ class PushnotOrbit {
   animate() {
     requestAnimationFrame(() => this.animate());
     const now = performance.now();
-    const dt = Math.min(0.1, (now - this.lastFrame) / 1000);
+    const dt = Math.min(0.05, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
 
     // Smooth 180° upside-down world flip with EXCLUSIVE visibility (never see the other world!)
-    this.flipRoll += (this.flipTarget - this.flipRoll) * Math.min(1, dt * 4.5);
-    if (Math.abs(this.flipTarget - this.flipRoll) < 0.002) this.flipRoll = this.flipTarget;
+    this.flipRoll = smoothDamp(this.flipRoll, this.flipTarget, this.flipRollVel, 0.55, Infinity, dt);
+    if (Math.abs(this.flipTarget - this.flipRoll) < 0.0005 && Math.abs(this.flipRollVel.v) < 0.001) {
+      this.flipRoll = this.flipTarget;
+      this.flipRollVel.v = 0;
+    }
     this.worldPivot.rotation.z = this.flipRoll;
     const leoInFocus = this.flipRoll >= Math.PI * 0.5;
     this.normalGroup.visible = !leoInFocus;
@@ -5583,95 +5718,146 @@ class PushnotOrbit {
       this.focusCamPos = null;
       this.focusTargetPos = null;
       this.cinematicFollow = false;
+      this.cameraRig.disengage();
     } else if (this.focusTargetPos && this.focusCamPos) {
-      // Smooth cinematic camera snap into focus on clicked GLB model with shallow depth of field emphasis!
-      this.controls.target.lerp(this.focusTargetPos, Math.min(1, dt * 5.0));
-      this.camera.position.lerp(this.focusCamPos, Math.min(1, dt * 4.2));
-      this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-      if (this.camera.position.distanceTo(this.focusCamPos) < 0.3) {
-        this.camera.position.copy(this.focusCamPos);
-        this.controls.target.copy(this.focusTargetPos);
+      // Smooth robotic arm arcing focus into clicked GLB model (no hard 0.3 snap cutoff!)
+      this.cameraRig.engage(this.camera, this.controls.target);
+      this.cameraRig.stepToCartesian(
+        this.focusCamPos,
+        this.focusTargetPos,
+        0.50,
+        dt,
+        this.camera,
+        this.controls.target
+      );
+      this.orbitAngle = this.cameraRig.theta;
+      if (this.cameraRig.isSettled(this.focusCamPos, this.focusTargetPos, 0.02, 0.02)) {
         this.focusTargetPos = null;
         this.focusCamPos = null;
+        this.cameraRig.disengage();
       }
     } else if (this.playing || this.cinematicFollow) {
+      this.cameraRig.engage(this.camera, this.controls.target);
       const stops = MODE_STEPS[this.mode] || [0];
       const N = stops.length;
+      const getRigForStep = (idx) => {
+        const key = `${this.mode}_step_${idx}`;
+        const r = (this.directorRigs && this.directorRigs[key]) || DEFAULT_DIRECTOR_RIGS[key];
+        if (!r) return null;
+        return {
+          theta: r.angle !== undefined ? r.angle : Math.atan2(r.cam.x, r.cam.z),
+          radius: r.radius !== undefined ? r.radius : Math.hypot(r.cam.x, r.cam.z),
+          y: r.cam.y,
+          tx: r.target.x,
+          ty: r.target.y,
+          tz: r.target.z
+        };
+      };
+
       let i = 0;
       for (let j = 0; j < N; j++) {
         if (this.t >= stops[j] - 0.001) i = j;
       }
-      const nextI = Math.min(N - 1, i + 1);
-      const rigKeyCurr = `${this.mode}_step_${i}`;
-      const rigKeyNext = `${this.mode}_step_${nextI}`;
 
-      const rigCurr = (this.directorRigs && this.directorRigs[rigKeyCurr]) || DEFAULT_DIRECTOR_RIGS[rigKeyCurr];
-      const rigNext = (this.directorRigs && this.directorRigs[rigKeyNext]) || DEFAULT_DIRECTOR_RIGS[rigKeyNext] || rigCurr;
+      let targetTheta, targetRadius, targetY, targetLook;
+      const rigCurr = getRigForStep(i);
 
-      let targetCam, targetTgt;
-      if (rigCurr && rigNext && i !== nextI) {
-        // Continuous circular track dolly interpolation along curved track rail arc
-        const u = seg(this.t, stops[i], stops[nextI]);
-        const s = u * u * (3 - 2 * u); // Smooth cubic ease
+      if (this.playing && N >= 2 && rigCurr) {
+        // Continuous cylindrical Catmull-Rom spline across MODE_STEPS (zero per-stop halts & seamless 1 -> 0 wrap)
+        const inWrapTail = this.t < stops[0];
+        const segI = inWrapTail ? (N - 1) : i;
+        const nextI = (segI + 1) % N;
+        const prevI = (segI - 1 + N) % N;
+        const next2I = (segI + 2) % N;
+        const t0 = stops[segI];
+        const t1 = nextI === 0 ? (1.0 + stops[0]) : stops[nextI];
+        const tAdj = inWrapTail ? (this.t + 1.0) : this.t;
+        const u = t1 > t0 ? clamp01((tAdj - t0) / (t1 - t0)) : 0;
 
-        // Calculate angular track positions on circular dolly track
-        const angleA = rigCurr.angle !== undefined ? rigCurr.angle : Math.atan2(rigCurr.cam.x, rigCurr.cam.z);
-        const angleB = rigNext.angle !== undefined ? rigNext.angle : Math.atan2(rigNext.cam.x, rigNext.cam.z);
-        const radiusA = rigCurr.radius !== undefined ? rigCurr.radius : Math.hypot(rigCurr.cam.x, rigCurr.cam.z);
-        const radiusB = rigNext.radius !== undefined ? rigNext.radius : Math.hypot(rigNext.cam.x, rigNext.cam.z);
+        const r1 = getRigForStep(segI) || rigCurr;
+        const r0 = getRigForStep(prevI) || r1;
+        const r2 = getRigForStep(nextI) || r1;
+        const r3 = getRigForStep(next2I) || r2;
 
-        // Shortest angular path around circular track dolly
-        let diff = angleB - angleA;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-
-        const curAngle = angleA + diff * s;
-        const curRadius = radiusA + (radiusB - radiusA) * s;
-        const curY = rigCurr.cam.y + (rigNext.cam.y - rigCurr.cam.y) * s;
-
-        targetCam = new THREE.Vector3(
-          Math.sin(curAngle) * curRadius,
-          curY,
-          Math.cos(curAngle) * curRadius
-        );
-
-        targetTgt = new THREE.Vector3().lerpVectors(
-          new THREE.Vector3(rigCurr.target.x, rigCurr.target.y, rigCurr.target.z),
-          new THREE.Vector3(rigNext.target.x, rigNext.target.y, rigNext.target.z),
-          s
+        targetTheta = catmullRomAngle(r0.theta, r1.theta, r2.theta, r3.theta, u);
+        targetRadius = Math.max(15, catmullRom(r0.radius, r1.radius, r2.radius, r3.radius, u));
+        targetY = catmullRom(r0.y, r1.y, r2.y, r3.y, u);
+        targetLook = new THREE.Vector3(
+          catmullRom(r0.tx, r1.tx, r2.tx, r3.tx, u),
+          catmullRom(r0.ty, r1.ty, r2.ty, r3.ty, u),
+          catmullRom(r0.tz, r1.tz, r2.tz, r3.tz, u)
         );
       } else if (rigCurr) {
-        targetCam = new THREE.Vector3(rigCurr.cam.x, rigCurr.cam.y, rigCurr.cam.z);
-        targetTgt = new THREE.Vector3(rigCurr.target.x, rigCurr.target.y, rigCurr.target.z);
+        const nextI = Math.min(N - 1, i + 1);
+        const rigNext = getRigForStep(nextI) || rigCurr;
+        if (i !== nextI) {
+          const u = seg(this.t, stops[i], stops[nextI]);
+          const diff = shortestAngleDiff(rigCurr.theta, rigNext.theta);
+          targetTheta = rigCurr.theta + diff * u;
+          targetRadius = rigCurr.radius + (rigNext.radius - rigCurr.radius) * u;
+          targetY = rigCurr.y + (rigNext.y - rigCurr.y) * u;
+          targetLook = new THREE.Vector3(
+            rigCurr.tx + (rigNext.tx - rigCurr.tx) * u,
+            rigCurr.ty + (rigNext.ty - rigCurr.ty) * u,
+            rigCurr.tz + (rigNext.tz - rigCurr.tz) * u
+          );
+        } else {
+          targetTheta = rigCurr.theta;
+          targetRadius = rigCurr.radius;
+          targetY = rigCurr.y;
+          targetLook = new THREE.Vector3(rigCurr.tx, rigCurr.ty, rigCurr.tz);
+        }
       } else {
-        targetCam = this.cineCamPos;
-        targetTgt = this.cineLookAt;
+        targetTheta = this.cameraRig.theta;
+        targetRadius = this.cameraRig.radius;
+        targetY = this.cameraRig.y;
+        targetLook = this.controls.target.clone();
       }
 
       if (this.mode === 'leo') {
-        if (targetCam) targetCam.y = Math.max(50.0, targetCam.y);
-        if (targetTgt) targetTgt.y = Math.max(40.0, targetTgt.y);
+        targetY = Math.max(50.0, targetY);
+        targetLook.y = Math.max(40.0, targetLook.y);
       }
 
-      // Smooth cinema dolly rolling speed along the rails (eliminates any jerky snap zoom/snap dolly)
-      const camLerp = Math.min(1, dt * 2.8);
-      const tgtLerp = Math.min(1, dt * 3.2);
-      this.camera.position.lerp(targetCam, camLerp);
-      this.controls.target.lerp(targetTgt, tgtLerp);
-      this.orbitAngle = Math.atan2(this.camera.position.x, this.camera.position.z);
-      if (!this.playing && Math.abs(this.targetT - this.t) < 0.002 && this.camera.position.distanceTo(targetCam) < 0.3) {
-        this.cinematicFollow = false;
+      const smoothTime = this.playing ? 0.35 : 0.60;
+      this.cameraRig.stepToCylindrical(
+        targetTheta,
+        targetRadius,
+        targetY,
+        targetLook,
+        smoothTime,
+        dt,
+        this.camera,
+        this.controls.target
+      );
+      this.orbitAngle = this.cameraRig.theta;
+
+      if (!this.playing && Math.abs(this.targetT - this.t) < 0.002) {
+        const targetCamVec = new THREE.Vector3(
+          Math.sin(targetTheta) * targetRadius,
+          targetY,
+          Math.cos(targetTheta) * targetRadius
+        );
+        if (this.cameraRig.isSettled(targetCamVec, targetLook, 0.02, 0.02)) {
+          this.cinematicFollow = false;
+          this.cameraRig.disengage();
+        }
       }
     } else if (this.autoOrbit) {
-      this.orbitAngle += dt * 0.12;
-      const camR = 90.0;
-      const desiredPos = new THREE.Vector3(
-        Math.sin(this.orbitAngle) * camR,
+      this.cameraRig.engage(this.camera, this.controls.target);
+      this.orbitAngle += dt * 0.14;
+      this.cameraRig.stepToCylindrical(
+        this.orbitAngle,
+        90.0,
         26.0,
-        Math.cos(this.orbitAngle) * camR
+        new THREE.Vector3(0, 18, 0),
+        0.60,
+        dt,
+        this.camera,
+        this.controls.target
       );
-      this.camera.position.lerp(desiredPos, Math.min(1, dt * 3.5));
-      this.controls.target.lerp(new THREE.Vector3(0, 18, 0), Math.min(1, dt * 4.0));
+    } else {
+      this.cameraRig.disengage();
     }
 
     // Animated moving dotted lines streaming smoothly along curves (zero arrows/cones!)
@@ -5759,7 +5945,9 @@ class PushnotOrbit {
       }
     }
 
-    this.controls.update();
+    if (!this.cameraRig.active) {
+      this.controls.update();
+    }
     this.updateState(dt);
     this.updateDirectorHUD();
     this.renderer.render(this.scene, this.camera);

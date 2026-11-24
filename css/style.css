@@ -26,23 +26,57 @@ html, body {
   backdrop-filter: blur(16px);
 }
 
+/* Startup Fullscreen Blur Backdrop Overlay */
+.start-blur-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 24;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: rgba(4, 7, 18, 0.48);
+  opacity: 1;
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.start-blur-backdrop.dismissed {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* Authentic Mobile Push Notification Permission Prompt (iOS / Android) */
 .push-permission-dialog {
-  position: absolute; top: 18px; left: 22px; z-index: 25;
-  width: 275px; max-width: calc(100vw - 120px);
-  background: rgba(24, 28, 40, 0.88);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 18px;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 20px rgba(56, 189, 248, 0.12);
+  position: fixed;
+  z-index: 28;
+  width: 290px;
+  max-width: calc(100vw - 32px);
+  background: rgba(24, 28, 40, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 20px;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(56, 189, 248, 0.2);
   overflow: hidden;
   font-family: var(--sans);
-  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s ease, box-shadow 0.28s ease;
 }
+
+/* Centered focus on start */
+.push-permission-dialog.initial-focus {
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+/* Moved up and off screen when user clicks Yes / Allow */
+.push-permission-dialog.off-screen {
+  transform: translate(-50%, -240%) scale(0.85) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .push-permission-dialog:hover {
-  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.7), 0 0 24px rgba(56, 189, 248, 0.22);
-  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.8), 0 0 32px rgba(56, 189, 248, 0.28);
+  border-color: rgba(56, 189, 248, 0.45);
 }
 .push-permission-dialog .perm-body {
   padding: 14px 16px 12px;

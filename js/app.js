@@ -379,7 +379,7 @@ class PushnotOrbit {
     const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 12, 128), this.ringMat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = 0.15;
-    this.worldGroup.add(ring);
+    this.normalGroup.add(ring);
 
     const outer = new THREE.Mesh(
       new THREE.TorusGeometry(R + 11, 0.08, 8, 128),
@@ -387,7 +387,7 @@ class PushnotOrbit {
     );
     outer.rotation.x = Math.PI / 2;
     outer.position.y = 0.1;
-    this.worldGroup.add(outer);
+    this.normalGroup.add(outer);
 
     // Subtle Cinema Circular Track Dolly Rails at outer perimeter
     const trackRailMat = new THREE.MeshStandardMaterial({
@@ -403,7 +403,7 @@ class PushnotOrbit {
     const trackOuter = new THREE.Mesh(new THREE.TorusGeometry(92, 0.16, 8, 160), trackRailMat);
     trackOuter.rotation.x = Math.PI / 2;
     trackOuter.position.y = 0.12;
-    this.worldGroup.add(trackInner, trackOuter);
+    this.normalGroup.add(trackInner, trackOuter);
 
     // Arcs emerging cleanly between Apple and Google signs
     const pPhone  = POS.phone.clone().setY(15);
@@ -3166,157 +3166,92 @@ class PushnotOrbit {
     return group;
   }
 
-  /* ---- 3D Official EXIGENT DEMAND Warrant Paper with Rotating Emergency Siren Beacon ---- */
-  createExigentDemandWithSiren() {
+  /* ---- Single Standalone 3D Judicial Gavel for Outbound RCMP Orders ---- */
+  createJudicialGavel() {
     const group = new THREE.Group();
 
-    // 1. High-resolution canvas texture for official legal paper (512x720)
-    const cvs = document.createElement('canvas');
-    cvs.width = 512;
-    cvs.height = 720;
-    const ctx = cvs.getContext('2d');
-
-    // Clean legal parchment
-    ctx.fillStyle = '#f8fafc';
-    ctx.fillRect(0, 0, 512, 720);
-
-    // Official navy and gold double border
-    ctx.strokeStyle = '#1e3a8a';
-    ctx.lineWidth = 8;
-    ctx.strokeRect(16, 16, 480, 688);
-    ctx.strokeStyle = '#b45309';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(26, 26, 460, 668);
-
-    // Official RCMP Coat of Arms Crest at top of letter
-    const crestImg = new Image();
-    crestImg.onload = () => {
-      ctx.drawImage(crestImg, 256 - 38, 36, 76, 76);
-      tex.needsUpdate = true;
-    };
-    crestImg.src = 'textures/rcmp_crest.webp';
-
-    // Header: Canadian Justice / Police Crest header
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#0f172a';
-    ctx.font = '900 18px "Space Grotesk", sans-serif';
-    ctx.fillText('🇨🇦 ROYAL CANADIAN MOUNTED POLICE · GRC', 256, 126);
-
-    ctx.fillStyle = '#475569';
-    ctx.font = '700 12px "JetBrains Mono", monospace';
-    ctx.fillText('CRIMINAL CODE OF CANADA · S. 487.014(1)', 256, 146);
-
-    // Bold Urgent Header Box
-    ctx.fillStyle = '#dc2626';
-    ctx.beginPath();
-    ctx.roundRect(40, 162, 432, 54, 8);
-    ctx.fill();
-
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 26px "Space Grotesk", sans-serif';
-    ctx.fillText('EXIGENT DEMAND', 256, 198);
-
-    // Official legal document metadata
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#0f172a';
-    ctx.font = 'bold 15px "JetBrains Mono", monospace';
-    ctx.fillText('CASE REF: #RCMP-2026-X99', 52, 246);
-    ctx.fillText('TARGET:   PROTON AG (SWITZERLAND)', 52, 274);
-    ctx.fillText('OFFENCE:  IMMINENT LIFE SAFETY THREAT', 52, 302);
-    ctx.fillText('MANDATE:  IMMEDIATE LOG PRESERVATION', 52, 330);
-
-    // Horizontal divider
-    ctx.strokeStyle = '#cbd5e1';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(52, 350); ctx.lineTo(460, 350);
-    ctx.stroke();
-
-    // Body lines of legal demand
-    ctx.fillStyle = '#334155';
-    ctx.font = '13px "Space Grotesk", sans-serif';
-    ctx.fillText('PURSUANT TO SECTION 487.014(1) OF THE CRIMINAL CODE,', 52, 380);
-    ctx.fillText('YOU ARE HEREBY COMMANDED TO DISCLOSE IDENTIFYING', 52, 404);
-    ctx.fillText('IP ACCESS RECORDS, ROUTING DATA, AND SUBSCRIBER', 52, 428);
-    ctx.fillText('CREDENTIALS ASSOCIATED WITH THE ATTACHED THREAT.', 52, 452);
-
-    // Official Red Stamp in bottom-right corner: EXIGENT / IMMEDIATE
-    ctx.save();
-    ctx.translate(360, 560);
-    ctx.rotate(-0.16);
-    ctx.strokeStyle = 'rgba(220, 38, 38, 0.85)';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(-80, -35, 160, 70);
-    ctx.fillStyle = 'rgba(220, 38, 38, 0.85)';
-    ctx.font = '900 20px "Space Grotesk", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('EXIGENT', 0, -6);
-    ctx.font = 'bold 13px "JetBrains Mono", monospace';
-    ctx.fillText('IMMEDIATE ACTION', 0, 18);
-    ctx.restore();
-
-    // Barcode / verification hash at bottom
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '11px "JetBrains Mono", monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('SHA256: 8F7E41C09A52... [LEO VERIFIED]', 256, 672);
-
-    const tex = new THREE.CanvasTexture(cvs);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.minFilter = THREE.LinearFilter;
-    tex.magFilter = THREE.LinearFilter;
-
-    // 2. Paper Mesh (5.2 width x 7.2 height) — anchored so bottom edge is at Y = 0!
-    const paperH = 7.2;
-    const paperGeo = new THREE.PlaneGeometry(5.2, paperH);
-    const paperMat = new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide });
-    const paperMesh = new THREE.Mesh(paperGeo, paperMat);
-    paperMesh.position.y = paperH * 0.5;
-    group.add(paperMesh);
-
-    // Thin dark backing card to give paper physical thickness & edge
-    const backingGeo = new THREE.BoxGeometry(5.24, paperH + 0.04, 0.1);
-    const backingMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.3, roughness: 0.6 });
-    const backing = new THREE.Mesh(backingGeo, backingMat);
-    backing.position.set(0, paperH * 0.5, -0.06);
-    group.add(backing);
-
-    // 3. Emergency Siren Beacon mounted on top of the paper
-    const sirenGroup = new THREE.Group();
-    sirenGroup.position.set(0, paperH + 0.8, 0);
-
-    const baseGeo = new THREE.CylinderGeometry(0.9, 1.1, 0.5, 16);
-    const baseMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.2 });
-    sirenGroup.add(new THREE.Mesh(baseGeo, baseMat));
-
-    const rotor = new THREE.Group();
-    rotor.position.y = 0.5;
-
-    const redMat = new THREE.MeshPhysicalMaterial({
-      color: 0xef4444, emissive: 0xdc2626, emissiveIntensity: 0.9,
-      transparent: true, opacity: 0.85, roughness: 0.1, metalness: 0.1
-    });
-    const blueMat = new THREE.MeshPhysicalMaterial({
-      color: 0x3b82f6, emissive: 0x2563eb, emissiveIntensity: 0.9,
-      transparent: true, opacity: 0.85, roughness: 0.1, metalness: 0.1
+    // Handcrafted dark walnut / mahogany wood material
+    const woodMat = new THREE.MeshStandardMaterial({
+      color: 0x3d1a08,
+      roughness: 0.38,
+      metalness: 0.08
     });
 
-    const redDome = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.85, 16, 1, false, 0, Math.PI), redMat);
-    const blueDome = new THREE.Mesh(new THREE.CylinderGeometry(0.72, 0.72, 0.85, 16, 1, false, Math.PI, Math.PI), blueMat);
-    rotor.add(redDome, blueDome);
+    // Polished brass accents: bands, collar ferrule, pommel
+    const brassMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      roughness: 0.22,
+      metalness: 0.88
+    });
 
-    const redLight = new THREE.PointLight(0xef4444, 4.0, 24);
-    redLight.position.set(0, 0, 0.6);
-    const blueLight = new THREE.PointLight(0x3b82f6, 4.0, 24);
-    blueLight.position.set(0, 0, -0.6);
-    rotor.add(redLight, blueLight);
+    // 1. Gavel Head (Horizontal cylinder along X axis)
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 3.8, 0);
 
-    sirenGroup.add(rotor);
-    group.add(sirenGroup);
+    // Main barrel cylinder
+    const barrelGeo = new THREE.CylinderGeometry(0.72, 0.72, 2.2, 28);
+    const barrel = new THREE.Mesh(barrelGeo, woodMat);
+    barrel.rotation.z = Math.PI / 2;
+    headGroup.add(barrel);
 
-    group.userData.rotor = rotor;
-    group.userData.redLight = redLight;
-    group.userData.blueLight = blueLight;
+    // Flared strike caps on both ends of the head
+    const capGeoL = new THREE.CylinderGeometry(0.86, 0.72, 0.38, 28);
+    const capL = new THREE.Mesh(capGeoL, woodMat);
+    capL.rotation.z = -Math.PI / 2;
+    capL.position.x = -1.25;
+    headGroup.add(capL);
+
+    const capGeoR = new THREE.CylinderGeometry(0.86, 0.72, 0.38, 28);
+    const capR = new THREE.Mesh(capGeoR, woodMat);
+    capR.rotation.z = Math.PI / 2;
+    capR.position.x = 1.25;
+    headGroup.add(capR);
+
+    // Dual polished brass decorative bands around barrel
+    const bandGeo = new THREE.CylinderGeometry(0.74, 0.74, 0.16, 28);
+    const bandL = new THREE.Mesh(bandGeo, brassMat);
+    bandL.rotation.z = Math.PI / 2;
+    bandL.position.x = -0.55;
+    const bandR = new THREE.Mesh(bandGeo, brassMat);
+    bandR.rotation.z = Math.PI / 2;
+    bandR.position.x = 0.55;
+    headGroup.add(bandL, bandR);
+
+    group.add(headGroup);
+
+    // 2. Brass Collar Ferrule connecting head to handle
+    const ferruleGeo = new THREE.CylinderGeometry(0.36, 0.32, 0.42, 24);
+    const ferrule = new THREE.Mesh(ferruleGeo, brassMat);
+    ferrule.position.set(0, 3.55, 0);
+    group.add(ferrule);
+
+    // 3. Turned Mahogany / Walnut Handle
+    const handleGeo = new THREE.CylinderGeometry(0.24, 0.32, 3.8, 24);
+    const handle = new THREE.Mesh(handleGeo, woodMat);
+    handle.position.set(0, 1.7, 0);
+    group.add(handle);
+
+    // Ergonomic grip ring
+    const gripRingGeo = new THREE.TorusGeometry(0.28, 0.06, 12, 24);
+    const gripRing = new THREE.Mesh(gripRingGeo, brassMat);
+    gripRing.rotation.x = Math.PI / 2;
+    gripRing.position.set(0, 1.4, 0);
+    group.add(gripRing);
+
+    // 4. Polished Brass Pommel at bottom of handle
+    const pommelGeo = new THREE.SphereGeometry(0.40, 20, 20);
+    pommelGeo.scale(1, 0.75, 1);
+    const pommel = new THREE.Mesh(pommelGeo, brassMat);
+    pommel.position.set(0, -0.2, 0);
+    group.add(pommel);
+
+    // Subtle warm point light illuminating the gavel
+    const warmLight = new THREE.PointLight(0xfef08a, 2.5, 14);
+    warmLight.position.set(0, 2.5, 1.5);
+    group.add(warmLight);
+
+    group.userData.warmLight = warmLight;
+    group.scale.setScalar(1.05);
 
     return group;
   }
@@ -3364,10 +3299,11 @@ class PushnotOrbit {
     this.threatPacket.visible = false;
     this.leoGroup.add(this.threatPacket);
 
-    // Official EXIGENT DEMAND Legal Warrant Document with Rotating Emergency Siren
-    this.exigentDemand = this.createExigentDemandWithSiren();
-    this.exigentDemand.visible = false;
-    this.leoGroup.add(this.exigentDemand);
+    // Standalone 3D Judicial Gavel for Outbound RCMP Investigation Orders
+    this.judicialGavel = this.createJudicialGavel();
+    this.judicialGavel.visible = false;
+    this.leoGroup.add(this.judicialGavel);
+    this.exigentDemand = this.judicialGavel; // backwards-compatible alias
     this.leoTops.ag = 20;
 
     // LEO investigative arcs radiating from the central RCMP Green Timbers HQ
@@ -5463,21 +5399,24 @@ class PushnotOrbit {
         showLeoThreat = showDemand;
 
         if (showDemand) {
-          // At Step 2 (t = 0.20), u = 0, document sits directly at front door of RCMP (pSwat)
+          // At Step 2 (t = 0.20), u = 0, judicial gavel departs front door of RCMP
           const u = seg(t, 0.20, 0.26);
           const p = this.arcLeoProton.getPoint(u);
-          if (this.exigentDemand) {
-            this.exigentDemand.visible = true;
-            this.exigentDemand.position.copy(p);
-            // Orient vertically (pitch = 0, roll = 0) facing camera horizontally, so bottom never pitches into the building awning!
-            const camDir = this.camera.position.clone().sub(p);
-            this.exigentDemand.rotation.set(0, Math.atan2(camDir.x, camDir.z), 0);
-            this.exigentDemand.scale.setScalar(0.95);
+          const tangent = this.arcLeoProton.getTangent(u);
+          if (this.judicialGavel) {
+            this.judicialGavel.visible = true;
+            this.judicialGavel.position.copy(p);
+            // Travel along outbound RCMP investigation arc with animated gentle strike posture
+            this.judicialGavel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tangent);
+            const strikeOsc = Math.sin(u * Math.PI * 6) * 0.18;
+            this.judicialGavel.rotateX(-0.55 + strikeOsc);
+            this.judicialGavel.scale.setScalar(1.0);
           }
-          moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
-          moverText = '🚨 Emergency Order';
+          moverPos = p.clone().add(new THREE.Vector3(0, 4.5, 0));
+          moverText = '⚖️ Judicial Order';
           moverCls = 'red';
         } else {
+          if (this.judicialGavel) this.judicialGavel.visible = false;
           // Rejection Swiss Shield Icon + Speech Bubble REMOVED per user request
           if (this.rejectShieldBubble) this.rejectShieldBubble.visible = false;
           showLeoDenied = false;
@@ -5497,21 +5436,24 @@ class PushnotOrbit {
         }
       } else if (t < 0.48) {
         // Step 4: Emergency Order served to App Servers (Meta, Instagram, 𝕏)
-        const p = this.arcLeoToMeta.getPoint(seg(t, 0.32, 0.48));
-        if (this.exigentDemand) {
-          this.exigentDemand.visible = true;
-          this.exigentDemand.position.copy(p);
-          const camDir = this.camera.position.clone().sub(p);
-          this.exigentDemand.rotation.set(0, Math.atan2(camDir.x, camDir.z), 0);
-          this.exigentDemand.scale.setScalar(0.95);
+        const u = seg(t, 0.32, 0.48);
+        const p = this.arcLeoToMeta.getPoint(u);
+        const tangent = this.arcLeoToMeta.getTangent(u);
+        if (this.judicialGavel) {
+          this.judicialGavel.visible = true;
+          this.judicialGavel.position.copy(p);
+          this.judicialGavel.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), tangent);
+          const strikeOsc = Math.sin(u * Math.PI * 6) * 0.18;
+          this.judicialGavel.rotateX(-0.55 + strikeOsc);
+          this.judicialGavel.scale.setScalar(1.0);
         }
-        moverPos = p.clone().add(new THREE.Vector3(0, 6.0, 0));
-        moverText = '🚨 Order → App Servers';
+        moverPos = p.clone().add(new THREE.Vector3(0, 4.5, 0));
+        moverText = '⚖️ Judicial Order → App Servers';
         moverCls = 'cyan';
       } else if (t < 0.62) {
         // Step 5: App Server discloses unique Push Token Key
         if (this.threatPacket) this.threatPacket.visible = false;
-    if (this.exigentDemand) this.exigentDemand.visible = false;
+        if (this.judicialGavel) this.judicialGavel.visible = false;
         const p = this.arcLeoTokens.getPoint(seg(t, 0.48, 0.60));
         if (this.leoUniqueKeysGroup) {
           this.leoUniqueKeysGroup.visible = true;
@@ -6176,12 +6118,10 @@ class PushnotOrbit {
       if (uData.pointLight) uData.pointLight.intensity = 4.0 + Math.sin(now * 0.025) * 3.0;
     }
 
-    // Emergency siren beacon: high-speed rotation and dual red/blue emergency strobe flashing
-    if (this.exigentDemand && this.exigentDemand.visible && this.exigentDemand.userData) {
-      const uData = this.exigentDemand.userData;
-      if (uData.rotor) uData.rotor.rotation.y += dt * 16.0;
-      if (uData.redLight) uData.redLight.intensity = 3.5 + Math.sin(now * 0.022) * 2.5;
-      if (uData.blueLight) uData.blueLight.intensity = 3.5 + Math.cos(now * 0.022) * 2.5;
+    // 3D Judicial Gavel: subtle warm illumination pulse
+    if (this.judicialGavel && this.judicialGavel.visible && this.judicialGavel.userData) {
+      const uData = this.judicialGavel.userData;
+      if (uData.warmLight) uData.warmLight.intensity = 2.4 + Math.sin(now * 0.005) * 0.8;
     }
 
     // Live real-time flashing on hacker computer screen during Step 1

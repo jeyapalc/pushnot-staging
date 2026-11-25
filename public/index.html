@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PUSHNOT // 3D Push Notification Orbit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=114" />
+  <script type="importmap">
+    { "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="load-status" class="load-status">Loading 3D models…</div>
+
+  <!-- Startup Blur Backdrop Overlay -->
+  <div id="start-blur-backdrop" class="start-blur-backdrop"></div>
+
+  <!-- Authentic Mobile Push Notification Permission Prompt (Initial Centered Focus) -->
+  <div class="push-permission-dialog initial-focus" id="push-permission-dialog" role="dialog" aria-label="Notification Permission">
+    <div class="perm-body">
+      <div class="perm-icon" id="perm-icon">🔔</div>
+      <div class="perm-text-wrap">
+        <div class="perm-title" id="perm-title">“Candy Crush Saga” Would Like to Send You Notifications</div>
+        <div class="perm-message" id="perm-message">Notifications may include alerts, sounds, and icon badges. These can be configured in Settings.</div>
+      </div>
+    </div>
+    <div class="perm-actions">
+      <button class="perm-btn perm-deny" id="perm-btn-deny">Don’t Allow</button>
+      <button class="perm-btn perm-allow" id="perm-btn-allow">Allow</button>
+    </div>
+    <!-- Hidden brand-dot to keep compatibility with existing JS toggles -->
+    <span class="dot" id="brand-dot" style="display:none"></span>
+  </div>
+  <div class="top-right">
+    <div class="os-toggle" id="os-toggle" title="Switch Operating System (iOS / Android)">
+      <button class="btn-os active ios" id="btn-os-ios"> iOS</button>
+      <button class="btn-os android" id="btn-os-android">🤖 Android</button>
+    </div>
+    <button class="btn-fs" id="btn-fullscreen" title="Fullscreen">⛶</button>
+  </div>
+
+  <!-- Crisp polarity direction indicator -->
+  <div class="polarity-banner" id="polarity-banner">
+    <span class="pol-arrow" id="pol-arrow">↺</span>
+    <span class="pol-label" id="pol-label">SETUP FLOW</span>
+    <span class="pol-route" id="pol-route">App Store → Phone → Post Office → Server</span>
+  </div>
+
+  <!-- Minimal 3-station ground labels + World (Normal Mode) -->
+  <div class="pin pin-node" id="pin-store" style="display:none"></div>
+  <div class="pin pin-node" id="pin-phone">IPHONE (iOS)</div>
+  <div class="pin pin-os-float" id="pin-phone-os" title="Click to toggle between iOS and Android"><span id="phone-os-badge"> iOS</span> <span style="opacity:0.6;font-size:0.6rem">⇄ SWITCH</span></div>
+  <div class="pin pin-node" id="pin-post">APPLE APNs (iTUNES / APP STORE)</div>
+  <div class="pin pin-node" id="pin-server">APP SERVER</div>
+  <div class="pin pin-node" id="pin-ufo">WORLD</div>
+
+  <!-- Multi-stream world outbound stimulus pills (hidden to avoid HUD clutter; 3D brand tiles already show each app!) -->
+  <div class="pin pin-stim cyan" id="pin-stim-0" style="display:none"></div>
+  <div class="pin pin-stim blue" id="pin-stim-1" style="display:none"></div>
+  <div class="pin pin-stim pink" id="pin-stim-2" style="display:none"></div>
+  <div class="pin pin-stim slate" id="pin-stim-3" style="display:none"></div>
+  <div class="pin pin-stim green" id="pin-stim-4" style="display:none"></div>
+  <div class="pin pin-stim amber" id="pin-stim-5" style="display:none"></div>
+
+  <!-- Law Enforcement Mode station labels (visible when flipped upside down) -->
+  <div class="pin pin-node leo-pin" id="pin-leo-bandit">SUSPECT</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-swat">🇨🇦 RCMP GREEN TIMBERS HQ</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-bot">APP SERVERS</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-proton">🇨🇭 PROTON</div>
+  <div class="pin pin-node leo-pin" id="pin-leo-ag">APPLE &amp; GOOGLE</div>
+
+  <!-- Single active contextual callout -->
+  <div class="pin pin-event cyan" id="pin-install">
+    <span class="ev-ico">🍬</span>
+    <div>
+      <div class="ev-title">Candy Crush Installed</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-token">
+    <span class="ev-ico">🔑</span>
+    <div>
+      <div class="ev-title">Unique Gold Key</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event red" id="pin-no-direct">
+    <span class="ev-ico">🛡️</span>
+    <div>
+      <div class="ev-title">No Direct Connection</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-saved">
+    <span class="ev-ico">✓</span>
+    <div>
+      <div class="ev-title">Key Saved</div>
+    </div>
+  </div>
+
+  <!-- Genuine Mobile OS Push Notification Banner right on top of the Phone model -->
+  <div class="pin push-banner-toast" id="pin-push">
+    <div class="toast-icon">🔔</div>
+    <div class="toast-body">
+      <div class="toast-meta">
+        <span class="toast-app">CANDY CRUSH</span>
+        <span class="toast-time">now</span>
+      </div>
+      <div class="toast-msg">Push notification from Candy Crush</div>
+    </div>
+  </div>
+
+  <!-- Law Enforcement Scenario Callouts (Upside-Down Reverse Trace) -->
+  <div class="pin pin-event red" id="pin-leo-threat">
+    <span class="ev-ico">💣</span>
+    <div>
+      <div class="ev-title">Bomb Threat</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event red" id="pin-leo-denied">
+    <span class="ev-ico">🇨🇭</span>
+    <div>
+      <div class="ev-title">Proton · Denied</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event amber" id="pin-leo-tokens">
+    <span class="ev-ico">🔑</span>
+    <div>
+      <div class="ev-title">Push Tokens</div>
+    </div>
+  </div>
+
+  <div class="pin pin-event green" id="pin-leo-id">
+    <span class="ev-ico">🪪</span>
+    <div>
+      <div class="ev-title">Suspect Identified</div>
+    </div>
+  </div>
+
+  <!-- Notepad Routing Ledger (floats above 3D Brain at Post Office during matching) -->
+  <div class="pin ledger-pad" id="pin-ledger">
+    <div class="pad-rings">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <div class="pad-head">
+      <span>APNs / FCM LEDGER</span>
+      <span class="pad-status" id="pad-status">SEARCHING…</span>
+    </div>
+    <div class="pad-cols">
+      <div class="pad-col">
+        <div class="col-title">PUSH REQUEST</div>
+        <div class="req-box" id="pad-req">
+          <div class="tok">🔑 7f4a…e891</div>
+          <div class="sub">🔔 Candy Crush Push</div>
+        </div>
+      </div>
+      <div class="pad-col">
+        <div class="col-title">DEVICE ROUTE</div>
+        <div class="scroll-window">
+          <div class="scroll-track" id="pad-track">
+            <div class="addr-row">a19c…02b1 · #104</div>
+            <div class="addr-row">3c88…10f2 · #209</div>
+            <div class="addr-row">9d04…ff12 · #318</div>
+            <div class="addr-row">e21b…440a · #412</div>
+            <div class="addr-row">b912…77d0 · iPad</div>
+            <div class="addr-row match-row" id="pad-match-row">🔑 7f4a…e891 → Phone</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Moving packet pill -->
+  <div class="pin-mover" id="pin-mover"></div>
+
+  <!-- Permanent HUD Action Caption Banner (Captions Only) -->
+  <div class="hud-banner" id="hud-banner">
+    <div class="hud-caption" id="hud-caption">Candy Crush Saga Installed</div>
+  </div>
+
+  <!-- Ultra-clean single-row presentation dock -->
+  <nav class="orbit-dock">
+    <div class="polarity-switch" role="group" aria-label="Flow Polarity">
+      <button class="pol-btn active setup" id="mode-setup" data-mode="setup">1 · Setup</button>
+      <button class="pol-btn push" id="mode-push" data-mode="push">2 · Push</button>
+      <button class="pol-btn world" id="mode-world" data-mode="world">3 · World</button>
+      <button class="pol-btn leo" id="mode-leo" data-mode="leo">4 · LEO</button>
+      <div class="step-counter-pill" id="step-counter-pill">Step 1 / 10</div>
+      <button class="pol-flip" id="btn-flip" title="Cycle Mode (Tab)" style="display:none">⇄</button>
+    </div>
+
+    <div class="controls">
+      <button class="ctl" id="btn-step-prev" title="Previous Step (←)">◀</button>
+      <button class="ctl play" id="btn-play" title="Auto / Manual Step (Space)">▶</button>
+      <div class="slider-wrapper" id="slider-wrapper">
+        <input type="range" id="scrub" min="0" max="1000" value="0" />
+        <div class="slider-ticks" id="slider-ticks"></div>
+      </div>
+      <span class="scrub-pct" id="scrub-pct" style="display:none">0%</span>
+      <button class="ctl" id="btn-step-next" title="Next Step (→)">▶</button>
+      <button class="ctl orbit-toggle" id="btn-orbit" title="Auto-orbit camera">⟳</button>
+      <button class="ctl cam-lock-btn locked" id="btn-cam-lock" title="Toggle Camera Snap / Unlock (C)">🔒 Snap</button>
+      <button class="ctl wheel-mode-btn active" id="btn-wheel-mode" title="Click to toggle Scroll Wheel mode (Glide / Zoom)">🖱️ Glide</button>
+    </div>
+  </nav>
+
+  <script type="module" src="js/app.js?v=136"></script>
+</body>
+</html>

@@ -4405,14 +4405,14 @@ class PushnotOrbit {
       depthWrite: false
     });
 
-    // 9:16 portrait video plane standing directly on top of the Proton server tower
-    const videoGeo = new THREE.PlaneGeometry(8.6, 14.5);
-    videoGeo.translate(0, 14.5 / 2, 0); // anchor bottom of video plane to y = 0
+    // 9:16 portrait video plane sitting directly on top of the Proton server tower
+    const videoGeo = new THREE.PlaneGeometry(8.6, 14.0);
+    videoGeo.translate(0, 14.0 / 2, 0); // anchor bottom of video plane to y = 0
     this.swissVideoMesh = new THREE.Mesh(videoGeo, chromakeyMat);
-    this.swissVideoMesh.position.set(this.leoPos.proton.x, 22.8, this.leoPos.proton.z);
+    this.swissVideoMesh.position.set(0.6, 22.8, 1.2);
     this.swissVideoMesh.visible = false;
     this.swissVideoMesh.userData.stationKey = 'proton';
-    this.leoGroup.add(this.swissVideoMesh);
+    this.protonGroup.add(this.swissVideoMesh);
   }
 
   initAppleGoogleSkyscraper(done) {
@@ -5431,9 +5431,8 @@ class PushnotOrbit {
           // Step 3 (Swiss Proton server receives order): Play laughing video sitting directly on top of Proton server!
           if (this.swissVideoMesh) {
             this.swissVideoMesh.visible = true;
-            this.swissVideoMesh.position.set(L.proton.x, 22.8, L.proton.z);
-            const camDir = this.camera.position.clone().sub(this.swissVideoMesh.position);
-            this.swissVideoMesh.rotation.set(0, Math.atan2(camDir.x, camDir.z), 0);
+            this.swissVideoMesh.position.set(0.6, 22.8, 1.2);
+            this.swissVideoMesh.rotation.set(0, 0, 0);
           }
           if (this.swissVideoEl && this.swissVideoEl.paused) {
             this.swissVideoEl.play().catch(() => {});

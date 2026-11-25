@@ -3808,86 +3808,36 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Nighttime law enforcement office: dark unlit tactical building with glowing interior office lights
+      // Completely unlit RCMP headquarters building (dark tactical stealth monolith, zero window/office emissions, zero exterior lights)
       m.traverse(c => {
         if (!c.isMesh) return;
         c.castShadow = true;
         c.receiveShadow = true;
         if (c.material) {
           c.material.envMapIntensity = 0.0;
+          if (c.material.emissive) {
+            c.material.emissive.setHex(0x000000);
+            c.material.emissiveIntensity = 0.0;
+          }
           const matName = (c.material.name || '').toLowerCase();
           const meshName = (c.name || '').toLowerCase();
-
-          const isGlassOrWindow = matName.includes('glass') || matName.includes('window') ||
-                                  matName.includes('backing') || matName.includes('atrium') ||
-                                  meshName.includes('glazing');
           const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
                                matName.includes('bison') || matName.includes('crest');
           const isWoodWall = matName.includes('wood') || meshName.includes('wood');
-          const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
-                                   matName.includes('canopy') || matName.includes('sign');
 
-          if (isGlassOrWindow) {
-            // Interior office lights shining through windows at night!
-            // Natural office interior warmth: soft golden-warm incandescent and fluorescent office lighting
-            let winColor = 0xfffaea;
-            let emitColor = 0xffdf88;
-            let intensity = 0.88;
-
-            if (matName.includes('atrium') || matName.includes('public')) {
-              // Central entrance atrium & lobby: bright warm interior welcome glow
-              winColor = 0xfffdf5;
-              emitColor = 0xffe294;
-              intensity = 0.95;
-            } else if (matName.includes('shaded')) {
-              // Slightly subdued executive office/corner office
-              emitColor = 0xfde68a;
-              intensity = 0.72;
-            } else if (matName.includes('0') || matName.includes('2') || matName.includes('4')) {
-              // Warm active office workspaces
-              emitColor = 0xffdf7a;
-              intensity = 0.90;
-            } else {
-              // Crisp fluorescent office workspaces
-              emitColor = 0xfef08a;
-              intensity = 0.84;
-            }
-
-            if (c.material.color) c.material.color.setHex(winColor);
-            if (c.material.emissive) {
-              c.material.emissive.setHex(emitColor);
-              c.material.emissiveIntensity = intensity;
-            }
-            c.material.roughness = 0.20;
-            c.material.metalness = 0.10;
-            c.material.transparent = true;
-            c.material.opacity = 0.92;
-          } else if (isBisonCrest) {
-            // White etched RCMP bison crest pops brightly on the illuminated glass atrium
-            if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.20;
-            c.material.metalness = 0.30;
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0xffffff);
-              c.material.emissiveIntensity = 0.85;
-            }
+          if (isBisonCrest) {
+            // Subtle dark etched silver emblem, unlit
+            if (c.material.color) c.material.color.setHex(0x52525b);
+            c.material.roughness = 0.65;
+            c.material.metalness = 0.20;
           } else if (isWoodWall) {
-            // Rich natural cedar/wood panel foyer wall, softly visible through glass entrance
-            if (c.material.color) c.material.color.setHex(0x6e3d1b);
-            c.material.roughness = 0.75;
+            // Dark muted natural cedar foyer wall, unlit
+            if (c.material.color) c.material.color.setHex(0x382012);
+            c.material.roughness = 0.85;
             c.material.metalness = 0.05;
-          } else if (isEntranceAccent) {
-            // Entrance canopy trim and signage: dark sleek trim
-            if (c.material.color) c.material.color.setHex(0x1e293b);
-            c.material.roughness = 0.60;
-            c.material.metalness = 0.40;
           } else {
-            // Dark unlit tactical nighttime building exterior (precast, charcoal panels, roof)
-            if (c.material.color) c.material.color.setHex(0x0f1520);
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0x000000);
-              c.material.emissiveIntensity = 0.0;
-            }
+            // Dark stealth slate / charcoal unlit surfaces across glass, walls, panels and roof
+            if (c.material.color) c.material.color.setHex(0x0c111a);
             c.material.roughness = 0.92;
             c.material.metalness = 0.08;
           }
@@ -3900,35 +3850,6 @@ class PushnotOrbit {
       m.rotation.y = Math.PI * 0.22;
       this.leoTops.swat = this.ground(m, 76.0, this.leoPos.swat);
       this.leoGroup.add(m);
-
-      // Interior Nighttime Office Lighting Rig for RCMP Green Timbers Node
-      // Kept completely unlit from the outside (no exterior spotlights or daytime floodlights)
-      // Soft warm lights placed inside the office volume make it look like interior office lights are on at night
-      this.rcmpInteriorLights = new THREE.Group();
-      this.rcmpInteriorLights.userData.stationKey = 'swat';
-
-      // 1. Central Glass Atrium & Lobby Interior Light (shining gently from inside the entrance glass)
-      const atriumLight = new THREE.PointLight(0xffeaad, 3.5, 32, 1.6);
-      atriumLight.position.set(this.leoPos.swat.x + 8.0, 9.5, this.leoPos.swat.z + 4.0);
-      this.rcmpInteriorLights.add(atriumLight);
-
-      // 2. East Office Wing Interior Warm Light (inside floor plate)
-      const eastOfficeLight = new THREE.PointLight(0xffdf88, 2.8, 36, 1.8);
-      eastOfficeLight.position.set(this.leoPos.swat.x + 22.0, 11.0, this.leoPos.swat.z - 2.0);
-      this.rcmpInteriorLights.add(eastOfficeLight);
-
-      // 3. West Office Wing Interior Warm Light (inside floor plate)
-      const westOfficeLight = new THREE.PointLight(0xffdf88, 2.8, 36, 1.8);
-      westOfficeLight.position.set(this.leoPos.swat.x - 16.0, 11.0, this.leoPos.swat.z + 2.0);
-      this.rcmpInteriorLights.add(westOfficeLight);
-
-      // 4. Subtle cool ceiling downlight inside central operations atrium
-      const opsLight = new THREE.PointLight(0xe0f2fe, 1.8, 24, 2.0);
-      opsLight.position.set(this.leoPos.swat.x + 2.0, 14.0, this.leoPos.swat.z - 4.0);
-      this.rcmpInteriorLights.add(opsLight);
-
-      // Building footprint stands directly on ground plane with zero plinth / zero base slab
-      this.leoGroup.add(this.rcmpInteriorLights);
       done();
     }, undefined, done);
 

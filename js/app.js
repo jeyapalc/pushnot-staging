@@ -2704,32 +2704,32 @@ class PushnotOrbit {
     if (this.homeSweetHomeScene) {
       homeWrap.add(this.homeSweetHomeScene.clone(true));
     }
-    homeWrap.position.set(10.2, 0, 0);
-    // REMOVE ROTATE: front yard with tree faces forward toward user, level with ground!
-    homeWrap.rotation.set(0, 0, 0);
+    // Tilted up to directly face the user and elevated camera view
+    homeWrap.position.set(10.2, 1.4, 0.4);
+    homeWrap.rotation.set(-0.48, -0.15, 0); // ~27.5° pitch up so front door, windows and porch face user
     group.add(homeWrap);
 
     // Front yard address plaque standing on front-right curb of driveway
-    // (Walkway, front door, lawn, and white-blossomed tree are 100% visible and unobstructed!)
+    // Tilted in harmony with the house so plaque faces user
     const addrPlaque = this.createHouseAddressPlaque();
-    addrPlaque.position.set(14.2, 0, 4.6);
-    addrPlaque.rotation.set(0, -0.18, 0);
+    addrPlaque.position.set(14.2, 0.8, 4.0);
+    addrPlaque.rotation.set(-0.40, -0.22, 0);
     group.add(addrPlaque);
 
     // Dedicated localized architectural lighting rig strictly on the home & bundle
     // (Local spotlights & point lights so no directional light spills globally across the scene or onto RCMP office)
-    const homeKey = new THREE.SpotLight(0xfffaea, 8.5, 28, Math.PI / 3.5, 0.45, 1.2);
-    homeKey.position.set(13.5, 12.0, 10.0);
-    homeKey.target.position.set(10.2, 2.0, 0);
+    const homeKey = new THREE.SpotLight(0xfffaea, 8.5, 30, Math.PI / 3.2, 0.45, 1.2);
+    homeKey.position.set(13.0, 14.0, 12.0);
+    homeKey.target.position.set(10.2, 2.2, 0.4);
 
-    const homeFill = new THREE.PointLight(0x38bdf8, 3.2, 22, 1.5);
-    homeFill.position.set(6.0, 6.0, 6.0);
+    const homeFill = new THREE.PointLight(0x38bdf8, 3.2, 24, 1.5);
+    homeFill.position.set(6.0, 7.0, 7.0);
 
-    const homeSun = new THREE.SpotLight(0xffeedd, 7.0, 30, Math.PI / 3.2, 0.45, 1.2);
-    homeSun.position.set(10.2, 16.0, 4.0);
-    homeSun.target.position.set(10.2, 2.0, 0);
+    const homeSun = new THREE.SpotLight(0xffeedd, 7.0, 32, Math.PI / 3.0, 0.45, 1.2);
+    homeSun.position.set(10.2, 17.0, 5.0);
+    homeSun.target.position.set(10.2, 2.2, 0.4);
 
-    const homeRim = new THREE.PointLight(0x60a5fa, 2.2, 20, 1.5);
+    const homeRim = new THREE.PointLight(0x60a5fa, 2.2, 22, 1.5);
     homeRim.position.set(10.2, 8.0, -6.0);
 
     group.add(homeKey, homeKey.target, homeFill, homeSun, homeSun.target, homeRim);
@@ -3968,6 +3968,8 @@ class PushnotOrbit {
         if (hw) {
           hw.clear();
           hw.add(houseRoot.clone(true));
+          hw.position.set(10.2, 1.4, 0.4);
+          hw.rotation.set(-0.48, -0.15, 0);
         }
       };
       attachHouse(this.leoSubscriberBundle);

@@ -2301,19 +2301,19 @@ class PushnotOrbit {
       new THREE.CylinderGeometry(0.7, 0.9, 0.8, 16),
       new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.9, roughness: 0.2 })
     );
-    poleBase.position.set(-2.8, roofY + 0.4, 0);
+    poleBase.position.set(-2.8, roofY + 0.4, -2.4);
     group.add(poleBase);
 
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.28, 0.36, 18, 16),
       new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.18 })
     );
-    pole.position.set(-2.8, roofY + 9.0, 0);
+    pole.position.set(-2.8, roofY + 9.0, -2.4);
     const finial = new THREE.Mesh(
       new THREE.SphereGeometry(0.65, 16, 16),
       new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.95, roughness: 0.15 })
     );
-    finial.position.set(-2.8, roofY + 18.2, 0);
+    finial.position.set(-2.8, roofY + 18.2, -2.4);
     group.add(pole, finial);
 
     // High-res Swiss Flag (crisp red square + white cross)
@@ -2336,7 +2336,7 @@ class PushnotOrbit {
       map: fTex, side: THREE.DoubleSide, roughness: 0.55, metalness: 0.05
     });
     this.swissFlagMesh = new THREE.Mesh(flagGeo, flagMat);
-    this.swissFlagMesh.position.set(3.2, roofY + 11.5, 0);
+    this.swissFlagMesh.position.set(3.2, roofY + 11.5, -2.4);
     this.swissFlagBase = Float32Array.from(flagGeo.attributes.position.array);
     group.add(this.swissFlagMesh);
 
@@ -4406,10 +4406,10 @@ class PushnotOrbit {
     });
 
     // 9:16 portrait video plane sitting directly on top of the Proton server tower
-    const videoGeo = new THREE.PlaneGeometry(8.6, 14.0);
-    videoGeo.translate(0, 14.0 / 2, 0); // anchor bottom of video plane to y = 0
+    const videoGeo = new THREE.PlaneGeometry(9.2, 15.0);
+    videoGeo.translate(0, 15.0 / 2, 0); // anchor bottom of video plane to y = 0
     this.swissVideoMesh = new THREE.Mesh(videoGeo, chromakeyMat);
-    this.swissVideoMesh.position.set(0.6, 22.8, 1.2);
+    this.swissVideoMesh.position.set(0.0, 22.8, 1.8);
     this.swissVideoMesh.visible = false;
     this.swissVideoMesh.userData.stationKey = 'proton';
     this.protonGroup.add(this.swissVideoMesh);
@@ -5431,7 +5431,7 @@ class PushnotOrbit {
           // Step 3 (Swiss Proton server receives order): Play laughing video sitting directly on top of Proton server!
           if (this.swissVideoMesh) {
             this.swissVideoMesh.visible = true;
-            this.swissVideoMesh.position.set(0.6, 22.8, 1.2);
+            this.swissVideoMesh.position.set(0.0, 22.8, 1.8);
             this.swissVideoMesh.rotation.set(0, 0, 0);
           }
           if (this.swissVideoEl && this.swissVideoEl.paused) {

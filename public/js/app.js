@@ -3808,71 +3808,46 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Balanced, normal law enforcement architectural finish: visible white crest, warm wood foyer, and reflective blue glass
+      // Imposing, menacing law enforcement finish: dark tactical monolith with bright entrance accents
       m.traverse(c => {
         if (!c.isMesh) return;
         c.castShadow = true;
         c.receiveShadow = true;
         if (c.material) {
-          c.material.envMapIntensity = 0.8;
+          c.material.envMapIntensity = 0.0;
           const matName = (c.material.name || '').toLowerCase();
           const meshName = (c.name || '').toLowerCase();
           const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
                                matName.includes('bison') || matName.includes('crest');
           const isWoodWall = matName.includes('wood') || meshName.includes('wood');
-          const isGlassOrWindow = matName.includes('glass') || matName.includes('window') ||
-                                  matName.includes('backing') || matName.includes('atrium') ||
-                                  meshName.includes('glazing');
           const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
                                    matName.includes('canopy') || matName.includes('sign');
 
           if (isBisonCrest) {
-            // Crisp, brilliant white RCMP bison crest clearly visible on the front glass atrium
+            // White etched RCMP bison crest pops brightly on the glass atrium (Image 1 reference)
             if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.15;
-            c.material.metalness = 0.25;
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0xffffff);
-              c.material.emissiveIntensity = 0.95;
-            }
-          } else if (isWoodWall) {
-            // Warm rich natural cedar/wood paneling clearly visible at the entrance foyer & canopy
-            if (c.material.color) c.material.color.setHex(0xa05a2c);
-            c.material.roughness = 0.55;
-            c.material.metalness = 0.05;
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0x3d1c06);
-              c.material.emissiveIntensity = 0.22;
-            }
-          } else if (isGlassOrWindow) {
-            // Clean, reflective blue-tinted architectural glass clearly visible across atrium and window bands
-            if (c.material.color) c.material.color.setHex(0x38bdf8);
-            c.material.roughness = 0.12;
-            c.material.metalness = 0.45;
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0x0284c7);
-              c.material.emissiveIntensity = 0.35;
-            }
-            c.material.transparent = true;
-            c.material.opacity = 0.88;
-          } else if (isEntranceAccent) {
-            // Clean metallic entrance trim and canopy framework
-            if (c.material.color) c.material.color.setHex(0xe2e8f0);
-            c.material.roughness = 0.30;
+            c.material.roughness = 0.20;
             c.material.metalness = 0.40;
             if (c.material.emissive) {
-              c.material.emissive.setHex(0x000000);
-              c.material.emissiveIntensity = 0.0;
+              c.material.emissive.setHex(0xffffff);
+              c.material.emissiveIntensity = 0.70;
             }
+          } else if (isWoodWall) {
+            // Warm rich natural wood panel wall at the entrance foyer (matching reference photo)
+            if (c.material.color) c.material.color.setHex(0x8a532b);
+            c.material.roughness = 0.65;
+            c.material.metalness = 0.05;
+          } else if (isEntranceAccent) {
+            if (c.material.color) c.material.color.setHex(0xffffff);
+            c.material.roughness = 0.25;
+            c.material.metalness = 0.50;
           } else {
-            // Clean dark slate/charcoal building facade: crisp architectural geometry visible under light
-            if (c.material.color) c.material.color.setHex(0x222c3d);
-            c.material.roughness = 0.70;
-            c.material.metalness = 0.20;
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0x000000);
-              c.material.emissiveIntensity = 0.0;
+            // Menacing dark tactical slate/charcoal exterior across roof and shells
+            if (c.material.color) {
+              c.material.color.setHex(0x18202e);
             }
+            c.material.roughness = 0.88;
+            c.material.metalness = 0.12;
           }
           c.material.needsUpdate = true;
         }
@@ -3884,34 +3859,38 @@ class PushnotOrbit {
       this.leoTops.swat = this.ground(m, 76.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
-      // Balanced normal lighting rig for the central RCMP Green Timbers centerpiece
-      this.rcmpLightingGroup = new THREE.Group();
-      this.rcmpLightingGroup.userData.stationKey = 'swat';
+      // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
+      this.rcmpDaylightGroup = new THREE.Group();
+      this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
-      // 1. Key spotlight focused on front entrance canopy, wood wall, glass atrium & white crest
-      const spotLight = new THREE.SpotLight(0xfffaea, 55.0, 180, Math.PI / 3.2, 0.45, 1.1);
-      spotLight.position.set(this.leoPos.swat.x + 10.0, 52.0, this.leoPos.swat.z + 30.0);
-      spotLight.target.position.set(this.leoPos.swat.x + 8.0, 8.0, this.leoPos.swat.z + 6.0);
+      // Bright dramatic spotlight directly lighting the entrance canopy, wooden wall, RCMP crest, and courtyard
+      const spotLight = new THREE.SpotLight(0xfffae0, 110.0, 240, Math.PI / 3.2, 0.45, 1.1);
+      spotLight.position.set(this.leoPos.swat.x + 12.0, 58.0, this.leoPos.swat.z + 32.0);
+      spotLight.target.position.set(this.leoPos.swat.x + 14.0, 6.5, this.leoPos.swat.z + 8.0);
       spotLight.castShadow = true;
-      this.rcmpLightingGroup.add(spotLight);
-      this.rcmpLightingGroup.add(spotLight.target);
+      this.rcmpDaylightGroup.add(spotLight);
+      this.rcmpDaylightGroup.add(spotLight.target);
 
-      // 2. Soft entrance fill light illuminating the wood foyer and glass entry
-      const entranceLight = new THREE.PointLight(0xfff5ea, 15.0, 42, 1.2);
-      entranceLight.position.set(this.leoPos.swat.x + 8.0, 9.0, this.leoPos.swat.z + 10.0);
-      this.rcmpLightingGroup.add(entranceLight);
+      // Warm entrance illumination pool highlighting canopy and silver RCMP crest
+      const entranceLight = new THREE.PointLight(0xfffaea, 25.0, 52, 1.2);
+      entranceLight.position.set(this.leoPos.swat.x + 8.0, 10.5, this.leoPos.swat.z + 10.0);
+      this.rcmpDaylightGroup.add(entranceLight);
 
-      // 3. West Wing building fill light
-      const westFill = new THREE.PointLight(0xdbeafe, 10.0, 65, 1.3);
-      westFill.position.set(this.leoPos.swat.x - 18.0, 22.0, this.leoPos.swat.z + 18.0);
-      this.rcmpLightingGroup.add(westFill);
+      // Warm courtyard ground light pool in front of the entrance doors and trees
+      const poolGeo = new THREE.CircleGeometry(12.0, 32);
+      const poolMat = new THREE.MeshBasicMaterial({
+        color: 0xfff5dd,
+        transparent: true,
+        opacity: 0.18,
+        blending: THREE.AdditiveBlending
+      });
+      const poolMesh = new THREE.Mesh(poolGeo, poolMat);
+      poolMesh.rotation.x = -Math.PI / 2;
+      poolMesh.position.set(this.leoPos.swat.x + 14.0, 0.08, this.leoPos.swat.z + 10.0);
+      this.rcmpDaylightGroup.add(poolMesh);
 
-      // 4. East Wing building fill light
-      const eastFill = new THREE.PointLight(0xfff7ed, 10.0, 65, 1.3);
-      eastFill.position.set(this.leoPos.swat.x + 22.0, 22.0, this.leoPos.swat.z + 16.0);
-      this.rcmpLightingGroup.add(eastFill);
-
-      this.leoGroup.add(this.rcmpLightingGroup);
+      // Building footprint stands directly on ground plane with zero plinth / zero base slab
+      this.leoGroup.add(this.rcmpDaylightGroup);
       done();
     }, undefined, done);
 
@@ -4426,10 +4405,11 @@ class PushnotOrbit {
       depthWrite: false
     });
 
-    // 9:16 portrait video plane standing free outside/above the Proton server node
-    const videoGeo = new THREE.PlaneGeometry(10.5, 18.5);
+    // 9:16 portrait video plane standing directly on top of the Proton server tower
+    const videoGeo = new THREE.PlaneGeometry(8.6, 14.5);
+    videoGeo.translate(0, 14.5 / 2, 0); // anchor bottom of video plane to y = 0
     this.swissVideoMesh = new THREE.Mesh(videoGeo, chromakeyMat);
-    this.swissVideoMesh.position.set(this.leoPos.proton.x + 3.0, 31.0, this.leoPos.proton.z + 4.5);
+    this.swissVideoMesh.position.set(this.leoPos.proton.x, 22.8, this.leoPos.proton.z);
     this.swissVideoMesh.visible = false;
     this.swissVideoMesh.userData.stationKey = 'proton';
     this.leoGroup.add(this.swissVideoMesh);
@@ -5448,11 +5428,12 @@ class PushnotOrbit {
           moverText = '🇨🇭 Proton AG';
           moverCls = 'cyan';
 
-          // Step 3 (Swiss Proton server receives order): Play laughing video in 3D facing camera, standing free above server!
+          // Step 3 (Swiss Proton server receives order): Play laughing video sitting directly on top of Proton server!
           if (this.swissVideoMesh) {
             this.swissVideoMesh.visible = true;
-            this.swissVideoMesh.position.set(L.proton.x + 2.5, 31.0, L.proton.z + 4.5);
-            this.swissVideoMesh.lookAt(this.camera.position);
+            this.swissVideoMesh.position.set(L.proton.x, 22.8, L.proton.z);
+            const camDir = this.camera.position.clone().sub(this.swissVideoMesh.position);
+            this.swissVideoMesh.rotation.set(0, Math.atan2(camDir.x, camDir.z), 0);
           }
           if (this.swissVideoEl && this.swissVideoEl.paused) {
             this.swissVideoEl.play().catch(() => {});

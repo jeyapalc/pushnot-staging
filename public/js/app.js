@@ -3808,50 +3808,8 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Imposing, menacing law enforcement finish: dark tactical monolith with bright entrance accents
-      m.traverse(c => {
-        if (!c.isMesh) return;
-        c.castShadow = true;
-        c.receiveShadow = true;
-        if (c.material) {
-          c.material.envMapIntensity = 0.0;
-          const matName = (c.material.name || '').toLowerCase();
-          const meshName = (c.name || '').toLowerCase();
-          const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
-                               matName.includes('bison') || matName.includes('crest');
-          const isWoodWall = matName.includes('wood') || meshName.includes('wood');
-          const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
-                                   matName.includes('canopy') || matName.includes('sign');
-
-          if (isBisonCrest) {
-            // White etched RCMP bison crest pops brightly on the glass atrium (Image 1 reference)
-            if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.20;
-            c.material.metalness = 0.40;
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0xffffff);
-              c.material.emissiveIntensity = 0.70;
-            }
-          } else if (isWoodWall) {
-            // Warm rich natural wood panel wall at the entrance foyer (matching reference photo)
-            if (c.material.color) c.material.color.setHex(0x8a532b);
-            c.material.roughness = 0.65;
-            c.material.metalness = 0.05;
-          } else if (isEntranceAccent) {
-            if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.25;
-            c.material.metalness = 0.50;
-          } else {
-            // Menacing dark tactical slate/charcoal exterior across roof and shells
-            if (c.material.color) {
-              c.material.color.setHex(0x18202e);
-            }
-            c.material.roughness = 0.88;
-            c.material.metalness = 0.12;
-          }
-          c.material.needsUpdate = true;
-        }
-      });
+      // Authentic architectural finish: preserve original GLB materials, textures, cedar entrance, and glass
+      this.harmonizeAsset(m, { minRough: 0.28, maxRough: 0.72, maxMetal: 0.7, envIntensity: 1.15, liftDark: false });
 
       // Ground and angle the RCMP Green Timbers Headquarters building footprint at center (0, 0, 0)
       // Scaled up to 76.0 for a commanding, larger centerpiece in LEO mode!
@@ -3859,35 +3817,34 @@ class PushnotOrbit {
       this.leoTops.swat = this.ground(m, 76.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
-      // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
+      // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node
       this.rcmpDaylightGroup = new THREE.Group();
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
-      // Bright dramatic spotlight directly lighting the entrance canopy, wooden wall, RCMP crest, and courtyard
-      const spotLight = new THREE.SpotLight(0xfffae0, 110.0, 240, Math.PI / 3.2, 0.45, 1.1);
-      spotLight.position.set(this.leoPos.swat.x + 12.0, 58.0, this.leoPos.swat.z + 32.0);
-      spotLight.target.position.set(this.leoPos.swat.x + 14.0, 6.5, this.leoPos.swat.z + 8.0);
-      spotLight.castShadow = true;
-      this.rcmpDaylightGroup.add(spotLight);
-      this.rcmpDaylightGroup.add(spotLight.target);
+      // 1. Warm afternoon directional sunlight (~5400K natural sunlight)
+      const sunLight = new THREE.DirectionalLight(0xfff5e6, 3.4);
+      sunLight.position.set(this.leoPos.swat.x + 18, 28, this.leoPos.swat.z + 22);
+      sunLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
+      sunLight.castShadow = true;
+      this.rcmpDaylightGroup.add(sunLight);
+      this.rcmpDaylightGroup.add(sunLight.target);
 
-      // Warm entrance illumination pool highlighting canopy and silver RCMP crest
-      const entranceLight = new THREE.PointLight(0xfffaea, 25.0, 52, 1.2);
-      entranceLight.position.set(this.leoPos.swat.x + 8.0, 10.5, this.leoPos.swat.z + 10.0);
-      this.rcmpDaylightGroup.add(entranceLight);
+      // 2. Soft sky ambient fill (diffuse natural daylight atmosphere from above)
+      const skyLight = new THREE.DirectionalLight(0xbde0fe, 1.8);
+      skyLight.position.set(this.leoPos.swat.x - 14, 24, this.leoPos.swat.z - 16);
+      skyLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
+      this.rcmpDaylightGroup.add(skyLight);
+      this.rcmpDaylightGroup.add(skyLight.target);
 
-      // Warm courtyard ground light pool in front of the entrance doors and trees
-      const poolGeo = new THREE.CircleGeometry(12.0, 32);
-      const poolMat = new THREE.MeshBasicMaterial({
-        color: 0xfff5dd,
-        transparent: true,
-        opacity: 0.18,
-        blending: THREE.AdditiveBlending
-      });
-      const poolMesh = new THREE.Mesh(poolGeo, poolMat);
-      poolMesh.rotation.x = -Math.PI / 2;
-      poolMesh.position.set(this.leoPos.swat.x + 14.0, 0.08, this.leoPos.swat.z + 10.0);
-      this.rcmpDaylightGroup.add(poolMesh);
+      // 3. Crisp daylight entrance accent on the glass atrium, cedar awning & etched bison crest
+      const entranceDaylight = new THREE.PointLight(0xfffaed, 3.2, 42, 1.2);
+      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 7.0, this.leoPos.swat.z + 5.0);
+      this.rcmpDaylightGroup.add(entranceDaylight);
+
+      // 4. Ground bounce daylight fill (subtle warm reflection off ground plane)
+      const bounceLight = new THREE.PointLight(0xfef3c7, 1.5, 32, 1.5);
+      bounceLight.position.set(this.leoPos.swat.x - 4, 1.0, this.leoPos.swat.z - 2);
+      this.rcmpDaylightGroup.add(bounceLight);
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
       this.leoGroup.add(this.rcmpDaylightGroup);
@@ -4405,14 +4362,28 @@ class PushnotOrbit {
       depthWrite: false
     });
 
-    // 9:16 portrait video plane sitting directly on top of the Proton server tower
-    const videoGeo = new THREE.PlaneGeometry(9.2, 15.0);
-    videoGeo.translate(0, 15.0 / 2, 0); // anchor bottom of video plane to y = 0
+    // Video plane cropped to subject and anchored at bottom
+    // JJ Jameson is in UV range [vMin=0.312, vMax=0.688], aspect ratio 1.40 (1010x721px)
+    const vidW = 8.6;
+    const vidH = 6.2;
+    const videoGeo = new THREE.PlaneGeometry(vidW, vidH);
+    const uvs = videoGeo.attributes.uv;
+    const uMin = 0.04, uMax = 0.98;
+    const vMin = 0.312, vMax = 0.688;
+    for (let i = 0; i < uvs.count; i++) {
+      const u = uvs.getX(i);
+      const v = uvs.getY(i);
+      uvs.setXY(i, uMin + u * (uMax - uMin), vMin + v * (vMax - vMin));
+    }
+    uvs.needsUpdate = true;
+    videoGeo.translate(0, vidH / 2, 0); // anchor bottom of JJ Jameson to y = 0
+
     this.swissVideoMesh = new THREE.Mesh(videoGeo, chromakeyMat);
-    this.swissVideoMesh.position.set(0.0, 22.8, 1.8);
+    // Positioned directly on the Proton server roof (roofY = 22.8) in world coordinates
+    this.swissVideoMesh.position.set(-58.85, 22.8, -58.85);
     this.swissVideoMesh.visible = false;
     this.swissVideoMesh.userData.stationKey = 'proton';
-    this.protonGroup.add(this.swissVideoMesh);
+    this.leoGroup.add(this.swissVideoMesh);
   }
 
   initAppleGoogleSkyscraper(done) {
@@ -5431,8 +5402,9 @@ class PushnotOrbit {
           // Step 3 (Swiss Proton server receives order): Play laughing video sitting directly on top of Proton server!
           if (this.swissVideoMesh) {
             this.swissVideoMesh.visible = true;
-            this.swissVideoMesh.position.set(0.0, 22.8, 1.8);
-            this.swissVideoMesh.rotation.set(0, 0, 0);
+            this.swissVideoMesh.position.set(-58.85, 22.8, -58.85);
+            // Face the user/camera upright from any viewpoint
+            this.swissVideoMesh.lookAt(this.camera.position.x, 22.8 + 3.1, this.camera.position.z);
           }
           if (this.swissVideoEl && this.swissVideoEl.paused) {
             this.swissVideoEl.play().catch(() => {});

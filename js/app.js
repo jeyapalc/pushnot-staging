@@ -2716,22 +2716,23 @@ class PushnotOrbit {
     addrPlaque.rotation.set(0, -0.18, 0);
     group.add(addrPlaque);
 
-    // Dedicated high-intensity architectural lighting rig on the home
-    // (Crisp, warm, bright: illuminates roof shingles, walls, lawn, and tree!)
-    const homeKey = new THREE.DirectionalLight(0xfffaea, 4.5);
-    homeKey.position.set(13.5, 14.0, 12.0);
+    // Dedicated localized architectural lighting rig strictly on the home & bundle
+    // (Local spotlights & point lights so no directional light spills globally across the scene or onto RCMP office)
+    const homeKey = new THREE.SpotLight(0xfffaea, 8.5, 28, Math.PI / 3.5, 0.45, 1.2);
+    homeKey.position.set(13.5, 12.0, 10.0);
     homeKey.target.position.set(10.2, 2.0, 0);
 
-    const homeFill = new THREE.PointLight(0x38bdf8, 3.2, 40);
-    homeFill.position.set(6.0, 8.0, 8.0);
+    const homeFill = new THREE.PointLight(0x38bdf8, 3.2, 22, 1.5);
+    homeFill.position.set(6.0, 6.0, 6.0);
 
-    const homeSun = new THREE.DirectionalLight(0xffeedd, 3.2);
-    homeSun.position.set(10.2, 18.0, 4.0);
+    const homeSun = new THREE.SpotLight(0xffeedd, 7.0, 30, Math.PI / 3.2, 0.45, 1.2);
+    homeSun.position.set(10.2, 16.0, 4.0);
+    homeSun.target.position.set(10.2, 2.0, 0);
 
-    const homeRim = new THREE.DirectionalLight(0x60a5fa, 2.2);
-    homeRim.position.set(10.2, 10.0, -8.0);
+    const homeRim = new THREE.PointLight(0x60a5fa, 2.2, 20, 1.5);
+    homeRim.position.set(10.2, 8.0, -6.0);
 
-    group.add(homeKey, homeKey.target, homeFill, homeSun, homeRim);
+    group.add(homeKey, homeKey.target, homeFill, homeSun, homeSun.target, homeRim);
     group.scale.setScalar(scale);
     return group;
   }
@@ -3730,8 +3731,8 @@ class PushnotOrbit {
       this.hackerScreenGlow.position.set(0, 11, 4.0);
       hacker.add(this.hackerScreenGlow);
 
-      // Front interrogation spotlight aiming directly into hacker's face (OFF until suspect is ID'ed!)
-      this.hackerSpotlight = new THREE.SpotLight(0xfff5ea, 0, 75, Math.PI / 3.8, 0.35, 1.2);
+      // Front interrogation spotlight aiming directly into hacker's face (strictly confined to desk, distance: 36)
+      this.hackerSpotlight = new THREE.SpotLight(0xfff5ea, 0, 36, Math.PI / 3.8, 0.35, 1.2);
       this.hackerSpotlight.position.set(this.leoPos.bandit.x - 12.0, 26.0, this.leoPos.bandit.z - 16.0);
       this.hackerSpotlight.target.position.set(this.leoPos.bandit.x, 12.5, this.leoPos.bandit.z);
       this.leoGroup.add(this.hackerSpotlight);
@@ -3807,7 +3808,7 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Imposing, menacing law enforcement finish: dark tactical monolith with bright entrance accents
+      // Nighttime law enforcement office: dark unlit tactical building with glowing interior office lights
       m.traverse(c => {
         if (!c.isMesh) return;
         c.castShadow = true;
@@ -3816,37 +3817,79 @@ class PushnotOrbit {
           c.material.envMapIntensity = 0.0;
           const matName = (c.material.name || '').toLowerCase();
           const meshName = (c.name || '').toLowerCase();
+
+          const isGlassOrWindow = matName.includes('glass') || matName.includes('window') ||
+                                  matName.includes('backing') || matName.includes('atrium') ||
+                                  meshName.includes('glazing');
           const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
                                matName.includes('bison') || matName.includes('crest');
           const isWoodWall = matName.includes('wood') || meshName.includes('wood');
           const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
                                    matName.includes('canopy') || matName.includes('sign');
 
-          if (isBisonCrest) {
-            // White etched RCMP bison crest pops brightly on the glass atrium (Image 1 reference)
+          if (isGlassOrWindow) {
+            // Interior office lights shining through windows at night!
+            // Natural office interior warmth: soft golden-warm incandescent and fluorescent office lighting
+            let winColor = 0xfffaea;
+            let emitColor = 0xffdf88;
+            let intensity = 0.88;
+
+            if (matName.includes('atrium') || matName.includes('public')) {
+              // Central entrance atrium & lobby: bright warm interior welcome glow
+              winColor = 0xfffdf5;
+              emitColor = 0xffe294;
+              intensity = 0.95;
+            } else if (matName.includes('shaded')) {
+              // Slightly subdued executive office/corner office
+              emitColor = 0xfde68a;
+              intensity = 0.72;
+            } else if (matName.includes('0') || matName.includes('2') || matName.includes('4')) {
+              // Warm active office workspaces
+              emitColor = 0xffdf7a;
+              intensity = 0.90;
+            } else {
+              // Crisp fluorescent office workspaces
+              emitColor = 0xfef08a;
+              intensity = 0.84;
+            }
+
+            if (c.material.color) c.material.color.setHex(winColor);
+            if (c.material.emissive) {
+              c.material.emissive.setHex(emitColor);
+              c.material.emissiveIntensity = intensity;
+            }
+            c.material.roughness = 0.20;
+            c.material.metalness = 0.10;
+            c.material.transparent = true;
+            c.material.opacity = 0.92;
+          } else if (isBisonCrest) {
+            // White etched RCMP bison crest pops brightly on the illuminated glass atrium
             if (c.material.color) c.material.color.setHex(0xffffff);
             c.material.roughness = 0.20;
-            c.material.metalness = 0.40;
+            c.material.metalness = 0.30;
             if (c.material.emissive) {
               c.material.emissive.setHex(0xffffff);
-              c.material.emissiveIntensity = 0.70;
+              c.material.emissiveIntensity = 0.85;
             }
           } else if (isWoodWall) {
-            // Warm rich natural wood panel wall at the entrance foyer (matching reference photo)
-            if (c.material.color) c.material.color.setHex(0x8a532b);
-            c.material.roughness = 0.65;
+            // Rich natural cedar/wood panel foyer wall, softly visible through glass entrance
+            if (c.material.color) c.material.color.setHex(0x6e3d1b);
+            c.material.roughness = 0.75;
             c.material.metalness = 0.05;
           } else if (isEntranceAccent) {
-            if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.25;
-            c.material.metalness = 0.50;
+            // Entrance canopy trim and signage: dark sleek trim
+            if (c.material.color) c.material.color.setHex(0x1e293b);
+            c.material.roughness = 0.60;
+            c.material.metalness = 0.40;
           } else {
-            // Menacing dark tactical slate/charcoal exterior across roof and shells
-            if (c.material.color) {
-              c.material.color.setHex(0x18202e);
+            // Dark unlit tactical nighttime building exterior (precast, charcoal panels, roof)
+            if (c.material.color) c.material.color.setHex(0x0f1520);
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0x000000);
+              c.material.emissiveIntensity = 0.0;
             }
-            c.material.roughness = 0.88;
-            c.material.metalness = 0.12;
+            c.material.roughness = 0.92;
+            c.material.metalness = 0.08;
           }
           c.material.needsUpdate = true;
         }
@@ -3858,38 +3901,34 @@ class PushnotOrbit {
       this.leoTops.swat = this.ground(m, 76.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
-      // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
-      this.rcmpDaylightGroup = new THREE.Group();
-      this.rcmpDaylightGroup.userData.stationKey = 'swat';
+      // Interior Nighttime Office Lighting Rig for RCMP Green Timbers Node
+      // Kept completely unlit from the outside (no exterior spotlights or daytime floodlights)
+      // Soft warm lights placed inside the office volume make it look like interior office lights are on at night
+      this.rcmpInteriorLights = new THREE.Group();
+      this.rcmpInteriorLights.userData.stationKey = 'swat';
 
-      // Bright dramatic spotlight directly lighting the entrance canopy, wooden wall, RCMP crest, and courtyard
-      const spotLight = new THREE.SpotLight(0xfffae0, 110.0, 240, Math.PI / 3.2, 0.45, 1.1);
-      spotLight.position.set(this.leoPos.swat.x + 12.0, 58.0, this.leoPos.swat.z + 32.0);
-      spotLight.target.position.set(this.leoPos.swat.x + 14.0, 6.5, this.leoPos.swat.z + 8.0);
-      spotLight.castShadow = true;
-      this.rcmpDaylightGroup.add(spotLight);
-      this.rcmpDaylightGroup.add(spotLight.target);
+      // 1. Central Glass Atrium & Lobby Interior Light (shining gently from inside the entrance glass)
+      const atriumLight = new THREE.PointLight(0xffeaad, 3.5, 32, 1.6);
+      atriumLight.position.set(this.leoPos.swat.x + 8.0, 9.5, this.leoPos.swat.z + 4.0);
+      this.rcmpInteriorLights.add(atriumLight);
 
-      // Warm entrance illumination pool highlighting canopy and silver RCMP crest
-      const entranceLight = new THREE.PointLight(0xfffaea, 25.0, 52, 1.2);
-      entranceLight.position.set(this.leoPos.swat.x + 8.0, 10.5, this.leoPos.swat.z + 10.0);
-      this.rcmpDaylightGroup.add(entranceLight);
+      // 2. East Office Wing Interior Warm Light (inside floor plate)
+      const eastOfficeLight = new THREE.PointLight(0xffdf88, 2.8, 36, 1.8);
+      eastOfficeLight.position.set(this.leoPos.swat.x + 22.0, 11.0, this.leoPos.swat.z - 2.0);
+      this.rcmpInteriorLights.add(eastOfficeLight);
 
-      // Warm courtyard ground light pool in front of the entrance doors and trees
-      const poolGeo = new THREE.CircleGeometry(12.0, 32);
-      const poolMat = new THREE.MeshBasicMaterial({
-        color: 0xfff5dd,
-        transparent: true,
-        opacity: 0.18,
-        blending: THREE.AdditiveBlending
-      });
-      const poolMesh = new THREE.Mesh(poolGeo, poolMat);
-      poolMesh.rotation.x = -Math.PI / 2;
-      poolMesh.position.set(this.leoPos.swat.x + 14.0, 0.08, this.leoPos.swat.z + 10.0);
-      this.rcmpDaylightGroup.add(poolMesh);
+      // 3. West Office Wing Interior Warm Light (inside floor plate)
+      const westOfficeLight = new THREE.PointLight(0xffdf88, 2.8, 36, 1.8);
+      westOfficeLight.position.set(this.leoPos.swat.x - 16.0, 11.0, this.leoPos.swat.z + 2.0);
+      this.rcmpInteriorLights.add(westOfficeLight);
+
+      // 4. Subtle cool ceiling downlight inside central operations atrium
+      const opsLight = new THREE.PointLight(0xe0f2fe, 1.8, 24, 2.0);
+      opsLight.position.set(this.leoPos.swat.x + 2.0, 14.0, this.leoPos.swat.z - 4.0);
+      this.rcmpInteriorLights.add(opsLight);
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
-      this.leoGroup.add(this.rcmpDaylightGroup);
+      this.leoGroup.add(this.rcmpInteriorLights);
       done();
     }, undefined, done);
 

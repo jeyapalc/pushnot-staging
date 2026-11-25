@@ -3808,38 +3808,71 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Completely unlit RCMP headquarters building (dark tactical stealth monolith, zero window/office emissions, zero exterior lights)
+      // Balanced, normal law enforcement architectural finish: visible white crest, warm wood foyer, and reflective blue glass
       m.traverse(c => {
         if (!c.isMesh) return;
         c.castShadow = true;
         c.receiveShadow = true;
         if (c.material) {
-          c.material.envMapIntensity = 0.0;
-          if (c.material.emissive) {
-            c.material.emissive.setHex(0x000000);
-            c.material.emissiveIntensity = 0.0;
-          }
+          c.material.envMapIntensity = 0.8;
           const matName = (c.material.name || '').toLowerCase();
           const meshName = (c.name || '').toLowerCase();
           const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
                                matName.includes('bison') || matName.includes('crest');
           const isWoodWall = matName.includes('wood') || meshName.includes('wood');
+          const isGlassOrWindow = matName.includes('glass') || matName.includes('window') ||
+                                  matName.includes('backing') || matName.includes('atrium') ||
+                                  meshName.includes('glazing');
+          const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
+                                   matName.includes('canopy') || matName.includes('sign');
 
           if (isBisonCrest) {
-            // Subtle dark etched silver emblem, unlit
-            if (c.material.color) c.material.color.setHex(0x52525b);
-            c.material.roughness = 0.65;
-            c.material.metalness = 0.20;
+            // Crisp, brilliant white RCMP bison crest clearly visible on the front glass atrium
+            if (c.material.color) c.material.color.setHex(0xffffff);
+            c.material.roughness = 0.15;
+            c.material.metalness = 0.25;
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0xffffff);
+              c.material.emissiveIntensity = 0.95;
+            }
           } else if (isWoodWall) {
-            // Dark muted natural cedar foyer wall, unlit
-            if (c.material.color) c.material.color.setHex(0x382012);
-            c.material.roughness = 0.85;
+            // Warm rich natural cedar/wood paneling clearly visible at the entrance foyer & canopy
+            if (c.material.color) c.material.color.setHex(0xa05a2c);
+            c.material.roughness = 0.55;
             c.material.metalness = 0.05;
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0x3d1c06);
+              c.material.emissiveIntensity = 0.22;
+            }
+          } else if (isGlassOrWindow) {
+            // Clean, reflective blue-tinted architectural glass clearly visible across atrium and window bands
+            if (c.material.color) c.material.color.setHex(0x38bdf8);
+            c.material.roughness = 0.12;
+            c.material.metalness = 0.45;
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0x0284c7);
+              c.material.emissiveIntensity = 0.35;
+            }
+            c.material.transparent = true;
+            c.material.opacity = 0.88;
+          } else if (isEntranceAccent) {
+            // Clean metallic entrance trim and canopy framework
+            if (c.material.color) c.material.color.setHex(0xe2e8f0);
+            c.material.roughness = 0.30;
+            c.material.metalness = 0.40;
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0x000000);
+              c.material.emissiveIntensity = 0.0;
+            }
           } else {
-            // Dark stealth slate / charcoal unlit surfaces across glass, walls, panels and roof
-            if (c.material.color) c.material.color.setHex(0x0c111a);
-            c.material.roughness = 0.92;
-            c.material.metalness = 0.08;
+            // Clean dark slate/charcoal building facade: crisp architectural geometry visible under light
+            if (c.material.color) c.material.color.setHex(0x222c3d);
+            c.material.roughness = 0.70;
+            c.material.metalness = 0.20;
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0x000000);
+              c.material.emissiveIntensity = 0.0;
+            }
           }
           c.material.needsUpdate = true;
         }
@@ -3850,6 +3883,35 @@ class PushnotOrbit {
       m.rotation.y = Math.PI * 0.22;
       this.leoTops.swat = this.ground(m, 76.0, this.leoPos.swat);
       this.leoGroup.add(m);
+
+      // Balanced normal lighting rig for the central RCMP Green Timbers centerpiece
+      this.rcmpLightingGroup = new THREE.Group();
+      this.rcmpLightingGroup.userData.stationKey = 'swat';
+
+      // 1. Key spotlight focused on front entrance canopy, wood wall, glass atrium & white crest
+      const spotLight = new THREE.SpotLight(0xfffaea, 55.0, 180, Math.PI / 3.2, 0.45, 1.1);
+      spotLight.position.set(this.leoPos.swat.x + 10.0, 52.0, this.leoPos.swat.z + 30.0);
+      spotLight.target.position.set(this.leoPos.swat.x + 8.0, 8.0, this.leoPos.swat.z + 6.0);
+      spotLight.castShadow = true;
+      this.rcmpLightingGroup.add(spotLight);
+      this.rcmpLightingGroup.add(spotLight.target);
+
+      // 2. Soft entrance fill light illuminating the wood foyer and glass entry
+      const entranceLight = new THREE.PointLight(0xfff5ea, 15.0, 42, 1.2);
+      entranceLight.position.set(this.leoPos.swat.x + 8.0, 9.0, this.leoPos.swat.z + 10.0);
+      this.rcmpLightingGroup.add(entranceLight);
+
+      // 3. West Wing building fill light
+      const westFill = new THREE.PointLight(0xdbeafe, 10.0, 65, 1.3);
+      westFill.position.set(this.leoPos.swat.x - 18.0, 22.0, this.leoPos.swat.z + 18.0);
+      this.rcmpLightingGroup.add(westFill);
+
+      // 4. East Wing building fill light
+      const eastFill = new THREE.PointLight(0xfff7ed, 10.0, 65, 1.3);
+      eastFill.position.set(this.leoPos.swat.x + 22.0, 22.0, this.leoPos.swat.z + 16.0);
+      this.rcmpLightingGroup.add(eastFill);
+
+      this.leoGroup.add(this.rcmpLightingGroup);
       done();
     }, undefined, done);
 

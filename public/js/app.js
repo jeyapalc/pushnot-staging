@@ -2704,16 +2704,16 @@ class PushnotOrbit {
     if (this.homeSweetHomeScene) {
       homeWrap.add(this.homeSweetHomeScene.clone(true));
     }
-    // Tilted up to directly face the user and elevated camera view
-    homeWrap.position.set(10.2, 1.4, 0.4);
-    homeWrap.rotation.set(-0.48, -0.15, 0); // ~27.5° pitch up so front door, windows and porch face user
+    // Tilted 45 degrees forward to face the user and showcase the front yard, facade, and roof
+    homeWrap.position.set(10.2, 2.2, 0.4);
+    homeWrap.rotation.set(Math.PI / 4, -0.15, 0); // 45° tilt forward the other way
     group.add(homeWrap);
 
     // Front yard address plaque standing on front-right curb of driveway
-    // Tilted in harmony with the house so plaque faces user
+    // Tilted in harmony with the house (45°) so plaque faces user
     const addrPlaque = this.createHouseAddressPlaque();
-    addrPlaque.position.set(14.2, 0.8, 4.0);
-    addrPlaque.rotation.set(-0.40, -0.22, 0);
+    addrPlaque.position.set(14.2, 0.4, 4.0);
+    addrPlaque.rotation.set(Math.PI / 4, -0.15, 0);
     group.add(addrPlaque);
 
     // Dedicated localized architectural lighting rig strictly on the home & bundle
@@ -3951,8 +3951,8 @@ class PushnotOrbit {
         if (hw) {
           hw.clear();
           hw.add(houseRoot.clone(true));
-          hw.position.set(10.2, 1.4, 0.4);
-          hw.rotation.set(-0.48, -0.15, 0);
+          hw.position.set(10.2, 2.2, 0.4);
+          hw.rotation.set(Math.PI / 4, -0.15, 0);
         }
       };
       attachHouse(this.leoSubscriberBundle);

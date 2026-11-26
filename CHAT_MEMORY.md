@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-25 (v148)  
+**Last Updated:** 2026-11-25 (v149)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,10 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v149 (RCMP Building Body Color Restored to 0x18202e)
+- **Restored Building Body Tone**: Switched the RCMP building exterior finish from pitch black (`0x0a0c10`) back to the authentic dark tactical slate/charcoal color (`0x18202e`, roughness: 0.88, metalness: 0.12) across all roof, wall, shell, and window bay meshes, exactly matching the user's reference screenshot (`media_1795671305458_9c41203f.jpg`).
+- **Maintained Wood & Logo Accents**: Preserved warm natural wood (`0x8a532b`) on the entrance awning and front entrance wall, the crisp emissive white RCMP bison crest decal (`0xffffff`), and the 4 green courtyard trees.
 
 ### v148 (Removed Glass, Wood Awning & Wall, Black Building, White Logo)
 - **Glass Removed**: Handled multi-material array traversal (`Array.isArray(c.material)`) across all building meshes (`Brick, bronze, silver and ribbon glazing`, `East laboratory`, etc.). All glass materials (`Blue-gray glass`, `Clear public-entry glass`, `Atrium glass`, window frames) are set to solid matte black (`0x0a0c10`, roughness: 0.95, metalness: 0.0), completely eliminating all glass reflections, transparency, and window stripe artifacts.

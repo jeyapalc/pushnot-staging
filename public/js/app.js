@@ -3869,18 +3869,18 @@ class PushnotOrbit {
             mat.opacity = 1.0;
             mat.transparent = false;
           } else if (isGlass) {
-            // Glass removed: solid matte black matching building with zero sheen/reflections
-            if (mat.color) mat.color.setHex(0x0a0c10);
+            // Glass removed: dark tactical slate matching building with zero reflections
+            if (mat.color) mat.color.setHex(0x18202e);
             mat.roughness = 0.95;
             mat.metalness = 0.0;
             mat.visible = true;
             mat.opacity = 1.0;
             mat.transparent = false;
           } else {
-            // Solid matte black for the building (walls, roofs, coping, parapets, spandrels)
-            if (mat.color) mat.color.setHex(0x0a0c10);
-            mat.roughness = 0.92;
-            mat.metalness = 0.08;
+            // Dark tactical slate/charcoal exterior across roof, walls, and shells (0x18202e)
+            if (mat.color) mat.color.setHex(0x18202e);
+            mat.roughness = 0.88;
+            mat.metalness = 0.12;
             mat.visible = true;
             mat.opacity = 1.0;
             mat.transparent = false;

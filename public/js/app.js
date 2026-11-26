@@ -3808,49 +3808,73 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Imposing, menacing law enforcement finish: dark tactical monolith with bright entrance accents
+      // Custom RCMP building finish per user directive:
+      // 1. Remove all glass (hide / make invisible)
+      // 2. Leave wood on awning and wood wall at front entrance
+      // 3. Black for the building
+      // 4. Show the white logo & signage
       m.traverse(c => {
         if (!c.isMesh) return;
         c.castShadow = true;
         c.receiveShadow = true;
-        if (c.material) {
-          c.material.envMapIntensity = 0.0;
-          const matName = (c.material.name || '').toLowerCase();
-          const meshName = (c.name || '').toLowerCase();
-          const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
-                               matName.includes('bison') || matName.includes('crest');
-          const isWoodWall = matName.includes('wood') || meshName.includes('wood');
-          const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
-                                   matName.includes('canopy') || matName.includes('sign');
+        const meshName = (c.name || '').toLowerCase();
+        const mats = Array.isArray(c.material) ? c.material : (c.material ? [c.material] : []);
 
-          if (isBisonCrest) {
-            // White etched RCMP bison crest pops brightly on the glass atrium (Image 1 reference)
-            if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.20;
-            c.material.metalness = 0.40;
-            if (c.material.emissive) {
-              c.material.emissive.setHex(0xffffff);
-              c.material.emissiveIntensity = 0.70;
+        mats.forEach(mat => {
+          if (!mat) return;
+          mat.envMapIntensity = 0.0;
+          const matName = (mat.name || '').toLowerCase();
+
+          const isLogo = matName.includes('crest') || matName.includes('bison') ||
+                         meshName.includes('crest') || meshName.includes('bison') ||
+                         matName.includes('signage') || matName.includes('warm white') ||
+                         meshName.includes('canada') || meshName.includes('police') || meshName.includes('gendarmerie');
+
+          const isWood = matName.includes('wood') || meshName.includes('wood') ||
+                         matName.includes('canopy wood') || matName.includes('warm neutral backing');
+
+          const isGlass = matName.includes('glass') || meshName.includes('glass') ||
+                          matName.includes('atrium glass') || matName.includes('glaz');
+
+          if (isLogo) {
+            // Crisp, glowing white RCMP bison crest & entrance signage
+            if (mat.color) mat.color.setHex(0xffffff);
+            mat.roughness = 0.20;
+            mat.metalness = 0.40;
+            if (mat.emissive) {
+              mat.emissive.setHex(0xffffff);
+              mat.emissiveIntensity = 0.85;
             }
-          } else if (isWoodWall) {
-            // Warm rich natural wood panel wall at the entrance foyer (matching reference photo)
-            if (c.material.color) c.material.color.setHex(0x8a532b);
-            c.material.roughness = 0.65;
-            c.material.metalness = 0.05;
-          } else if (isEntranceAccent) {
-            if (c.material.color) c.material.color.setHex(0xffffff);
-            c.material.roughness = 0.25;
-            c.material.metalness = 0.50;
+            mat.visible = true;
+            mat.opacity = 1.0;
+            mat.transparent = false;
+          } else if (isWood) {
+            // Warm rich natural wood on the awning & entrance foyer wall
+            if (mat.color) mat.color.setHex(0x8a532b);
+            mat.roughness = 0.65;
+            mat.metalness = 0.05;
+            mat.visible = true;
+            mat.opacity = 1.0;
+            mat.transparent = false;
+          } else if (isGlass) {
+            // Remove all glass completely
+            mat.visible = false;
+            mat.opacity = 0.0;
+            mat.transparent = true;
+            mat.depthWrite = false;
           } else {
-            // Menacing dark tactical slate/charcoal exterior across roof and shells
-            if (c.material.color) {
-              c.material.color.setHex(0x18202e);
+            // Solid matte black for the building (walls, roofs, window frames, spandrels, backings)
+            if (mat.color) {
+              mat.color.setHex(0x0a0c10);
             }
-            c.material.roughness = 0.88;
-            c.material.metalness = 0.12;
+            mat.roughness = 0.90;
+            mat.metalness = 0.10;
+            mat.visible = true;
+            mat.opacity = 1.0;
+            mat.transparent = false;
           }
-          c.material.needsUpdate = true;
-        }
+          mat.needsUpdate = true;
+        });
       });
 
       // Ground and angle the RCMP Green Timbers Headquarters building footprint at center (0, 0, 0)

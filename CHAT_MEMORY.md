@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-25 (v145)  
+**Last Updated:** 2026-11-25 (v146)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,12 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v146 (Restored RCMP Node with Trees & Single Dramatic Spotlight)
+- **Restored RCMP Node State**: Reverted the RCMP building node to the exact point when the 4 green Nikko maple trees were finalized (`bf1c003`).
+- **Dark Scene & Tactical Monolith**: Dark tactical slate/charcoal exterior finish (`0x18202e`), white etched bison crest (`0xffffff`), and warm rich natural wood foyer wall (`0x8a532b`).
+- **Single Dramatic Spotlight**: Restored the 110-intensity focused entrance spotlight (`spotLight` at `110.0`), entrance fill point light (`25.0`), and courtyard pool, casting a focused dramatic beam while preserving the dark tactical nighttime scene.
+- **Courtyard Trees**: Restored the 4 green summer Nikko maple trees (`#2e7d32`, height 10.5) in the courtyard opposite the entrance foyer at `{ x: 19.5, z: 14.5 }`, `{ x: 22.5, z: 14.0 }`, `{ x: 25.5, z: 13.5 }`, `{ x: 28.5, z: 13.0 }`.
 
 ### v136 (Ground Circle & Judicial Gavel)
 - **Removed Ground Circle Under RCMP Building in LEO**: Moved `ring`, `outer`, `trackInner`, and `trackOuter` into `normalGroup`. In LEO mode, `normalGroup` is hidden, completely clearing the ground plane under the RCMP headquarters with zero circles or rings.

@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-25 (v146)  
+**Last Updated:** 2026-11-25 (v148)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,12 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v148 (Removed Glass, Wood Awning & Wall, Black Building, White Logo)
+- **Glass Removed**: Handled multi-material array traversal (`Array.isArray(c.material)`) across all building meshes (`Brick, bronze, silver and ribbon glazing`, `East laboratory`, etc.). All glass materials (`Blue-gray glass`, `Clear public-entry glass`, `Atrium glass`, window frames) are set to solid matte black (`0x0a0c10`, roughness: 0.95, metalness: 0.0), completely eliminating all glass reflections, transparency, and window stripe artifacts.
+- **Wood Awning & Entrance Wall**: Target matches for `Courtyard canopy and columns`, `Public entry canopy`, `Canopy wood 0/1`, and `Warm neutral backing at public entrance` rendered in rich warm wood (`0x8a532b`, roughness: 0.65).
+- **Solid Black Building**: All exterior shell panels, roofs, spandrels, and parapets rendered in solid matte black (`0x0a0c10`, roughness: 0.92).
+- **Crisp White RCMP Bison Logo**: The textured alpha decal (`Front atrium bison crest decal` with `White etched bison crest`) is rendered in pure emissive white (`0xffffff`, roughness: 0.15, emissiveIntensity: 1.0) with polygon offset to cleanly float above the matte black atrium facade without z-fighting. All official police text signage (`Canada`, `du Canada`, `Royal Canadian Mounted Police`) also rendered in crisp white.
 
 ### v146 (Restored RCMP Node with Trees & Single Dramatic Spotlight)
 - **Restored RCMP Node State**: Reverted the RCMP building node to the exact point when the 4 green Nikko maple trees were finalized (`bf1c003`).

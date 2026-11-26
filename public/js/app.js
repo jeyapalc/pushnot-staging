@@ -3809,10 +3809,10 @@ class PushnotOrbit {
       });
 
       // Custom RCMP building finish per user directive:
-      // 1. Remove all glass (hide / make invisible)
-      // 2. Leave wood on awning and wood wall at front entrance
-      // 3. Black for the building
-      // 4. Show the white logo & signage
+      // 1. Remove all glass (matte black matching building, zero glass sheen/reflection)
+      // 2. Leave wood on awning and wood wall at front entrance (0x8a532b)
+      // 3. Black for the building (walls, roofs, window openings, trims)
+      // 4. Show the white logo (crisp glowing white bison crest decal & police signage)
       m.traverse(c => {
         if (!c.isMesh) return;
         c.castShadow = true;
@@ -3825,29 +3825,41 @@ class PushnotOrbit {
           mat.envMapIntensity = 0.0;
           const matName = (mat.name || '').toLowerCase();
 
+          // 1. White logo & official police signage
           const isLogo = matName.includes('crest') || matName.includes('bison') ||
-                         meshName.includes('crest') || meshName.includes('bison') ||
-                         matName.includes('signage') || matName.includes('warm white') ||
-                         meshName.includes('canada') || meshName.includes('police') || meshName.includes('gendarmerie');
+                         meshName.includes('bison crest') || matName.includes('white etched') ||
+                         matName.includes('warm white signage') ||
+                         meshName === 'canada' || meshName === 'du canada' ||
+                         meshName.includes('mounted police') || meshName.includes('royal canadian') ||
+                         meshName.includes('gendarmerie royale');
 
-          const isWood = matName.includes('wood') || meshName.includes('wood') ||
-                         matName.includes('canopy wood') || matName.includes('warm neutral backing');
+          // 2. Wood on the awning & wood wall at front entrance
+          const isWood = !isLogo && (
+            matName.includes('wood') || meshName.includes('canopy') ||
+            matName.includes('canopy') || matName.includes('warm neutral backing at public entrance')
+          );
 
-          const isGlass = matName.includes('glass') || meshName.includes('glass') ||
-                          matName.includes('atrium glass') || matName.includes('glaz');
+          // 3. Glass to remove (matte black matching building, zero reflections)
+          const isGlass = !isLogo && !isWood && (
+            matName.includes('glass') || meshName.includes('glaz') || matName.includes('glaz') || matName.includes('window')
+          );
 
           if (isLogo) {
-            // Crisp, glowing white RCMP bison crest & entrance signage
+            // Crisp, glowing white RCMP bison crest decal & entrance signage
             if (mat.color) mat.color.setHex(0xffffff);
-            mat.roughness = 0.20;
-            mat.metalness = 0.40;
+            mat.roughness = 0.15;
+            mat.metalness = 0.35;
             if (mat.emissive) {
               mat.emissive.setHex(0xffffff);
-              mat.emissiveIntensity = 0.85;
+              mat.emissiveIntensity = 1.0;
             }
+            mat.transparent = true;
+            mat.depthWrite = false;
+            mat.polygonOffset = true;
+            mat.polygonOffsetFactor = -2;
+            mat.polygonOffsetUnits = -2;
+            mat.side = THREE.DoubleSide;
             mat.visible = true;
-            mat.opacity = 1.0;
-            mat.transparent = false;
           } else if (isWood) {
             // Warm rich natural wood on the awning & entrance foyer wall
             if (mat.color) mat.color.setHex(0x8a532b);
@@ -3857,18 +3869,18 @@ class PushnotOrbit {
             mat.opacity = 1.0;
             mat.transparent = false;
           } else if (isGlass) {
-            // Remove all glass completely
-            mat.visible = false;
-            mat.opacity = 0.0;
-            mat.transparent = true;
-            mat.depthWrite = false;
+            // Glass removed: solid matte black matching building with zero sheen/reflections
+            if (mat.color) mat.color.setHex(0x0a0c10);
+            mat.roughness = 0.95;
+            mat.metalness = 0.0;
+            mat.visible = true;
+            mat.opacity = 1.0;
+            mat.transparent = false;
           } else {
-            // Solid matte black for the building (walls, roofs, window frames, spandrels, backings)
-            if (mat.color) {
-              mat.color.setHex(0x0a0c10);
-            }
-            mat.roughness = 0.90;
-            mat.metalness = 0.10;
+            // Solid matte black for the building (walls, roofs, coping, parapets, spandrels)
+            if (mat.color) mat.color.setHex(0x0a0c10);
+            mat.roughness = 0.92;
+            mat.metalness = 0.08;
             mat.visible = true;
             mat.opacity = 1.0;
             mat.transparent = false;

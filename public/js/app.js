@@ -3808,8 +3808,50 @@ class PushnotOrbit {
         if (c.geometry) c.geometry.dispose();
       });
 
-      // Authentic architectural finish: preserve original GLB materials, textures, cedar entrance, and glass
-      this.harmonizeAsset(m, { minRough: 0.28, maxRough: 0.72, maxMetal: 0.7, envIntensity: 1.15, liftDark: false });
+      // Imposing, menacing law enforcement finish: dark tactical monolith with bright entrance accents
+      m.traverse(c => {
+        if (!c.isMesh) return;
+        c.castShadow = true;
+        c.receiveShadow = true;
+        if (c.material) {
+          c.material.envMapIntensity = 0.0;
+          const matName = (c.material.name || '').toLowerCase();
+          const meshName = (c.name || '').toLowerCase();
+          const isBisonCrest = meshName.includes('crest') || meshName.includes('bison') ||
+                               matName.includes('bison') || matName.includes('crest');
+          const isWoodWall = matName.includes('wood') || meshName.includes('wood');
+          const isEntranceAccent = meshName.includes('canopy') || meshName.includes('sign') ||
+                                   matName.includes('canopy') || matName.includes('sign');
+
+          if (isBisonCrest) {
+            // White etched RCMP bison crest pops brightly on the glass atrium (Image 1 reference)
+            if (c.material.color) c.material.color.setHex(0xffffff);
+            c.material.roughness = 0.20;
+            c.material.metalness = 0.40;
+            if (c.material.emissive) {
+              c.material.emissive.setHex(0xffffff);
+              c.material.emissiveIntensity = 0.70;
+            }
+          } else if (isWoodWall) {
+            // Warm rich natural wood panel wall at the entrance foyer (matching reference photo)
+            if (c.material.color) c.material.color.setHex(0x8a532b);
+            c.material.roughness = 0.65;
+            c.material.metalness = 0.05;
+          } else if (isEntranceAccent) {
+            if (c.material.color) c.material.color.setHex(0xffffff);
+            c.material.roughness = 0.25;
+            c.material.metalness = 0.50;
+          } else {
+            // Menacing dark tactical slate/charcoal exterior across roof and shells
+            if (c.material.color) {
+              c.material.color.setHex(0x18202e);
+            }
+            c.material.roughness = 0.88;
+            c.material.metalness = 0.12;
+          }
+          c.material.needsUpdate = true;
+        }
+      });
 
       // Ground and angle the RCMP Green Timbers Headquarters building footprint at center (0, 0, 0)
       // Scaled up to 76.0 for a commanding, larger centerpiece in LEO mode!
@@ -3817,34 +3859,35 @@ class PushnotOrbit {
       this.leoTops.swat = this.ground(m, 76.0, this.leoPos.swat);
       this.leoGroup.add(m);
 
-      // Dedicated Natural Daylight Lighting Rig for RCMP Green Timbers Node
+      // Dedicated Dramatic Lighting Rig for RCMP Green Timbers Node
       this.rcmpDaylightGroup = new THREE.Group();
       this.rcmpDaylightGroup.userData.stationKey = 'swat';
 
-      // 1. Warm afternoon directional sunlight (~5400K natural sunlight)
-      const sunLight = new THREE.DirectionalLight(0xfff5e6, 3.4);
-      sunLight.position.set(this.leoPos.swat.x + 18, 28, this.leoPos.swat.z + 22);
-      sunLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
-      sunLight.castShadow = true;
-      this.rcmpDaylightGroup.add(sunLight);
-      this.rcmpDaylightGroup.add(sunLight.target);
+      // Bright dramatic spotlight directly lighting the entrance canopy, wooden wall, RCMP crest, and courtyard
+      const spotLight = new THREE.SpotLight(0xfffae0, 110.0, 240, Math.PI / 3.2, 0.45, 1.1);
+      spotLight.position.set(this.leoPos.swat.x + 12.0, 58.0, this.leoPos.swat.z + 32.0);
+      spotLight.target.position.set(this.leoPos.swat.x + 14.0, 6.5, this.leoPos.swat.z + 8.0);
+      spotLight.castShadow = true;
+      this.rcmpDaylightGroup.add(spotLight);
+      this.rcmpDaylightGroup.add(spotLight.target);
 
-      // 2. Soft sky ambient fill (diffuse natural daylight atmosphere from above)
-      const skyLight = new THREE.DirectionalLight(0xbde0fe, 1.8);
-      skyLight.position.set(this.leoPos.swat.x - 14, 24, this.leoPos.swat.z - 16);
-      skyLight.target.position.set(this.leoPos.swat.x, 2.5, this.leoPos.swat.z);
-      this.rcmpDaylightGroup.add(skyLight);
-      this.rcmpDaylightGroup.add(skyLight.target);
+      // Warm entrance illumination pool highlighting canopy and silver RCMP crest
+      const entranceLight = new THREE.PointLight(0xfffaea, 25.0, 52, 1.2);
+      entranceLight.position.set(this.leoPos.swat.x + 8.0, 10.5, this.leoPos.swat.z + 10.0);
+      this.rcmpDaylightGroup.add(entranceLight);
 
-      // 3. Crisp daylight entrance accent on the glass atrium, cedar awning & etched bison crest
-      const entranceDaylight = new THREE.PointLight(0xfffaed, 3.2, 42, 1.2);
-      entranceDaylight.position.set(this.leoPos.swat.x + 1.5, 7.0, this.leoPos.swat.z + 5.0);
-      this.rcmpDaylightGroup.add(entranceDaylight);
-
-      // 4. Ground bounce daylight fill (subtle warm reflection off ground plane)
-      const bounceLight = new THREE.PointLight(0xfef3c7, 1.5, 32, 1.5);
-      bounceLight.position.set(this.leoPos.swat.x - 4, 1.0, this.leoPos.swat.z - 2);
-      this.rcmpDaylightGroup.add(bounceLight);
+      // Warm courtyard ground light pool in front of the entrance doors and trees
+      const poolGeo = new THREE.CircleGeometry(12.0, 32);
+      const poolMat = new THREE.MeshBasicMaterial({
+        color: 0xfff5dd,
+        transparent: true,
+        opacity: 0.18,
+        blending: THREE.AdditiveBlending
+      });
+      const poolMesh = new THREE.Mesh(poolGeo, poolMat);
+      poolMesh.rotation.x = -Math.PI / 2;
+      poolMesh.position.set(this.leoPos.swat.x + 14.0, 0.08, this.leoPos.swat.z + 10.0);
+      this.rcmpDaylightGroup.add(poolMesh);
 
       // Building footprint stands directly on ground plane with zero plinth / zero base slab
       this.leoGroup.add(this.rcmpDaylightGroup);
@@ -3907,12 +3950,15 @@ class PushnotOrbit {
             c.material = c.material.clone();
             const matName = (c.material.name || '').toLowerCase();
             const meshName = (c.name || '').toLowerCase();
-            // Black out the trees completely (pitch black tactical silhouette per user request)
-            c.material.color.set('#040507');
-            c.material.roughness = 0.95;
-            c.material.metalness = 0.0;
-            if (c.material.emissive) c.material.emissive.set('#000000');
-            c.material.emissiveIntensity = 0;
+            if (matName.includes('leaf') || meshName.includes('leaf')) {
+              // Tint leaves to lush natural summer green matching real trees in photo (#2e7d32)
+              c.material.color.set('#2e7d32');
+              c.material.roughness = 0.52;
+            } else {
+              // Trunk and branches
+              c.material.roughness = 0.85;
+            }
+            c.material.metalness = 0.04;
             c.material.needsUpdate = true;
           }
         }
@@ -3930,15 +3976,16 @@ class PushnotOrbit {
       const treeBase = new THREE.Group();
       treeBase.add(treeModel);
 
-      // Plant 4 real trees running parallel with the wooden sign near the entrance (exact restored alignment)
+      // Plant 4 real trees lined up cleanly in front of the entrance on the opposite side
+      // (to the right of the wooden entrance foyer in the open courtyard/plaza with positive Z values)
       const treeRow = new THREE.Group();
       treeRow.userData.stationKey = 'swat';
 
       const treeCoords = [
-        { x:  8.5, z:  7.5, rot: 0.1,  s: 1.00 },
-        { x: 10.0, z: 12.0, rot: 1.2,  s: 0.95 },
-        { x: 11.5, z: 16.5, rot: 2.3,  s: 1.05 },
-        { x: 13.0, z: 21.0, rot: 3.5,  s: 0.98 }
+        { x: 19.5, z: 14.5, rot: 0.2,  s: 1.00 },
+        { x: 22.5, z: 14.0, rot: 1.4,  s: 0.95 },
+        { x: 25.5, z: 13.5, rot: 2.6,  s: 1.05 },
+        { x: 28.5, z: 13.0, rot: 3.8,  s: 0.98 }
       ];
 
       for (let i = 0; i < treeCoords.length; i++) {

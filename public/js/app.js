@@ -40,43 +40,43 @@ const MODE_STEPS = {
 
 // Default Director's Camera Rigs (Eye-level circular carousel track orbiting at natural eye level Y ≈ 26, constant R = 90)
 const DEFAULT_DIRECTOR_RIGS = {
-  // Mode 1: Setup (10 steps) — Tightened Eye-level Circular Track Carousel at constant R = 76.0
-  "setup_step_0": { angle: 0.43,  radius: 52.0, cam: { x: 20.0,  y: 28.0, z: 46.0 }, target: { x: 0.0,  y: 14.0, z: -34.0 } },
-  "setup_step_1": { angle: 0.45,  radius: 76.0, cam: { x: 33.0,  y: 25.0, z: 68.0 }, target: { x: 18.0, y: 16.0, z: -16.0 } },
-  "setup_step_2": { angle: 0.65,  radius: 76.0, cam: { x: 46.0,  y: 25.0, z: 60.0 }, target: { x: 22.0, y: 16.0, z: 6.0 } },
-  "setup_step_3": { angle: 0.82,  radius: 76.0, cam: { x: 55.0,  y: 25.0, z: 52.0 }, target: { x: 24.0, y: 16.0, z: 24.0 } },
-  "setup_step_4": { angle: 0.60,  radius: 76.0, cam: { x: 43.0,  y: 25.0, z: 63.0 }, target: { x: 16.0, y: 16.0, z: -4.0 } },
-  "setup_step_5": { angle: 0.35,  radius: 76.0, cam: { x: 26.0,  y: 25.0, z: 71.0 }, target: { x: 14.0, y: 16.0, z: -22.0 } },
-  "setup_step_6": { angle: 0.70,  radius: 76.0, cam: { x: 49.0,  y: 25.0, z: 58.0 }, target: { x: 20.0, y: 16.0, z: 12.0 } },
-  "setup_step_7": { angle: 0.82,  radius: 76.0, cam: { x: 55.0,  y: 25.0, z: 52.0 }, target: { x: 24.0, y: 16.0, z: 24.0 } },
-  "setup_step_8": { angle: -0.82, radius: 76.0, cam: { x: -55.0, y: 25.0, z: 52.0 }, target: { x: -24.0, y: 16.0, z: 24.0 } },
-  "setup_step_9": { angle: 0.00,  radius: 76.0, cam: { x: 0.0,   y: 25.0, z: 76.0 }, target: { x: 0.0,  y: 16.0, z: 0.0 } },
+  // Mode 1: Setup (10 steps) — Diablo / StarCraft Isometric Command View (All nodes visible, minimal camera movement)
+  "setup_step_0": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_1": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_2": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_3": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_4": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_5": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_6": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_7": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_8": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_9": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
 
-  // Mode 2: Push (6 steps) — Tightened Eye-level Circular Track Carousel at constant R = 76.0
-  "push_step_0": { angle: -0.82, radius: 76.0, cam: { x: -55.0, y: 25.0, z: 52.0 }, target: { x: -24.0, y: 16.0, z: 24.0 } },
-  "push_step_1": { angle: -0.40, radius: 76.0, cam: { x: -30.0, y: 25.0, z: 70.0 }, target: { x: -12.0, y: 16.0, z: -6.0 } },
-  "push_step_2": { angle: 0.35,  radius: 76.0, cam: { x: 26.0,  y: 25.0, z: 71.0 }, target: { x: 14.0, y: 16.0, z: -20.0 } },
-  "push_step_3": { angle: 0.65,  radius: 76.0, cam: { x: 46.0,  y: 25.0, z: 60.0 }, target: { x: 20.0, y: 16.0, z: 10.0 } },
-  "push_step_4": { angle: 0.82,  radius: 76.0, cam: { x: 55.0,  y: 25.0, z: 52.0 }, target: { x: 24.0, y: 16.0, z: 24.0 } },
-  "push_step_5": { angle: 0.00,  radius: 76.0, cam: { x: 0.0,   y: 25.0, z: 76.0 }, target: { x: 0.0,  y: 16.0, z: 0.0 } },
+  // Mode 2: Push (6 steps) — Diablo / StarCraft Isometric Command View (All nodes visible, minimal camera movement)
+  "push_step_0": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_1": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_2": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_3": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_4": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_5": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
 
-  // Mode 3: World (6 steps) — Continuous 360° orbital dolly sweep around Earth
-  "world_step_0": { angle: 0.60, radius: 108.0, cam: { x: 61.0, y: 56.0, z: 89.0 },   target: { x: 0.0, y: 32.0, z: 0.0 } },
-  "world_step_1": { angle: 1.65, radius: 108.0, cam: { x: 108.0, y: 54.0, z: -9.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_2": { angle: 2.70, radius: 108.0, cam: { x: 46.0, y: 58.0, z: -98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_3": { angle: 3.75, radius: 108.0, cam: { x: -61.0, y: 58.0, z: -89.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
+  // Mode 3: World (6 steps) — Diablo / StarCraft Isometric Command View
+  "world_step_0": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_1": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_2": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_3": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_4": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  "world_step_5": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — True rock-solid isometric stage view (zero camera spin, zero motion sickness)
-  "leo_step_0": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 1: Suspect Hacker transmits threat
-  "leo_step_1": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 2: Central RCMP Green Timbers HQ opens probe
-  "leo_step_2": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 3: RCMP -> Swiss Proton AG (gavel & laughing video)
-  "leo_step_3": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 4: RCMP -> App Server (court order served)
-  "leo_step_4": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 5: App Server -> RCMP (device push tokens returned)
-  "leo_step_5": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 6: RCMP -> Apple & Google HQ (push token subpoenas)
-  "leo_step_6": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 7: Apple & Google reveal subscriber ID + house
-  "leo_step_7": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }  // Step 8: RCMP raid executed at Suspect residence
+  // Mode 4: Law Enforcement (8 steps) — Diablo / StarCraft Isometric Command View (All 5 stations + central RCMP framed)
+  "leo_step_0": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
+  "leo_step_1": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
+  "leo_step_2": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
+  "leo_step_3": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
+  "leo_step_4": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
+  "leo_step_5": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
+  "leo_step_6": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
+  "leo_step_7": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } }
 };
 
 const WORLD_APPS = [
@@ -231,6 +231,99 @@ class RoboticCameraRig {
       Math.abs(this.vTz.v)
     );
     return camDist < posEps && tgtDist < posEps && maxVel < velEps;
+  }
+}
+
+/* =====================================================================
+   CIRCUIT BOARD PATHWAY SYSTEM (Diablo / StarCraft Isometric PCB Grid)
+   Orthogonal & 45°-chamfered cyber traces with glowing annular solder vias
+   ===================================================================== */
+class CircuitPathwayCurve extends THREE.Curve {
+  constructor(waypoints, chamferRadius = 3.0) {
+    super();
+    this.waypoints = waypoints;
+    this.chamferRadius = chamferRadius;
+    this.points = this.generateChamferedPoints(waypoints, chamferRadius);
+
+    this.lengths = [0];
+    let total = 0;
+    for (let i = 1; i < this.points.length; i++) {
+      total += this.points[i].distanceTo(this.points[i - 1]);
+      this.lengths.push(total);
+    }
+    this.totalLength = Math.max(0.001, total);
+  }
+
+  generateChamferedPoints(rawPts, radius) {
+    if (!rawPts || rawPts.length < 2) return rawPts || [];
+    const pts = [rawPts[0].clone()];
+
+    for (let i = 1; i < rawPts.length - 1; i++) {
+      const pPrev = rawPts[i - 1];
+      const pCurr = rawPts[i];
+      const pNext = rawPts[i + 1];
+
+      const v1 = new THREE.Vector3().subVectors(pPrev, pCurr);
+      const v2 = new THREE.Vector3().subVectors(pNext, pCurr);
+      const len1 = v1.length();
+      const len2 = v2.length();
+
+      if (len1 < 0.001 || len2 < 0.001) continue;
+
+      const r = Math.min(radius, len1 * 0.45, len2 * 0.45);
+      const cornerStart = new THREE.Vector3().addVectors(pCurr, v1.normalize().multiplyScalar(r));
+      const cornerEnd   = new THREE.Vector3().addVectors(pCurr, v2.normalize().multiplyScalar(r));
+
+      pts.push(cornerStart);
+
+      const steps = 4;
+      for (let s = 1; s < steps; s++) {
+        const u = s / steps;
+        const pInter = new THREE.Vector3()
+          .addScaledVector(cornerStart, (1 - u) * (1 - u))
+          .addScaledVector(pCurr, 2 * (1 - u) * u)
+          .addScaledVector(cornerEnd, u * u);
+        pts.push(pInter);
+      }
+      pts.push(cornerEnd);
+    }
+
+    pts.push(rawPts[rawPts.length - 1].clone());
+    return pts;
+  }
+
+  getPoint(t, optionalTarget = new THREE.Vector3()) {
+    const clampedT = THREE.MathUtils.clamp(t, 0, 1);
+    const targetDist = clampedT * this.totalLength;
+
+    let idx = 0;
+    for (let i = 1; i < this.lengths.length; i++) {
+      if (this.lengths[i] >= targetDist) {
+        idx = i - 1;
+        break;
+      }
+    }
+    if (idx >= this.points.length - 1) {
+      idx = Math.max(0, this.points.length - 2);
+    }
+
+    const d0 = this.lengths[idx];
+    const d1 = this.lengths[idx + 1] || d0;
+    const span = d1 - d0;
+    const u = span > 0.0001 ? (targetDist - d0) / span : 0;
+
+    optionalTarget.lerpVectors(this.points[idx], this.points[idx + 1] || this.points[idx], u);
+    return optionalTarget;
+  }
+
+  getTangent(t, optionalTarget = new THREE.Vector3()) {
+    const delta = 0.004;
+    const t1 = Math.max(0, t - delta);
+    const t2 = Math.min(1, t + delta);
+    const p1 = this.getPoint(t1);
+    const p2 = this.getPoint(t2);
+    optionalTarget.subVectors(p2, p1).normalize();
+    return optionalTarget;
   }
 }
 
@@ -416,33 +509,94 @@ class PushnotOrbit {
     trackOuter.position.y = 0.12;
     this.normalGroup.add(trackInner, trackOuter);
 
-    // Arcs emerging cleanly between Apple and Google signs
-    const pPhone  = POS.phone.clone().setY(15);
-    const pPost   = POS.post.clone().setY(10.5); // centered right between Apple and Google signs
-    const pServer = POS.server.clone().setY(15);
+    // Tactical Cyber PCB Ground Substrate Grid (StarCraft / Diablo command board)
+    const pcbGridNormal = new THREE.GridHelper(160, 32, 0x0ea5e9, 0x071e2e);
+    pcbGridNormal.position.y = 0.05;
+    if (pcbGridNormal.material) {
+      pcbGridNormal.material.transparent = true;
+      pcbGridNormal.material.opacity = 0.35;
+    }
+    this.normalGroup.add(pcbGridNormal);
 
-    this.arcStoreToPhone  = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 3, 17, -4), pPhone);
-    this.arcPhoneToPost   = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(8, 18, -4),    pPost);
-    this.arcPostToPhone   = new THREE.QuadraticBezierCurve3(pPost,   new THREE.Vector3(D + 3, 17, -4), pPhone);
-    this.arcPhoneToServer = new THREE.QuadraticBezierCurve3(pPhone,  new THREE.Vector3(0, 14, R + 6),  pServer);
-    this.arcServerToPost  = new THREE.QuadraticBezierCurve3(pServer, new THREE.Vector3(-D - 3, 17, -4), pPost);
-    this.arcPushWorldToPost = new THREE.QuadraticBezierCurve3(
-      POS.ufo.clone().setY(42.0),
-      new THREE.Vector3((POS.ufo.x + POS.post.x) * 0.5, 32.0, (POS.ufo.z + POS.post.z) * 0.5),
+    // Circuit Board Pathways (Setup & Push Modes) — Orthogonal PCB traces at Y = 1.2 with 45° chamfers
+    const pPhone  = POS.phone.clone().setY(15);
+    const pPost   = POS.post.clone().setY(10.5);
+    const pServer = POS.server.clone().setY(15);
+    const Y_B = 1.2;
+
+    this.arcStoreToPhone = new CircuitPathwayCurve([
+      pPost.clone(),
+      new THREE.Vector3(pPost.x, Y_B, pPost.z),
+      new THREE.Vector3(0, Y_B, -8),
+      new THREE.Vector3(12, Y_B, 4),
+      new THREE.Vector3(pPhone.x, Y_B, 16),
+      new THREE.Vector3(pPhone.x, Y_B, pPhone.z),
+      pPhone.clone()
+    ], 3.0);
+
+    this.arcPhoneToPost = new CircuitPathwayCurve([
+      pPhone.clone(),
+      new THREE.Vector3(pPhone.x - 2, Y_B, pPhone.z - 2),
+      new THREE.Vector3(pPhone.x - 2, Y_B, 14),
+      new THREE.Vector3(8, Y_B, 2),
+      new THREE.Vector3(-4, Y_B, -10),
+      new THREE.Vector3(-4, Y_B, pPost.z),
+      new THREE.Vector3(pPost.x, Y_B, pPost.z),
+      pPost.clone()
+    ], 3.0);
+
+    this.arcPhoneToServer = new CircuitPathwayCurve([
+      pPhone.clone(),
+      new THREE.Vector3(pPhone.x, Y_B, pPhone.z),
+      new THREE.Vector3(10, Y_B, pPhone.z),
+      new THREE.Vector3(4, Y_B, pPhone.z - 4),
+      new THREE.Vector3(-4, Y_B, pPhone.z - 4),
+      new THREE.Vector3(-10, Y_B, pPhone.z),
+      new THREE.Vector3(pServer.x, Y_B, pServer.z),
+      pServer.clone()
+    ], 2.5);
+
+    this.arcServerToPost = new CircuitPathwayCurve([
+      pServer.clone(),
+      new THREE.Vector3(pServer.x, Y_B, pServer.z),
+      new THREE.Vector3(pServer.x, Y_B, 6),
+      new THREE.Vector3(-14, Y_B, -8),
+      new THREE.Vector3(0, Y_B, -22),
+      new THREE.Vector3(pPost.x, Y_B, pPost.z),
+      pPost.clone()
+    ], 3.0);
+
+    this.arcPushWorldToPost = new CircuitPathwayCurve([
+      POS.ufo.clone().setY(26.0),
+      new THREE.Vector3(POS.ufo.x, Y_B, POS.ufo.z),
+      new THREE.Vector3(POS.ufo.x, Y_B, 4),
+      new THREE.Vector3(-12, Y_B, -12),
+      new THREE.Vector3(0, Y_B, -24),
+      new THREE.Vector3(pPost.x, Y_B, pPost.z),
       pPost.clone().setY(20.0)
-    );
+    ], 3.0);
+
+    this.arcPostToPhone = new CircuitPathwayCurve([
+      pPost.clone().setY(20.0),
+      new THREE.Vector3(pPost.x, Y_B, pPost.z),
+      new THREE.Vector3(0, Y_B, -8),
+      new THREE.Vector3(12, Y_B, 4),
+      new THREE.Vector3(pPhone.x, Y_B, 16),
+      new THREE.Vector3(pPhone.x, Y_B, pPhone.z),
+      pPhone.clone()
+    ], 3.0);
 
     this.setupCurves = [this.arcStoreToPhone, this.arcPhoneToPost, this.arcPhoneToServer];
     this.pushCurves  = [this.arcPushWorldToPost, this.arcPostToPhone];
 
     this.setupLines = [
-      this.addArc(this.arcStoreToPhone,  0x38bdf8, 0.5,  this.normalGroup),
-      this.addArc(this.arcPhoneToPost,   0xfbbf24, 0.45, this.normalGroup),
-      this.addArc(this.arcPhoneToServer, 0xfbbf24, 0.45, this.normalGroup)
+      this.createCircuitLine(this.arcStoreToPhone,  0x38bdf8, 0.65, this.normalGroup),
+      this.createCircuitLine(this.arcPhoneToPost,   0xfbbf24, 0.60, this.normalGroup),
+      this.createCircuitLine(this.arcPhoneToServer, 0xfbbf24, 0.60, this.normalGroup)
     ];
     this.pushLines = [
-      this.addArc(this.arcPushWorldToPost, 0x34d399, 0.55, this.normalGroup),
-      this.addArc(this.arcPostToPhone,     0x34d399, 0.55, this.normalGroup)
+      this.createCircuitLine(this.arcPushWorldToPost, 0x34d399, 0.70, this.normalGroup),
+      this.createCircuitLine(this.arcPostToPhone,     0x34d399, 0.70, this.normalGroup)
     ];
 
     // Multi-Stream World Outbound Stimulus Lines from Planet Earth -> Datacentre -> Post Office -> Phone
@@ -467,7 +621,74 @@ class PushnotOrbit {
     this.scene.add(this.stars);
   }
 
+  createCircuitLine(curve, color, opacity, parent = this.worldGroup) {
+    const group = new THREE.Group();
+
+    // 1. Physical PCB Copper / Bus Trace Track along the board
+    if (curve && curve.waypoints) {
+      const floorPts = curve.waypoints.filter(p => p.y <= 3.5);
+      if (floorPts.length >= 2) {
+        const trackGeo = new THREE.BufferGeometry().setFromPoints(floorPts);
+        const trackMat = new THREE.LineBasicMaterial({
+          color: 0x081e2b,
+          transparent: true,
+          opacity: 0.65
+        });
+        const trackLine = new THREE.Line(trackGeo, trackMat);
+        group.add(trackLine);
+      }
+
+      // 2. Annular Solder Via Rings at waypoints on the floor
+      const viaRingGeo = new THREE.RingGeometry(0.85, 1.6, 24);
+      const viaHoleGeo = new THREE.CircleGeometry(0.82, 16);
+      const viaRingMat = new THREE.MeshStandardMaterial({
+        color: color,
+        emissive: color,
+        emissiveIntensity: 0.55,
+        roughness: 0.35,
+        metalness: 0.85,
+        side: THREE.DoubleSide
+      });
+      const viaHoleMat = new THREE.MeshBasicMaterial({ color: 0x030712 });
+
+      for (const wp of curve.waypoints) {
+        if (wp.y <= 3.5) {
+          const viaRing = new THREE.Mesh(viaRingGeo, viaRingMat);
+          viaRing.rotation.x = -Math.PI / 2;
+          viaRing.position.set(wp.x, wp.y + 0.02, wp.z);
+
+          const viaHole = new THREE.Mesh(viaHoleGeo, viaHoleMat);
+          viaHole.rotation.x = -Math.PI / 2;
+          viaHole.position.set(wp.x, wp.y + 0.015, wp.z);
+
+          group.add(viaRing, viaHole);
+        }
+      }
+    }
+
+    // 3. Glowing animated signal line
+    const pts = curve.getPoints(120);
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineDashedMaterial({
+      color: color,
+      dashSize: 2.2,
+      gapSize: 2.0,
+      transparent: true,
+      opacity: opacity
+    });
+    const line = new THREE.Line(geo, mat);
+    line.computeLineDistances();
+    group.add(line);
+
+    line.userData.containerGroup = group;
+    parent.add(group);
+    return line;
+  }
+
   addArc(curve, color, opacity, parent = this.worldGroup) {
+    if (curve instanceof CircuitPathwayCurve) {
+      return this.createCircuitLine(curve, color, opacity, parent);
+    }
     const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(64));
     const mat = new THREE.LineDashedMaterial({ color, dashSize: 1.5, gapSize: 1.5, transparent: true, opacity });
     const line = new THREE.Line(geo, mat);
@@ -3328,49 +3549,91 @@ class PushnotOrbit {
     const pHacker      = L.bandit.clone().add(new THREE.Vector3(0, 9.5, 0));
 
     // Natural, elegant mortar trajectory arcs (height 32-35, control Y = 48-50)
-    // 1. Inbound bomb threat from hacker desk to RCMP front entrance
-    this.arcLeoThreat  = new THREE.QuadraticBezierCurve3(
-      pHacker,
-      new THREE.Vector3((pHacker.x + pSwatFront.x) * 0.5, 50.0, (pHacker.z + pSwatFront.z) * 0.5),
-      pSwatFront
-    );
-    // 2. Outbound emergency order from RCMP command to Swiss Proton server
-    this.arcLeoProton  = new THREE.QuadraticBezierCurve3(
-      pSwatRoof,
-      new THREE.Vector3((pSwatRoof.x + pProton.x) * 0.5, 50.0, (pSwatRoof.z + pProton.z) * 0.5),
-      pProton
-    );
-    // 3. Outbound order from RCMP to App Servers (outbound lane offset +1.2)
-    this.arcLeoToMeta  = new THREE.QuadraticBezierCurve3(
-      pSwatRoof,
-      new THREE.Vector3((pSwatRoof.x + pBot.x) * 0.5 + 1.2, 48.0, (pSwatRoof.z + pBot.z) * 0.5 + 1.2),
-      pBot
-    );
-    // 4. Inbound push tokens from App Servers to RCMP front entrance (inbound lane offset -1.2)
-    this.arcLeoTokens  = new THREE.QuadraticBezierCurve3(
-      pBot,
-      new THREE.Vector3((pBot.x + pSwatFront.x) * 0.5 - 1.2, 48.0, (pBot.z + pSwatFront.z) * 0.5 - 1.2),
-      pSwatFront
-    );
-    // 5. Outbound production order from RCMP to Apple & Google HQ (outbound lane offset +1.2)
-    this.arcLeoToAg    = new THREE.QuadraticBezierCurve3(
-      pSwatRoof,
-      new THREE.Vector3((pSwatRoof.x + pAg.x) * 0.5 + 1.2, 50.0, (pSwatRoof.z + pAg.z) * 0.5 + 1.2),
-      pAg
-    );
-    // 6. Inbound subscriber ID from Apple & Google to RCMP command (inbound lane offset -1.2)
-    this.arcLeoFromAg  = new THREE.QuadraticBezierCurve3(
-      pAg,
-      new THREE.Vector3((pAg.x + pSwatRoof.x) * 0.5 - 1.2, 50.0, (pAg.z + pSwatRoof.z) * 0.5 - 1.2),
-      pSwatRoof
-    );
+    // Tactical Cyber PCB Ground Substrate Grid for LEO Stage (StarCraft / Diablo command board)
+    const pcbGridLeo = new THREE.GridHelper(240, 48, 0xf43f5e, 0x1e0b16);
+    pcbGridLeo.position.y = 0.05;
+    if (pcbGridLeo.material) {
+      pcbGridLeo.material.transparent = true;
+      pcbGridLeo.material.opacity = 0.35;
+    }
+    this.leoGroup.add(pcbGridLeo);
 
-    this.leoLineThreat = this.addArc(this.arcLeoThreat, 0xf43f5e, 0.55, this.leoGroup);
-    this.leoLineProton = this.addArc(this.arcLeoProton, 0xf43f5e, 0.55, this.leoGroup);
-    this.leoLineToMeta = this.addArc(this.arcLeoToMeta, 0xfbbf24, 0.55, this.leoGroup);
-    this.leoLineTokens = this.addArc(this.arcLeoTokens, 0xfbbf24, 0.55, this.leoGroup);
-    this.leoLineToAg   = this.addArc(this.arcLeoToAg,   0x38bdf8, 0.55, this.leoGroup);
-    this.leoLineFromAg = this.addArc(this.arcLeoFromAg, 0x34d399, 0.55, this.leoGroup);
+    // Circuit Board Pathways (LEO Mode) — Orthogonal PCB traces at Y = 1.6 with 45° chamfers & solder vias
+    const Y_LB = 1.6;
+
+    // 1. Inbound bomb threat from hacker desk to RCMP front entrance
+    this.arcLeoThreat = new CircuitPathwayCurve([
+      pHacker.clone(),
+      new THREE.Vector3(pHacker.x, Y_LB, pHacker.z),
+      new THREE.Vector3(pHacker.x, Y_LB, 26.0),
+      new THREE.Vector3(44.0, Y_LB, 12.0),
+      new THREE.Vector3(16.0, Y_LB, 12.0),
+      new THREE.Vector3(pSwatFront.x + 4, Y_LB, pSwatFront.z),
+      pSwatFront.clone()
+    ], 3.5);
+
+    // 2. Outbound emergency order from RCMP command to Swiss Proton server
+    this.arcLeoProton = new CircuitPathwayCurve([
+      pSwatRoof.clone(),
+      new THREE.Vector3(pSwatRoof.x, Y_LB, pSwatRoof.z),
+      new THREE.Vector3(-16.0, Y_LB, pSwatRoof.z),
+      new THREE.Vector3(-26.0, Y_LB, -8.0),
+      new THREE.Vector3(-46.0, Y_LB, -46.0),
+      new THREE.Vector3(-54.0, Y_LB, -50.0),
+      new THREE.Vector3(pProton.x, Y_LB, pProton.z),
+      pProton.clone()
+    ], 3.5);
+
+    // 3. Outbound order from RCMP command to App Servers
+    this.arcLeoToMeta = new CircuitPathwayCurve([
+      pSwatRoof.clone(),
+      new THREE.Vector3(pSwatRoof.x, Y_LB, pSwatRoof.z),
+      new THREE.Vector3(0.0, Y_LB, 22.0),
+      new THREE.Vector3(-12.0, Y_LB, 34.0),
+      new THREE.Vector3(-40.0, Y_LB, pBot.z),
+      new THREE.Vector3(pBot.x, Y_LB, pBot.z),
+      pBot.clone()
+    ], 3.5);
+
+    // 4. Inbound push tokens from App Servers to RCMP front courtyard (parallel return lane)
+    this.arcLeoTokens = new CircuitPathwayCurve([
+      pBot.clone(),
+      new THREE.Vector3(pBot.x + 4, Y_LB, pBot.z - 3),
+      new THREE.Vector3(-38.0, Y_LB, pBot.z - 3),
+      new THREE.Vector3(-12.0, Y_LB, 30.0),
+      new THREE.Vector3(-4.0, Y_LB, 14.0),
+      new THREE.Vector3(pSwatFront.x, Y_LB, pSwatFront.z),
+      pSwatFront.clone()
+    ], 3.5);
+
+    // 5. Outbound production order from RCMP command to Apple & Google HQ
+    this.arcLeoToAg = new CircuitPathwayCurve([
+      pSwatRoof.clone(),
+      new THREE.Vector3(pSwatRoof.x, Y_LB, pSwatRoof.z),
+      new THREE.Vector3(16.0, Y_LB, pSwatRoof.z),
+      new THREE.Vector3(26.0, Y_LB, -8.0),
+      new THREE.Vector3(46.0, Y_LB, -46.0),
+      new THREE.Vector3(54.0, Y_LB, -50.0),
+      new THREE.Vector3(pAg.x, Y_LB, pAg.z),
+      pAg.clone()
+    ], 3.5);
+
+    // 6. Inbound subscriber ID from Apple & Google HQ to RCMP command (parallel return lane)
+    this.arcLeoFromAg = new CircuitPathwayCurve([
+      pAg.clone(),
+      new THREE.Vector3(pAg.x - 4, Y_LB, pAg.z + 4),
+      new THREE.Vector3(42.0, Y_LB, -42.0),
+      new THREE.Vector3(22.0, Y_LB, -4.0),
+      new THREE.Vector3(4.0, Y_LB, pSwatRoof.z),
+      pSwatRoof.clone()
+    ], 3.5);
+
+    this.leoLineThreat = this.createCircuitLine(this.arcLeoThreat, 0xf43f5e, 0.70, this.leoGroup);
+    this.leoLineProton = this.createCircuitLine(this.arcLeoProton, 0xf43f5e, 0.70, this.leoGroup);
+    this.leoLineToMeta = this.createCircuitLine(this.arcLeoToMeta, 0xfbbf24, 0.70, this.leoGroup);
+    this.leoLineTokens = this.createCircuitLine(this.arcLeoTokens, 0xfbbf24, 0.70, this.leoGroup);
+    this.leoLineToAg   = this.createCircuitLine(this.arcLeoToAg,   0x38bdf8, 0.70, this.leoGroup);
+    this.leoLineFromAg = this.createCircuitLine(this.arcLeoFromAg, 0x34d399, 0.70, this.leoGroup);
 
     this.leoLines = [
       this.leoLineThreat,
@@ -4623,10 +4886,19 @@ class PushnotOrbit {
     const color = isLeo ? 0xf43f5e : (isWorld ? 0x38bdf8 : (isPush ? 0x34d399 : 0xfbbf24));
     if (this.ringMat) this.ringMat.color.setHex(color);
     if (this.beadMat) this.beadMat.color.setHex(color);
-    this.setupLines.forEach((l) => (l.visible = mode === 'setup'));
-    this.pushLines.forEach((l) => (l.visible = isPush));
+    this.setupLines.forEach((l) => {
+      l.visible = mode === 'setup';
+      if (l.userData && l.userData.containerGroup) l.userData.containerGroup.visible = l.visible;
+    });
+    this.pushLines.forEach((l) => {
+      l.visible = isPush;
+      if (l.userData && l.userData.containerGroup) l.userData.containerGroup.visible = l.visible;
+    });
     if (this.flowCones) this.flowCones.forEach((fc) => (fc.mesh.visible = false));
-    this.leoLines.forEach((l) => (l.visible = false));
+    this.leoLines.forEach((l) => {
+      l.visible = false;
+      if (l.userData && l.userData.containerGroup) l.userData.containerGroup.visible = false;
+    });
     if (this.worldStimGroup) this.worldStimGroup.visible = isWorld;
 
     document.body.classList.toggle('leo-mode', isLeo);
@@ -5358,6 +5630,9 @@ class PushnotOrbit {
       const setLine = (line, active, shown) => {
         if (!line) return;
         line.visible = shown;
+        if (line.userData && line.userData.containerGroup) {
+          line.userData.containerGroup.visible = shown;
+        }
         if (line.material) {
           line.material.opacity = active ? 0.85 : 0.25;
         }
@@ -6048,25 +6323,27 @@ class PushnotOrbit {
         targetLook = this.controls.target.clone();
       }
 
-      // Check for active node transit movement: automatically frame origin, destination, and transit arc!
-      // In LEO mode, bypass transit camera hijacking so the camera stays calm and stable per click without whiplash
-      const transit = this.mode === 'leo' ? null : this.getActiveTransit(this.mode, this.t);
-      if (transit) {
-        const transitRig = this.computeTransitRig(transit.origin, transit.dest, transit.arc, this.mode === 'leo');
-        if (transitRig) {
-          targetTheta = transitRig.angle;
-          targetRadius = transitRig.radius;
-          targetY = transitRig.cam.y;
-          targetLook = transitRig.target;
-        }
-      }
+      // In Diablo / StarCraft isometric perspective, bypass transit camera hijacking across all modes
+      // so all stations and circuit board pathways remain stably in view with minimal camera movement
+      const transit = null;
 
       if (this.mode === 'leo') {
-        // Truly locked-in isometric camera: ZERO camera spin or rotation across steps and playback!
+        // Diablo / StarCraft Isometric Command View for LEO Stage (framing all 5 stations + central RCMP)
         targetTheta = 0.18;
-        targetRadius = 110.0;
+        targetRadius = 132.0;
+        targetY = 88.0;
+        targetLook = new THREE.Vector3(0.0, 18.0, 4.0);
+      } else if (this.mode === 'setup' || this.mode === 'push') {
+        // Diablo / StarCraft Isometric Command View for Setup & Push (framing Phone, Post Office, Datacentre)
+        targetTheta = 0.18;
+        targetRadius = 98.0;
         targetY = 64.0;
-        targetLook = new THREE.Vector3(0.0, 42.0, 4.0);
+        targetLook = new THREE.Vector3(0.0, 16.0, -2.0);
+      } else if (this.mode === 'world') {
+        targetTheta = 0.18;
+        targetRadius = 106.0;
+        targetY = 68.0;
+        targetLook = new THREE.Vector3(0.0, 18.0, 0.0);
       }
 
       const smoothTime = this.playing ? 0.60 : 0.85;
@@ -6115,6 +6392,7 @@ class PushnotOrbit {
     if (this.mode === 'setup' && this.setupLines) {
       for (const line of this.setupLines) {
         if (line && line.material) line.material.dashOffset -= dashDelta;
+        if (line && line.userData && line.userData.containerGroup) line.userData.containerGroup.visible = line.visible;
       }
     } else if (this.mode === 'push' && this.pushLines) {
       for (const line of this.pushLines) {

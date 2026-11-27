@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-27 (v154)  
+**Last Updated:** 2026-11-27 (v155)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,14 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v155 (Diablo / StarCraft Isometric Command View & Circuit Board Pathways)
+- **Unified Diablo / StarCraft Isometric Perspective**: Locked ALL modes (`Setup`, `Push`, `World`, `LEO`) into a cohesive, commanding isometric vantage point (`elevation ~30°–35°`, `angle: 0.18`) where every single station on the map is simultaneously visible in the frame with minimal camera movement. Bypassed transit camera hijacking across all modes so clicking steps never jerks, spins, or swings the camera.
+- **Circuit Board Style Pathways (PCB Traces & Solder Vias)**: Replaced high parabolic arcs with authentic orthogonal & 45°-chamfered PCB circuit board bus pathways.
+  - Implemented `CircuitPathwayCurve` extending `THREE.Curve` with Manhattan/octilinear routing, 45° chamfered corner fillets, and uniform-speed arc-length parameterization (`.getPoint(t)` and `.getTangent(t)`).
+  - Added physical dark PCB trace tracks along the board floor (`color: 0x081e2b`) with glowing metallic annular solder via rings (`THREE.RingGeometry(0.85, 1.6, 24)`) and center drill holes at every corner and terminal.
+  - Animated data dashes stream along the circuit board traces, with payload items (keys, gavels, threat packets, IDs) traveling cleanly through the PCB buses and descending/ascending through vertical vias.
+- **Tactical Cyber PCB Ground Grids**: Added dark cyber motherboard substrate grids to both top-side normal stage and underside LEO stage, giving the entire presentation a high-tech RTS / command-center tactical aesthetic.
 
 ### v154 (Locked True Isometric Camera & Removed 3D Brain in Push 2)
 - **Locked True Isometric Perspective (Zero Michael Bay Spin)**: Eliminated all camera spinning, orbiting, and angle changes during step clicks and playback in Mode 4 (LEO). Locked `DEFAULT_DIRECTOR_RIGS` for all steps (`leo_step_0` through `leo_step_7`) and `updateCamera()` to an invariant, rock-solid isometric vantage point (`theta: 0.18`, `radius: 110.0`, `cam: { x: 19.6, y: 64.0, z: 108.2 }`, `target: { x: 0.0, y: 42.0, z: 4.0 }`). The entire stage (front entrance of RCMP HQ, Swiss Proton server, Apple/Google HQ, Suspect residence, App Server) remains perfectly visible, stable, and calm without any motion sickness or swinging behind the RCMP building.

@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-27 (v153)  
+**Last Updated:** 2026-11-27 (v154)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,10 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v154 (Locked True Isometric Camera & Removed 3D Brain in Push 2)
+- **Locked True Isometric Perspective (Zero Michael Bay Spin)**: Eliminated all camera spinning, orbiting, and angle changes during step clicks and playback in Mode 4 (LEO). Locked `DEFAULT_DIRECTOR_RIGS` for all steps (`leo_step_0` through `leo_step_7`) and `updateCamera()` to an invariant, rock-solid isometric vantage point (`theta: 0.18`, `radius: 110.0`, `cam: { x: 19.6, y: 64.0, z: 108.2 }`, `target: { x: 0.0, y: 42.0, z: 4.0 }`). The entire stage (front entrance of RCMP HQ, Swiss Proton server, Apple/Google HQ, Suspect residence, App Server) remains perfectly visible, stable, and calm without any motion sickness or swinging behind the RCMP building.
+- **Removed 3D Brain in Push 2**: Completely disabled `this.brainGroup` from appearing in Mode 2 (`Push`) at Step 3 (`t < 0.78`). Kept `this.brainGroup.visible = false` while preserving the 2D user ledger socket matching UI and slider interactions.
 
 ### v153 (Tidied Key Materialization & 3D Letters 'EDR' Below Gavel)
 - **Tidied Key Materialization Effect (No Laser Cut)**: Replaced the industrial CNC laser cutting rig (gantry, rails, cutting nozzle, laser beam, molten metal puddle, and spark physics) with a sleek holographic quantum materializer above the Post Office. The 3D golden token key now smoothly materializes out of concentric pulsating energy rings with a sweeping vertical cyan scan ring and gentle presentation rotation.

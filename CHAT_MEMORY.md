@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-27 (v152)  
+**Last Updated:** 2026-11-27 (v153)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,10 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v153 (Tidied Key Materialization & 3D Letters 'EDR' Below Gavel)
+- **Tidied Key Materialization Effect (No Laser Cut)**: Replaced the industrial CNC laser cutting rig (gantry, rails, cutting nozzle, laser beam, molten metal puddle, and spark physics) with a sleek holographic quantum materializer above the Post Office. The 3D golden token key now smoothly materializes out of concentric pulsating energy rings with a sweeping vertical cyan scan ring and gentle presentation rotation.
+- **3D Letters 'EDR' Below Judicial Gavel**: Added 3D golden brass extruded letters spelling **"EDR"** (Emergency Disclosure Request) directly beneath the judicial gavel (`y - 2.8`). Features both instant procedural 3D block geometry and beveled `TextGeometry` loaded from `fonts/helvetiker_bold.typeface.json`, billboarded to always face the camera upright as it travels across investigation arcs in Steps 2 and 4.
 
 ### v152 (Camera Optimized Per Click: Calmed Viewing Cone & Eliminated Transit Whiplash)
 - **Calmed LEO Camera Viewing Cone**: Replaced erratic 180°–270° camera flips with a cohesive, stable front-stage viewing cone (all step angles contained within a calm -12° to +19° range). Each step gently pans and reframes the active stations from the front-stage perspective, keeping the viewer grounded and oriented without motion sickness.

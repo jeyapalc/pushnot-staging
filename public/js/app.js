@@ -68,15 +68,15 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Calm, unified stage viewing cone (optimized per click, zero 180° flips or motion sickness)
-  "leo_step_0": { angle: 0.26,  radius: 104.0, cam: { x: 27.0,  y: 58.0, z: 100.0 }, target: { x: 24.0, y: 44.0, z: 24.0 } }, // Step 1: Suspect Hacker transmits threat
-  "leo_step_1": { angle: 0.00,  radius: 96.0,  cam: { x: 0.0,   y: 58.0, z: 96.0 },  target: { x: 0.0,  y: 44.0, z: 6.0 } },  // Step 2: Central RCMP Green Timbers HQ opens probe
-  "leo_step_2": { angle: -0.15, radius: 106.0, cam: { x: -16.0, y: 60.0, z: 104.0 }, target: { x: -22.0, y: 45.0, z: -18.0 } }, // Step 3: RCMP -> Swiss Proton AG (gavel & laughing video)
-  "leo_step_3": { angle: -0.22, radius: 102.0, cam: { x: -22.0, y: 58.0, z: 99.0 },  target: { x: -24.0, y: 43.0, z: 22.0 } },  // Step 4: RCMP -> App Server (court order served)
-  "leo_step_4": { angle: -0.10, radius: 100.0, cam: { x: -10.0, y: 58.0, z: 99.0 },  target: { x: -14.0, y: 43.0, z: 14.0 } },  // Step 5: App Server -> RCMP (device push tokens returned)
-  "leo_step_5": { angle: 0.18,  radius: 106.0, cam: { x: 19.0,  y: 60.0, z: 104.0 }, target: { x: 24.0, y: 45.0, z: -18.0 } }, // Step 6: RCMP -> Apple & Google HQ (push token subpoenas)
-  "leo_step_6": { angle: 0.28,  radius: 104.0, cam: { x: 29.0,  y: 58.0, z: 99.0 },  target: { x: 32.0, y: 44.0, z: -16.0 } }, // Step 7: Apple & Google reveal subscriber ID + house
-  "leo_step_7": { angle: 0.32,  radius: 100.0, cam: { x: 32.0,  y: 58.0, z: 95.0 },  target: { x: 38.0, y: 44.0, z: 34.0 } }   // Step 8: RCMP raid executed at Suspect residence
+  // Mode 4: Law Enforcement (8 steps) — True rock-solid isometric stage view (zero camera spin, zero motion sickness)
+  "leo_step_0": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 1: Suspect Hacker transmits threat
+  "leo_step_1": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 2: Central RCMP Green Timbers HQ opens probe
+  "leo_step_2": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 3: RCMP -> Swiss Proton AG (gavel & laughing video)
+  "leo_step_3": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 4: RCMP -> App Server (court order served)
+  "leo_step_4": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 5: App Server -> RCMP (device push tokens returned)
+  "leo_step_5": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 6: RCMP -> Apple & Google HQ (push token subpoenas)
+  "leo_step_6": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }, // Step 7: Apple & Google reveal subscriber ID + house
+  "leo_step_7": { angle: 0.18, radius: 110.0, cam: { x: 19.6, y: 64.0, z: 108.2 }, target: { x: 0.0, y: 42.0, z: 4.0 } }  // Step 8: RCMP raid executed at Suspect residence
 };
 
 const WORLD_APPS = [
@@ -1938,6 +1938,7 @@ class PushnotOrbit {
   updateBrainAndLedger(progress) {
     const pop = Math.min(1, progress / 0.15);
     const ease = 1 - Math.pow(1 - pop, 3);
+    this.brainGroup.visible = false;
     this.brainGroup.scale.setScalar(Math.max(0.01, ease));
 
     const matched = progress >= 0.72;
@@ -5260,7 +5261,7 @@ class PushnotOrbit {
         const bp = seg(t, 0.56, 0.78);
         this.pushOrb.visible = true;
         this.pushOrb.position.set(POS.post.x, 26, POS.post.z);
-        this.brainGroup.visible = true;
+        this.brainGroup.visible = false;
         this.updateBrainAndLedger(bp);
         showLedger = true;
         moverPos = new THREE.Vector3(POS.post.x, 26, POS.post.z);
@@ -6045,8 +6046,11 @@ class PushnotOrbit {
       }
 
       if (this.mode === 'leo') {
-        targetY = Math.max(50.0, targetY);
-        targetLook.y = Math.max(40.0, targetLook.y);
+        // Truly locked-in isometric camera: ZERO camera spin or rotation across steps and playback!
+        targetTheta = 0.18;
+        targetRadius = 110.0;
+        targetY = 64.0;
+        targetLook = new THREE.Vector3(0.0, 42.0, 4.0);
       }
 
       const smoothTime = this.playing ? 0.60 : 0.85;

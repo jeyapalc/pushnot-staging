@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-27 (v151)  
+**Last Updated:** 2026-11-27 (v152)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,11 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v152 (Camera Optimized Per Click: Calmed Viewing Cone & Eliminated Transit Whiplash)
+- **Calmed LEO Camera Viewing Cone**: Replaced erratic 180°–270° camera flips with a cohesive, stable front-stage viewing cone (all step angles contained within a calm -12° to +19° range). Each step gently pans and reframes the active stations from the front-stage perspective, keeping the viewer grounded and oriented without motion sickness.
+- **Eliminated Transit Whiplash**: Bypassed `transitRig` camera hijacking in LEO mode (`this.mode === 'leo' ? null : this.getActiveTransit(...)`), preventing the camera from violently snapping sideways perpendicular to in-flight packets or the judicial gavel.
+- **Silky Camera Damping**: Tuned camera `smoothTime` to `0.85s` per click (and `0.60s` in continuous playback) for smooth, broadcast-quality transitions.
 
 ### v151 (Removed Circle Under Trees & Matched Dark Building Colors on Trees)
 - **Removed Ground Circle Under Trees**: Eliminated `poolMesh` (`THREE.CircleGeometry(12.0, 32)`) from the RCMP courtyard ground, leaving the dark space beneath the trees completely seamless with zero ground pad or circular disc.

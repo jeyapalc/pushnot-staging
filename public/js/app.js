@@ -68,15 +68,15 @@ const DEFAULT_DIRECTOR_RIGS = {
   "world_step_4": { angle: 4.80, radius: 108.0, cam: { x: -108.0, y: 54.0, z: 10.0 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
   "world_step_5": { angle: 5.85, radius: 108.0, cam: { x: -45.0, y: 56.0, z: 98.0 },  target: { x: 0.0, y: 18.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Elevated eye-level carousel track framing origin, destination & transit arcs
-  "leo_step_0": { angle: 0.87,  radius: 88.0, cam: { x: 74.0,  y: 55.0, z: 66.0 },  target: { x: 50.0, y: 45.0, z: 50.0 } }, // Suspect on Rule of Thirds
-  "leo_step_1": { angle: 0.00,  radius: 82.0, cam: { x: 0.0,   y: 56.0, z: 82.0 },  target: { x: 0.0,  y: 44.0, z: 8.5 } },  // Central RCMP Green Timbers HQ
-  "leo_step_2": { angle: 2.63,  radius: 96.0, cam: { x: 48.0,  y: 55.0, z: -84.0 }, target: { x: -28.0, y: 44.0, z: -28.0 } }, // Transit: RCMP -> Swiss Proton (origin, dest & arc)
-  "leo_step_3": { angle: -2.08, radius: 96.0, cam: { x: -84.0, y: 55.0, z: -48.0 }, target: { x: -28.0, y: 44.0, z: 28.0 } },  // Transit: RCMP -> App Server (origin, dest & arc)
-  "leo_step_4": { angle: -2.08, radius: 96.0, cam: { x: -84.0, y: 55.0, z: -48.0 }, target: { x: -28.0, y: 44.0, z: 28.0 } },  // Transit: App Server -> RCMP Tokens (origin, dest & arc)
-  "leo_step_5": { angle: 1.06,  radius: 96.0, cam: { x: 84.0,  y: 55.0, z: 48.0 },  target: { x: 28.0,  y: 44.0, z: -28.0 } }, // Transit: RCMP -> Apple/Google HQ (origin, dest & arc)
-  "leo_step_6": { angle: 1.06,  radius: 96.0, cam: { x: 84.0,  y: 55.0, z: 48.0 },  target: { x: 28.0,  y: 44.0, z: -28.0 } }, // Transit: Apple/Google -> RCMP Record (origin, dest & arc)
-  "leo_step_7": { angle: 1.57,  radius: 20.0, cam: { x: 42.0,  y: 48.0, z: 32.0 },  target: { x: 58.0, y: 46.0, z: 58.0 } }  // Suspect unmasked facing camera head-on with front illumination and full scene framing
+  // Mode 4: Law Enforcement (8 steps) — Calm, unified stage viewing cone (optimized per click, zero 180° flips or motion sickness)
+  "leo_step_0": { angle: 0.26,  radius: 104.0, cam: { x: 27.0,  y: 58.0, z: 100.0 }, target: { x: 24.0, y: 44.0, z: 24.0 } }, // Step 1: Suspect Hacker transmits threat
+  "leo_step_1": { angle: 0.00,  radius: 96.0,  cam: { x: 0.0,   y: 58.0, z: 96.0 },  target: { x: 0.0,  y: 44.0, z: 6.0 } },  // Step 2: Central RCMP Green Timbers HQ opens probe
+  "leo_step_2": { angle: -0.15, radius: 106.0, cam: { x: -16.0, y: 60.0, z: 104.0 }, target: { x: -22.0, y: 45.0, z: -18.0 } }, // Step 3: RCMP -> Swiss Proton AG (gavel & laughing video)
+  "leo_step_3": { angle: -0.22, radius: 102.0, cam: { x: -22.0, y: 58.0, z: 99.0 },  target: { x: -24.0, y: 43.0, z: 22.0 } },  // Step 4: RCMP -> App Server (court order served)
+  "leo_step_4": { angle: -0.10, radius: 100.0, cam: { x: -10.0, y: 58.0, z: 99.0 },  target: { x: -14.0, y: 43.0, z: 14.0 } },  // Step 5: App Server -> RCMP (device push tokens returned)
+  "leo_step_5": { angle: 0.18,  radius: 106.0, cam: { x: 19.0,  y: 60.0, z: 104.0 }, target: { x: 24.0, y: 45.0, z: -18.0 } }, // Step 6: RCMP -> Apple & Google HQ (push token subpoenas)
+  "leo_step_6": { angle: 0.28,  radius: 104.0, cam: { x: 29.0,  y: 58.0, z: 99.0 },  target: { x: 32.0, y: 44.0, z: -16.0 } }, // Step 7: Apple & Google reveal subscriber ID + house
+  "leo_step_7": { angle: 0.32,  radius: 100.0, cam: { x: 32.0,  y: 58.0, z: 95.0 },  target: { x: 38.0, y: 44.0, z: 34.0 } }   // Step 8: RCMP raid executed at Suspect residence
 };
 
 const WORLD_APPS = [
@@ -6091,7 +6091,8 @@ class PushnotOrbit {
       }
 
       // Check for active node transit movement: automatically frame origin, destination, and transit arc!
-      const transit = this.getActiveTransit(this.mode, this.t);
+      // In LEO mode, bypass transit camera hijacking so the camera stays calm and stable per click without whiplash
+      const transit = this.mode === 'leo' ? null : this.getActiveTransit(this.mode, this.t);
       if (transit) {
         const transitRig = this.computeTransitRig(transit.origin, transit.dest, transit.arc, this.mode === 'leo');
         if (transitRig) {
@@ -6107,7 +6108,7 @@ class PushnotOrbit {
         targetLook.y = Math.max(40.0, targetLook.y);
       }
 
-      const smoothTime = this.playing ? 0.35 : 0.60;
+      const smoothTime = this.playing ? 0.60 : 0.85;
       this.cameraRig.stepToCylindrical(
         targetTheta,
         targetRadius,

@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-27 (v150)  
+**Last Updated:** 2026-11-27 (v151)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,10 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v151 (Removed Circle Under Trees & Matched Dark Building Colors on Trees)
+- **Removed Ground Circle Under Trees**: Eliminated `poolMesh` (`THREE.CircleGeometry(12.0, 32)`) from the RCMP courtyard ground, leaving the dark space beneath the trees completely seamless with zero ground pad or circular disc.
+- **Matched Dark Building Tone on Trees**: Tinted both the trunk and leaf materials of the Nikko maple trees to match the authentic dark tactical slate tone of the RCMP building (`0x18202e`, roughness: 0.88, metalness: 0.12). Used `onBeforeCompile` shader override on the leaf material (`diffuseColor = vec4(diffuse, sampledDiffuseColor.a)`) to preserve all organic alpha transparency cutouts from the GLB texture while seamlessly unifying their color with the building.
 
 ### v150 (RCMP Courtyard Trees Aligned Parallel to Front Wooden Sign)
 - **Realigned 4 Courtyard Trees Parallel with Wooden Sign**: Restored the exact coordinates from `5339830` (`{ x: 8.5, z: 7.5 }`, `{ x: 10.0, z: 12.0 }`, `{ x: 11.5, z: 16.5 }`, `{ x: 13.0, z: 21.0 }`) so that the row of 4 green Nikko maple trees runs directly parallel with the front wooden entrance sign and foyer structure, resolving the "went back too far" wide-courtyard positioning.

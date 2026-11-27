@@ -3912,20 +3912,7 @@ class PushnotOrbit {
       entranceLight.position.set(this.leoPos.swat.x + 8.0, 10.5, this.leoPos.swat.z + 10.0);
       this.rcmpDaylightGroup.add(entranceLight);
 
-      // Warm courtyard ground light pool in front of the entrance doors and trees
-      const poolGeo = new THREE.CircleGeometry(12.0, 32);
-      const poolMat = new THREE.MeshBasicMaterial({
-        color: 0xfff5dd,
-        transparent: true,
-        opacity: 0.18,
-        blending: THREE.AdditiveBlending
-      });
-      const poolMesh = new THREE.Mesh(poolGeo, poolMat);
-      poolMesh.rotation.x = -Math.PI / 2;
-      poolMesh.position.set(this.leoPos.swat.x + 14.0, 0.08, this.leoPos.swat.z + 10.0);
-      this.rcmpDaylightGroup.add(poolMesh);
-
-      // Building footprint stands directly on ground plane with zero plinth / zero base slab
+      // Building footprint stands directly on ground plane with zero plinth / zero base slab / zero ground circle
       this.leoGroup.add(this.rcmpDaylightGroup);
       done();
     }, undefined, done);
@@ -3979,25 +3966,36 @@ class PushnotOrbit {
     this.loader.load('models/leo/nikko_maple.glb', (gltf) => {
       const treeModel = gltf.scene;
       treeModel.traverse((c) => {
-        if (c.isMesh) {
-          c.castShadow = true;
-          c.receiveShadow = true;
-          if (c.material) {
-            c.material = c.material.clone();
-            const matName = (c.material.name || '').toLowerCase();
-            const meshName = (c.name || '').toLowerCase();
-            if (matName.includes('leaf') || meshName.includes('leaf')) {
-              // Tint leaves to lush natural summer green matching real trees in photo (#2e7d32)
-              c.material.color.set('#2e7d32');
-              c.material.roughness = 0.52;
-            } else {
-              // Trunk and branches
-              c.material.roughness = 0.85;
-            }
-            c.material.metalness = 0.04;
-            c.material.needsUpdate = true;
+        if (!c.isMesh) return;
+        c.castShadow = true;
+        c.receiveShadow = true;
+        const meshName = (c.name || '').toLowerCase();
+        const mats = Array.isArray(c.material) ? c.material : (c.material ? [c.material] : []);
+        mats.forEach((mat) => {
+          if (!mat) return;
+          const matName = (mat.name || '').toLowerCase();
+          mat.envMapIntensity = 0.0;
+          if (matName.includes('leaf') || meshName.includes('leaf')) {
+            // Match the dark tactical slate color of the RCMP building (0x18202e)
+            // Replace diffuse color texture while preserving authentic alpha transparency cutouts
+            mat.color.setHex(0x18202e);
+            mat.roughness = 0.88;
+            mat.metalness = 0.12;
+            mat.onBeforeCompile = (shader) => {
+              shader.fragmentShader = shader.fragmentShader.replace(
+                'diffuseColor *= sampledDiffuseColor;',
+                'diffuseColor = vec4(diffuse, sampledDiffuseColor.a);'
+              );
+            };
+          } else {
+            // Trunk and branches in matching dark building slate
+            mat.map = null;
+            mat.color.setHex(0x18202e);
+            mat.roughness = 0.88;
+            mat.metalness = 0.12;
           }
-        }
+          mat.needsUpdate = true;
+        });
       });
 
       // Target tree height: about half the height of the RCMP building (~10.5 units)

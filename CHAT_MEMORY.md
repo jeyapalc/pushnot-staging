@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-25 (v149)  
+**Last Updated:** 2026-11-27 (v150)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,17 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v150 (RCMP Courtyard Trees Aligned Parallel to Front Wooden Sign)
+- **Realigned 4 Courtyard Trees Parallel with Wooden Sign**: Restored the exact coordinates from `5339830` (`{ x: 8.5, z: 7.5 }`, `{ x: 10.0, z: 12.0 }`, `{ x: 11.5, z: 16.5 }`, `{ x: 13.0, z: 21.0 }`) so that the row of 4 green Nikko maple trees runs directly parallel with the front wooden entrance sign and foyer structure, resolving the "went back too far" wide-courtyard positioning.
+- **Preserved All Architectural Assets**:
+  - Dark tactical slate/charcoal building exterior (`0x18202e`) (v149).
+  - Matte black window bays with all glass reflection removed (`0x0a0c10`) (v148).
+  - Rich warm wood on awning and entrance wall (`0x8a532b`) (v148).
+  - Pure glowing white RCMP bison crest decal and police signage (`0xffffff`) (v148).
+  - JJ Jameson laughing video mounted flush on Swiss Proton server (`y = 22.8`) (v145).
+  - 45-degree forward tilted ID reveal house and address plaque (v141).
+  - Single 3D Judicial Gavel traveling along outbound investigation arcs (v136).
 
 ### v149 (RCMP Building Body Color Restored to 0x18202e)
 - **Restored Building Body Tone**: Switched the RCMP building exterior finish from pitch black (`0x0a0c10`) back to the authentic dark tactical slate/charcoal color (`0x18202e`, roughness: 0.88, metalness: 0.12) across all roof, wall, shell, and window bay meshes, exactly matching the user's reference screenshot (`media_1795671305458_9c41203f.jpg`).

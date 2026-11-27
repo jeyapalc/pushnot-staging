@@ -4012,16 +4012,15 @@ class PushnotOrbit {
       const treeBase = new THREE.Group();
       treeBase.add(treeModel);
 
-      // Plant 4 real trees lined up cleanly in front of the entrance on the opposite side
-      // (to the right of the wooden entrance foyer in the open courtyard/plaza with positive Z values)
+      // Plant 4 real trees running parallel with the wooden sign near the entrance (exact restored alignment)
       const treeRow = new THREE.Group();
       treeRow.userData.stationKey = 'swat';
 
       const treeCoords = [
-        { x: 19.5, z: 14.5, rot: 0.2,  s: 1.00 },
-        { x: 22.5, z: 14.0, rot: 1.4,  s: 0.95 },
-        { x: 25.5, z: 13.5, rot: 2.6,  s: 1.05 },
-        { x: 28.5, z: 13.0, rot: 3.8,  s: 0.98 }
+        { x:  8.5, z:  7.5, rot: 0.1,  s: 1.00 },
+        { x: 10.0, z: 12.0, rot: 1.2,  s: 0.95 },
+        { x: 11.5, z: 16.5, rot: 2.3,  s: 1.05 },
+        { x: 13.0, z: 21.0, rot: 3.5,  s: 0.98 }
       ];
 
       for (let i = 0; i < treeCoords.length; i++) {

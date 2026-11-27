@@ -275,7 +275,18 @@ class PushnotOrbit {
     this.loadModels();
     this.initUI();
     this.setScrollMode('glide');
-    this.setMode('setup', false);
+    const urlParams = new URLSearchParams(window.location.search);
+    const startMode = urlParams.get('mode') || 'setup';
+    const startStep = urlParams.get('step');
+    this.setMode(startMode, false);
+    if (startStep !== null) {
+      const stepIdx = parseInt(startStep, 10);
+      const stops = this.getStops(startMode);
+      if (stops && stepIdx >= 0 && stepIdx < stops.length) {
+        this.t = stops[stepIdx];
+        this.targetT = this.t;
+      }
+    }
     this.animate();
   }
 

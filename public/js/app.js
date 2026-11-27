@@ -758,230 +758,115 @@ class PushnotOrbit {
     return this.createSingleTokenKey(scale);
   }
 
-  /* ---- Industrial CNC Fiber Laser Key Fabrication Rig ---- */
-  createLaserCutterForge() {
+  /* ---- Holographic Quantum Token Key Materialization Rig ---- */
+  createKeyMaterializer() {
     const group = new THREE.Group();
 
-    // 1. Heavy cast industrial CNC bed frame
-    const frameMat = new THREE.MeshStandardMaterial({
-      color: 0x111622, roughness: 0.65, metalness: 0.8
+    // 1. Sleek Floating Cyber Platform Base (Brushed Titanium + Emissive Cyan)
+    const baseMat = new THREE.MeshStandardMaterial({
+      color: 0x0f172a, roughness: 0.35, metalness: 0.90
     });
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(16, 1.2, 11), frameMat);
-    frame.position.y = -0.6;
-    group.add(frame);
+    const basePlate = new THREE.Mesh(new THREE.CylinderGeometry(4.8, 5.2, 0.45, 36), baseMat);
+    basePlate.position.y = -0.22;
+    group.add(basePlate);
 
-    // Aluminum slat grid (underneath plate where sparks fall)
-    const slatMat = new THREE.MeshStandardMaterial({
-      color: 0x334155, roughness: 0.4, metalness: 0.9
+    // Glowing cyan cyber trim ring
+    const trimMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, transparent: true, opacity: 0.85
     });
-    const slatGeo = new THREE.BoxGeometry(14.8, 0.35, 0.12);
-    for (let z = -4.5; z <= 4.5; z += 0.65) {
-      const slat = new THREE.Mesh(slatGeo, slatMat);
-      slat.position.set(0, -0.1, z);
-      group.add(slat);
+    const trimRing = new THREE.Mesh(new THREE.TorusGeometry(4.85, 0.08, 12, 48), trimMat);
+    trimRing.rotation.x = Math.PI / 2;
+    trimRing.position.y = 0.02;
+    group.add(trimRing);
+
+    // Inner holographic energy disc
+    const discMat = new THREE.MeshBasicMaterial({
+      color: 0x0284c7, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending
+    });
+    const energyDisc = new THREE.Mesh(new THREE.CircleGeometry(4.0, 32), discMat);
+    energyDisc.rotation.x = -Math.PI / 2;
+    energyDisc.position.y = 0.04;
+    group.add(energyDisc);
+
+    // Concentric pulsating holographic rings
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, transparent: true, opacity: 0.65, blending: THREE.AdditiveBlending
+    });
+    const innerRing1 = new THREE.Mesh(new THREE.RingGeometry(1.8, 1.95, 32), ringMat);
+    innerRing1.rotation.x = -Math.PI / 2;
+    innerRing1.position.y = 0.06;
+    const innerRing2 = new THREE.Mesh(new THREE.RingGeometry(3.1, 3.25, 32), ringMat);
+    innerRing2.rotation.x = -Math.PI / 2;
+    innerRing2.position.y = 0.06;
+    group.add(innerRing1, innerRing2);
+
+    // 4 Sleek emitter pylons with glowing cyan tips
+    const pylonMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b, roughness: 0.4, metalness: 0.85
+    });
+    const tipMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+    const pylonGeo = new THREE.CylinderGeometry(0.16, 0.22, 1.8, 16);
+    const tipGeo = new THREE.SphereGeometry(0.22, 16, 16);
+    const pylonRadius = 4.2;
+
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * Math.PI) / 2 + Math.PI / 4;
+      const px = Math.cos(angle) * pylonRadius;
+      const pz = Math.sin(angle) * pylonRadius;
+      const pylon = new THREE.Mesh(pylonGeo, pylonMat);
+      pylon.position.set(px, 0.9, pz);
+      const tip = new THREE.Mesh(tipGeo, tipMat);
+      tip.position.set(px, 1.85, pz);
+      group.add(pylon, tip);
     }
 
-    // Precision fixture clamps holding down sheet corners
-    const clampMat = new THREE.MeshStandardMaterial({
-      color: 0x0284c7, roughness: 0.35, metalness: 0.85
+    // Dynamic Vertical Holographic Scan Ring (sweeps smoothly up through the key during materialization)
+    const scanRingMat = new THREE.MeshBasicMaterial({
+      color: 0x38bdf8, transparent: true, opacity: 0.90, blending: THREE.AdditiveBlending
     });
-    const clampGeo = new THREE.BoxGeometry(1.0, 0.3, 0.6);
-    [[-6.2, 0.12, -3.8], [6.2, 0.12, -3.8], [-6.2, 0.12, 3.8], [6.2, 0.12, 3.8]].forEach(([x, y, z]) => {
-      const cl = new THREE.Mesh(clampGeo, clampMat);
-      cl.position.set(x, y, z);
-      group.add(cl);
-    });
+    const scanRing = new THREE.Mesh(new THREE.TorusGeometry(2.6, 0.09, 16, 48), scanRingMat);
+    scanRing.rotation.x = Math.PI / 2;
+    scanRing.position.y = 0.8;
+    group.add(scanRing);
 
-    // The Raw Gold Sheet Blank sitting on the slats (0.22 unit thick)
-    const sheetMat = new THREE.MeshStandardMaterial({
-      color: 0xd97706, roughness: 0.32, metalness: 0.88, envMapIntensity: 1.2
-    });
-    const rawSheet = new THREE.Mesh(new THREE.BoxGeometry(12.8, 0.22, 7.8), sheetMat);
-    rawSheet.position.y = 0.0;
-    group.add(rawSheet);
-
-    // 2. High Bridge Rails across X and Z
-    const railMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b, roughness: 0.5, metalness: 0.85
-    });
-    const bridgeBeam = new THREE.Mesh(new THREE.BoxGeometry(17.5, 0.45, 0.6), railMat);
-    bridgeBeam.position.set(0, 5.2, 0);
-    group.add(bridgeBeam);
-
-    // Optical Cutting Head Assembly
-    const headAssembly = new THREE.Group();
-    group.add(headAssembly);
-
-    // Optical Head housing (machined gunmetal cylinder + cyan status ring)
-    const headMat = new THREE.MeshStandardMaterial({
-      color: 0x0f172a, roughness: 0.3, metalness: 0.95
-    });
-    const housing = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.45, 1.6, 24), headMat);
-    housing.position.y = 1.8;
-    headAssembly.add(housing);
-
-    const statusRing = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.57, 0.57, 0.18, 24),
-      new THREE.MeshBasicMaterial({ color: 0x00f0ff })
-    );
-    statusRing.position.y = 1.95;
-    headAssembly.add(statusRing);
-
-    // Precision copper conical cutting nozzle
-    const nozzleMat = new THREE.MeshStandardMaterial({
-      color: 0xb45309, roughness: 0.2, metalness: 0.95
-    });
-    const nozzle = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 24), nozzleMat);
-    nozzle.rotation.x = Math.PI; // point down
-    nozzle.position.y = 0.75;
-    headAssembly.add(nozzle);
-
-    // Cutting Laser Beam (Vertical needle of intense cyan-white light from nozzle to plate)
-    const beamGeo = new THREE.CylinderGeometry(0.03, 0.06, 0.75, 12);
-    beamGeo.translate(0, -0.375, 0);
-    const laserBeamMat = new THREE.MeshBasicMaterial({
-      color: 0xffffff, transparent: true, opacity: 0.95
-    });
-    const laserBeam = new THREE.Mesh(beamGeo, laserBeamMat);
-    laserBeam.position.y = 0.75;
-    headAssembly.add(laserBeam);
-
-    // Beam Outer Glow Shroud
-    const haloGeo = new THREE.CylinderGeometry(0.1, 0.28, 0.75, 12);
-    haloGeo.translate(0, -0.375, 0);
-    const beamHaloMat = new THREE.MeshBasicMaterial({
-      color: 0x00f0ff, transparent: true, opacity: 0.45, blending: THREE.AdditiveBlending
-    });
-    const beamHalo = new THREE.Mesh(haloGeo, beamHaloMat);
-    beamHalo.position.y = 0.75;
-    headAssembly.add(beamHalo);
-
-    // Blinding focal cutting spot light
-    const focalSpotLight = new THREE.PointLight(0x00f0ff, 8.0, 14);
-    focalSpotLight.position.set(0, 0.1, 0);
-    headAssembly.add(focalSpotLight);
-
-    // Amber melt under-glow light
-    const meltLight = new THREE.PointLight(0xff6600, 6.0, 8);
-    meltLight.position.set(0, 0.08, 0);
-    headAssembly.add(meltLight);
-
-    // Molten puddle disc on sheet surface
-    const puddleGeo = new THREE.CircleGeometry(0.35, 16);
-    puddleGeo.rotateX(-Math.PI / 2);
-    const moltenPuddle = new THREE.Mesh(
-      puddleGeo,
-      new THREE.MeshBasicMaterial({ color: 0xffedd5, transparent: true, opacity: 0.92 })
-    );
-    moltenPuddle.position.y = 0.14;
-    group.add(moltenPuddle);
-
-    // 3. Mathematical Key Contour Path (closed Catmull-Rom loop)
-    const pts = [];
-    const bowCenter = { x: -3.2, z: 0.0 };
-    const bowRadius = 1.8;
-    const bowArcStart = 0.42;
-    const bowArcEnd = Math.PI * 2 - 0.42;
-    for (let i = 0; i <= 30; i++) {
-      const a = bowArcStart + (i / 30) * (bowArcEnd - bowArcStart);
-      pts.push(new THREE.Vector3(
-        bowCenter.x + Math.cos(a) * bowRadius,
-        0.14,
-        bowCenter.z + Math.sin(a) * bowRadius
-      ));
+    // Shimmering quantum energy particle field
+    const pCount = 48;
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(pCount * 3);
+    for (let i = 0; i < pCount; i++) {
+      const r = 0.8 + Math.random() * 2.5;
+      const a = Math.random() * Math.PI * 2;
+      pPos[i * 3]     = Math.cos(a) * r;
+      pPos[i * 3 + 1] = 0.2 + Math.random() * 3.2;
+      pPos[i * 3 + 2] = Math.sin(a) * r;
     }
-    pts.push(new THREE.Vector3(-1.4, 0.14, -0.5));
-    pts.push(new THREE.Vector3(-0.9, 0.14, -0.5));
-    pts.push(new THREE.Vector3(-0.3, 0.14, -0.5));
-    pts.push(new THREE.Vector3(-0.15, 0.14, -1.05));
-    pts.push(new THREE.Vector3( 0.35, 0.14, -1.05));
-    pts.push(new THREE.Vector3( 0.5,  0.14, -0.5));
-    pts.push(new THREE.Vector3( 0.9,  0.14, -0.5));
-    pts.push(new THREE.Vector3( 1.05, 0.14, -1.35));
-    pts.push(new THREE.Vector3( 1.55, 0.14, -1.35));
-    pts.push(new THREE.Vector3( 1.7,  0.14, -0.5));
-    pts.push(new THREE.Vector3( 2.1,  0.14, -0.5));
-    pts.push(new THREE.Vector3( 2.25, 0.14, -0.95));
-    pts.push(new THREE.Vector3( 2.75, 0.14, -0.95));
-    pts.push(new THREE.Vector3( 2.9,  0.14, -0.5));
-    pts.push(new THREE.Vector3( 3.4,  0.14, -0.5));
-    pts.push(new THREE.Vector3( 3.8,  0.14, -0.25));
-    pts.push(new THREE.Vector3( 3.95, 0.14,  0.0));
-    pts.push(new THREE.Vector3( 3.8,  0.14,  0.42));
-    pts.push(new THREE.Vector3(-0.9,  0.14,  0.42));
-    pts.push(new THREE.Vector3(-1.4,  0.14,  0.5));
-    pts.push(new THREE.Vector3(
-      bowCenter.x + Math.cos(bowArcStart) * bowRadius,
-      0.14,
-      bowCenter.z + Math.sin(bowArcStart) * bowRadius
-    ));
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({
+      color: 0x38bdf8, size: 0.26, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending
+    });
+    const particles = new THREE.Points(pGeo, pMat);
+    group.add(particles);
 
-    const cutCurve = new THREE.CatmullRomCurve3(pts, true, 'centripetal', 0.15);
+    // Central Core Illumination PointLight
+    const coreLight = new THREE.PointLight(0x38bdf8, 3.5, 20);
+    coreLight.position.set(0, 2.2, 0);
+    group.add(coreLight);
 
-    // 4. Dynamic Kerf Seam Line with vertex coloring
-    const maxKerfPts = 300;
-    const kerfPositions = new Float32Array(maxKerfPts * 3);
-    const kerfColors = new Float32Array(maxKerfPts * 3);
-    const kerfGeo = new THREE.BufferGeometry();
-    kerfGeo.setAttribute('position', new THREE.BufferAttribute(kerfPositions, 3));
-    kerfGeo.setAttribute('color', new THREE.BufferAttribute(kerfColors, 3));
-    const kerfLine = new THREE.Line(
-      kerfGeo,
-      new THREE.LineBasicMaterial({ vertexColors: true, linewidth: 2 })
-    );
-    group.add(kerfLine);
-
-    // 5. Physics Sparks Particle System
-    const sparkCount = 60;
-    const sparkGeo = new THREE.BufferGeometry();
-    const sparkPos = new Float32Array(sparkCount * 3);
-    const sparkCol = new Float32Array(sparkCount * 3);
-    const sparksData = [];
-    for (let i = 0; i < sparkCount; i++) {
-      sparkPos[i * 3 + 1] = -100;
-      sparkCol[i * 3]     = 1.0;
-      sparkCol[i * 3 + 1] = 0.85;
-      sparkCol[i * 3 + 2] = 0.3;
-      sparksData.push({
-        pos: new THREE.Vector3(0, -100, 0),
-        vel: new THREE.Vector3(),
-        life: 1.0,
-        maxLife: 0.25
-      });
-    }
-    sparkGeo.setAttribute('position', new THREE.BufferAttribute(sparkPos, 3));
-    sparkGeo.setAttribute('color', new THREE.BufferAttribute(sparkCol, 3));
-    const sparkPoints = new THREE.Points(
-      sparkGeo,
-      new THREE.PointsMaterial({
-        size: 0.35, vertexColors: true, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending
-      })
-    );
-    group.add(sparkPoints);
-
-    // Dynamic Handles
-    this.laserCutterData = {
-      bridgeBeam,
-      headAssembly,
-      laserBeam,
-      beamHalo,
-      focalSpotLight,
-      meltLight,
-      moltenPuddle,
-      cutCurve,
-      maxKerfPts,
-      kerfLine,
-      sparkCount,
-      sparkPoints,
-      sparksData,
-      lastTime: performance.now()
+    // Dynamic Handles for animation loop
+    this.materializerData = {
+      scanRing,
+      scanRingMat,
+      innerRing1,
+      innerRing2,
+      particles,
+      coreLight
     };
 
     return group;
   }
 
-  createKeyMaterializer() {
-    return this.createLaserCutterForge();
+  createLaserCutterForge() {
+    return this.createKeyMaterializer();
   }
 
   /* ---- 3D Diamond-Angled Monopoly "GO TO JAIL" Tile (Using original picture, facing LEFT, rotated 45° as a diamond!) ---- */
@@ -3257,6 +3142,114 @@ class PushnotOrbit {
     return group;
   }
 
+  /* ---- 3D Letters 'EDR' (Emergency Disclosure Request) below the Judicial Gavel ---- */
+  createEdr3DLetters() {
+    const group = new THREE.Group();
+
+    // Polished golden brass material matching the gavel's brass bands
+    const brassMat = new THREE.MeshStandardMaterial({
+      color: 0xfbbf24,
+      metalness: 0.90,
+      roughness: 0.18,
+      emissive: 0xd97706,
+      emissiveIntensity: 0.45
+    });
+
+    // 1. Procedural 3D block-letter geometry for 'EDR' (renders instantly with zero network/font latency)
+    const buildBlockLetters = () => {
+      const g = new THREE.Group();
+      const thick = 0.32;
+      const h = 1.35;
+      const bar = 0.22;
+
+      // Letter 'E' (center at x = -1.25)
+      const eGroup = new THREE.Group();
+      eGroup.position.x = -1.25;
+      const eStem = new THREE.Mesh(new THREE.BoxGeometry(bar, h, thick), brassMat);
+      eStem.position.set(-0.35, 0, 0);
+      const eTop = new THREE.Mesh(new THREE.BoxGeometry(0.75, bar, thick), brassMat);
+      eTop.position.set(0.02, h / 2 - bar / 2, 0);
+      const eMid = new THREE.Mesh(new THREE.BoxGeometry(0.55, bar, thick), brassMat);
+      eMid.position.set(-0.08, 0, 0);
+      const eBot = new THREE.Mesh(new THREE.BoxGeometry(0.75, bar, thick), brassMat);
+      eBot.position.set(0.02, -h / 2 + bar / 2, 0);
+      eGroup.add(eStem, eTop, eMid, eBot);
+
+      // Letter 'D' (center at x = 0.0)
+      const dGroup = new THREE.Group();
+      dGroup.position.x = 0.0;
+      const dStem = new THREE.Mesh(new THREE.BoxGeometry(bar, h, thick), brassMat);
+      dStem.position.set(-0.40, 0, 0);
+      const dTop = new THREE.Mesh(new THREE.BoxGeometry(0.55, bar, thick), brassMat);
+      dTop.position.set(-0.10, h / 2 - bar / 2, 0);
+      const dBot = new THREE.Mesh(new THREE.BoxGeometry(0.55, bar, thick), brassMat);
+      dBot.position.set(-0.10, -h / 2 + bar / 2, 0);
+      const dSpine = new THREE.Mesh(new THREE.BoxGeometry(bar, h * 0.76, thick), brassMat);
+      dSpine.position.set(0.35, 0, 0);
+      const dTopCorner = new THREE.Mesh(new THREE.BoxGeometry(bar, bar * 1.4, thick), brassMat);
+      dTopCorner.rotation.z = Math.PI / 4;
+      dTopCorner.position.set(0.24, h / 2 - bar * 0.8, 0);
+      const dBotCorner = new THREE.Mesh(new THREE.BoxGeometry(bar, bar * 1.4, thick), brassMat);
+      dBotCorner.rotation.z = -Math.PI / 4;
+      dBotCorner.position.set(0.24, -h / 2 + bar * 0.8, 0);
+      dGroup.add(dStem, dTop, dBot, dSpine, dTopCorner, dBotCorner);
+
+      // Letter 'R' (center at x = 1.25)
+      const rGroup = new THREE.Group();
+      rGroup.position.x = 1.25;
+      const rStem = new THREE.Mesh(new THREE.BoxGeometry(bar, h, thick), brassMat);
+      rStem.position.set(-0.35, 0, 0);
+      const rTop = new THREE.Mesh(new THREE.BoxGeometry(0.60, bar, thick), brassMat);
+      rTop.position.set(-0.05, h / 2 - bar / 2, 0);
+      const rMid = new THREE.Mesh(new THREE.BoxGeometry(0.60, bar, thick), brassMat);
+      rMid.position.set(-0.05, 0.08, 0);
+      const rSpine = new THREE.Mesh(new THREE.BoxGeometry(bar, h * 0.42, thick), brassMat);
+      rSpine.position.set(0.30, 0.38, 0);
+      const rLeg = new THREE.Mesh(new THREE.BoxGeometry(bar, h * 0.62, thick), brassMat);
+      rLeg.rotation.z = -Math.PI / 4.5;
+      rLeg.position.set(0.12, -0.32, 0);
+      rGroup.add(rStem, rTop, rMid, rSpine, rLeg);
+
+      g.add(eGroup, dGroup, rGroup);
+      return g;
+    };
+
+    let activeMesh = buildBlockLetters();
+    group.add(activeMesh);
+
+    // Warm illumination point light for EDR letters
+    const edrLight = new THREE.PointLight(0xfef08a, 2.8, 12);
+    edrLight.position.set(0, 0, 1.0);
+    group.add(edrLight);
+
+    // 2. Asynchronously upgrade to beveled TextGeometry when font is loaded
+    const fontLoader = new FontLoader();
+    fontLoader.load('fonts/helvetiker_bold.typeface.json', (font) => {
+      try {
+        const textGeo = new TextGeometry('EDR', {
+          font: font,
+          size: 1.35,
+          depth: 0.35,
+          curveSegments: 8,
+          bevelEnabled: true,
+          bevelThickness: 0.05,
+          bevelSize: 0.03,
+          bevelSegments: 3
+        });
+        textGeo.center();
+        const textMesh = new THREE.Mesh(textGeo, brassMat);
+        textMesh.castShadow = true;
+        group.remove(activeMesh);
+        activeMesh = textMesh;
+        group.add(activeMesh);
+      } catch (e) {
+        console.warn('TextGeometry creation fallback:', e);
+      }
+    });
+
+    return group;
+  }
+
   initLeoStage() {
     // Underside Law Enforcement Reverse-Trace Stage (swings upright when worldPivot flips 180°!)
     // Spaced out radial distance so central RCMP Green Timbers centerpiece has ample courtyard breathing room
@@ -3305,6 +3298,10 @@ class PushnotOrbit {
     this.judicialGavel.visible = false;
     this.leoGroup.add(this.judicialGavel);
     this.exigentDemand = this.judicialGavel; // backwards-compatible alias
+    // 3D Extruded Letters 'EDR' (Emergency Disclosure Request) traveling below the Judicial Gavel
+    this.edrGroup = this.createEdr3DLetters();
+    this.edrGroup.visible = false;
+    this.leoGroup.add(this.edrGroup);
     this.leoTops.ag = 20;
 
     // LEO investigative arcs radiating from the central RCMP Green Timbers HQ
@@ -5039,6 +5036,7 @@ class PushnotOrbit {
     document.getElementById('scrub').value = Math.round(t * 1000);
     document.getElementById('scrub-pct').textContent = Math.round(t * 100) + '%';
 
+    if (this.edrGroup) this.edrGroup.visible = false;
     this.appOrb.visible = false;
     this.tokenKey.visible = false;
     this.tokenKey.scale.setScalar(1.2);
@@ -5157,121 +5155,54 @@ class PushnotOrbit {
         moverText = this.currentOS === 'ios' ? '📲 Request APNs Token' : '📲 Request FCM Token';
         moverCls = 'cyan';
       } else if (t < 0.60) {
-        // Step 5: High-Precision CNC Fiber Laser Key Fabrication (No HUD clutter, pure laser cut!)
+        // Step 5: Holographic Key Materialization (Zero laser cut / zero CNC clutter)
         const mp = seg(t, 0.48, 0.60);
         const forgePos = new THREE.Vector3(POS.post.x, this.tops.post + 6, POS.post.z);
         this.keyForge.visible = true;
         this.keyForge.position.copy(forgePos);
 
-        const LC = this.laserCutterData;
-        if (LC) {
-          const isCutting = mp < 0.78;
-          const cutProgress = Math.min(1.0, mp / 0.75);
-          const headTargetPos = LC.cutCurve.getPoint(cutProgress);
+        const MD = this.materializerData;
+        const now = performance.now();
 
-          let headY = 0.0;
-          if (mp >= 0.78) {
-            const liftZ = Math.min(1.0, (mp - 0.78) / 0.22);
-            headY = liftZ * 2.8; // Z-axis nozzle retracts
-          }
+        if (MD) {
+          // Slowly rotate concentric energy rings
+          MD.innerRing1.rotation.z = now * 0.002;
+          MD.innerRing2.rotation.z = -now * 0.0015;
 
-          LC.headAssembly.position.set(headTargetPos.x, headY, headTargetPos.z);
-          LC.bridgeBeam.position.z = headTargetPos.z;
+          // Materialization phase (0.0 to 0.75): Key forms out of light as scan ring sweeps up
+          if (mp < 0.75) {
+            const formProgress = mp / 0.75; // 0 to 1
+            const scanY = 0.6 + formProgress * 3.4;
+            MD.scanRing.position.y = scanY;
+            MD.scanRing.scale.setScalar(1.0 + Math.sin(mp * Math.PI * 8) * 0.15);
+            MD.scanRingMat.opacity = 0.95;
+            MD.coreLight.intensity = 3.5 + Math.sin(mp * 16.0) * 2.0;
 
-          // Vertical laser beam & intense focal spot lights
-          if (isCutting) {
-            LC.laserBeam.visible = true;
-            LC.beamHalo.visible = true;
-            LC.focalSpotLight.intensity = 7.0 + Math.random() * 2.0;
-            LC.meltLight.intensity = 5.0 + Math.random() * 2.0;
-            LC.moltenPuddle.visible = true;
-            LC.moltenPuddle.position.set(headTargetPos.x, 0.14, headTargetPos.z);
-          } else {
-            LC.laserBeam.visible = false;
-            LC.beamHalo.visible = false;
-            LC.focalSpotLight.intensity = 0;
-            LC.meltLight.intensity = 0;
-            LC.moltenPuddle.visible = false;
-          }
-
-          // Dynamic Kerf Line (white-hot tip cooling to dark cut seam)
-          const kerfCount = Math.floor(cutProgress * LC.maxKerfPts);
-          const posAttr = LC.kerfLine.geometry.attributes.position;
-          const colAttr = LC.kerfLine.geometry.attributes.color;
-
-          for (let i = 0; i < LC.maxKerfPts; i++) {
-            if (i <= kerfCount) {
-              const u = i / LC.maxKerfPts;
-              const pt = LC.cutCurve.getPoint(u);
-              posAttr.setXYZ(i, pt.x, 0.14, pt.z);
-
-              const distFromTip = (kerfCount - i) / 20;
-              if (distFromTip < 1.0) {
-                colAttr.setXYZ(i, 1.0, 0.95 - distFromTip * 0.3, 0.2);
-              } else if (distFromTip < 3.0) {
-                colAttr.setXYZ(i, 0.95, 0.25, 0.05);
-              } else {
-                colAttr.setXYZ(i, 0.22, 0.15, 0.05);
-              }
-            } else {
-              posAttr.setXYZ(i, headTargetPos.x, -50, headTargetPos.z);
-              colAttr.setXYZ(i, 0, 0, 0);
-            }
-          }
-          posAttr.needsUpdate = true;
-          colAttr.needsUpdate = true;
-
-          // Physics sparks cascade downward
-          const now = performance.now();
-          const dt = Math.min(0.05, (now - LC.lastTime) * 0.001);
-          LC.lastTime = now;
-
-          const pArr = LC.sparkPoints.geometry.attributes.position.array;
-          for (let i = 0; i < LC.sparkCount; i++) {
-            const s = LC.sparksData[i];
-            s.life += dt;
-            if (s.life >= s.maxLife) {
-              if (isCutting) {
-                s.life = 0;
-                s.maxLife = 0.12 + Math.random() * 0.18;
-                s.pos.copy(headTargetPos).add(new THREE.Vector3(
-                  (Math.random() - 0.5) * 0.1, 0.14, (Math.random() - 0.5) * 0.1
-                ));
-                const ang = Math.random() * Math.PI * 2;
-                const spd = 3.5 + Math.random() * 6.5;
-                s.vel.set(Math.cos(ang) * spd, (Math.random() * 2.5) - 2.0, Math.sin(ang) * spd);
-              } else {
-                pArr[i * 3 + 1] = -100;
-                continue;
-              }
-            }
-            s.vel.y -= 14.0 * dt;
-            s.pos.addScaledVector(s.vel, dt);
-            if (s.pos.y < -0.8) {
-              s.pos.y = -0.8;
-              s.vel.y *= -0.25;
-            }
-            pArr[i * 3]     = s.pos.x;
-            pArr[i * 3 + 1] = s.pos.y;
-            pArr[i * 3 + 2] = s.pos.z;
-          }
-          LC.sparkPoints.geometry.attributes.position.needsUpdate = true;
-
-          // Finished 3D Golden Token Key Lift & Presentation Rotation
-          if (mp >= 0.78) {
+            // Key scales up from center as it materializes
             this.tokenKey.visible = true;
-            const keyLiftProg = THREE.MathUtils.smoothstep(mp, 0.78, 0.98);
-            this.tokenKey.position.set(forgePos.x - 0.5, forgePos.y + 0.15 + keyLiftProg * 3.2, forgePos.z);
-            this.tokenKey.scale.setScalar(1.2);
-            this.tokenKey.rotation.y = now * 0.0025;
-            this.tokenKey.rotation.x = Math.sin(now * 0.002) * 0.1;
+            const keyScale = THREE.MathUtils.smoothstep(formProgress, 0.05, 1.0) * 1.2;
+            this.tokenKey.scale.setScalar(keyScale);
+            this.tokenKey.position.set(forgePos.x, forgePos.y + 2.2, forgePos.z);
+            this.tokenKey.rotation.y = mp * Math.PI * 4;
+            this.tokenKey.rotation.x = Math.sin(mp * Math.PI * 2) * 0.1;
+            this.tokenKey.rotation.z = 0;
           } else {
-            this.tokenKey.visible = false;
+            // Fully materialized phase (0.75 to 1.0): Key floats up into ready presentation pose
+            const liftProgress = (mp - 0.75) / 0.25;
+            MD.scanRingMat.opacity = Math.max(0, 0.95 * (1.0 - liftProgress));
+            MD.coreLight.intensity = 3.5 + (1.0 - liftProgress) * 2.0;
+
+            this.tokenKey.visible = true;
+            this.tokenKey.scale.setScalar(1.2);
+            this.tokenKey.position.set(forgePos.x, forgePos.y + 2.2 + liftProgress * 1.5, forgePos.z);
+            this.tokenKey.rotation.y = now * 0.0025;
+            this.tokenKey.rotation.x = 0;
+            this.tokenKey.rotation.z = 0;
           }
         }
 
         moverPos = forgePos.clone().add(new THREE.Vector3(0, 6.2, 0));
-        moverText = 'NEW TOKEN CREATED';
+        moverText = this.currentOS === 'ios' ? '✨ APNs Token Materialized' : '✨ FCM Token Materialized';
         moverCls = 'cyan';
       } else if (t < 0.70) {
         // Step 6: Token returns to Phone
@@ -5466,6 +5397,11 @@ class PushnotOrbit {
             const strikeOsc = Math.sin(u * Math.PI * 6) * 0.18;
             this.judicialGavel.rotateX(-0.55 + strikeOsc);
             this.judicialGavel.scale.setScalar(1.0);
+            if (this.edrGroup) {
+              this.edrGroup.visible = true;
+              this.edrGroup.position.set(p.x, p.y - 2.8, p.z);
+              this.edrGroup.quaternion.copy(this.camera.quaternion);
+            }
           }
           moverPos = p.clone().add(new THREE.Vector3(0, 4.5, 0));
           moverText = '⚖️ Judicial Order';
@@ -5502,6 +5438,11 @@ class PushnotOrbit {
           const strikeOsc = Math.sin(u * Math.PI * 6) * 0.18;
           this.judicialGavel.rotateX(-0.55 + strikeOsc);
           this.judicialGavel.scale.setScalar(1.0);
+        }
+        if (this.edrGroup) {
+          this.edrGroup.visible = true;
+          this.edrGroup.position.set(p.x, p.y - 2.8, p.z);
+          this.edrGroup.quaternion.copy(this.camera.quaternion);
         }
         moverPos = p.clone().add(new THREE.Vector3(0, 4.5, 0));
         moverText = '⚖️ Judicial Order → App Servers';

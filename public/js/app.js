@@ -4882,6 +4882,11 @@ class PushnotOrbit {
     const isWorld = mode === 'world';
     const isLeo   = mode === 'leo';
     this.flipTarget = isLeo ? Math.PI : 0;
+    if (resetT) {
+      this.flipRoll = this.flipTarget;
+      this.flipRollVel.v = 0;
+      if (this.worldPivot) this.worldPivot.rotation.z = this.flipRoll;
+    }
 
     const color = isLeo ? 0xf43f5e : (isWorld ? 0x38bdf8 : (isPush ? 0x34d399 : 0xfbbf24));
     if (this.ringMat) this.ringMat.color.setHex(color);

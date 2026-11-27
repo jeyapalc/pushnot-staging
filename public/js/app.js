@@ -4860,6 +4860,11 @@ class PushnotOrbit {
     if (btnDeny) {
       btnDeny.addEventListener('click', () => dismissPermissionPrompt(false));
     }
+    const searchParams = new URLSearchParams(window.location.search);
+    if ((searchParams.get('mode') && searchParams.get('mode') !== 'setup') || searchParams.has('dismiss')) {
+      if (permDialog) permDialog.style.display = 'none';
+      if (blurBackdrop) blurBackdrop.style.display = 'none';
+    }
     this.renderSliderTicks();
 
     document.getElementById('scrub').addEventListener('input', (e) => {

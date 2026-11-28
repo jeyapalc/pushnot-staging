@@ -1,6 +1,6 @@
 # PUSHNOT // Project Chat Memory & Architectural Reference
 
-**Last Updated:** 2026-11-27 (v155)  
+**Last Updated:** 2026-11-27 (v156)  
 **Repository:** `jeyapalc/pushnot-staging`  
 **Active Branches:** `staging` (source), `gh-pages` (deployed production/staging)  
 **Live Deployments:**
@@ -10,6 +10,19 @@
 ---
 
 ## 1. Key Architectural Directives & Chronology
+
+### v156 (True Orthographic Isometric Vector Projection & Removed All Ground Circles)
+- **True Orthographic Isometric Camera (`THREE.OrthographicCamera`)**:
+  - Replaced `THREE.PerspectiveCamera` with `THREE.OrthographicCamera` across all modes (`Setup`, `Push`, `World`, `LEO`), exactly matching classic architectural isometric vector art (such as Vecteezy isometric vector illustration).
+  - Parallel lines in 3D now remain strictly parallel on screen (zero perspective vanishing points and zero lens foreshortening).
+  - Mathematically locked to the standard 35.264° isometric elevation pitch (`atan(1 / sqrt(2))`), keeping all vertical edges straight up (90°) and horizontal planes at standard 30° / 30° isometric slopes.
+  - Smooth per-mode orthographic zoom damping (`zoom = 1.0` for Setup/Push, `0.68` for LEO to frame all 5 stations + central RCMP HQ).
+  - Removed `scene.fog` so the orthographic view is crystal-clear and razor sharp.
+- **Removed All Circles on the Ground**:
+  - Completely removed the circular orbit ring (`ring`, `TorusGeometry` R=46) and outer circular ring (`outer`, `TorusGeometry` R=57).
+  - Completely removed the circular cinema dolly track rails (`trackInner`, `trackOuter`).
+  - Replaced the circular cylinder plinth and torus rim under the Apple & Google logos with a crisp rectangular isometric foundation (`BoxGeometry(22, 1.2, 14)`) and cyan perimeter edge lines.
+  - Replaced circular solder via rings (`RingGeometry`) and drill holes on the circuit traces with square SMD solder pads (`PlaneGeometry(1.6, 1.6)`). Zero circular shapes remain on the ground floor.
 
 ### v155 (Diablo / StarCraft Isometric Command View & Circuit Board Pathways)
 - **Unified Diablo / StarCraft Isometric Perspective**: Locked ALL modes (`Setup`, `Push`, `World`, `LEO`) into a cohesive, commanding isometric vantage point (`elevation ~30°–35°`, `angle: 0.18`) where every single station on the map is simultaneously visible in the frame with minimal camera movement. Bypassed transit camera hijacking across all modes so clicking steps never jerks, spins, or swings the camera.

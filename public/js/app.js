@@ -38,45 +38,45 @@ const MODE_STEPS = {
   leo:   [0.08, 0.20, 0.28, 0.40, 0.58, 0.68, 0.82, 0.94]
 };
 
-// Default Director's Camera Rigs (Eye-level circular carousel track orbiting at natural eye level Y ≈ 26, constant R = 90)
+// Default Director's Camera Rigs (True Orthographic Isometric Vantage Point, constant 35.264° pitch)
 const DEFAULT_DIRECTOR_RIGS = {
-  // Mode 1: Setup (10 steps) — Diablo / StarCraft Isometric Command View (All nodes visible, minimal camera movement)
-  "setup_step_0": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_1": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_2": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_3": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_4": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_5": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_6": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_7": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_8": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "setup_step_9": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  // Mode 1: Setup (10 steps) — True Orthographic Isometric Perspective (Zero perspective foreshortening)
+  "setup_step_0": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_1": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_2": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_3": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_4": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_5": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_6": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_7": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_8": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "setup_step_9": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
 
-  // Mode 2: Push (6 steps) — Diablo / StarCraft Isometric Command View (All nodes visible, minimal camera movement)
-  "push_step_0": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "push_step_1": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "push_step_2": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "push_step_3": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "push_step_4": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
-  "push_step_5": { angle: 0.18, radius: 98.0, cam: { x: 17.5, y: 64.0, z: 96.4 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  // Mode 2: Push (6 steps) — True Orthographic Isometric Perspective
+  "push_step_0": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_1": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_2": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_3": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_4": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
+  "push_step_5": { angle: 0.32, radius: 120.0, cam: { x: 37.8, y: 100.8, z: 113.9 }, target: { x: 0.0, y: 16.0, z: -2.0 } },
 
-  // Mode 3: World (6 steps) — Diablo / StarCraft Isometric Command View
-  "world_step_0": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_1": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_2": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_3": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_4": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
-  "world_step_5": { angle: 0.18, radius: 106.0, cam: { x: 18.9, y: 68.0, z: 104.3 }, target: { x: 0.0, y: 18.0, z: 0.0 } },
+  // Mode 3: World (6 steps) — True Orthographic Isometric Perspective
+  "world_step_0": { angle: 0.32, radius: 130.0, cam: { x: 40.9, y: 108.9, z: 123.4 }, target: { x: 0.0, y: 17.0, z: 0.0 } },
+  "world_step_1": { angle: 0.32, radius: 130.0, cam: { x: 40.9, y: 108.9, z: 123.4 }, target: { x: 0.0, y: 17.0, z: 0.0 } },
+  "world_step_2": { angle: 0.32, radius: 130.0, cam: { x: 40.9, y: 108.9, z: 123.4 }, target: { x: 0.0, y: 17.0, z: 0.0 } },
+  "world_step_3": { angle: 0.32, radius: 130.0, cam: { x: 40.9, y: 108.9, z: 123.4 }, target: { x: 0.0, y: 17.0, z: 0.0 } },
+  "world_step_4": { angle: 0.32, radius: 130.0, cam: { x: 40.9, y: 108.9, z: 123.4 }, target: { x: 0.0, y: 17.0, z: 0.0 } },
+  "world_step_5": { angle: 0.32, radius: 130.0, cam: { x: 40.9, y: 108.9, z: 123.4 }, target: { x: 0.0, y: 17.0, z: 0.0 } },
 
-  // Mode 4: Law Enforcement (8 steps) — Diablo / StarCraft Isometric Command View (All 5 stations + central RCMP framed)
-  "leo_step_0": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
-  "leo_step_1": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
-  "leo_step_2": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
-  "leo_step_3": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
-  "leo_step_4": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
-  "leo_step_5": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
-  "leo_step_6": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } },
-  "leo_step_7": { angle: 0.18, radius: 132.0, cam: { x: 23.5, y: 88.0, z: 129.9 }, target: { x: 0.0, y: 18.0, z: 4.0 } }
+  // Mode 4: Law Enforcement (8 steps) — True Orthographic Isometric Perspective (Framing RCMP HQ & all 5 stations)
+  "leo_step_0": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } },
+  "leo_step_1": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } },
+  "leo_step_2": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } },
+  "leo_step_3": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } },
+  "leo_step_4": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } },
+  "leo_step_5": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } },
+  "leo_step_6": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } },
+  "leo_step_7": { angle: 0.30, radius: 150.0, cam: { x: 44.3, y: 122.1, z: 143.3 }, target: { x: 0.0, y: 16.0, z: 2.0 } }
 };
 
 const WORLD_APPS = [
@@ -385,7 +385,8 @@ class PushnotOrbit {
 
   initScene() {
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x05080f, 0.003);
+    // Zero fog for crisp, razor-sharp orthographic isometric rendering (like Vecteezy vector art)
+    this.scene.fog = null;
 
     // World Pivot allows smoothly flipping the entire 3D orbit 180° upside down!
     this.worldPivot = new THREE.Group();
@@ -407,8 +408,22 @@ class PushnotOrbit {
     this.leoGroup.visible = false;
     this.worldGroup.add(this.leoGroup);
 
-    this.camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 1500);
-    this.camera.position.set(24.0, 30.0, 52.0);
+    // True Orthographic Camera for authentic parallel isometric vector projection (like Vecteezy vector art)
+    const aspect = innerWidth / innerHeight;
+    this.frustumBase = 110;
+    this.camera = new THREE.OrthographicCamera(
+      (-this.frustumBase * aspect) / 2,
+      (this.frustumBase * aspect) / 2,
+      this.frustumBase / 2,
+      -this.frustumBase / 2,
+      -1000,
+      3000
+    );
+    this.camera.aspect = aspect;
+    this.camera.position.set(37.8, 100.8, 113.9);
+    this.camera.zoom = 1.0;
+    this.targetZoom = 1.0;
+    this.vZoom = { v: 0 };
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setSize(innerWidth, innerHeight);
@@ -426,9 +441,11 @@ class PushnotOrbit {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
-    this.controls.target.set(0.0, 14.0, -46.0);
+    this.controls.target.set(0.0, 16.0, -2.0);
     this.controls.minDistance = 15;
     this.controls.maxDistance = 450;
+    this.controls.minZoom = 0.25;
+    this.controls.maxZoom = 4.0;
     this.controls.maxPolarAngle = Math.PI * 0.52;
     this.controls.addEventListener('start', () => {
       if (this.autoOrbit) this.setAutoOrbit(false);
@@ -439,7 +456,12 @@ class PushnotOrbit {
     });
 
     addEventListener('resize', () => {
-      this.camera.aspect = innerWidth / innerHeight;
+      const aspect = innerWidth / innerHeight;
+      this.camera.aspect = aspect;
+      this.camera.left = (-this.frustumBase * aspect) / 2;
+      this.camera.right = (this.frustumBase * aspect) / 2;
+      this.camera.top = this.frustumBase / 2;
+      this.camera.bottom = -this.frustumBase / 2;
       this.camera.updateProjectionMatrix();
       this.renderer.setSize(innerWidth, innerHeight);
     });
@@ -480,36 +502,9 @@ class PushnotOrbit {
 
   initOrbitRing() {
     this.ringMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.32 });
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(R, 0.22, 12, 128), this.ringMat);
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.15;
-    this.normalGroup.add(ring);
+    // Circles on ground completely removed per user directive (no circular orbit rings, no outer torus, no rail circles)
 
-    const outer = new THREE.Mesh(
-      new THREE.TorusGeometry(R + 11, 0.08, 8, 128),
-      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.12 })
-    );
-    outer.rotation.x = Math.PI / 2;
-    outer.position.y = 0.1;
-    this.normalGroup.add(outer);
-
-    // Subtle Cinema Circular Track Dolly Rails at outer perimeter
-    const trackRailMat = new THREE.MeshStandardMaterial({
-      color: 0x1e293b,
-      metalness: 0.85,
-      roughness: 0.28,
-      transparent: true,
-      opacity: 0.50
-    });
-    const trackInner = new THREE.Mesh(new THREE.TorusGeometry(88, 0.16, 8, 160), trackRailMat);
-    trackInner.rotation.x = Math.PI / 2;
-    trackInner.position.y = 0.12;
-    const trackOuter = new THREE.Mesh(new THREE.TorusGeometry(92, 0.16, 8, 160), trackRailMat);
-    trackOuter.rotation.x = Math.PI / 2;
-    trackOuter.position.y = 0.12;
-    this.normalGroup.add(trackInner, trackOuter);
-
-    // Tactical Cyber PCB Ground Substrate Grid (StarCraft / Diablo command board)
+    // Tactical Cyber PCB Ground Substrate Grid (StarCraft / Diablo / Vecteezy isometric command board)
     const pcbGridNormal = new THREE.GridHelper(160, 32, 0x0ea5e9, 0x071e2e);
     pcbGridNormal.position.y = 0.05;
     if (pcbGridNormal.material) {
@@ -638,30 +633,23 @@ class PushnotOrbit {
         group.add(trackLine);
       }
 
-      // 2. Annular Solder Via Rings at waypoints on the floor
-      const viaRingGeo = new THREE.RingGeometry(0.85, 1.6, 24);
-      const viaHoleGeo = new THREE.CircleGeometry(0.82, 16);
-      const viaRingMat = new THREE.MeshStandardMaterial({
+      // 2. Square SMD Solder Pads at circuit waypoints (Rectilinear PCB styling, zero circles)
+      const padGeo = new THREE.PlaneGeometry(1.6, 1.6);
+      const padMat = new THREE.MeshStandardMaterial({
         color: color,
         emissive: color,
-        emissiveIntensity: 0.55,
+        emissiveIntensity: 0.50,
         roughness: 0.35,
         metalness: 0.85,
         side: THREE.DoubleSide
       });
-      const viaHoleMat = new THREE.MeshBasicMaterial({ color: 0x030712 });
 
       for (const wp of curve.waypoints) {
         if (wp.y <= 3.5) {
-          const viaRing = new THREE.Mesh(viaRingGeo, viaRingMat);
-          viaRing.rotation.x = -Math.PI / 2;
-          viaRing.position.set(wp.x, wp.y + 0.02, wp.z);
-
-          const viaHole = new THREE.Mesh(viaHoleGeo, viaHoleMat);
-          viaHole.rotation.x = -Math.PI / 2;
-          viaHole.position.set(wp.x, wp.y + 0.015, wp.z);
-
-          group.add(viaRing, viaHole);
+          const pad = new THREE.Mesh(padGeo, padMat);
+          pad.rotation.x = -Math.PI / 2;
+          pad.position.set(wp.x, wp.y + 0.02, wp.z);
+          group.add(pad);
         }
       }
     }
@@ -4745,8 +4733,8 @@ class PushnotOrbit {
     this.storeGroup.userData.stationKey = 'post';
     this.normalGroup.add(this.storeGroup);
 
-    // Sleek dark architectural cyber-plinth at ground level
-    const plinthGeo = new THREE.CylinderGeometry(14, 15.5, 1.2, 48);
+    // Sleek dark architectural cyber-plinth (rectangular foundation, zero circles)
+    const plinthGeo = new THREE.BoxGeometry(22.0, 1.2, 14.0);
     const plinthMat = new THREE.MeshStandardMaterial({
       color: 0x0a0f1d,
       roughness: 0.35,
@@ -4757,14 +4745,13 @@ class PushnotOrbit {
     plinth.position.y = 0.6;
     this.storeGroup.add(plinth);
 
-    // Glowing cyan cyber rim ring around plinth
-    const ringGeo = new THREE.TorusGeometry(14.8, 0.18, 16, 64);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.userData.stationKey = 'post';
-    ring.rotation.x = Math.PI * 0.5;
-    ring.position.y = 1.22;
-    this.storeGroup.add(ring);
+    // Cyan accent edge lines along top perimeter of rectangular plinth
+    const edgeGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(22.1, 0.05, 14.1));
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.85 });
+    const edgeLine = new THREE.LineSegments(edgeGeo, edgeMat);
+    edgeLine.position.y = 1.21;
+    edgeLine.userData.stationKey = 'post';
+    this.storeGroup.add(edgeLine);
 
     // Front-facing logo mount group for Apple and Google signs
     this.frontLogosGroup = new THREE.Group();
@@ -4886,6 +4873,21 @@ class PushnotOrbit {
       this.flipRoll = this.flipTarget;
       this.flipRollVel.v = 0;
       if (this.worldPivot) this.worldPivot.rotation.z = this.flipRoll;
+    }
+
+    if (this.camera && this.camera.isOrthographicCamera) {
+      if (isLeo) {
+        this.targetZoom = 0.68;
+      } else if (isWorld) {
+        this.targetZoom = 0.88;
+      } else {
+        this.targetZoom = 1.0;
+      }
+      if (resetT) {
+        this.camera.zoom = this.targetZoom;
+        this.camera.updateProjectionMatrix();
+        this.vZoom.v = 0;
+      }
     }
 
     const color = isLeo ? 0xf43f5e : (isWorld ? 0x38bdf8 : (isPush ? 0x34d399 : 0xfbbf24));
@@ -6333,25 +6335,33 @@ class PushnotOrbit {
       const transit = null;
 
       if (this.mode === 'leo') {
-        // Diablo / StarCraft Isometric Command View for LEO Stage (framing all 5 stations + central RCMP)
-        targetTheta = 0.18;
-        targetRadius = 132.0;
-        targetY = 88.0;
-        targetLook = new THREE.Vector3(0.0, 18.0, 4.0);
+        // True Orthographic Isometric Command View for LEO Stage (framing all 5 stations + central RCMP)
+        targetTheta = 0.30;
+        targetRadius = 150.0;
+        targetY = 122.1;
+        targetLook = new THREE.Vector3(0.0, 16.0, 2.0);
       } else if (this.mode === 'setup' || this.mode === 'push') {
-        // Diablo / StarCraft Isometric Command View for Setup & Push (framing Phone, Post Office, Datacentre)
-        targetTheta = 0.18;
-        targetRadius = 98.0;
-        targetY = 64.0;
+        // True Orthographic Isometric Command View for Setup & Push (framing Phone, Post Office, Datacentre)
+        targetTheta = 0.32;
+        targetRadius = 120.0;
+        targetY = 100.8;
         targetLook = new THREE.Vector3(0.0, 16.0, -2.0);
       } else if (this.mode === 'world') {
-        targetTheta = 0.18;
-        targetRadius = 106.0;
-        targetY = 68.0;
-        targetLook = new THREE.Vector3(0.0, 18.0, 0.0);
+        targetTheta = 0.32;
+        targetRadius = 130.0;
+        targetY = 108.9;
+        targetLook = new THREE.Vector3(0.0, 17.0, 0.0);
       }
 
       const smoothTime = this.playing ? 0.60 : 0.85;
+
+      if (this.camera && this.camera.isOrthographicCamera && !this.controls.state) {
+        const oldZoom = this.camera.zoom;
+        this.camera.zoom = smoothDamp(this.camera.zoom, this.targetZoom, this.vZoom, smoothTime, Infinity, dt);
+        if (Math.abs(this.camera.zoom - oldZoom) > 0.0001) {
+          this.camera.updateProjectionMatrix();
+        }
+      }
       this.cameraRig.stepToCylindrical(
         targetTheta,
         targetRadius,
